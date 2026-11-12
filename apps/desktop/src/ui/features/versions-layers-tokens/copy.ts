@@ -87,6 +87,7 @@ const COPY = {
   layersHidden: "Hidden",
   layersMatchOne: "1 match",
   layersMatchesSuffix: " matches",
+  layersNoDesign: "No design yet. Layers show here when the page has a design.",
   layersNoMatches: "No layers match.",
   layersReading: "Reading layers…",
   layersShowingPrefix: "Showing the first ",

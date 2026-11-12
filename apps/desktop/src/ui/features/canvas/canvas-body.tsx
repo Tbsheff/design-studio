@@ -41,6 +41,7 @@ const CanvasBody = ({
             frames={preview.frames}
             edits={layerEdits}
             frameName={frameName(active)}
+            isEmpty={stage.note === "empty"}
             selection={props.selection}
             onSelectMode={selectMode}
             onClose={close}

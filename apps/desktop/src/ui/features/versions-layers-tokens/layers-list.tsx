@@ -15,6 +15,7 @@ interface LayersListProps {
   readonly children: ReactNode;
   readonly isBusy: boolean;
   readonly isDragging: boolean;
+  readonly isEmpty: boolean;
   readonly isSearching: boolean;
   readonly onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => void;
   readonly onPointerCancel: () => void;
@@ -50,6 +51,7 @@ const LayersList = (props: LayersListProps): ReactNode => {
       onScroll={props.onScroll}
     >
       <LayersListBody
+        isEmpty={props.isEmpty}
         isSearching={props.isSearching}
         rowCount={props.rowCount}
         tree={tree}

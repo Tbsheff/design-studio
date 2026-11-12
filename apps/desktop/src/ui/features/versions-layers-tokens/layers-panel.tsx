@@ -37,6 +37,7 @@ interface LayersPanelProps {
   onToggleLocked?: (id: number, locked: boolean) => void;
   busy?: boolean;
   hoveredNode?: number | null;
+  readonly isEmpty: boolean;
 }
 
 const toMenu = (
@@ -70,6 +71,7 @@ const LayersPanel = ({
   onToggleLocked,
   busy = false,
   hoveredNode = null,
+  isEmpty,
 }: LayersPanelProps): ReactNode => {
   const edits = editsProp ?? null;
   const isMac = IS_MAC;
@@ -105,6 +107,7 @@ const LayersPanel = ({
         ref={listRef}
         isBusy={busy}
         isDragging={drag.dragging !== null}
+        isEmpty={isEmpty}
         isSearching={state.search.isActive}
         rowCount={state.rows.length}
         selectedIndex={list.selectedIndex}

@@ -36,11 +36,13 @@ const CanvasLayersPanel = ({
   frames,
   edits,
   frameName,
+  isEmpty,
   selection,
   onSelectMode,
   onClose,
 }: {
   frames: TreeFrames;
+  readonly isEmpty: boolean;
   edits: LayerEdits;
   frameName: string;
   selection: SelectionContext[];
@@ -104,6 +106,7 @@ const CanvasLayersPanel = ({
       onToggleLocked={handleToggleLocked}
       busy={!edits.settled}
       frameName={frameName}
+      isEmpty={isEmpty}
       selectedNode={selectedNode2}
       onHover={handleHover}
       hoveredNode={hoveredNode}

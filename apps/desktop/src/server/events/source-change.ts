@@ -20,6 +20,7 @@ const listeners = new Set<Listener>();
 const treeStamps = new Map<string, number>();
 const treeLogs = new Map<string, { stamp: number; paths: string[] }[]>();
 const TREE_LOG_MAX = 200;
+const TREE_PATHS_MAX = 20_000;
 
 const treeStamp = (root: string): number => treeStamps.get(root) ?? 0;
 
@@ -28,9 +29,17 @@ const noteTreeChange = (root: string, paths: string[]): void => {
 
   treeStamps.set(root, stamp);
 
-  const log = [...(treeLogs.get(root) ?? []), { paths, stamp }];
+  const log = [...(treeLogs.get(root) ?? []), { paths, stamp }].slice(
+    -TREE_LOG_MAX
+  );
 
-  treeLogs.set(root, log.slice(-TREE_LOG_MAX));
+  let total = log.reduce((sum, item) => sum + item.paths.length, 0);
+
+  while (total > TREE_PATHS_MAX && log.length > 0) {
+    total -= log.shift()?.paths.length ?? 0;
+  }
+
+  treeLogs.set(root, log);
 };
 
 const noteTreeWrite = (

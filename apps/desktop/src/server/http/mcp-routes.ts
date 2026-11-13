@@ -1,3 +1,4 @@
+import type { Project } from "@design-studio/contracts";
 import type { McpApprovalPoll } from "@design-studio/contracts/export";
 import type { Hono } from "hono";
 
@@ -32,6 +33,8 @@ interface McpRouteDeps extends ExportDeps {
   frameStates: FrameStateDeps;
   bus: EventBus;
   projectsFolder: () => Promise<string>;
+  trustedFolders: () => Promise<readonly string[]>;
+  saveFirstVersion: (project: Project) => Promise<Project>;
   appOpen: () => boolean;
   history?: EditRecorder;
   listener: McpListenerRunnerApi | null;

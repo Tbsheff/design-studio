@@ -5,6 +5,7 @@ import { registerAppCanvasRoutes } from "./app-canvas-routes.js";
 import { registerAppCommentsRoutes } from "./app-comments-routes.js";
 import { createAppContext, type AppDeps } from "./app-context.js";
 import {
+  applyDevserverHold,
   registerDevserverPortRoutes,
   registerDevserverRoutes,
 } from "./app-devserver-routes.js";
@@ -51,6 +52,8 @@ export function createApp(deps: AppDeps): Hono {
   registerSessionRoutes(app, ctx);
 
   registerLoopbackGuard(app, ctx);
+
+  applyDevserverHold(app, ctx);
 
   const mcpSlot = createMcpSlot();
   registerProjectsRoutes(app, ctx);

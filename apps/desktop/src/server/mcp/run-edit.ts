@@ -1,4 +1,4 @@
-import { firstVersionBlock } from "../app/first-version.js";
+import { firstVersionBlock, startFirstVersion } from "../app/first-version.js";
 import {
   PENDING_VERSION,
   savedVersionId,
@@ -89,13 +89,14 @@ function withSaveFailures(result: unknown, projectId: unknown): unknown {
 
 async function firstVersionRefusal(
   edits: EditDeps,
-  name: string,
   projectId: unknown
 ): Promise<string | null> {
-  if (!RENDER_WAIT_TOOLS.has(name) || typeof projectId !== "string")
-    return null;
+  if (typeof projectId !== "string") return null;
   const project = await edits.projects.get(projectId).catch(() => null);
-  return project ? firstVersionBlock(project, FIRST_VERSION_WAIT_MS) : null;
+  if (!project) return null;
+  if (project.app && project.directions[0]?.headVersionId === null)
+    startFirstVersion(project.id, null, () => edits.saveFirstVersion(project));
+  return firstVersionBlock(project, FIRST_VERSION_WAIT_MS);
 }
 
 function lockOnly(name: string, args: Record<string, unknown>): boolean {
@@ -115,7 +116,7 @@ async function runEdit(
   try {
     const started = Date.now();
     const { args, wait } = splitWait(name, raw);
-    const blocked = await firstVersionRefusal(edits, name, args.projectId);
+    const blocked = await firstVersionRefusal(edits, args.projectId);
     if (blocked)
       return { content: [{ type: "text", text: blocked }], isError: true };
     const result = await withCallOrigin(client, async () =>
@@ -255,7 +256,7 @@ async function runActionEdit(input: ActionEditInput): Promise<unknown> {
       ? splitWait(name, raw)
       : { args: argsOf(raw), wait: false };
     const { args, wait } = split;
-    const blocked = await firstVersionRefusal(edits, name, args.projectId);
+    const blocked = await firstVersionRefusal(edits, args.projectId);
 
     if (blocked) {
       return toFailure(blocked);

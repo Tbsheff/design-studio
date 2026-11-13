@@ -6,7 +6,7 @@ import type { Schema } from "effect";
 
 import { toTrimmedText } from "../../agent-tools/index.js";
 import { callAction } from "../action-call.js";
-import { approve, oneLine } from "../edit-guards.js";
+import { approve, isTrustedFolder, oneLine } from "../edit-guards.js";
 import type { EditDeps } from "../edit-guards.js";
 import { toFieldTool, ok } from "../edit-kit.js";
 import type { Done } from "../edit-kit.js";
@@ -67,6 +67,10 @@ const confirmFolder = async (
   const projects = await toProjectsFolder(deps);
 
   if (projects !== null && isInside(folder, projects)) {
+    return;
+  }
+
+  if (await isTrustedFolder(deps, folder)) {
     return;
   }
 

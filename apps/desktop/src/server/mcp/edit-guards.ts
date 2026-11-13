@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, realpath, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import type { Direction, Project } from "@design-studio/contracts";
@@ -36,6 +36,8 @@ export interface EditDeps extends ExportDeps {
   activity: ActivityLog;
   dataDir: string;
   projectsFolder(): Promise<string>;
+  trustedFolders(): Promise<readonly string[]>;
+  saveFirstVersion(project: Project): Promise<Project>;
   history?: EditRecorder & Partial<Pick<EditHistory, "mark" | "dropUnsaved">>;
   keepVariant: KeepVariant;
   layerLocks: LayerLockStore | null;
@@ -139,6 +141,34 @@ export async function approve(deps: EditDeps, ask: ApprovalAsk): Promise<void> {
   throw new EditError("The user denied this write in Design Studio.");
 }
 
+const toRealRoot = async (root: string): Promise<string> => {
+  try {
+    return await realpath(root);
+  } catch {
+    return path.resolve(root);
+  }
+};
+
+const toTrustRoots = async (
+  deps: Pick<EditDeps, "trustedFolders">
+): Promise<readonly string[]> => {
+  try {
+    return await deps.trustedFolders();
+  } catch {
+    return [];
+  }
+};
+
+export const isTrustedFolder = async (
+  deps: Pick<EditDeps, "trustedFolders">,
+  folder: string
+): Promise<boolean> => {
+  const roots = await toTrustRoots(deps);
+  const real = await Promise.all(roots.map((root) => toRealRoot(root)));
+
+  return real.some((root) => isInside(folder, root));
+};
+
 export async function outputFolder(
   deps: EditDeps,
   raw: unknown
@@ -159,7 +189,8 @@ export async function outputFolder(
     folder,
     trusted:
       isInside(folder, downloads) ||
-      (projects !== null && isInside(folder, projects)),
+      (projects !== null && isInside(folder, projects)) ||
+      (await isTrustedFolder(deps, folder)),
   };
 }
 

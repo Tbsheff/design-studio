@@ -216,15 +216,7 @@ async function holdEditsForFirstVersion(
   throw new ConflictError(firstVersionWaitText(pid));
 }
 
-export function registerAppRoutes(app: Hono, deps: AppRouteDeps): void {
-  const { projects } = deps;
-
-  bindDevServerRuntime({
-    projects,
-    preview: deps.preview,
-    attach: (project) => finishAttach(deps, project),
-  });
-
+export const applyFirstVersionHold = (app: Hono, deps: AppRouteDeps): void => {
   app.use("/api/projects/:pid/d/:did/*", async (c, next) => {
     if (
       c.req.method !== "GET" &&
@@ -234,6 +226,16 @@ export function registerAppRoutes(app: Hono, deps: AppRouteDeps): void {
     }
 
     await next();
+  });
+};
+
+export function registerAppRoutes(app: Hono, deps: AppRouteDeps): void {
+  const { projects } = deps;
+
+  bindDevServerRuntime({
+    projects,
+    preview: deps.preview,
+    attach: (project) => finishAttach(deps, project),
   });
 
   app.post("/api/projects/:pid/d/:did/open-source", async (c) => {

@@ -18,6 +18,16 @@ const ICON_SIZE = 14;
 const toSharedLine = (state: SharedLayersState): string => {
   const { same, total } = state.counts;
 
+  if (state.notice !== null) {
+    const { applied, skipped } = state.notice;
+
+    return copy.sharedAppliedSkipped(
+      applied,
+      skipped.length,
+      skipped.join(", ")
+    );
+  }
+
   if (same === total) {
     return copy.sharedOnPages(total);
   }

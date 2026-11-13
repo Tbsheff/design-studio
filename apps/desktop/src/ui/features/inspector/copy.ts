@@ -233,6 +233,14 @@ const copy = {
   setByCode: "Set by code",
   setEachCorner: "Set each corner",
   shadow: "Shadow ",
+  sharedAllChanged:
+    "Every page changed since the check. Look at the pages, then try again.",
+  sharedAppliedSkipped: (
+    applied: number,
+    skipped: number,
+    files: string
+  ): string =>
+    `Applied to ${applied} pages. ${skipped} changed since: ${files}`,
   sharedApplyPages: (count: number): string => `Apply to ${count} pages`,
   sharedLabel: "Shared layer",
   sharedMatchPages: (same: number, total: number): string =>

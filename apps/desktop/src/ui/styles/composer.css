@@ -1295,13 +1295,20 @@ button.skill-opt {
   }
 }
 
-.prompt-bar .drafts-short {
+.prompt-bar .drafts-short,
+.prompt-bar .level-short {
   display: none;
 }
 
 @container prompt-bar (max-width: 300px) {
-  .prompt-bar .composer-pill.level-pill {
+  .prompt-bar .level-pill .level-full,
+  .prompt-bar .level-pill .stable-text-size {
     display: none;
+  }
+
+  .prompt-bar .level-pill .level-short {
+    display: inline-grid;
+    place-items: center;
   }
 
   .prompt-bar .drafts-pill .drafts-full,

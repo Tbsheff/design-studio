@@ -16,7 +16,7 @@ import {
 } from "./clip/report.ts";
 import { createSeed } from "./clip/seed.ts";
 import type { SeededProject } from "./clip/seed.ts";
-import { APP_ROOT, startStudio, stopServer } from "./clip/server.ts";
+import { APP_ROOT, UI_SECRET, startStudio, stopServer } from "./clip/server.ts";
 import {
   insertUnreachable,
   inspectMenus,
@@ -97,6 +97,7 @@ const startHome = async (
   origin: string,
   theme: string
 ): Promise<void> => {
+  await page.goto(`${origin}/api/session/open?key=${UI_SECRET}`);
   await page.goto(`${origin}/?theme=${theme}`);
   await page.evaluate(([key, value]) => localStorage.setItem(key, value), [
     UI_KEY,

@@ -2,6 +2,7 @@ import { writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { fail } from "../stamp/args.js";
+import { UI_SECRET } from "./server.ts";
 import { runEach } from "./steps.ts";
 
 interface SeededProject {
@@ -18,7 +19,9 @@ interface CreatedProject {
   };
 }
 
-const TOKEN_PATTERN = /name="studio-token" content="(?<token>[^"]+)"/u;
+interface SessionReply {
+  readonly token: string;
+}
 
 const toPage = (title: string, lede: string): string => `<!doctype html>
 <html lang="en">
@@ -54,26 +57,20 @@ const FRAMES: readonly SeedBody[] = [
 ];
 
 const toToken = async (origin: string): Promise<string> => {
-  const response = await fetch(`${origin}/`);
+  const response = await fetch(`${origin}/api/session`, {
+    headers: { "x-studio-ui-secret": UI_SECRET },
+  });
 
   if (!response.ok) {
     return fail(
-      `the studio page answered ${response.status}`,
-      "pnpm --config.verify-deps-before-run=false run build:ui"
+      `the studio session answered ${response.status}`,
+      "check that the clip server gets STUDIO_UI_SECRET from scripts/clip/server.ts"
     );
   }
 
-  const html = await response.text();
-  const token = TOKEN_PATTERN.exec(html)?.groups?.token ?? null;
+  const reply: SessionReply = await response.json();
 
-  if (token === null) {
-    return fail(
-      "the studio page has no studio-token meta tag",
-      "pnpm --config.verify-deps-before-run=false run build:ui"
-    );
-  }
-
-  return token;
+  return reply.token;
 };
 
 const runPost = async <Reply>(

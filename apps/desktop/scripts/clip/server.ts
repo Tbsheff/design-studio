@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import type { ChildProcess } from "node:child_process";
+import { randomBytes } from "node:crypto";
 import { createWriteStream } from "node:fs";
 import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
@@ -28,6 +29,8 @@ const APP_PORT_BASE = 47_500;
 const BOOT_TIMEOUT_MS = 120_000;
 const BOOT_POLL_MS = 500;
 const STOP_WAIT_MS = 800;
+const UI_SECRET_BYTES = 32;
+const UI_SECRET = randomBytes(UI_SECRET_BYTES).toString("hex");
 
 const toUiIndex = (): string => path.join(APP_ROOT, "dist", "ui", "index.html");
 
@@ -95,6 +98,7 @@ const startServer = async (): Promise<ClipServer> => {
       STUDIO_PREVIEW_PORT: String(PREVIEW_PORT),
       STUDIO_PROJECTS_DIR: path.join(work, "projects"),
       STUDIO_SHARE_PORT: String(SHARE_PORT),
+      STUDIO_UI_SECRET: UI_SECRET,
       STUDIO_VITE_PORT_BASE: String(VITE_PORT_BASE),
     },
     stdio: ["ignore", "pipe", "pipe"],
@@ -130,6 +134,6 @@ const startStudio = async (shouldSkipBuild: boolean): Promise<ClipServer> => {
   return startServer();
 };
 
-export { APP_ROOT, startStudio, stopServer };
+export { APP_ROOT, UI_SECRET, startStudio, stopServer };
 
 export type { ClipServer };

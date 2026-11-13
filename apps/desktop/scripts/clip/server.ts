@@ -21,11 +21,14 @@ interface ClipServer {
 }
 
 const APP_ROOT = fileURLToPath(new URL("../../", import.meta.url));
-const STUDIO_PORT = 47_310;
-const PREVIEW_PORT = 47_311;
-const SHARE_PORT = 47_312;
-const VITE_PORT_BASE = 47_400;
-const APP_PORT_BASE = 47_500;
+const DEFAULT_PORT = 47_310;
+const VITE_OFFSET = 90;
+const APP_OFFSET = 190;
+const STUDIO_PORT = Number(env.STUDIO_CLIP_PORT ?? DEFAULT_PORT);
+const PREVIEW_PORT = STUDIO_PORT + 1;
+const SHARE_PORT = STUDIO_PORT + 2;
+const VITE_PORT_BASE = STUDIO_PORT + VITE_OFFSET;
+const APP_PORT_BASE = STUDIO_PORT + APP_OFFSET;
 const BOOT_TIMEOUT_MS = 120_000;
 const BOOT_POLL_MS = 500;
 const STOP_WAIT_MS = 800;

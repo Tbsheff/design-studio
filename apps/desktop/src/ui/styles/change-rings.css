@@ -110,3 +110,11 @@
   color: var(--danger);
   text-overflow: ellipsis;
 }
+
+.change-ring[data-undone="true"] {
+  border-style: solid;
+  border-color: var(--frame-skeleton-text);
+  background: var(--frame-skeleton);
+  box-shadow: 0 0 0 1px var(--halo-soft);
+  animation: none;
+}

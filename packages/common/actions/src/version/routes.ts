@@ -120,6 +120,12 @@ const routes = {
     method: "PATCH",
     path: "/api/projects/:projectId/versions/:versionId",
   },
+  restoreChangeVersion: {
+    id: "version.restoreChange",
+    invalidates: ["version.list", "version.inspectChanges", "canvas.getDoc"],
+    method: "POST",
+    path: "/api/projects/:projectId/d/:directionId/changes/restore",
+  },
   restoreHeadVersion: {
     id: "version.restoreHead",
     invalidates: [

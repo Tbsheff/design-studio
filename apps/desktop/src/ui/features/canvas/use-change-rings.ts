@@ -9,7 +9,7 @@ import type { MutableRefObject, RefObject } from "react";
 
 import { errorText } from "../../api.js";
 import { useProjectEvents } from "../../platform/events.js";
-import { call } from "../../platform/http.js";
+import { ApiError, call } from "../../platform/http.js";
 import type { RouteInput } from "../../platform/http.js";
 import { useLatest } from "../../platform/use-latest.js";
 import {
@@ -23,7 +23,9 @@ import {
   toRingAt,
   toRings,
   toSpot,
+  toSpotStale,
   toSpotTarget,
+  toSpotUndone,
   toSpotWithout,
   toStepRing,
 } from "./change-rings-model.js";
@@ -40,6 +42,8 @@ type SpotFrames = Pick<PreviewApi, "listen" | "post">;
 type SpotContexts = (SelectionContext | null)[];
 
 type HunkRevertInput = RouteInput<typeof routes.applyHunkVersion>;
+
+type LayerRestoreInput = RouteInput<typeof routes.restoreChangeVersion>;
 
 interface ChangeRingsInput {
   readonly directionId: string | null;
@@ -66,6 +70,12 @@ interface SpotStore {
 }
 
 const ID_RADIX = 36;
+
+const REFUSED_TAGS: ReadonlySet<string> = new Set([
+  "BadRequest",
+  "Conflict",
+  "NotFound",
+]);
 
 const toRequestId = (): string => {
   const stamp = Date.now().toString(ID_RADIX);
@@ -156,6 +166,38 @@ const toRevertInput = (
   projectId: forProject,
   versionId: spot.to,
 });
+
+const toRestoreInput = (
+  forProject: string,
+  spot: ChangeSpot,
+  ring: ChangeRing
+): LayerRestoreInput => ({
+  directionId: spot.directionId,
+  file: ring.item.file,
+  kind: ring.item.kind,
+  layerId: ring.item.layerId,
+  projectId: forProject,
+  versionId: spot.to,
+});
+
+const undoRing = async (
+  forProject: string,
+  spot: ChangeSpot,
+  ring: ChangeRing
+): Promise<ChangeSpot | null> => {
+  if (ring.isStale) {
+    await call(routes.applyHunkVersion, toRevertInput(forProject, spot, ring));
+
+    return toSpotWithout(spot, ring);
+  }
+
+  await call(
+    routes.restoreChangeVersion,
+    toRestoreInput(forProject, spot, ring)
+  );
+
+  return toSpotUndone(spot, ring);
+};
 
 const focusRing = (
   ring: ChangeRing | null,
@@ -293,23 +335,34 @@ const useChangeRings = (input: ChangeRingsInput): ChangeRings => {
   const undo = useCallback((): void => {
     const ring = toStepRing(spot);
 
-    if (!spot || !ring) {
+    if (!spot || !ring || ring.isUndone) {
       return;
     }
 
     startTransition(async () => {
       try {
-        await call(
-          routes.applyHunkVersion,
-          toRevertInput(projectId, spot, ring)
-        );
-        setStore(toSpotStore(store, toSpotWithout(spot, ring)));
+        const next = await undoRing(projectId, spot, ring);
+        setStore(toSpotStore(store, next));
         setMessage(null);
+        focusRing(toStepRing(next), post, zoomKey);
       } catch (error) {
+        if (error instanceof ApiError && REFUSED_TAGS.has(error.tag)) {
+          setStore(toSpotStore(store, toSpotStale(spot, ring)));
+        }
+
         setMessage(errorText(error));
       }
     });
-  }, [projectId, setMessage, setStore, spot, startTransition, store]);
+  }, [
+    post,
+    projectId,
+    setMessage,
+    setStore,
+    spot,
+    startTransition,
+    store,
+    zoomKey,
+  ]);
 
   useEscClear(spot, clear);
 

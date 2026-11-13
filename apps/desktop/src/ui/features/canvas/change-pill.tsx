@@ -1,7 +1,8 @@
 import type { MouseEvent, ReactElement } from "react";
 import { useCallback } from "react";
 
-import { toHunkCount } from "./change-rings-model.js";
+import { toHunkCount, toStepRing } from "./change-rings-model.js";
+import type { ChangeRing, ChangeSpot } from "./change-rings-model.js";
 import { copy } from "./copy.js";
 import type { ChangeRings } from "./use-change-rings.js";
 
@@ -17,12 +18,36 @@ const toCountText = (count: number): string => {
   return `${count}${copy.changeSpotCount}`;
 };
 
-const toUndoText = (count: number): string => {
+const toHunkText = (count: number): string => {
   if (count > 1) {
     return `${copy.changeSpotUndoMany}${count}${copy.changeSpotUndoManyEnd}`;
   }
 
   return copy.changeSpotUndo;
+};
+
+const toUndoText = (spot: ChangeSpot, ring: ChangeRing | null): string => {
+  if (ring?.isUndone) {
+    return copy.changeSpotUndone;
+  }
+
+  if (ring?.isStale) {
+    return toHunkText(toHunkCount(spot));
+  }
+
+  return copy.changeSpotUndo;
+};
+
+const toUndoTip = (ring: ChangeRing | null): string => {
+  if (ring?.isUndone) {
+    return copy.changeSpotUndoneTip;
+  }
+
+  if (ring?.isStale) {
+    return copy.changeSpotStaleTip;
+  }
+
+  return copy.changeSpotUndoTip;
 };
 
 const toStepText = (step: number | null, count: number): string | null => {
@@ -55,6 +80,8 @@ const ChangePill = ({ control }: ChangePillProps): ReactElement | null => {
 
   const count = spot.rings.length;
   const stepText = toStepText(spot.step, count);
+  const ring = toStepRing(spot);
+  const isUndone = ring?.isUndone === true;
 
   return (
     <div className="change-pill">
@@ -71,11 +98,11 @@ const ChangePill = ({ control }: ChangePillProps): ReactElement | null => {
         <button
           type="button"
           className="change-pill-undo"
-          data-tip={copy.changeSpotUndoTip}
-          disabled={isPending}
+          data-tip={toUndoTip(ring)}
+          disabled={isPending || isUndone}
           onClick={undo}
         >
-          {toUndoText(toHunkCount(spot))}
+          {toUndoText(spot, ring)}
         </button>
       )}
       <button

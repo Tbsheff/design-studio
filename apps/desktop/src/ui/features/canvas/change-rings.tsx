@@ -39,6 +39,7 @@ const ChangeRings = ({ spot, zoom }: ChangeRingsProps): ReactElement | null => {
             className="change-ring"
             data-kind={ring.item.kind}
             data-layer-id={ring.item.layerId}
+            data-undone={ring.isUndone}
             style={toRingStyle(ring, zoom)}
           />
         );

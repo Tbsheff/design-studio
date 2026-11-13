@@ -2,6 +2,8 @@ export { SkillStore } from "./skill-store.js";
 
 export { ChangeStore } from "./change-store.js";
 
+export { ChangeRestoreWriter } from "./change-restore-writer.js";
+
 export { getFileLocks } from "../platform/path-lock/index.js";
 
 export { FileLockStore } from "./file-lock-store.js";

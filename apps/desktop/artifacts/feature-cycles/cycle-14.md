@@ -234,3 +234,10 @@ Shared files (named from the cycle-13 "outside the pick list" sections):
 8. Agent engine choice (Codex, Gemini CLI, OpenRouter models), as in doop and Open Design; high effort.
 9. Scale tool (K): scale a layer with its font sizes, padding, gap and radius (Figma); the only manual tool gap found.
 10. Voice prompt (Figma Make, Bolt); low: macOS dictation already works in any text field, and Chromium speech recognition in Electron likely needs Google keys (not checked).
+
+## Results
+
+- Merged with no conflicts: live-edit, next-screen, layer-undo, rule-proposals, port-check. Main at 21e09382d.
+- Checks: typecheck 0 errors, lint:gate pass (59671, baseline 89733), build:ui pass, desktop:pack pass.
+- Installed app: :4570 returns 200. Server idle CPU 0.01 CPU-s/min. Two short-lived headless Chromes were seen once and were gone a minute later.
+- Open: no real-model run for live edit, next screen or port check. Port check has no "Show diff" image view. Layer undo fallback still returns 409 after a hand edit. MCP snapshots not refreshed for the new tools (user decision).

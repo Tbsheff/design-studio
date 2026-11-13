@@ -55,6 +55,14 @@ const toRoutePath = (routePath: string): string => {
   return `/${trimmed}`;
 };
 
+const toRouteName = (name: string | null, routePath: string): string => {
+  if (name !== null) {
+    return name;
+  }
+
+  return `Redesign ${routePath}`;
+};
+
 const toImportWidth = (viewport: number | null): number => {
   if (viewport === null) {
     return PAGE_IMPORT_WIDTH_DEFAULT;
@@ -198,7 +206,7 @@ const toRouteRunBody = (
       width: copy.width,
     },
     mode: "edit",
-    prompt: `Redesign ${routePath} (${copy.page} is a static copy of that app route, with the app tokens): ${input.prompt}`,
+    prompt: `Redesign ${routePath}: ${input.prompt}`,
   };
 
   if (input.level === null) {
@@ -224,6 +232,7 @@ const createRoutePrototype = Effect.fn("project.createPrototype.route")(
 
     const created = yield* writer.createPrototype({
       ...input,
+      name: toRouteName(input.name, routePath),
       shouldStartRun: false,
     });
 

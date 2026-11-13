@@ -19,14 +19,11 @@ import type {
   TokenFile,
 } from "@design-studio/contracts";
 
-import {
-  extractRulesBlock,
-  upsertRulesBlock,
-} from "../design-rules/markdown.js";
 import { writeAtomic } from "../platform/atomic-write/index.js";
 import { resourcePath } from "../platform/resources/index.js";
 import { compileTokens, parseTokenFile, resolveEntryValue } from "./compile.js";
 import { composeDesignMd as composeWithNotes } from "./design-md.js";
+import { applyPackComponents, toKeptDesignMd } from "./pack-components.js";
 import { parseManifestFields } from "./pack-manifest.js";
 import { toIssueLines } from "./parse-schema.js";
 
@@ -513,15 +510,6 @@ export function wiresReact(project: Project): boolean {
 
 export const WIRED_FILES = [REACT_ENTRY_FILE, "index.html"];
 
-async function keepRules(file: string, next: string): Promise<string> {
-  const current = await readText(file);
-  const rules = current === null ? null : extractRulesBlock(current);
-
-  return rules === null || extractRulesBlock(next) !== null
-    ? next
-    : upsertRulesBlock(next, rules);
-}
-
 export async function applyPack(
   project: Project,
   workTree: string,
@@ -538,14 +526,22 @@ export async function applyPack(
     `${JSON.stringify(pack.manifest, null, 2)}\n`
   );
   await writeFileAtomic(path.join(workTree, TOKENS_CSS_FILE), pack.css);
+  const kit = await applyPackComponents(pack.dir, workTree);
   await writeFileAtomic(
     path.join(workTree, DESIGN_MD_FILE),
-    await keepRules(
+    await toKeptDesignMd(
       path.join(workTree, DESIGN_MD_FILE),
-      composeDesignMd(pack, options.userDesignMd)
+      composeDesignMd(pack, options.userDesignMd),
+      kit
     )
   );
-  const written = [TOKENS_FILE, PACK_FILE, TOKENS_CSS_FILE, DESIGN_MD_FILE];
+  const written = [
+    TOKENS_FILE,
+    PACK_FILE,
+    TOKENS_CSS_FILE,
+    DESIGN_MD_FILE,
+    ...kit,
+  ];
 
   if (wiresReact(project)) {
     written.push(...(await wireReact(workTree, pack.manifest)));

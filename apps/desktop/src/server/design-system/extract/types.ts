@@ -1,4 +1,4 @@
-import type { DraftSourceKind } from "@design-studio/contracts";
+import type { DraftSourceKind, PackDarkMode } from "@design-studio/contracts";
 
 export type SourceKind = DraftSourceKind;
 
@@ -44,6 +44,12 @@ export interface Harvest {
   googleFontsUrl?: string;
   darkHint?: boolean;
   unmapped?: string[];
+  sourceVars?: {
+    readonly label: string;
+    readonly root: ReadonlyMap<string, string>;
+    readonly dark: ReadonlyMap<string, string>;
+  };
+  darkMode?: PackDarkMode;
 }
 
 export type {

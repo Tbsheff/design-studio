@@ -15,6 +15,7 @@ import type {
   RunSummary,
 } from "@design-studio/contracts";
 
+import { toStudioToken } from "./studio-session.ts";
 import { toWorkspaceBin } from "./workspace-root.ts";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -83,7 +84,7 @@ async function main(): Promise<void> {
   server.stderr.pipe(log);
 
   try {
-    const html = await waitFor(
+    await waitFor(
       "server",
       async () => {
         const res = await fetch(`${BASE}/`);
@@ -93,7 +94,7 @@ async function main(): Promise<void> {
       60_000
     );
 
-    const token = /name="studio-token" content="([^"]+)"/.exec(html)?.[1] ?? "";
+    const token = await toStudioToken(BASE, dataDir);
 
     const call = async <T>(
       method: string,

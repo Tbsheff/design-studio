@@ -32,7 +32,11 @@ const routes = {
   },
   setStatusConnection: {
     id: "connection.setStatus",
-    invalidates: ["connection.getStatus", "connection.listApprovals"],
+    invalidates: [
+      "connection.getSetup",
+      "connection.getStatus",
+      "connection.listApprovals",
+    ],
     method: "POST",
     path: "/api/mcp",
   },

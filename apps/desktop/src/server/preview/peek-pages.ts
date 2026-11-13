@@ -1,6 +1,12 @@
+import type { RenderColorScheme } from "../../shared/render-rpc.js";
 import type { RenderPage } from "../../shared/server-ports.js";
 
-type Viewport = { width: number; height: number; scale?: number };
+type Viewport = {
+  width: number;
+  height: number;
+  scale?: number;
+  colorScheme?: RenderColorScheme;
+};
 type Opener = (url: string, viewport: Viewport) => Promise<RenderPage>;
 type Closer = (page: RenderPage) => Promise<void>;
 type Lander = (page: RenderPage, url: string) => Promise<void>;
@@ -111,7 +117,7 @@ function shotsKeepTaint(page: RenderPage): RenderPage {
 }
 
 function keyOf(url: string, viewport: Viewport): string {
-  return `${viewport.width}x${viewport.height}@${viewport.scale ?? 1} ${url}`;
+  return `${viewport.width}x${viewport.height}@${viewport.scale ?? 1}:${viewport.colorScheme ?? "none"} ${url}`;
 }
 
 const pause = (ms: number) => new Promise((done) => setTimeout(done, ms));

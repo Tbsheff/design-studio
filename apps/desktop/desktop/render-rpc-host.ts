@@ -30,7 +30,12 @@ export class RenderHost {
   private async open(
     args: RenderOps["open"]["args"]
   ): Promise<RenderOps["open"]["result"]> {
-    const state = await this.pool.open(args.width, args.height, args.scale);
+    const state = await this.pool.open(
+      args.width,
+      args.height,
+      args.scale,
+      args.colorScheme ?? null
+    );
     const pageId = `p${this.nextPage++}`;
     this.pages.set(pageId, state);
 

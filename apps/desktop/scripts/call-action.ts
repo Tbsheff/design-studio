@@ -16,6 +16,7 @@ import type {
   Surface,
   SurfaceResult,
 } from "./stamp/call-types.js";
+import { toStudioToken } from "./studio-session.js";
 
 interface Options {
   readonly id: string;
@@ -38,8 +39,6 @@ const VIEWER_PORT = 4570;
 const TOOL_PORT = 4590;
 
 const RESERVED_PORTS: ReadonlySet<number> = new Set([VIEWER_PORT, TOOL_PORT]);
-
-const TOKEN_META = /<meta name="studio-token" content="(?<token>[^"]*)">/u;
 
 const USAGE =
   "pnpm exec tsx apps/desktop/scripts/call-action.ts <action id> '<json>' [--port N]";
@@ -111,7 +110,7 @@ const loadAction = async (id: string): Promise<CallableAction> => {
   return found;
 };
 
-const fetchHome = async (base: string): Promise<string> => {
+const readToken = async (base: string): Promise<string> => {
   try {
     const res = await fetch(`${base}/`);
 
@@ -119,16 +118,16 @@ const fetchHome = async (base: string): Promise<string> => {
       return fail(`The studio at ${base} answered ${res.status}.`, START);
     }
 
-    return await res.text();
+    await res.arrayBuffer();
   } catch {
     return fail(`No studio answers at ${base}.`, START);
   }
-};
 
-const readToken = async (base: string): Promise<string> => {
-  const html = await fetchHome(base);
-
-  return TOKEN_META.exec(html)?.groups?.token ?? "";
+  try {
+    return await toStudioToken(base, null);
+  } catch (error) {
+    return fail(`No studio token from ${base}: ${String(error)}`, START);
+  }
 };
 
 const safely = async (

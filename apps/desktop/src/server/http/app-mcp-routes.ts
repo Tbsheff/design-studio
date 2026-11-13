@@ -37,6 +37,10 @@ const registerAppMcpRoutes = (
     layerLocks: ctx.layerLocks ?? null,
     listener: ctx.mcpListener,
     isAgentToolOpen: config.agentMode === "mock",
+    trusted: {
+      list: () => ctx.defaultFolder.savedTrustedFolders(),
+      set: (raw) => ctx.defaultFolder.setTrustedFolders(raw),
+    },
     ...(runtime === null ? {} : { runtime }),
   });
   slot.routes = mcpRoutes;

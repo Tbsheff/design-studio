@@ -16,8 +16,14 @@ const SwatchSchema = Schema.Struct({
   value: Schema.String,
 });
 
+const PackDarkModeSchema = Schema.Struct({
+  selector: Schema.NullOr(Schema.String),
+  trigger: Schema.Literals(["class", "media"]),
+});
+
 const PackSummarySchema = Schema.Struct({
   copiedFrom: Schema.optionalKey(Schema.String),
+  darkMode: Schema.optionalKey(PackDarkModeSchema),
   darkSwatches: Schema.optionalKey(Schema.Array(SwatchSchema)),
   description: Schema.String,
   draft: Schema.optionalKey(Schema.Boolean),
@@ -212,9 +218,9 @@ const SaveResultSchema = Schema.Struct({
 });
 
 const DraftResultSchema = Schema.Struct({
-  coverage: Schema.Unknown,
+  coverage: Schema.NullOr(Schema.Unknown),
   directionId: Schema.NullOr(Schema.String),
-  grade: Schema.String,
+  grade: Schema.NullOr(Schema.String),
   improve: Schema.String,
   ms: Schema.Number,
   name: Schema.String,
@@ -223,6 +229,8 @@ const DraftResultSchema = Schema.Struct({
   packId: Schema.String,
   project: Schema.Unknown,
   projectId: Schema.String,
+  score: Schema.NullOr(Schema.Number),
+  status: Schema.Literals(["queued", "ready"]),
 });
 
 const PublishedDraftSchema = Schema.Struct({

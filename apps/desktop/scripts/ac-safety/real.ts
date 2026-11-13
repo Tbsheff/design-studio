@@ -23,6 +23,7 @@ import { chromium } from "playwright-core";
 import type { Browser } from "playwright-core";
 
 import { diffTrees, treeHash } from "../../e2e/ac/safety/helpers.js";
+import { toUiOpenUrl } from "../studio-session.ts";
 import { toWorkspaceBin } from "../workspace-root.ts";
 
 const ROOT = path.resolve(
@@ -296,7 +297,7 @@ async function main(): Promise<void> {
       viewport: { width: 1600, height: 1000 },
     });
 
-    await page.goto(BASE);
+    await page.goto(await toUiOpenUrl(BASE, dataDir));
     token =
       (await page
         .locator('meta[name="studio-token"]')

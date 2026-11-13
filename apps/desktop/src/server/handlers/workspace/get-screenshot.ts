@@ -13,6 +13,7 @@ const handle = Effect.fn("workspace.getScreenshot")(function* run(
   const store = yield* McpReadStore;
 
   return yield* store.screenshot({
+    colorScheme: input.colorScheme ?? null,
     directionId: input.directionId ?? null,
     element: input.element ?? null,
     frameId: input.frameId ?? null,

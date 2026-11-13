@@ -4,6 +4,8 @@ import path from "node:path";
 import { chromium } from "playwright-core";
 import type { Page } from "playwright-core";
 
+import { toUiOpenUrl } from "./studio-session.js";
+
 const base = process.env.STUDIO_URL ?? "http://127.0.0.1:4975";
 const out = path.resolve(process.argv[2] ?? "/tmp/ui-studio");
 mkdirSync(out, { recursive: true });
@@ -47,14 +49,18 @@ async function send(page: Page, text: string): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  const browser = await chromium.launch({
-    channel: "chrome",
-    headless: true,
-    args: [
-      "--disable-site-isolation-trials",
-      "--disable-features=IsolateOrigins,site-per-process",
-    ],
-  });
+  const [browser, openUrl] = await Promise.all([
+    chromium.launch({
+      channel: "chrome",
+      headless: true,
+      args: [
+        "--disable-site-isolation-trials",
+        "--disable-features=IsolateOrigins,site-per-process",
+      ],
+    }),
+    toUiOpenUrl(base, null),
+  ]);
+
   for (const theme of ["dark", "light"] as const) {
     const context = await browser.newContext({
       viewport: { width: 1440, height: 900 },
@@ -68,7 +74,8 @@ async function main(): Promise<void> {
       localStorage.setItem("design-studio.theme", value);
     }, theme);
     const page = await context.newPage();
-    await page.goto(base);
+
+    await page.goto(openUrl);
     await page.waitForLoadState("networkidle");
     await openProject(page);
     await shot(page, `studio-${theme}`);

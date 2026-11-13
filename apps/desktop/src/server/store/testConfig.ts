@@ -18,6 +18,7 @@ export async function makeTempConfig(): Promise<{
     previewPort: 0,
     vitePortBase: 0,
     studioToken: "test-token",
+    uiSecret: null,
     agentMode: "mock",
     studioOrigin: "http://127.0.0.1:0",
     previewOrigin: "http://127.0.0.1:0",

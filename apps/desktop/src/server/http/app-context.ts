@@ -31,12 +31,13 @@ import {
 } from "../canvas/index.js";
 import type { CanvasService } from "../canvas/index.js";
 import { previewOrigin } from "../components/props-service.js";
+import { applyCreatedPack } from "../design-system/created-pack.js";
 import { createLiveDrafts } from "../design-system/draft-live.js";
 import type { ImproveStarted } from "../design-system/draft-live.js";
 import { draftAttachmentIds } from "../design-system/draft-project.js";
 import { createFetcher } from "../design-system/extract/draft.js";
 import { createPackLibrary } from "../design-system/library.js";
-import { applyPack, packRegistry } from "../design-system/packs.js";
+import { packRegistry } from "../design-system/packs.js";
 import type { LoadedPack, PackRegistry } from "../design-system/packs.js";
 import {
   loadDesignSystemPromptContext,
@@ -317,9 +318,8 @@ const createAppContext = (deps: AppDeps) => {
     pack: LoadedPack,
     designMd: string | undefined
   ): Promise<Project> => {
-    await applyPack(project, projects.mainDirection(project).workTree, pack, {
-      userDesignMd: designMd,
-    });
+    const { workTree } = projects.mainDirection(project);
+    await applyCreatedPack(project, workTree, pack, designMd);
     await projects.setPackId(project.id, pack.manifest.id);
 
     return commitInit(

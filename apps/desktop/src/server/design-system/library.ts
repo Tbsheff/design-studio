@@ -26,6 +26,8 @@ import { createKeyedMutex } from "../platform/mutex/index.js";
 import { checkDesignSystemFiles } from "./check.js";
 import { compileTokens, parseTokenFile } from "./compile.js";
 import { removeTokenBlock } from "./design-md.js";
+import { toDarkModeField } from "./extract/dark-trigger.js";
+import { duplicatePackComponents } from "./pack-components.js";
 import {
   PackExistsError,
   findImportConflict,
@@ -177,7 +179,10 @@ export function buildPackFiles(
   }
 
   return {
-    manifest: manifest.value as PackManifest,
+    manifest: {
+      ...(manifest.value as PackManifest),
+      ...toDarkModeField(parsed.file),
+    },
     tokensText,
     designMd: `${prose}\n`,
   };
@@ -315,6 +320,7 @@ export function createPackLibrary(registry: PackRegistry): PackLibrary {
       const files = buildPackFiles(id, input);
       const target = path.join(root, id);
       const staged = await writeStaged(root, files);
+      await duplicatePackComponents(target, staged);
       const old = path.join(root, tempName("old"));
 
       try {

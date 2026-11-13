@@ -19,11 +19,15 @@ interface DesignSystemRouteDeps {
   live?: LiveDrafts;
   projects: StudioProjectStore;
   projectsFolder: () => Promise<string>;
+  trustedFolders?: () => Promise<readonly string[]>;
   readBody: (c: Context) => Promise<Record<string, unknown>>;
   runner: AgentRunner;
   versions: VersionStore;
   watch: (project: Project, direction: Direction) => void;
 }
+
+const toNoTrustedFolders = (): Promise<readonly string[]> =>
+  Promise.resolve([]);
 
 const registerDesignSystemRoutes = (
   _app: Hono,
@@ -35,6 +39,7 @@ const registerDesignSystemRoutes = (
       fetcher: deps.fetcher ?? createFetcher(deps.allowLoopback),
       finishCreate: deps.finishCreate,
       projectsFolder: deps.projectsFolder,
+      trustedFolders: deps.trustedFolders ?? toNoTrustedFolders,
       versions: deps.versions,
       watch: deps.watch,
     },

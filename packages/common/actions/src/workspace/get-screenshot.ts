@@ -63,6 +63,11 @@ const PaddingFieldSchema = Schema.Int.check(
   Schema.isBetween({ maximum: 200, minimum: 0 })
 ).annotate({ description: "Space around the element crop in px. Default 16." });
 
+const ColorSchemeFieldSchema = Schema.Literals(["light", "dark"]).annotate({
+  description:
+    'Color scheme for the shot. "dark" sets prefers-color-scheme dark, class "dark" and data-theme="dark" on <html>; "light" sets light and removes class "dark". Leave out to shoot the page as it is.',
+});
+
 const getScreenshotWorkspace = defineAction({
   access: "read",
   agent: {
@@ -74,11 +79,12 @@ const getScreenshotWorkspace = defineAction({
   },
   confirm: "none",
   description:
-    "Get a PNG screenshot of a page at a viewport size, or of one canvas frame (frameId sets the page, the direction, the frame state and the size; pass width to shoot that frame at another width), or of one element on it (element: layer id or CSS selector). Returns the PNG as base64 data with its media type and a note. Over MCP the PNG comes back as an image. Read only.",
+    "Get a PNG screenshot of a page at a viewport size, or of one canvas frame (frameId sets the page, the direction, the frame state and the size; pass width to shoot that frame at another width), or of one element on it (element: layer id or CSS selector). Pass colorScheme light or dark to shoot that theme. Returns the PNG as base64 data with its media type and a note. Over MCP the PNG comes back as an image. Read only.",
   errors: [BadRequest, Conflict, NotFound],
   http: { method: "GET", path: "/api/projects/:projectId/screenshot" },
   id: "workspace.getScreenshot",
   input: Schema.Struct({
+    colorScheme: Schema.optionalKey(ColorSchemeFieldSchema),
     directionId: Schema.optionalKey(DirectionFieldSchema),
     element: Schema.optionalKey(ElementFieldSchema),
     frameId: Schema.optionalKey(FrameFieldSchema),

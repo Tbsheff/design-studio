@@ -20,6 +20,7 @@ import type {
   RenderBackend,
   RenderCheckOptions,
   RenderPage,
+  RenderViewport,
   TileRequest,
   TileResult,
   ProbeRect,
@@ -427,7 +428,7 @@ export class BrowserPool {
 
   run<T>(
     url: string,
-    viewport: { width: number; height: number; scale?: number },
+    viewport: RenderViewport,
     task: (page: RenderPage) => Promise<T>
   ): Promise<T> {
     return this.withPage(url, viewport, task);
@@ -461,7 +462,7 @@ export class BrowserPool {
 
   private async withPage<T>(
     url: string,
-    viewport: { width: number; height: number; scale?: number },
+    viewport: RenderViewport,
     task: (page: RenderPage) => Promise<T>,
     oneOff = false
   ): Promise<T> {

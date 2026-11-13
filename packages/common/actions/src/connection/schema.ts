@@ -17,6 +17,7 @@ const McpSetupSchema = Schema.Struct({
   isRunning: Schema.Boolean,
   name: Schema.String,
   token: Schema.String,
+  trustedFolders: Schema.Array(Schema.String),
   url: Schema.String,
 });
 

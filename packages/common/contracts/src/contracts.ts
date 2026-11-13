@@ -2255,6 +2255,11 @@ export const REQUIRED_TOKENS = {
   text: ["xs", "sm", "base", "lg", "xl", "2xl", "3xl", "4xl"],
 } as const;
 
+export interface PackDarkMode {
+  readonly selector: string | null;
+  readonly trigger: "class" | "media";
+}
+
 export interface PackManifest {
   id: string;
   name: string;
@@ -2271,6 +2276,7 @@ export interface PackManifest {
   };
   draft?: boolean;
   copiedFrom?: string;
+  darkMode?: PackDarkMode;
 }
 
 export type PackSource = "builtin" | "user";

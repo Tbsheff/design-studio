@@ -33,6 +33,7 @@ interface PackDraftDeps {
     pack: LoadedPack
   ) => Promise<Project>;
   readonly projectsFolder: () => Promise<string>;
+  readonly trustedFolders: () => Promise<readonly string[]>;
   readonly versions: VersionStore;
   readonly watch: (project: Project, direction: Direction) => void;
 }

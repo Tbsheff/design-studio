@@ -1,6 +1,7 @@
 import type { Direction, Project, Version } from "@design-studio/contracts";
 import { cleanExportPath } from "@design-studio/contracts/export";
 
+import type { RenderColorScheme } from "../../shared/render-rpc.js";
 import type {
   PreviewService,
   VersionStore,
@@ -35,6 +36,7 @@ interface FrameHtml {
 }
 
 interface ShotQuery {
+  readonly colorScheme: RenderColorScheme | null;
   readonly directionId: string | null;
   readonly element: string | null;
   readonly frameId: string | null;

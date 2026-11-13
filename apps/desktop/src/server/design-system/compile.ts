@@ -4,7 +4,13 @@ import type {
   TokenFile,
   TokenType,
 } from "@design-studio/contracts";
-import { clampChroma, converter, formatHex, formatHex8, parse } from "culori";
+
+import {
+  fromTokenFileDarkMode,
+  toDarkSelector,
+} from "./extract/dark-trigger.js";
+import type { DarkMode } from "./extract/dark-trigger.js";
+import { toLiteralProblem, toOklchText } from "./token-literal.js";
 
 export type ThemeMode = "light" | "dark";
 
@@ -56,21 +62,18 @@ const TOKEN_TYPES = new Set<TokenType>([
   "number",
   "shadow",
   "duration",
+  "other",
 ]);
 
 const NAME_PATTERN = /^[A-Za-z0-9_-]+$/;
 const WHOLE_ALIAS = /^\{([A-Za-z0-9_.-]+)\}$/;
 const ANY_ALIAS = /\{([A-Za-z0-9_.-]+)\}/g;
-const UNSAFE_VALUE = /[;{}<>\\]/;
 
-const DIMENSION =
-  /^(0|-?(\d+\.?\d*|\.\d+)(px|rem|em|%|vh|vw|vmin|vmax|ch|ex|lh|rlh))$/;
-
-const CSS_MATH = /^(calc|clamp|min|max)\([A-Za-z0-9 .,%+*/()-]+\)$/;
-const NUMBER = /^-?(\d+\.?\d*|\.\d+)$/;
-const DURATION = /^(\d+\.?\d*|\.\d+)(ms|s)$/;
-const FONT_WEIGHT_KEYWORDS = new Set(["normal", "bold", "lighter", "bolder"]);
-const toOklch = converter("oklch");
+const EMBEDDED_ALIAS_TYPES = new Set<TokenType>([
+  "shadow",
+  "fontFamily",
+  "other",
+]);
 
 interface RawToken {
   path: string;
@@ -96,10 +99,6 @@ interface CompiledToken {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function round(value: number, places: number): string {
-  return String(Number(value.toFixed(places)));
 }
 
 function groupOrder(file: TokenFile): string[] {
@@ -393,52 +392,6 @@ function checkCycles(tokens: RawToken[], errors: string[]): Set<string> {
   return inCycle;
 }
 
-function formatOklch(value: string): { css: string; hex: string } | null {
-  const parsed = parse(value);
-
-  if (!parsed) {
-    return null;
-  }
-
-  const color = toOklch(parsed);
-  const alpha = color.alpha ?? 1;
-  const hue = Number.isFinite(color.h) ? (color.h as number) : 0;
-  const alphaPart = alpha < 1 ? ` / ${round(alpha, 3)}` : "";
-  const css = `oklch(${round(color.l * 100, 2)}% ${round(color.c, 4)} ${round(hue, 2)}${alphaPart})`;
-  const inGamut = clampChroma(color, "oklch");
-  const hex = alpha < 1 ? formatHex8(inGamut) : formatHex(inGamut);
-
-  return { css, hex };
-}
-
-function checkLiteral(type: TokenType, value: string): string | null {
-  if (UNSAFE_VALUE.test(value)) {
-    return "must not contain ; { } < > or \\";
-  }
-
-  if (type === "dimension" && !DIMENSION.test(value) && !CSS_MATH.test(value)) {
-    return `"${value}" is not a dimension (for example 16px or 1rem)`;
-  }
-
-  if (type === "number" && !NUMBER.test(value)) {
-    return `"${value}" is not a number`;
-  }
-
-  if (type === "duration" && !DURATION.test(value)) {
-    return `"${value}" is not a duration (for example 150ms)`;
-  }
-
-  if (
-    type === "fontWeight" &&
-    !FONT_WEIGHT_KEYWORDS.has(value) &&
-    !(NUMBER.test(value) && Number(value) >= 1 && Number(value) <= 1000)
-  ) {
-    return `"${value}" is not a font weight`;
-  }
-
-  return null;
-}
-
 function resolveAlias(
   ref: string,
   token: RawToken,
@@ -491,7 +444,7 @@ function resolveValue(
   }
 
   if (token.type === "color") {
-    const color = formatOklch(value);
+    const color = toOklchText(value);
 
     return color
       ? { ...color, refs: [] }
@@ -504,15 +457,11 @@ function resolveValue(
     return `alias {${substituted.missing}} points to no token`;
   }
 
-  if (
-    substituted.refs.length > 0 &&
-    token.type !== "shadow" &&
-    token.type !== "fontFamily"
-  ) {
+  if (substituted.refs.length > 0 && !EMBEDDED_ALIAS_TYPES.has(token.type)) {
     return "only a whole-value alias is allowed for this $type";
   }
 
-  const problem = checkLiteral(token.type, substituted.text);
+  const problem = toLiteralProblem(token.type, substituted.text);
 
   return (
     problem ?? { css: substituted.text, hex: null, refs: substituted.refs }
@@ -695,22 +644,38 @@ function buildPreviewLayers(compiled: CompiledToken[]): Layers {
 function themeBlock(
   light: string[],
   dark: string[],
-  systemDark: boolean
+  systemDark: boolean,
+  darkSelector: string
 ): string[] {
   const media = systemDark
     ? wrap(SYSTEM_DARK_MEDIA, rule(SYSTEM_DARK_SELECTOR, dark))
     : [];
 
-  return [...rule(":root", light), ...rule(DARK_SELECTOR, dark), ...media];
+  return [...rule(":root", light), ...rule(darkSelector, dark), ...media];
 }
 
-function renderCss(layers: Layers, mode: ThemeMode): string {
-  const systemDark = mode === "light" && layers.baseDark.length > 0;
-  const base = themeBlock(layers.baseLight, layers.baseDark, systemDark);
+function renderCss(
+  layers: Layers,
+  mode: ThemeMode,
+  darkMode: DarkMode | null
+): string {
+  const systemDark =
+    mode === "light" &&
+    layers.baseDark.length > 0 &&
+    darkMode?.trigger !== "class";
+
+  const darkSelector = toDarkSelector(DARK_SELECTOR, darkMode);
+
+  const base = themeBlock(
+    layers.baseLight,
+    layers.baseDark,
+    systemDark,
+    darkSelector
+  );
 
   const modern = wrap(
     OKLCH_SUPPORTS,
-    themeBlock(layers.modernLight, layers.modernDark, systemDark)
+    themeBlock(layers.modernLight, layers.modernDark, systemDark, darkSelector)
   );
 
   return `${[TOKENS_CSS_HEADER, ...base, ...modern].join("\n")}\n`;
@@ -760,11 +725,13 @@ export function compileTokens(
 
   const byPath = new Map(compiled.map((token) => [token.raw.path, token]));
   const entries = compiled.map(toEntry);
+  const darkMode = fromTokenFileDarkMode(file);
 
   if (options.only === undefined) {
     const css = renderCss(
       buildLayers(compiled, byPath),
-      options.mode ?? "light"
+      options.mode ?? "light",
+      darkMode
     );
 
     return {
@@ -781,7 +748,11 @@ export function compileTokens(
   const css =
     subset.length === 0
       ? ""
-      : renderCss(buildPreviewLayers(subset), options.mode ?? "light");
+      : renderCss(
+          buildPreviewLayers(subset),
+          options.mode ?? "light",
+          darkMode
+        );
 
   return {
     css,

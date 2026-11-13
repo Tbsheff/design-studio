@@ -44,7 +44,7 @@ interface QueueOptions {
   events?: ApprovalEvents;
 }
 
-export const APPROVAL_TIMEOUT_MS = 50_000;
+export const APPROVAL_TIMEOUT_MS = 600_000;
 const POLL_GRACE_MS = 6000;
 const MAX_PENDING = 10;
 const TEXT_MAX = { title: 200, detail: 600 };

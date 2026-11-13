@@ -2,6 +2,8 @@ import { randomBytes } from "node:crypto";
 import { chmod, mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
+import type { McpEnv } from "../platform/config/index.js";
+
 export interface McpSettings {
   enabled: boolean;
   edits: boolean;
@@ -11,6 +13,16 @@ export interface McpSettings {
 
 export const DEFAULT_MCP_PORT = 4590;
 const FILE = "mcp.json";
+
+const toMcpUrl = (port: number): string => `http://127.0.0.1:${port}/mcp`;
+
+const toMcpSettingsPath = (dataDir: string): string => path.join(dataDir, FILE);
+
+const fromMcpEnv = (settings: McpSettings, env: McpEnv): McpSettings => ({
+  ...settings,
+  edits: env.canEdit ?? settings.edits,
+  enabled: env.isEnabled ?? settings.enabled,
+});
 
 export function newToken(): string {
   return randomBytes(32).toString("base64url");
@@ -52,11 +64,15 @@ export async function writeMcpSettings(
   settings: McpSettings
 ): Promise<void> {
   await mkdir(dataDir, { recursive: true });
-  const target = path.join(dataDir, FILE);
+  const target = toMcpSettingsPath(dataDir);
   const temp = `${target}.tmp-${randomBytes(4).toString("hex")}`;
-  await writeFile(temp, `${JSON.stringify(settings, null, 2)}\n`, {
+  const body = { ...settings, url: toMcpUrl(settings.port) };
+  await writeFile(temp, `${JSON.stringify(body, null, 2)}\n`, {
     mode: 0o600,
   });
   await chmod(temp, 0o600);
   await rename(temp, target);
+  await chmod(target, 0o600);
 }
+
+export { fromMcpEnv, toMcpSettingsPath, toMcpUrl };

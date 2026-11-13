@@ -1,9 +1,11 @@
+import type { RenderColorScheme } from "../../shared/render-rpc.js";
 import type { RenderBackend, RenderPage } from "../../shared/server-ports.js";
 
 export interface PageSize {
   width: number;
   height: number;
   scale?: number;
+  colorScheme?: RenderColorScheme;
 }
 
 interface IdlePage {
@@ -16,7 +18,7 @@ const MAX_ACTIVE = { playwright: 6, electron: 4 } as const;
 const IDLE_CLOSE_MS = 3 * 60_000;
 
 function sizeKey(size: PageSize): string {
-  return `${size.width}x${size.height}@${size.scale ?? 1}`;
+  return `${size.width}x${size.height}@${size.scale ?? 1}:${size.colorScheme ?? "none"}`;
 }
 
 export class WarmPages {

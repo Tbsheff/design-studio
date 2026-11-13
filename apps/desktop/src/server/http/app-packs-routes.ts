@@ -42,6 +42,7 @@ const registerAppPacksRoutes = (app: Hono, ctx: AppContext): void => {
     runner,
     versions,
     projectsFolder: () => defaultFolder.ensure(),
+    trustedFolders: () => defaultFolder.trustedFolders(),
     finishCreate: (project, pack) =>
       applyPackOnCreate(project, pack, undefined),
     watch: watchDirection,

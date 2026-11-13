@@ -9,7 +9,8 @@ import { needsQuestions } from "@design-studio/contracts/clarify";
 import { expect } from "@playwright/test";
 import type { FrameLocator, Page } from "@playwright/test";
 
-import { BASE_URL } from "./server";
+import { toUiOpenUrl } from "../../scripts/studio-session.ts";
+import { BASE_URL, readState } from "./server";
 
 export class StudioApi {
   constructor(readonly token: string) {}
@@ -84,7 +85,7 @@ export class StudioApi {
 }
 
 export async function openHome(page: Page): Promise<StudioApi> {
-  await page.goto("/");
+  await page.goto(await toUiOpenUrl(BASE_URL, readState().dataDir));
 
   const token = await page
     .locator('meta[name="studio-token"]')

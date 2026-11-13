@@ -31,6 +31,7 @@ interface PinTarget {
 }
 
 interface ShotQuery {
+  readonly colorScheme: null;
   readonly directionId: null;
   readonly element: null;
   readonly frameId: string;
@@ -71,6 +72,7 @@ const toPinPage = (
 };
 
 const toShotQuery = (pin: PinTarget): ShotQuery => ({
+  colorScheme: null,
   directionId: null,
   element: null,
   frameId: pin.frameId,

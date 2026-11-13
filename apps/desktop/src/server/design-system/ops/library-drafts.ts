@@ -40,6 +40,9 @@ interface DraftStart {
 const NEXT_STEP =
   "Call design_system_status with this projectId until sources.done is true.";
 
+const QUEUED_STEP =
+  "The sources are still being read, so there is no grade or score yet. Call design_system_status with this projectId until sources.done is true, then read the coverage grade and score there.";
+
 const editorLock = createKeyedMutex();
 
 const toSource = (
@@ -146,6 +149,17 @@ const toDraftResult = (result: DesignSystemDraftResult): DraftResult => ({
   packId: result.pack.id,
   project: result.project,
   projectId: result.project.id,
+  score: result.coverage.score,
+  status: "ready",
+});
+
+const toQueuedResult = (result: DesignSystemDraftResult): DraftResult => ({
+  ...toDraftResult(result),
+  coverage: null,
+  grade: null,
+  next: QUEUED_STEP,
+  score: null,
+  status: "queued",
 });
 
 const createDraft = async (
@@ -173,7 +187,7 @@ const createDraft = async (
   const start: DraftStart = { images, isImproved, request, started };
 
   if (runtime.live) {
-    return toDraftResult(await createLive(runtime, runtime.live, start));
+    return toQueuedResult(await createLive(runtime, runtime.live, start));
   }
 
   return toDraftResult(await createBuilt(runtime, start));

@@ -4,6 +4,8 @@ import path from "node:path";
 import { chromium } from "playwright-core";
 import type { Page } from "playwright-core";
 
+import { toUiOpenUrl } from "./studio-session.js";
+
 const base = process.env.STUDIO_URL ?? "http://127.0.0.1:4370";
 const out = path.resolve(process.argv[2] ?? "/tmp/premium-inputs");
 const parentPath = process.argv[3] ?? "/tmp/ps-projects";
@@ -86,6 +88,8 @@ async function run(
     deviceScaleFactor: 2,
     viewport: { height: 900, width: 1440 },
   });
+
+  await page.goto(await toUiOpenUrl(base, null));
 
   const { id, did } = await openProject(page, theme);
   const compose = page.getByTestId("comment-compose");

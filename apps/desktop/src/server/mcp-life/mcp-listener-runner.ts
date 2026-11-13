@@ -1,9 +1,8 @@
 import type { Server } from "node:http";
 
+import { Unavailable } from "@design-studio/actions/_core/errors/unavailable";
 import { serve } from "@hono/node-server";
 import { Context, Effect, Layer, Ref } from "effect";
-
-import { Unavailable } from "@design-studio/actions/_core/errors/unavailable";
 
 type McpFetch = (request: Request) => Response | Promise<Response>;
 
@@ -18,6 +17,8 @@ interface McpListenerRunnerApi {
 
 const LOOPBACK = "127.0.0.1";
 
+const REQUEST_TIMEOUT_MS = 660_000;
+
 const toListenError = (port: number, error: Error): Unavailable =>
   new Unavailable({
     message: `The MCP server could not listen on port ${port}: ${error.message}`,
@@ -28,7 +29,12 @@ const startServer = (
   handler: McpFetch
 ): Effect.Effect<Server, Unavailable> =>
   Effect.callback<Server, Unavailable>((resume) => {
-    const options = { fetch: handler, hostname: LOOPBACK, port: listenPort };
+    const options = {
+      fetch: handler,
+      hostname: LOOPBACK,
+      port: listenPort,
+      serverOptions: { requestTimeout: REQUEST_TIMEOUT_MS },
+    };
 
     const created = serve(options, () => {
       resume(Effect.succeed(created as Server));

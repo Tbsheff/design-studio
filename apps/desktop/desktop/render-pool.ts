@@ -5,8 +5,13 @@ import { BrowserWindow, session } from "electron";
 import type { Session, WebContents } from "electron";
 import { PNG } from "pngjs";
 
-import type { RenderClip, RenderErrors } from "../src/shared/render-rpc.js";
+import type {
+  RenderClip,
+  RenderColorScheme,
+  RenderErrors,
+} from "../src/shared/render-rpc.js";
 import { pngSize } from "./png-size.js";
+import { applyColorScheme } from "./render-color-scheme.js";
 import { measureScrollSize } from "./render-pool.renderer.js";
 
 const POOL_SIZE = 4;
@@ -243,7 +248,12 @@ export class RenderPool {
     slot.idleTimer = setTimeout(() => this.dropSlot(slot), IDLE_CLOSE_MS);
   }
 
-  async open(width: number, height: number, scale = 1): Promise<PageState> {
+  async open(
+    width: number,
+    height: number,
+    scale = 1,
+    colorScheme: RenderColorScheme | null = null
+  ): Promise<PageState> {
     const slot = await this.acquire(`${width}x${height}`);
     const state: PageState = {
       slot,
@@ -254,6 +264,7 @@ export class RenderPool {
     };
     try {
       await this.prepare(state, width, height);
+      await applyColorScheme(slot.window.webContents, colorScheme);
       return state;
     } catch (error) {
       this.dropSlot(slot);

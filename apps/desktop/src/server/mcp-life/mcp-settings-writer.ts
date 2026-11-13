@@ -1,6 +1,8 @@
+import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
 import type { McpStatus } from "@design-studio/contracts/export";
 import { Context, Effect, Layer } from "effect";
 
+import { attemptKnown } from "../platform/attempt/index.js";
 import { lifeRuntime } from "./mcp-life-runtime.js";
 import type { McpLifeApprovals, McpLifeRuntime } from "./mcp-life-runtime.js";
 
@@ -8,10 +10,13 @@ interface McpSettingsUpdate {
   readonly edits?: boolean;
   readonly enabled?: boolean;
   readonly rotate?: boolean;
+  readonly trustedFolders?: readonly string[];
 }
 
 interface McpSettingsWriterApi {
-  readonly update: (input: McpSettingsUpdate) => Effect.Effect<McpStatus>;
+  readonly update: (
+    input: McpSettingsUpdate
+  ) => Effect.Effect<McpStatus, BadRequest>;
 }
 
 const setPendingDenied = (approvals: McpLifeApprovals): void => {
@@ -42,6 +47,15 @@ const applyEnabled = Effect.fn("McpSettingsWriter.applyEnabled")(function* run(
   return yield* Effect.promise(() => runtime.mcp.setEnabled(enabled));
 });
 
+const applyTrustedFolders = Effect.fn("McpSettingsWriter.applyTrustedFolders")(
+  function* run(runtime: McpLifeRuntime, raw: readonly string[]) {
+    yield* Effect.mapError(
+      attemptKnown(() => runtime.mcp.setTrustedFolders(raw)),
+      (error) => new BadRequest({ message: error.message })
+    );
+  }
+);
+
 class McpSettingsWriter extends Context.Service<
   McpSettingsWriter,
   McpSettingsWriterApi
@@ -56,6 +70,11 @@ class McpSettingsWriter extends Context.Service<
       ) {
         const runtime = yield* lifeRuntime();
         const { edits = null, enabled = null, rotate = false } = input;
+        const { trustedFolders = null } = input;
+
+        if (trustedFolders !== null) {
+          yield* applyTrustedFolders(runtime, trustedFolders);
+        }
 
         if (rotate) {
           yield* Effect.promise(() => runtime.mcp.rotate());

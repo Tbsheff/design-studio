@@ -34,6 +34,7 @@ const toShot = (
 
   return Effect.match(
     reads.screenshot({
+      colorScheme: null,
       directionId: query.directionId,
       element: null,
       frameId: null,

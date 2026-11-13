@@ -1,6 +1,8 @@
 import { lstat, opendir, readFile, realpath } from "node:fs/promises";
 import path from "node:path";
 
+import type { PackDarkMode } from "@design-studio/contracts";
+
 import { findTokenFile, safeFileInside } from "../app-tokens/detect.js";
 import { readCssTokens } from "../app-tokens/read-css.js";
 import { buildAppTokens } from "../app-tokens/tokens.js";
@@ -8,6 +10,7 @@ import { getAppDocs } from "./app-docs.js";
 import type { AppDocs } from "./app-docs.js";
 import { customProperties, parseCss } from "./css.js";
 import type { CustomProperties } from "./css.js";
+import { toDarkModeOf } from "./dark-trigger.js";
 import { flattenJs, objectAfter } from "./js-literal.js";
 import { matchName } from "./names.js";
 import type { ValueKind } from "./names.js";
@@ -289,6 +292,8 @@ interface TokenFileRead {
   file: string;
   relative: string;
   tailwind: boolean;
+  sourceVars: NonNullable<Harvest["sourceVars"]>;
+  darkMode: PackDarkMode | null;
 }
 
 async function absorbTokenFile(
@@ -297,14 +302,34 @@ async function absorbTokenFile(
 ): Promise<TokenFileRead | null> {
   const relative = await findTokenFile(root).catch(() => null);
   const file = relative ? await safeFileInside(root, relative) : null;
-  if (!relative || !file) return null;
-  const sheet = readCssTokens(await readFile(file, "utf-8"));
-  for (const token of buildAppTokens(sheet)) {
-    if (token.light) acc.props.root.set(token.name, token.light.value);
-    if (token.dark) acc.props.dark.set(token.name, token.dark.value);
+
+  if (!relative || !file) {
+    return null;
   }
+
+  const text = await readFile(file, "utf-8");
+  const sheet = readCssTokens(text);
+
+  for (const token of buildAppTokens(sheet)) {
+    if (token.light) {
+      acc.props.root.set(token.name, token.light.value);
+    }
+
+    if (token.dark) {
+      acc.props.dark.set(token.name, token.dark.value);
+    }
+  }
+
   acc.read.push(relative);
-  return { file, relative, tailwind: sheet.tailwind };
+  const darkMode = toDarkModeOf(text, sheet);
+
+  const sourceVars = {
+    dark: new Map(acc.props.dark),
+    label: `${path.basename(root)}: ${relative}`,
+    root: new Map(acc.props.root),
+  };
+
+  return { darkMode, file, relative, sourceVars, tailwind: sheet.tailwind };
 }
 
 const TAILWIND_TEXT: Record<string, string> = {
@@ -395,6 +420,15 @@ export async function scanFolder(
     extras: vars.extras,
     ...(fonts.googleFontsUrl ? { googleFontsUrl: fonts.googleFontsUrl } : {}),
   };
+
+  if (main) {
+    harvest.sourceVars = main.sourceVars;
+  }
+
+  if (main?.darkMode) {
+    harvest.darkMode = main.darkMode;
+  }
+
   const docs = await getAppDocs(root).catch((): AppDocs => ({
     designMd: null,
     notes: [],

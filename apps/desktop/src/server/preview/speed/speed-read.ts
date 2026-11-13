@@ -29,6 +29,7 @@ const DEFAULT_HEIGHT = 900;
 const SETTLE_MS = 400;
 
 const toShotQuery = (query: SpeedRunQuery): ShotQuery => ({
+  colorScheme: null,
   directionId: query.directionId,
   element: null,
   frameId: query.frameId,

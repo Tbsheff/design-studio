@@ -12,6 +12,12 @@ const routes = {
     method: "GET",
     path: "/api/projects/:projectId/layer-style",
   },
+  setLayerStyle: {
+    id: "layer-style.set",
+    invalidates: ["layer-style.get", "version.list", "canvas.getDoc"],
+    method: "POST",
+    path: "/api/projects/:projectId/layer-style/set",
+  },
   updateLayerStyle: {
     id: "layer-style.update",
     invalidates: ["layer-style.get", "version.list", "canvas.getDoc"],

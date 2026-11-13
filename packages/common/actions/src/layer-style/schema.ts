@@ -103,6 +103,24 @@ const LayerStyleChangeSchema = Schema.Struct({
   versionId: Schema.NullOr(Schema.String),
 });
 
+const LAYOUT_KINDS = ["auto", "row", "column"] as const;
+
+const GAP_MAX = 200;
+
+const LayoutKindSchema = Schema.Literals(LAYOUT_KINDS);
+
+const LayoutGapSchema = Schema.NullOr(
+  Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(GAP_MAX))
+);
+
+const LayerLayoutChangeSchema = Schema.Struct({
+  direction: Schema.Literals(["row", "column"]),
+  gap: Schema.NullOr(Schema.String),
+  movedChildren: Schema.Int,
+  skipped: Schema.Array(LayerStyleSkippedSchema),
+  versionId: Schema.NullOr(Schema.String),
+});
+
 export {
   ApplyGroupsSchema,
   DirectionFieldSchema,
@@ -110,6 +128,9 @@ export {
   KeepTokensSchema,
   LAYER_STYLE_GROUPS,
   LayerIdSchema,
+  LayerLayoutChangeSchema,
+  LayoutGapSchema,
+  LayoutKindSchema,
   LayerScaleChangeSchema,
   LayerStyleChangeSchema,
   LayerStyleSchema,

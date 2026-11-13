@@ -378,6 +378,7 @@
     "./layer-style/index": "./src/layer-style/index.ts",
     "./layer-style/routes": "./src/layer-style/routes.ts",
     "./layer-style/schema": "./src/layer-style/schema.ts",
+    "./layer-style/set": "./src/layer-style/set.ts",
     "./layer-style/update": "./src/layer-style/update.ts",
     "./markup/create": "./src/markup/create.ts",
     "./markup/errors/index": "./src/markup/errors/index.ts",

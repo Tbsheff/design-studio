@@ -1,4 +1,5 @@
 import { routes } from "@design-studio/actions/canvas/routes";
+import { routes as runRoutes } from "@design-studio/actions/run/routes";
 import type { CanvasSection } from "@design-studio/contracts/canvas-file";
 import {
   useCallback,
@@ -6,6 +7,7 @@ import {
   useMemo,
   useRef,
   useSyncExternalStore,
+  useTransition,
 } from "react";
 
 import { selectionRun } from "../../platform/ask-chat.js";
@@ -18,8 +20,20 @@ import {
   toStateCheckView,
 } from "./state-check-model.js";
 import type { StateCheckView } from "./state-check-model.js";
+import {
+  toSequenceId,
+  toStateRunPhase,
+  toStopRunId,
+} from "./state-run-model.js";
 import type { StateRunPhase } from "./state-run-model.js";
-import { useStateRuns } from "./use-state-runs.js";
+
+interface StateSequence {
+  readonly handleDesign: () => void;
+  readonly handleStop: () => void;
+  readonly isPending: boolean;
+  readonly phase: StateRunPhase;
+  readonly startError: string | null;
+}
 
 interface StateCheckInput {
   readonly headVersionId: string | null;
@@ -29,6 +43,7 @@ interface StateCheckInput {
 
 interface StateCheck extends StateCheckView {
   readonly isRunning: boolean;
+  readonly startError: string | null;
   readonly isShown: boolean;
   readonly phase: StateRunPhase;
   readonly handleDesign: () => void;
@@ -70,6 +85,52 @@ const useVersionRecheck = (
   }, [headVersionId, refetch]);
 };
 
+const useStateSequence = (
+  projectId: string,
+  section: CanvasSection
+): StateSequence => {
+  const [isPending, startTransition] = useTransition();
+  const start = useAction(runRoutes.startStatesRun);
+  const stop = useAction(runRoutes.stopRun);
+  const { run: runStart } = start;
+  const { run: runStop } = stop;
+  const sectionId = section.id;
+
+  const sequenceQuery = useMemo(
+    () => ({ projectId, sequenceId: toSequenceId(sectionId) }),
+    [projectId, sectionId]
+  );
+
+  const { data } = useAction(runRoutes.getStatesRun, sequenceQuery);
+  const phase = useMemo(() => toStateRunPhase(data), [data]);
+
+  const handleDesign = useCallback((): void => {
+    startTransition(async (): Promise<void> => {
+      await runStart({ projectId, section: sectionId });
+    });
+  }, [projectId, runStart, sectionId]);
+
+  const runId = toStopRunId(phase);
+
+  const handleStop = useCallback((): void => {
+    if (runId === null) {
+      return;
+    }
+
+    startTransition(async (): Promise<void> => {
+      await runStop({ projectId, runId });
+    });
+  }, [projectId, runId, runStop]);
+
+  return {
+    handleDesign,
+    handleStop,
+    isPending,
+    phase,
+    startError: start.error?.message ?? null,
+  };
+};
+
 const useStateCheck = (input: StateCheckInput): StateCheck => {
   const { headVersionId, projectId, section } = input;
   const frameId = useBoardFrameId(projectId, section);
@@ -93,23 +154,16 @@ const useStateCheck = (input: StateCheckInput): StateCheck => {
   useVersionRecheck(headVersionId, refetch);
 
   const view = useMemo(() => toStateCheckView(data), [data]);
-
-  const runs = useStateRuns({ projectId, query, refetch });
-  const { handleStart } = runs;
-
-  const handleDesign = useCallback((): void => {
-    if (view.plan !== null) {
-      handleStart(view.plan);
-    }
-  }, [handleStart, view.plan]);
+  const sequence = useStateSequence(projectId, section);
 
   return {
     ...view,
-    handleDesign,
-    handleStop: runs.handleStop,
-    isRunning,
+    handleDesign: sequence.handleDesign,
+    handleStop: sequence.handleStop,
+    isRunning: isRunning || sequence.isPending,
     isShown: query !== null && error === null,
-    phase: runs.phase,
+    phase: sequence.phase,
+    startError: sequence.startError,
   };
 };
 

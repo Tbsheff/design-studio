@@ -298,7 +298,7 @@ const stateCheckCopy = {
   checking: "Checking states…",
   design: "Design missing states",
   designTip:
-    "Start one chat run per state that looks like the default, one after the other. The rest stop when the project closes",
+    "Start one chat run per state that looks like the default, one after the other. The runs go on when the project closes",
   lookLike: " look like the default",
   looksLike: " looks like the default",
   noneLike: "Every state has its own UI",
@@ -311,9 +311,6 @@ const stateRunCopy = {
   designing: "Designing ",
   notDone: " did not finish",
   of: " of ",
-  promptEnd: ". Change only the code for this state.",
-  promptOf: " state of ",
-  promptStart: "Design the ",
   stop: "Stop",
   stopTip: "Stop this run and skip the other states",
 } as const;

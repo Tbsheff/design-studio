@@ -2,7 +2,6 @@ import type { CanvasSection } from "@design-studio/contracts/canvas-file";
 import type { ReactElement } from "react";
 
 import { stateCheckCopy, stateRunCopy } from "./copy.js";
-import { toEndedLine, toRunningLine } from "./state-run-model.js";
 import { useStateCheck } from "./use-state-check.js";
 
 interface StateCheckLineProps {
@@ -27,7 +26,7 @@ const StateCheckLine = ({
   if (phase.kind === "running") {
     return (
       <span className="canvas-state-check">
-        <span className="canvas-state-check-line">{toRunningLine(phase)}</span>
+        <span className="canvas-state-check-line">{phase.line}</span>
         <button
           type="button"
           className="canvas-state-check-design"
@@ -44,9 +43,12 @@ const StateCheckLine = ({
     <span className="canvas-state-check">
       <span className="canvas-state-check-line">{check.line}</span>
       {phase.kind === "ended" && (
-        <span className="canvas-state-check-line">{toEndedLine(phase)}</span>
+        <span className="canvas-state-check-line">{phase.line}</span>
       )}
-      {check.plan !== null && (
+      {check.startError !== null && (
+        <span className="canvas-state-check-line">{check.startError}</span>
+      )}
+      {check.hasMissing && (
         <button
           type="button"
           className="canvas-state-check-design"

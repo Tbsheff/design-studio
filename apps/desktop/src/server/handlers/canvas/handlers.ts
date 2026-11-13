@@ -20,6 +20,7 @@ import {
 import { handle as exportFlowCanvasHandle } from "./export-flow.js";
 import { handle as getDocCanvasHandle } from "./get-doc.js";
 import { handle as getFlowVideoCanvasHandle } from "./get-flow-video.js";
+import { handle as importFrameCanvasHandle } from "./import-frame.js";
 import { handle as inspectLinkInteractionCanvasHandle } from "./inspect-link-interaction.js";
 import { handle as inspectCanvasHandle } from "./inspect.js";
 import { handle as listFlowLinksCanvasHandle } from "./list-flow-links.js";
@@ -57,6 +58,7 @@ const CanvasEntries = {
   exportFlowCanvas: { handle: exportFlowCanvasHandle },
   getDocCanvas: { handle: getDocCanvasHandle },
   getFlowVideoCanvas: { handle: getFlowVideoCanvasHandle },
+  importFrameCanvas: { handle: importFrameCanvasHandle },
   inspectCanvas: { handle: inspectCanvasHandle },
   inspectLinkInteractionCanvas: { handle: inspectLinkInteractionCanvasHandle },
   listFlowLinksCanvas: { handle: listFlowLinksCanvasHandle },

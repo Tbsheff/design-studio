@@ -77,6 +77,12 @@ const copy = {
   hand: "Hand",
   height: "Height",
   icon: "Icon",
+  imageDropAppNote:
+    "Screen drop works in HTML prototypes. In an app, use New screen.",
+  imageDropAsk: "Rebuild this screen. Add a note?",
+  imageDropFailed: "The screen was not added. Try again.",
+  imageDropHint: "Enter rebuilds the screen · Esc cancels",
+  imageDropPlaceholder: "Use our brand colors",
   inVariation: "Use in variation",
   insertAnIcon: "Insert an icon into the selected layer",
   insertIcon: "Insert icon",

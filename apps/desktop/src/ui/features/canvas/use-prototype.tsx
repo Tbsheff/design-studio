@@ -3,6 +3,7 @@ import type { PrototypeLink } from "@design-studio/contracts/links";
 import { Suspense, useCallback } from "react";
 import type { ReactNode } from "react";
 
+import { ImageDropGhost } from "./image-drop-ghost.js";
 import { PlayMode } from "./lazy-play-mode.js";
 import { PrototypeBar } from "./lazy-prototype-bar.js";
 import { LinkArrows } from "./link-arrows.js";
@@ -13,6 +14,7 @@ import { LinkedFramePrompt } from "./linked-frame-prompt.js";
 import { toLinkRectsInput } from "./prototype-links-input.js";
 import type { PrototypeOptions } from "./prototype-options-model.js";
 import { toFrameTitle, toLinkTitle } from "./prototype-titles-model.js";
+import { useImagePaste } from "./use-image-paste.js";
 import { useLinkRects } from "./use-link-rects.js";
 import type { LinkState } from "./use-link-rects.js";
 import { useLinkedFrame } from "./use-linked-frame.js";
@@ -131,6 +133,7 @@ const usePrototype = (options: PrototypeOptions): PrototypeParts => {
   const prototypeFile = usePrototypeFile(options);
   const view = usePrototypeView(options.on);
   const linked = useLinkedFrame(options);
+  const imageDrop = useImagePaste(options);
   const drag = usePrototypeDrag(options, linked.onDrop);
   const urlOf = usePrototypeUrls(options);
   const states = useLinkRects(toLinkRectsInput(options, prototypeFile));
@@ -161,6 +164,7 @@ const usePrototype = (options: PrototypeOptions): PrototypeParts => {
       {toBarNode(scene)}
       <LinkDragLine drag={drag.drag} />
       <LinkedFramePrompt control={linked} />
+      <ImageDropGhost control={imageDrop} />
       {view.playing && (
         <Suspense fallback={null}>
           <PlayMode

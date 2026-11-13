@@ -33,6 +33,7 @@ interface ChangedLayersResult {
 interface LineChange {
   readonly col: number;
   readonly isSameText: boolean;
+  readonly pairedLine: number | null;
 }
 
 interface ChangeBlock {
@@ -85,9 +86,14 @@ const toChangeCol = (before: string | null, after: string): number => {
   return at + 1;
 };
 
-const toLineChange = (before: string | null, after: string): LineChange => ({
+const toLineChange = (
+  before: string | null,
+  after: string,
+  pairedLine: number | null
+): LineChange => ({
   col: toChangeCol(before, after),
   isSameText: before !== null && toBareText([before]) === toBareText([after]),
+  pairedLine,
 });
 
 const toBlock = (draft: BlockDraft): ChangeBlock => {
@@ -95,7 +101,11 @@ const toBlock = (draft: BlockDraft): ChangeBlock => {
 
   for (const [index, line] of draft.addedLines.entries()) {
     const text = draft.addedText[index] ?? "";
-    added.set(line, toLineChange(draft.removedText[index] ?? null, text));
+    const pairedLine = draft.removed[index] ?? null;
+    added.set(
+      line,
+      toLineChange(draft.removedText[index] ?? null, text, pairedLine)
+    );
   }
 
   return {
@@ -226,6 +236,18 @@ const toEditKind = (
   return "style";
 };
 
+const isReplaced = (
+  change: FileChange,
+  block: ChangeBlock,
+  span: ElementSpan
+): boolean => {
+  const paired = block.added.get(span.start.line)?.pairedLine ?? null;
+
+  return change.before.some(
+    (old) => old.start.line === paired && old.tag === span.tag
+  );
+};
+
 const toAddedHit = (
   change: FileChange,
   block: ChangeBlock,
@@ -245,11 +267,35 @@ const toAddedHit = (
     toStartCount(change.after, block.added.keys()) >
     toStartCount(change.before, block.removed);
 
-  if (whole && isGrown) {
+  if (whole && isGrown && !isReplaced(change, block, whole)) {
     return [whole, "added"];
   }
 
   return [inner, toEditKind(inner, point, isSameText)];
+};
+
+const toNeighbor = (
+  spans: readonly ElementSpan[],
+  point: SpanPoint
+): ElementSpan | null => {
+  const key = toKey(point);
+
+  const [next] = spans
+    .filter((span) => toKey(span.start) >= key)
+    .toSorted(
+      (left, right) =>
+        toKey(left.start) - toKey(right.start) ||
+        toExtent(right) - toExtent(left)
+    );
+
+  const [last] = spans
+    .filter((span) => toKey(span.end) < key)
+    .toSorted(
+      (left, right) =>
+        toKey(right.end) - toKey(left.end) || toExtent(right) - toExtent(left)
+    );
+
+  return next ?? last ?? null;
 };
 
 const toRemovedHit = (
@@ -260,12 +306,18 @@ const toRemovedHit = (
   const point = { col: 1, line: block.at };
   const [inner] = toEnclosing(change.after, point);
 
-  if (!inner) {
-    return null;
+  if (gone > 0) {
+    const near = inner ?? toNeighbor(change.after, point);
+
+    if (!near) {
+      return null;
+    }
+
+    return [near, "removed"];
   }
 
-  if (gone > 0) {
-    return [inner, "removed"];
+  if (!inner) {
+    return null;
   }
 
   return [inner, toEditKind(inner, point, block.isSameText)];

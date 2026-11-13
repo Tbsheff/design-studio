@@ -1,4 +1,4 @@
-import { chordMatches, keyLabel } from "../../../shared/keymap.js";
+import { chordMatches } from "../../../shared/keymap.js";
 import type { KeyInput } from "../../../shared/keymap.js";
 import type { TidyFramesLayout } from "../../domain/tidy-frames-events.js";
 import { copy } from "./copy.js";
@@ -95,16 +95,12 @@ const toFrameAlignKeyLayout = (
   FRAME_ALIGN_ALL.find((tool) => chordMatches(tool.chord, event, mac))
     ?.layout ?? null;
 
-const toFrameAlignTip = (tool: FrameAlignTool, mac: boolean): string =>
-  `${tool.label}  ${keyLabel(tool.chord, mac)}`;
-
 export {
   FRAME_ALIGN_TOOLS,
   FRAME_SPREAD_TOOLS,
   isFrameAlignLayout,
   isFrameAlignReady,
   toFrameAlignKeyLayout,
-  toFrameAlignTip,
 };
 
 export type { FrameAlignLayout, FrameAlignTool };

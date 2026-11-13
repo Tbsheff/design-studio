@@ -74,7 +74,11 @@ const StageFrames = ({
         projectId={props.projectId}
         zoomPercent={stage.pz.zoomPercent}
       />
-      <FrameSelectionLayer layout={stage.canvasFrames.layout} origin={active} />
+      <FrameSelectionLayer
+        layout={stage.canvasFrames.layout}
+        origin={active}
+        removeFramesAt={wiring.removeFramesAt}
+      />
       <FrameSnapLayer origin={active} />
       {proto.artboard}
     </>

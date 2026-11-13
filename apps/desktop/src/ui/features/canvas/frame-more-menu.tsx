@@ -4,16 +4,9 @@ import type { KeyboardEvent, ReactElement } from "react";
 import { useCallback, useEffect } from "react";
 
 import { openPortDialog, portAvailable } from "../design-system/port-api.js";
-import { FrameMenuItemButton } from "./frame-menu-item.js";
-import {
-  menuKeys,
-  useCopyPngEntry,
-  useMenu,
-  useRedesignEntry,
-  useScreenEntry,
-  useTidyEntry,
-} from "./frame-menu-model.js";
-import { toMenuItems } from "./menu-items-model.js";
+import { menuKeys, toRootMenuItems, useMenu } from "./frame-menu-model.js";
+import { FrameMenuRows } from "./frame-menu-rows.js";
+import { useFrameMenuRows } from "./use-frame-menu-rows.js";
 import { usePortEntry } from "./use-port-entry.js";
 import { stop } from "./variation-model.js";
 
@@ -39,10 +32,13 @@ const FrameMoreMenu = ({
   const toggle = useCallback(() => setOpen((value) => !value), [setOpen]);
 
   const portEntry = usePortEntry(root, openPortDialog);
-  const screenEntry = useScreenEntry(root);
-  const copyPngEntry = useCopyPngEntry(root);
-  const redesignEntry = useRedesignEntry(path);
-  const tidyEntry = useTidyEntry(root);
+  let port: FrameMenuItem | null = null;
+
+  if (menu.open && portAvailable()) {
+    port = portEntry;
+  }
+
+  const rows = useFrameMenuRows({ own, path, port, root });
 
   const handleKeys = useCallback(
     (event: KeyboardEvent<HTMLElement>): void => menuKeys(event, close),
@@ -51,7 +47,7 @@ const FrameMoreMenu = ({
 
   useEffect(() => {
     if (menu.open && root.current) {
-      toMenuItems(root.current)[0]?.focus();
+      toRootMenuItems(root.current)[0]?.focus();
     }
   }, [menu.open, root]);
 
@@ -84,18 +80,7 @@ const FrameMoreMenu = ({
           aria-label={`${name} actions`}
           onKeyDown={handleKeys}
         >
-          {menu.open && portAvailable() && (
-            <FrameMenuItemButton entry={portEntry} close={close} />
-          )}
-          {redesignEntry && (
-            <FrameMenuItemButton entry={redesignEntry} close={close} />
-          )}
-          <FrameMenuItemButton entry={screenEntry} close={close} />
-          <FrameMenuItemButton entry={copyPngEntry} close={close} />
-          <FrameMenuItemButton entry={tidyEntry} close={close} />
-          {own.map((item) => (
-            <FrameMenuItemButton key={item.id} entry={item} close={close} />
-          ))}
+          <FrameMenuRows rows={rows} close={close} />
         </div>
       )}
     </div>

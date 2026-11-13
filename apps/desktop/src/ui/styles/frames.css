@@ -480,22 +480,41 @@ body[class*="frame-resize-"] .frame {
   position: absolute;
 }
 
-.frame-select-count {
+.frame-select-root {
   position: absolute;
   right: 0;
   bottom: 100%;
-  height: 20px;
   margin-bottom: 4px;
-  padding: 0 var(--s-2);
+  transform: scale(var(--inv-zoom, 1));
+  transform-origin: 100% 100%;
+  pointer-events: auto;
+}
+
+.frame-select-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 20px;
+  padding: 0 var(--s-1) 0 var(--s-2);
+  border: 0;
   border-radius: var(--r-xs);
   background: var(--accent);
   color: var(--on-accent);
   font: var(--w-medium) var(--t-xs) / 20px var(--font);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  transform: scale(var(--inv-zoom, 1));
-  transform-origin: 100% 100%;
-  pointer-events: auto;
+  cursor: pointer;
+}
+
+.frame-select-count:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.frame-select-menu {
+  left: auto;
+  right: 0;
+  transform-origin: top right;
 }
 
 .frame-label.selected .frame-name {
@@ -504,50 +523,4 @@ body[class*="frame-resize-"] .frame {
 
 .frame-dragging .frame-select-layer {
   visibility: hidden;
-}
-
-.frame-align-bar {
-  position: absolute;
-  left: 0;
-  bottom: 100%;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  margin-bottom: 4px;
-  padding: 2px;
-  border-radius: var(--r-md);
-  background: var(--surface-raised);
-  box-shadow: var(--shadow-pop);
-  transform: scale(var(--inv-zoom, 1)) translateY(-28px);
-  transform-origin: 0 100%;
-  pointer-events: auto;
-}
-
-.frame-align-tool {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border: 0;
-  border-radius: var(--r-control-sm);
-  background: transparent;
-  color: var(--text-2);
-  cursor: pointer;
-}
-
-.frame-align-tool:hover:not(:disabled) {
-  background: var(--surface-hover);
-  color: var(--text);
-}
-
-.frame-align-tool:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
-.frame-align-sep {
-  width: 1px;
-  height: 16px;
-  margin: 0 2px;
-  background: var(--line);
 }

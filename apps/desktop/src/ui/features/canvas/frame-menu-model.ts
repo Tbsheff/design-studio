@@ -53,6 +53,15 @@ const toMenuStep = (
   return null;
 };
 
+const MENU_ROLE = '[role="menu"]';
+
+const toRootMenuItems = (root: HTMLElement): HTMLButtonElement[] => {
+  const items = toMenuItems(root);
+  const menu = items[0]?.closest(MENU_ROLE) ?? null;
+
+  return items.filter((item) => item.closest(MENU_ROLE) === menu);
+};
+
 const menuKeys = (
   event: ReactKeyboardEvent<HTMLElement>,
   close: (refocus: boolean) => void
@@ -61,7 +70,7 @@ const menuKeys = (
     close(false);
   }
 
-  const items = toMenuItems(event.currentTarget);
+  const items = toRootMenuItems(event.currentTarget);
   const index = items.indexOf(document.activeElement as HTMLButtonElement);
   const target = toMenuStep(event.key, Math.max(0, index), items.length);
 
@@ -211,6 +220,7 @@ const openScreenCreate = (): void => {
 export {
   menuKeys,
   openScreenCreate,
+  toRootMenuItems,
   useCopyPngEntry,
   useMenu,
   useRedesignEntry,

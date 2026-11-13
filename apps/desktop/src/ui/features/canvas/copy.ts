@@ -159,6 +159,11 @@ const copy = {
   saveTheLinks: "Save the links found in the page code",
   select: "Select",
   selectLayer: "Select layer",
+  selectionPicture: {
+    label: "Picture of selection",
+    remove: "Leave the picture out of this run",
+    tip: "The agent gets a picture of the selected layers as you see them",
+  },
   selectionPrompt: {
     ask: "Ask",
     askTip: "Ask the agent to change the selection  ⌘I",

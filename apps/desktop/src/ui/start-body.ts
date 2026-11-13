@@ -10,6 +10,7 @@ type StartBody = Pick<
   | "editScope"
   | "effort"
   | "focusPaths"
+  | "isSelectionPictureOn"
   | "lean"
   | "level"
   | "mentions"
@@ -30,6 +31,7 @@ const startBody = (req: StartInput): StartBody => ({
   editScope: req.editScope,
   effort: req.effort,
   focusPaths: req.focusPaths,
+  isSelectionPictureOn: req.isSelectionPictureOn,
   lean: req.lean,
   level: req.level,
   mentions: req.mentions,

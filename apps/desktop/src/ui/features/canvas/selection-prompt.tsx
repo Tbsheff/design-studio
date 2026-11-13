@@ -38,6 +38,7 @@ const SelectionPrompt = ({
       )}
       {rect && phase.kind === "open" && (
         <SelectionPromptBox
+          count={selection.length}
           isRunning={isRunning}
           label={label}
           place={place}

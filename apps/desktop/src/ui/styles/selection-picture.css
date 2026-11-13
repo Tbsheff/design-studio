@@ -1,0 +1,15 @@
+.selection-prompt-foot .selection-picture-chip {
+  margin-right: auto;
+  margin-left: 4px;
+  border-color: var(--float-line);
+  background: transparent;
+  color: var(--float-fg-muted);
+}
+
+.selection-prompt-foot .selection-picture-chip .chip-x {
+  color: var(--float-fg-muted);
+}
+
+.selection-prompt-foot .selection-picture-chip .chip-x:hover {
+  color: var(--float-fg);
+}

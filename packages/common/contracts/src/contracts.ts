@@ -443,6 +443,7 @@ export interface RunRequest {
   reference?: ReferenceElement;
   selection?: SelectionContext[];
   selectionPicture?: string;
+  isSelectionPictureOn?: boolean;
   attachmentIds?: string[];
   comments?: RunComment[];
   commentIds?: string[];

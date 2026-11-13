@@ -11,6 +11,7 @@ import type { PromptPlacement, PromptRect } from "./selection-prompt-model.js";
 import { SelectionPromptRow } from "./selection-prompt-row.js";
 
 interface SelectionPromptBoxProps {
+  readonly count: number;
   readonly isRunning: boolean;
   readonly label: string;
   readonly onChat: () => void;
@@ -25,6 +26,7 @@ interface SelectionPromptBoxProps {
 }
 
 const SelectionPromptBox = ({
+  count,
   isRunning,
   label,
   onChat,
@@ -71,7 +73,7 @@ const SelectionPromptBox = ({
         onSubmit={onSubmit}
         onText={onText}
       />
-      <SelectionPromptFoot onChat={onChat} onClose={onClose} />
+      <SelectionPromptFoot count={count} onChat={onChat} onClose={onClose} />
     </div>
   );
 };

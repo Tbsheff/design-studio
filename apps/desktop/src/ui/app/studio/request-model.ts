@@ -9,6 +9,7 @@ import type {
 
 import type { ComposerMode } from "../../features/chat/run-settings";
 import type { RunView } from "../../features/chat/run-state-model";
+import { isSelectionPictureOn } from "../../platform/selection-picture";
 
 interface ComposeInput {
   prompt: string;
@@ -59,6 +60,7 @@ const composeRequest = (input: ComposeInput): RunRequest => {
 
   if (input.selection.length > 0) {
     request.selection = input.selection;
+    request.isSelectionPictureOn = isSelectionPictureOn();
   }
 
   if (input.attachmentIds.length > 0) {

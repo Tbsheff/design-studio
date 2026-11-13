@@ -67,19 +67,15 @@ const isLeaveKey = (event: KeyboardEvent): boolean => {
 };
 
 const routeModeKey = (event: KeyboardEvent): void => {
-  if (event.defaultPrevented) {
-    return;
-  }
-
-  if (isScaleKey(event)) {
-    event.preventDefault();
-    requestScaleMode();
-
-    return;
-  }
-
   if (isLeaveKey(event)) {
     stopScaleMode();
+
+    return;
+  }
+
+  if (isScaleKey(event) && !event.defaultPrevented) {
+    event.preventDefault();
+    requestScaleMode();
   }
 };
 

@@ -28,4 +28,9 @@ export type {
 
 export { RunDraftStore } from "./run-draft-store.js";
 
-export { setDraftComplete, setDraftText } from "./run-draft-map.js";
+export {
+  hasDraftBase,
+  setDraftBase,
+  setDraftComplete,
+  setDraftText,
+} from "./run-draft-map.js";

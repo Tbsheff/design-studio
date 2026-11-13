@@ -3,13 +3,19 @@ import path from "node:path";
 import type { SDKMessage } from "@anthropic-ai/claude-agent-sdk";
 
 import type { DriverInput } from "./lifecycle.js";
-import { stopDraft, insertDraftChunk } from "./run-draft-feed.js";
-import type { DraftTarget } from "./run-draft-feed.js";
+import {
+  insertDraftChunk,
+  startDraftBase,
+  stopDraft,
+} from "./run-draft-feed.js";
+import type { DraftKind, DraftTarget } from "./run-draft-feed.js";
 
 interface BlockDraft {
   readonly contentKey: string;
   json: string;
+  readonly kind: DraftKind;
   offset: number | null;
+  oldString: string | null;
   isClosed: boolean;
   path: string | null;
   readonly toolUseId: string;
@@ -22,10 +28,17 @@ interface SafeEnd {
 
 type StreamEvent = Extract<SDKMessage, { type: "stream_event" }>["event"];
 
-const CONTENT_KEYS = new Map([
-  ["Edit", "new_string"],
-  ["Write", "content"],
+const CONTENT_KEYS = new Map<string, DraftKind>([
+  ["Edit", "edit"],
+  ["Write", "write"],
 ]);
+
+const KEY_OF_KIND: Record<DraftKind, string> = {
+  edit: "new_string",
+  write: "content",
+};
+
+const OLD_STRING = /"old_string"\s*:\s*"/u;
 
 const UNICODE_ESCAPE_SIZE = 6;
 
@@ -63,6 +76,7 @@ const toTarget = (input: DriverInput): DraftTarget => ({
   directionId: input.ctx.direction.id,
   projectId: input.ctx.project.id,
   runId: input.runId,
+  workTree: input.ctx.direction.workTree,
 });
 
 const toEscapeSize = (raw: string, index: number): number => {
@@ -157,10 +171,41 @@ const toBlockPath = (input: DriverInput, block: BlockDraft): string | null => {
   return toRelativePath(input, raw);
 };
 
+const toOldString = (block: BlockDraft): string | null => {
+  if (block.oldString !== null || block.kind !== "edit") {
+    return block.oldString;
+  }
+
+  const match = OLD_STRING.exec(block.json);
+
+  if (match === null) {
+    return null;
+  }
+
+  const start = match.index + match[0].length;
+  const safe = toSafeEnd(block.json, start);
+
+  if (!safe.isClosed) {
+    return null;
+  }
+
+  return fromJsonString(block.json.slice(start, safe.end));
+};
+
 const toNewText = (input: DriverInput, block: BlockDraft): string => {
+  const known = block.path;
+
   block.path = toBlockPath(input, block);
 
+  if (known === null && block.path !== null && block.kind === "edit") {
+    startDraftBase(toTarget(input), block.path);
+  }
+
   const offset = toContentOffset(block);
+
+  if (offset !== null) {
+    block.oldString = toOldString(block);
+  }
 
   if (offset === null || block.isClosed || block.path === null) {
     return "";
@@ -185,17 +230,19 @@ const startBlock = (input: DriverInput, event: StreamEvent): void => {
     return;
   }
 
-  const contentKey = CONTENT_KEYS.get(block.name) ?? null;
+  const toolKind = CONTENT_KEYS.get(block.name) ?? null;
 
-  if (contentKey === null) {
+  if (toolKind === null) {
     return;
   }
 
   toBlocks(input.runId).set(event.index, {
-    contentKey,
+    contentKey: KEY_OF_KIND[toolKind],
     isClosed: false,
     json: "",
+    kind: toolKind,
     offset: null,
+    oldString: null,
     path: null,
     toolUseId: block.id,
   });
@@ -219,7 +266,16 @@ const updateBlock = (input: DriverInput, event: StreamEvent): void => {
   const text = toNewText(input, block);
 
   if (block.path !== null) {
-    insertDraftChunk(toTarget(input), block.toolUseId, block.path, text);
+    insertDraftChunk(
+      toTarget(input),
+      {
+        kind: block.kind,
+        oldString: block.oldString,
+        path: block.path,
+        toolUseId: block.toolUseId,
+      },
+      text
+    );
   }
 };
 

@@ -15,6 +15,7 @@ import { getDocCanvas } from "./get-doc.js";
 import { getFlowVideoCanvas } from "./get-flow-video.js";
 import { importFrameCanvas } from "./import-frame.js";
 import { inspectLinkInteractionCanvas } from "./inspect-link-interaction.js";
+import { inspectStateFramesCanvas } from "./inspect-state-frames.js";
 import { inspectCanvas } from "./inspect.js";
 import { listFlowLinksCanvas } from "./list-flow-links.js";
 import { listFlowParamsCanvas } from "./list-flow-params.js";
@@ -52,6 +53,7 @@ const CanvasActions = {
   importFrameCanvas,
   inspectCanvas,
   inspectLinkInteractionCanvas,
+  inspectStateFramesCanvas,
   listFlowLinksCanvas,
   listFlowParamsCanvas,
   listFrameStatesCanvas,

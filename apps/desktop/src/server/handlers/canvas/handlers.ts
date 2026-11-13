@@ -27,6 +27,7 @@ import { handle as getDocCanvasHandle } from "./get-doc.js";
 import { handle as getFlowVideoCanvasHandle } from "./get-flow-video.js";
 import { handle as importFrameCanvasHandle } from "./import-frame.js";
 import { handle as inspectLinkInteractionCanvasHandle } from "./inspect-link-interaction.js";
+import { handle as inspectStateFramesCanvasHandle } from "./inspect-state-frames.js";
 import { handle as inspectCanvasHandle } from "./inspect.js";
 import { handle as listFlowLinksCanvasHandle } from "./list-flow-links.js";
 import { handle as listFlowParamsCanvasHandle } from "./list-flow-params.js";
@@ -73,6 +74,7 @@ const CanvasEntries = {
   importFrameCanvas: { handle: importFrameCanvasHandle },
   inspectCanvas: { handle: inspectCanvasHandle },
   inspectLinkInteractionCanvas: { handle: inspectLinkInteractionCanvasHandle },
+  inspectStateFramesCanvas: { handle: inspectStateFramesCanvasHandle },
   listFlowLinksCanvas: { handle: listFlowLinksCanvasHandle },
   listFlowParamsCanvas: { handle: listFlowParamsCanvasHandle },
   listFrameStatesCanvas: { handle: listFrameStatesCanvasHandle },

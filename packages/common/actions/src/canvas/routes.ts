@@ -107,6 +107,12 @@ const routes = {
     method: "GET",
     path: "/api/projects/:projectId/link-interactions",
   },
+  inspectStateFramesCanvas: {
+    id: "canvas.inspectStateFrames",
+    invalidates: [],
+    method: "GET",
+    path: "/api/projects/:projectId/canvas/state-frames",
+  },
   listFlowLinksCanvas: {
     id: "canvas.listFlowLinks",
     invalidates: [],

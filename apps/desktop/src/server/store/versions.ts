@@ -27,6 +27,7 @@ import { CANVAS_FILE } from "@design-studio/contracts/canvas-file";
 import { LINKS_FILE } from "@design-studio/contracts/links";
 
 import type {
+  FileContents,
   SessionEndResult,
   SessionSpan,
   VersionStore,
@@ -60,6 +61,7 @@ import type { CommitInfo, GitScope, TreeEntry } from "../platform/git/index.js";
 import { createKeyedMutex } from "../platform/mutex/index.js";
 import { diffVersionFiles } from "./version-diff.js";
 import { createDirectStore } from "./version-direct.js";
+import type { CommitFiles } from "./version-direct.js";
 import { createExternalStatus } from "./version-external-status.js";
 import { isExternalTree, toCleanStatus } from "./version-external.js";
 import {
@@ -1445,7 +1447,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
   const commitDirect = async (
     project: Project,
     direction: Direction,
-    paths: string[],
+    files: CommitFiles,
     title: string,
     meta: VersionMeta
   ): Promise<Version | null | undefined> => {
@@ -1456,7 +1458,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     }
 
     try {
-      const built = await direct.buildCommit(project, direction, head, paths);
+      const built = await direct.buildCommit(project, direction, head, files);
 
       if (built === null) {
         return null;
@@ -1473,7 +1475,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
         built.changed
       );
 
-      direct.committed(project, direction, head, version.id, paths);
+      direct.committed(project, direction, head, version.id, files.paths);
 
       return version;
     } catch (error) {
@@ -1761,12 +1763,11 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       direction: Direction,
       relative: string | string[],
       title: string,
-      meta: VersionMeta
+      meta: VersionMeta,
+      contents: FileContents = null
     ): Promise<Version | null> {
       externalStatus.forget(lockKey(project, direction));
-
       const listed = Array.isArray(relative) ? relative : [relative];
-
       const paths = [
         ...listed,
         ...layoutFilesOf(project).filter(
@@ -1774,10 +1775,11 @@ export function createVersionStore(config: ServerConfig): VersionStore {
             !listed.includes(file) && existsSync(layoutOf(direction, file))
         ),
       ];
+      const files = { contents, paths };
 
       return locked(project, direction, async () => {
         const fast = (await rawFastOk(project, direction))
-          ? await commitDirect(project, direction, paths, title, meta)
+          ? await commitDirect(project, direction, files, title, meta)
           : undefined;
 
         if (fast !== undefined) {

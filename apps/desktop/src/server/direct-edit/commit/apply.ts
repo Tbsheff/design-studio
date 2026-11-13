@@ -21,7 +21,6 @@ import {
   publishVersion,
   saveDeferred,
 } from "./publish.js";
-import { savesSettled } from "./save-queue.js";
 
 async function unchangedResult(
   deps: DirectEditDeps,
@@ -53,10 +52,7 @@ async function writeAndCommit(
     project,
     direction,
     () => [domPatchOf(request, patch)],
-    async () => {
-      await savesSettled(project.id);
-      await writeAtomic(target.file, patch.code);
-    }
+    () => writeAtomic(target.file, patch.code)
   );
 
   return saveDeferred(
@@ -65,7 +61,8 @@ async function writeAndCommit(
     direction,
     [target.relative],
     editTitle(patch.tag, patch.applied, request),
-    { kind: "manual", prompt: editSummary(request) }
+    { kind: "manual", prompt: editSummary(request) },
+    new Map([[target.relative, patch.code]])
   );
 }
 

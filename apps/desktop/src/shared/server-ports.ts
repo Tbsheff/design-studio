@@ -192,12 +192,15 @@ interface ProjectStore {
   writeDesignMd: (projectId: string, content: string) => Promise<void>;
 }
 
+type FileContents = ReadonlyMap<string, string> | null;
+
 type CommitFileArgs = [
   project: Project,
   direction: Direction,
   relativePath: string | string[],
   title: string,
   meta: VersionMeta,
+  contents?: FileContents,
 ];
 
 type EndSessionArgs = [
@@ -427,6 +430,7 @@ export type {
   AxeViolation,
   DesignSystemPromptContext,
   DiffResult,
+  FileContents,
   InspectResult,
   MentionFile,
   PeekOptions,

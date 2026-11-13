@@ -11,6 +11,7 @@ import {
 } from "node:fs/promises";
 import path from "node:path";
 
+import type { FileContents } from "../../shared/server-ports.js";
 import {
   GITLINK_MODE,
   SYMLINK_MODE,
@@ -286,6 +287,23 @@ export async function readWorkFile(
     mode: info.mode & 0o100 ? "100755" : "100644",
     body: await readFile(absolute),
   };
+}
+
+export function toCommitFile(
+  workTree: string,
+  relative: string,
+  {
+    contents,
+    entry,
+  }: { readonly contents: FileContents; readonly entry: TreeEntry | null }
+): Promise<WorkFile | "missing" | "folder"> {
+  const snapshot = contents?.get(relative) ?? null;
+
+  if (snapshot === null || entry === null) {
+    return readWorkFile(workTree, relative);
+  }
+
+  return Promise.resolve({ mode: entry.mode, body: Buffer.from(snapshot) });
 }
 
 export function sameAsWork(entry: TreeEntry, file: WorkFile): boolean {

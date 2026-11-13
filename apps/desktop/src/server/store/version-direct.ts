@@ -6,6 +6,7 @@ import type {
   WorkTreeStatus,
 } from "@design-studio/contracts";
 
+import type { FileContents } from "../../shared/server-ports.js";
 import { comparePaths } from "../platform/git/index.js";
 import type { ObjectStore, TreeEntry } from "../platform/git/index.js";
 import {
@@ -16,6 +17,7 @@ import {
   lookupPath,
   readWorkFile,
   sameAsWork,
+  toCommitFile,
   updateTree,
   writeWorkFile,
 } from "./version-fast.js";
@@ -60,6 +62,11 @@ export type DirectStatus = WorkTreeStatus | "git" | "full";
 export interface DirectCommit {
   tree: string;
   changed: string[];
+}
+
+export interface CommitFiles {
+  readonly contents: FileContents;
+  readonly paths: string[];
 }
 
 const GITIGNORE = /(^|\/)\.git(?:ignore|attributes)$/;
@@ -335,7 +342,7 @@ export function createDirectStore(deps: DirectDeps) {
       project: Project,
       direction: Direction,
       head: string,
-      paths: string[]
+      { contents, paths }: CommitFiles
     ): Promise<DirectCommit | null> {
       const store = deps.objects(project);
       const headTree = await deps.treeOf(project, head);
@@ -345,7 +352,10 @@ export function createDirectStore(deps: DirectDeps) {
         if (scoped(project, [relative]).length === 0)
           throw new FastPathUnavailable(`${relative} is never tracked`);
         const entry = await lookupPath(store, headTree, relative);
-        const file = await readWorkFile(direction.workTree, relative);
+        const file = await toCommitFile(direction.workTree, relative, {
+          contents,
+          entry,
+        });
         if (
           !entry ||
           entry.mode === "40000" ||

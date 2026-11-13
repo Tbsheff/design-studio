@@ -5,6 +5,7 @@ import type {
   VersionMeta,
 } from "@design-studio/contracts";
 
+import type { FileContents } from "../../../shared/server-ports.js";
 import {
   announcePlanned,
   noteTreeWrite,
@@ -76,7 +77,8 @@ export function saveDeferred(
   direction: Direction,
   relatives: string[],
   title: string,
-  meta: VersionMeta
+  meta: VersionMeta,
+  contents: FileContents = null
 ): Version {
   const failed = (p: Project, d: Direction, message: string) =>
     deps.bus.emit({
@@ -97,7 +99,8 @@ export function saveDeferred(
     direction,
     relatives,
     title,
-    stampOrigin(meta)
+    stampOrigin(meta),
+    contents
   );
 }
 

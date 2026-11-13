@@ -7,7 +7,10 @@ import type {
   VersionMeta,
 } from "@design-studio/contracts";
 
-import type { VersionStore } from "../../../shared/server-ports.js";
+import type {
+  FileContents,
+  VersionStore,
+} from "../../../shared/server-ports.js";
 import { bindSaveLanes } from "../../events/index.js";
 import { logError } from "../../platform/logger/index.js";
 
@@ -30,6 +33,7 @@ interface Lane {
 }
 
 interface SaveJob {
+  readonly contents: FileContents;
   readonly deps: SaveDeps;
   readonly direction: Direction;
   readonly lane: Lane;
@@ -125,7 +129,8 @@ const runSave = async (job: SaveJob): Promise<void> => {
     job.direction,
     job.relatives,
     job.title,
-    job.meta
+    job.meta,
+    job.contents
   );
   const version = committed ?? null;
 
@@ -176,7 +181,8 @@ const saveLater = (
   direction: Direction,
   relatives: string[],
   title: string,
-  meta: VersionMeta
+  meta: VersionMeta,
+  contents: FileContents = null
 ): Version => {
   const pending: Version = {
     changedFiles: relatives,
@@ -190,6 +196,7 @@ const saveLater = (
 
   const lane = laneOf(project.id);
   const job: SaveJob = {
+    contents,
     deps,
     direction,
     lane,

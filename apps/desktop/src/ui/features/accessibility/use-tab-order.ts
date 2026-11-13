@@ -177,6 +177,13 @@ const useTabOrder = (options: TabOrderOptions): TabOrder => {
   return { badges, error: load.error };
 };
 
-export { useTabOrder };
+export { framesOf, frontOf, rectsOf, useTabOrder };
 
-export type { PlacedBadge, TabOrder, TabOrderFrames, TabOrderOptions };
+export type {
+  BadgeRect,
+  FrontSource,
+  PlacedBadge,
+  TabOrder,
+  TabOrderFrames,
+  TabOrderOptions,
+};

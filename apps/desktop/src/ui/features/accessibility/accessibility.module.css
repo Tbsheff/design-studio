@@ -152,3 +152,122 @@ figure.stop {
   border-radius: 4px;
   background: var(--surface-2, transparent);
 }
+
+.overlayMenu {
+  position: relative;
+}
+
+.overlayMenuPop {
+  position: absolute;
+  top: calc(100% + var(--s-1));
+  right: 0;
+  z-index: 40;
+  min-width: 160px;
+}
+
+.reader {
+  position: absolute;
+  top: 0;
+  left: calc(100% + 16px);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: 300px;
+  max-height: 640px;
+  overflow: hidden;
+  border-radius: var(--r-lg);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-pop);
+  color: var(--text);
+  transform-origin: top left;
+  pointer-events: auto;
+}
+
+.readerHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  height: 32px;
+  padding: 0 var(--s-2);
+  box-shadow: inset 0 -1px 0 var(--line);
+  font-size: var(--t-xs);
+  font-weight: var(--w-medium);
+}
+
+.readerCount {
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.readerLines {
+  margin: 0;
+  padding: var(--s-1);
+  overflow: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+}
+
+.readerRow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  width: 100%;
+  min-height: 28px;
+  padding-inline-end: var(--s-2);
+  border: 0;
+  border-radius: var(--r-control-sm);
+  background: transparent;
+  color: var(--text);
+  font-size: var(--t-xs);
+  text-align: left;
+  cursor: pointer;
+}
+
+.readerRow:is(:hover, :focus-visible) {
+  background: var(--surface-hover);
+  outline: none;
+}
+
+.readerText {
+  color: var(--text-3);
+}
+
+.readerMissing {
+  color: var(--danger);
+}
+
+.readerLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.readerWarn {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--danger);
+  color: var(--accent-text, #fff);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.readerNote {
+  margin: 0;
+  padding: var(--s-1) var(--s-2) var(--s-2);
+  box-shadow: inset 0 1px 0 var(--line);
+  color: var(--text-3);
+  font-size: var(--t-2xs);
+  text-wrap: pretty;
+}
+
+.readerOutline {
+  position: absolute;
+  border: 2px solid var(--accent);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}

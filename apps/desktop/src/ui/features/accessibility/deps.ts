@@ -29,6 +29,8 @@ export type {
   WireOutput,
 } from "@design-studio/actions/_core/action";
 
+export type { listReaderLinesAccessibility } from "@design-studio/actions/accessibility/list-reader-lines";
+
 export type { runVisionAccessibility } from "@design-studio/actions/accessibility/run-vision";
 
 export type {

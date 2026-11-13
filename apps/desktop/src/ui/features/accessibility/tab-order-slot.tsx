@@ -2,7 +2,7 @@ import { Suspense, lazy } from "react";
 import type { ReactElement } from "react";
 
 import type { TabOrderLayerProps } from "./tab-order-layer.js";
-import { useTabOrderOn } from "./tab-order-store.js";
+import { useOverlayMode } from "./tab-order-store.js";
 
 interface TabOrderSlotProps extends Omit<
   TabOrderLayerProps,
@@ -19,6 +19,12 @@ const TabOrderLayer = lazy(async () => {
   return { default: loaded.TabOrderLayer };
 });
 
+const ReaderLayer = lazy(async () => {
+  const loaded = await import("./reader-layer.js");
+
+  return { default: loaded.ReaderLayer };
+});
+
 const roundOf = (change: TabOrderSlotProps["lastChange"]): string => {
   if (change === null) {
     return "0";
@@ -28,16 +34,22 @@ const roundOf = (change: TabOrderSlotProps["lastChange"]): string => {
 };
 
 const TabOrderSlot = (props: TabOrderSlotProps): ReactElement | null => {
-  const isOn = useTabOrderOn();
+  const mode = useOverlayMode();
   const { directionId } = props;
 
-  if (!isOn || props.isBlocked || directionId === null) {
+  if (mode === "off" || props.isBlocked || directionId === null) {
     return null;
+  }
+
+  let Layer = TabOrderLayer;
+
+  if (mode === "reader") {
+    Layer = ReaderLayer;
   }
 
   return (
     <Suspense fallback={null}>
-      <TabOrderLayer
+      <Layer
         directionId={directionId}
         frameId={props.frameId}
         frames={props.frames}

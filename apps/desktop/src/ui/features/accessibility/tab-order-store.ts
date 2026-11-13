@@ -1,15 +1,48 @@
 import { createLiveStore, useLive } from "./deps.js";
 
-const tabOrderStore = createLiveStore(false);
+type OverlayMode = "off" | "reader" | "tabs";
+
+const overlayStore = createLiveStore<OverlayMode>("off");
+
+const toToggled = (mode: OverlayMode): OverlayMode => {
+  if (overlayStore.get() === mode) {
+    return "off";
+  }
+
+  return mode;
+};
 
 const setTabOrder = (isOn: boolean): void => {
-  tabOrderStore.set(isOn);
+  if (isOn) {
+    overlayStore.set("tabs");
+
+    return;
+  }
+
+  overlayStore.set("off");
 };
 
 const toggleTabOrder = (): void => {
-  tabOrderStore.set(!tabOrderStore.get());
+  overlayStore.set(toToggled("tabs"));
 };
 
-const useTabOrderOn = (): boolean => useLive(tabOrderStore);
+const toggleReader = (): void => {
+  overlayStore.set(toToggled("reader"));
+};
 
-export { setTabOrder, toggleTabOrder, useTabOrderOn };
+const useOverlayMode = (): OverlayMode => useLive(overlayStore);
+
+const useTabOrderOn = (): boolean => useOverlayMode() === "tabs";
+
+const useReaderOn = (): boolean => useOverlayMode() === "reader";
+
+export {
+  setTabOrder,
+  toggleReader,
+  toggleTabOrder,
+  useOverlayMode,
+  useReaderOn,
+  useTabOrderOn,
+};
+
+export type { OverlayMode };

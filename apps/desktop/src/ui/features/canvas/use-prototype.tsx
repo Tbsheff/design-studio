@@ -119,6 +119,7 @@ const toBarNode = (scene: PrototypeScene): ReactNode => {
         states={states}
         frames={options.shown}
         startId={prototypeFile.startId}
+        activeId={options.active.id}
         selected={selected}
         hasSelection={single !== null}
         selection={single}

@@ -11,6 +11,7 @@ import { pickEditing } from "./link-view.js";
 import { PrototypeBarLinks } from "./prototype-bar-links.js";
 import { toProtoHint } from "./prototype-model.js";
 import { PrototypeStartSelect } from "./prototype-start-select.js";
+import { StartPointsMenu } from "./start-points-menu.js";
 import type { LinkState } from "./use-link-rects.js";
 
 interface BarProps {
@@ -19,12 +20,41 @@ interface BarProps {
   readonly states: LinkState[];
   readonly frames: CanvasFrame[];
   readonly startId: string;
+  readonly activeId: string | null;
   readonly selected: LinkState | null;
   readonly hasSelection: boolean;
   readonly selection: SelectionContext | null;
   readonly linkTitle: (link: PrototypeLink) => string;
   readonly onError: (message: string) => void;
 }
+
+const toStartNodes = (
+  bar: BarProps,
+  toTitle: (frame: CanvasFrame) => string
+): ReactElement => {
+  const { onError } = bar;
+
+  return (
+    <>
+      <PrototypeStartSelect
+        projectId={bar.projectId}
+        file={bar.file}
+        frames={bar.frames}
+        startId={bar.startId}
+        toTitle={toTitle}
+        onError={onError}
+      />
+      <StartPointsMenu
+        projectId={bar.projectId}
+        file={bar.file}
+        frames={bar.frames}
+        activeId={bar.activeId}
+        toTitle={toTitle}
+        onError={onError}
+      />
+    </>
+  );
+};
 
 const PrototypeBar = (bar: BarProps): ReactElement => {
   const { projectId, file, states, frames, selected, onError } = bar;
@@ -66,14 +96,7 @@ const PrototypeBar = (bar: BarProps): ReactElement => {
       data-testid="proto-bar"
       onPointerDown={handleBarPointerDown}
     >
-      <PrototypeStartSelect
-        projectId={projectId}
-        file={file}
-        frames={frames}
-        startId={bar.startId}
-        toTitle={toTitle}
-        onError={onError}
-      />
+      {toStartNodes(bar, toTitle)}
       <div className="toolbar-sep" />
       {editing && (
         <LinkEditor

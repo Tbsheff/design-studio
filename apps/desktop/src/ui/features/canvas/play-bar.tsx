@@ -13,10 +13,12 @@ import {
   toDeviceValue,
   toStoredDevice,
 } from "./device-frame-model.js";
+import { PlayStartMenu } from "./play-start-menu.js";
 import { PlayThemeButton } from "./play-theme-button.js";
 import { protoCopy } from "./proto-copy.js";
 import { RotateButton } from "./rotate-button.js";
 import type { PlayTheme } from "./use-play-theme.js";
+import type { PlayStart } from "./use-start-points.js";
 
 interface PlayBarProps {
   readonly title: string;
@@ -26,6 +28,7 @@ interface PlayBarProps {
   readonly orientation: DeviceOrientation;
   readonly isHints: boolean;
   readonly theme: PlayTheme;
+  readonly start: PlayStart;
   readonly onHints: (next: boolean) => void;
   readonly onDevice: (device: DeviceFrameId | null) => void;
   readonly onRotate: () => void;
@@ -50,6 +53,7 @@ const PlayBar = ({
   orientation,
   isHints,
   theme,
+  start,
   onHints,
   onDevice,
   onRotate,
@@ -108,6 +112,7 @@ const PlayBar = ({
         orientation={orientation}
         onRotate={onRotate}
       />
+      <PlayStartMenu start={start} />
       <button type="button" className="btn small ghost" onClick={onRestart}>
         <Icon name="restore" size={12} />
         {copy.restart} <kbd>{copy.keyLetterR}</kbd>

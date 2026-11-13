@@ -63,7 +63,11 @@ import { diffVersionFiles } from "./version-diff.js";
 import { createDirectStore } from "./version-direct.js";
 import type { CommitFiles } from "./version-direct.js";
 import { createExternalStatus } from "./version-external-status.js";
-import { isExternalTree, toCleanStatus } from "./version-external.js";
+import {
+  isExternalTree,
+  toCleanStatus,
+  toStudioExcludes,
+} from "./version-external.js";
 import {
   FastPathUnavailable,
   diffTrees,
@@ -73,7 +77,8 @@ import {
 import {
   listChangedAmong,
   listStageable,
-  updateIndexPaths,
+  updateLayoutPaths,
+  updateSplitPaths,
 } from "./version-index-paths.js";
 import { toOriginMeta } from "./version-origin.js";
 import { seedFromUserRepo } from "./version-seed.js";
@@ -116,29 +121,6 @@ const LOOSE_OBJECTS_TO_PACK = 1000;
 const APP_MAX_TRACKED_BYTES = 2 * 1024 * 1024;
 const RAW_ATTRIBUTES = "* -text -filter -ident -working-tree-encoding\n";
 const STAT_BATCH = 256;
-
-const APP_EXCLUDES = [
-  ".studio/",
-  "*.onnx",
-  "*.mlmodelc/",
-  "*.mlpackage/",
-  "*.sqlite",
-  "*.db",
-  "*.m4a",
-  "*.mp3",
-  "*.wav",
-  "*.mp4",
-  "*.mov",
-  "*.zip",
-  "*.tar",
-  "*.tgz",
-  "*.gz",
-  ".env",
-  ".env.*",
-  "!.env.example",
-  "*.pem",
-  "*.key",
-];
 
 const META_PREFIX = "studio-meta: ";
 const MAX_ORIGIN_DEPTH = 64;
@@ -359,7 +341,10 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     await mkdir(infoDir, { recursive: true });
 
     const base = isExternalTree(project)
-      ? await toExternalExcludes(project, [...GIT_EXCLUDES, ...APP_EXCLUDES])
+      ? await toExternalExcludes(project, [
+          ...GIT_EXCLUDES,
+          ...toStudioExcludes(project),
+        ])
       : GIT_EXCLUDES;
 
     await writeFile(path.join(infoDir, "exclude"), `${base.join("\n")}\n`);
@@ -1614,7 +1599,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
 
     try {
       const cached = await loadHeadIndex(project, direction, head, tempIndex);
-      await updateIndexPaths(tempScope, paths);
+      await updateSplitPaths(tempScope, paths, layoutFilesOf(project));
 
       if (
         tempScope.untracked &&
@@ -1642,7 +1627,11 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       );
 
       await keepHeadIndex(project, direction, tempIndex, tree);
-      await updateIndexPaths(directionScope(project, direction), paths);
+      await updateSplitPaths(
+        directionScope(project, direction),
+        paths,
+        layoutFilesOf(project)
+      );
 
       return version;
     } finally {
@@ -1816,6 +1805,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
           direction,
           Boolean(project.app) && head === null
         );
+        await updateLayoutPaths(scope, layoutFilesOf(project));
         const { stdout } = await runGit(scope, ["write-tree"]);
         const tree = stdout.trim();
 

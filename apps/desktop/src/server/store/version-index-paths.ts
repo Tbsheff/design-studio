@@ -16,9 +16,10 @@ const isPresent = async (workTree: string, item: string): Promise<boolean> => {
   }
 };
 
-const updateIndexPaths = async (
+const updatePathsWith = async (
   scope: GitScope,
-  paths: readonly string[]
+  paths: readonly string[],
+  addFlags: readonly string[]
 ): Promise<void> => {
   const workTree = scope.workTree ?? "";
 
@@ -30,7 +31,7 @@ const updateIndexPaths = async (
   const missing = paths.filter((_item, at) => found[at] !== true);
 
   if (present.length > 0) {
-    await runGit(scope, [LITERAL, "add", "-A", "--", ...present]);
+    await runGit(scope, [LITERAL, "add", ...addFlags, "--", ...present]);
   }
 
   if (missing.length > 0) {
@@ -44,6 +45,34 @@ const updateIndexPaths = async (
       "--",
       ...missing,
     ]);
+  }
+};
+
+const updateIndexPaths = (
+  scope: GitScope,
+  paths: readonly string[]
+): Promise<void> => updatePathsWith(scope, paths, ["-A"]);
+
+const updateLayoutPaths = (
+  scope: GitScope,
+  paths: readonly string[]
+): Promise<void> => updatePathsWith(scope, paths, ["-f"]);
+
+const updateSplitPaths = async (
+  scope: GitScope,
+  paths: readonly string[],
+  layout: readonly string[]
+): Promise<void> => {
+  const layoutSet = new Set(layout);
+  const plain = paths.filter((item) => !layoutSet.has(item));
+  const forced = paths.filter((item) => layoutSet.has(item));
+
+  if (plain.length > 0) {
+    await updateIndexPaths(scope, plain);
+  }
+
+  if (forced.length > 0) {
+    await updateLayoutPaths(scope, forced);
   }
 };
 
@@ -112,4 +141,10 @@ const listChangedAmong = async (
   }
 };
 
-export { listChangedAmong, listStageable, updateIndexPaths };
+export {
+  listChangedAmong,
+  listStageable,
+  updateIndexPaths,
+  updateLayoutPaths,
+  updateSplitPaths,
+};

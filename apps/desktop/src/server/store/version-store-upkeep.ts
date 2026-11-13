@@ -7,6 +7,7 @@ import type { Project } from "@design-studio/contracts";
 import { ConflictError } from "../platform/errors/index.js";
 import { runGit } from "../platform/git/index.js";
 import type { GitScope } from "../platform/git/index.js";
+import { toRepoExcludeLines } from "./version-external.js";
 
 interface StoreReport {
   readonly alternates: readonly string[];
@@ -145,7 +146,7 @@ const toExternalExcludes = async (
     return [trimmed];
   });
 
-  return [...base, ...lines];
+  return [...base, ...toRepoExcludeLines(project, lines)];
 };
 
 const toTreeBytes = async (dir: string): Promise<number> => {

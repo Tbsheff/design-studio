@@ -59,3 +59,7 @@ export { lengthToPx } from "./tailwind/units.js";
 export { knownTokenVars } from "./tokens.js";
 
 export { parseDirectEditRequest } from "./validate.js";
+
+export { SCALE_PROPERTIES, toScaledStyles } from "./scale/to-scaled-styles.js";
+
+export type { ScaleProperty, ScaledStyles } from "./scale/to-scaled-styles.js";

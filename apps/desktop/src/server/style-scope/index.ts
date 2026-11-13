@@ -74,11 +74,17 @@ export type {
   TextStyleWriterApi,
 } from "./text-styles/index.js";
 
-export { LayerStyleStore, LayerStyleWriter } from "./layer-style/index.js";
+export {
+  LayerScaleWriter,
+  LayerStyleStore,
+  LayerStyleWriter,
+} from "./layer-style/index.js";
 
 export type {
   ApplyLayerStyleCommand,
   GetLayerStyleCommand,
+  LayerScaleWriterApi,
   LayerStyleStoreApi,
   LayerStyleWriterApi,
+  ScaleLayerStyleCommand,
 } from "./layer-style/index.js";

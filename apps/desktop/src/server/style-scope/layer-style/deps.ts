@@ -1,4 +1,9 @@
-export { classify, parseClass } from "../../direct-edit/engine/index.js";
+export {
+  SCALE_PROPERTIES,
+  classify,
+  parseClass,
+  toScaledStyles,
+} from "../../direct-edit/engine/index.js";
 
 export {
   applyDirectEditBatch,

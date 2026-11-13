@@ -72,6 +72,31 @@ const LayerStyleSkippedSchema = Schema.Struct({
   reason: Schema.String,
 });
 
+const SCALE_MIN = 0.25;
+
+const SCALE_MAX = 4;
+
+const ScaleFactorSchema = Schema.Number.check(
+  Schema.isBetween({ maximum: SCALE_MAX, minimum: SCALE_MIN })
+);
+
+const KeepTokensSchema = Schema.Boolean.pipe(
+  Schema.withDecodingDefaultKey(Effect.succeed(true))
+);
+
+const LayerScaleSkippedSchema = Schema.Struct({
+  layerId: Schema.String,
+  property: Schema.NullOr(Schema.String),
+  reason: Schema.String,
+});
+
+const LayerScaleChangeSchema = Schema.Struct({
+  changed: Schema.Array(Schema.String),
+  skipped: Schema.Array(LayerScaleSkippedSchema),
+  tokenCount: Schema.Int,
+  versionId: Schema.NullOr(Schema.String),
+});
+
 const LayerStyleChangeSchema = Schema.Struct({
   changed: Schema.Array(Schema.String),
   skipped: Schema.Array(LayerStyleSkippedSchema),
@@ -82,9 +107,12 @@ export {
   ApplyGroupsSchema,
   DirectionFieldSchema,
   GetGroupsSchema,
+  KeepTokensSchema,
   LAYER_STYLE_GROUPS,
   LayerIdSchema,
+  LayerScaleChangeSchema,
   LayerStyleChangeSchema,
   LayerStyleSchema,
+  ScaleFactorSchema,
   TargetLayerIdsSchema,
 };

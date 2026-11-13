@@ -224,18 +224,26 @@
   white-space: nowrap;
 }
 
-.version-meta > .version-author {
-  max-width: 14ch;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: var(--text-2);
-}
-
-.version-meta > time {
+.version-meta > :not(time, .dot) {
   flex: 0 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.version-meta > .version-kind {
+  min-width: 12px;
+}
+
+.version-meta .version-kind-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.version-meta > .version-author {
+  max-width: 14ch;
+  color: var(--text-2);
 }
 
 @container (max-width: 280px) {

@@ -3,6 +3,7 @@ import type { CSSProperties, ReactElement } from "react";
 
 import type { Box, CanvasLayout } from "./canvas-frames-model.js";
 import { copy } from "./copy.js";
+import { FrameAlignBar } from "./frame-align-bar.js";
 import { toGroupFrames, toGroupRect } from "./frame-selection-model.js";
 import { useSelectedFrameIds } from "./use-frame-selection.js";
 
@@ -53,6 +54,7 @@ const FrameSelectionLayer = ({
       ))}
       {frames.length > 1 && (
         <div className="frame-select-group" style={groupStyle}>
+          <FrameAlignBar count={frames.length} />
           <output className="frame-select-count" data-tip={copy.frameSelectTip}>
             {frames.length}
             {copy.frameSelectCount}

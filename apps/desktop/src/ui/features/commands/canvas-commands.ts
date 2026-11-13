@@ -1,4 +1,8 @@
 import { TIDY_FRAMES_EVENT } from "../../domain/tidy-frames-events.js";
+import type {
+  TidyFramesDetail,
+  TidyFramesLayout,
+} from "../../domain/tidy-frames-events.js";
 import type { CanvasActions } from "./canvas-actions.js";
 import { toReason, toTitle, withDisabled } from "./command-disabled.js";
 import { animationTimeline, uiStore } from "./deps.js";
@@ -82,6 +86,54 @@ const viewCommands = (canvasActions: CanvasActions): Command[] => [
   })),
 ];
 
+interface FrameAlignSpec {
+  readonly keyId: KeyId | null;
+  readonly layout: TidyFramesLayout;
+  readonly title: string;
+}
+
+const FRAME_ALIGNS: readonly FrameAlignSpec[] = [
+  { keyId: "align-left", layout: "left", title: "Align frames left" },
+  {
+    keyId: "align-center",
+    layout: "center",
+    title: "Align frames horizontal centers",
+  },
+  { keyId: "align-right", layout: "right", title: "Align frames right" },
+  { keyId: "align-top", layout: "top", title: "Align frames top" },
+  {
+    keyId: "align-middle",
+    layout: "middle",
+    title: "Align frames vertical centers",
+  },
+  { keyId: "align-bottom", layout: "bottom", title: "Align frames bottom" },
+  { keyId: null, layout: "spread-x", title: "Spread frames horizontally" },
+  { keyId: null, layout: "spread-y", title: "Spread frames vertically" },
+];
+
+const runFrameAlign = (layout: TidyFramesLayout): void => {
+  const detail: TidyFramesDetail = { frameId: null, layout };
+
+  globalThis.dispatchEvent(new CustomEvent(TIDY_FRAMES_EVENT, { detail }));
+};
+
+const toFrameAlignCommand = (spec: FrameAlignSpec): Command => {
+  const command: Command = {
+    group: "View",
+    icon: "frame",
+    id: `view.align-frames-${spec.layout}`,
+    keywords: "align distribute spread space frames selection",
+    run: () => runFrameAlign(spec.layout),
+    title: spec.title,
+  };
+
+  if (spec.keyId === null) {
+    return command;
+  }
+
+  return { ...command, keyId: spec.keyId };
+};
+
 const sectionCommands = (canvasActions: CanvasActions): Command[] => [
   {
     group: "View",
@@ -100,6 +152,7 @@ const sectionCommands = (canvasActions: CanvasActions): Command[] => [
     run: () => globalThis.dispatchEvent(new CustomEvent(TIDY_FRAMES_EVENT)),
     title: "Tidy up frames",
   },
+  ...FRAME_ALIGNS.map((spec) => toFrameAlignCommand(spec)),
 ];
 
 const playCommands = (canvasActions: CanvasActions): Command[] => [

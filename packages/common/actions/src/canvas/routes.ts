@@ -77,6 +77,12 @@ const routes = {
     method: "GET",
     path: "/api/projects/:projectId/flow/video",
   },
+  importFrameCanvas: {
+    id: "canvas.importFrame",
+    invalidates: ["canvas.getDoc", "version.list", "run.list"],
+    method: "POST",
+    path: "/api/projects/:projectId/canvas/frames/import",
+  },
   inspectCanvas: {
     id: "canvas.inspect",
     invalidates: [],

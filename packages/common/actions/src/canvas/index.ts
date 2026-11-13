@@ -11,6 +11,7 @@ import { deleteSectionCanvas } from "./delete-section.js";
 import { exportFlowCanvas } from "./export-flow.js";
 import { getDocCanvas } from "./get-doc.js";
 import { getFlowVideoCanvas } from "./get-flow-video.js";
+import { importFrameCanvas } from "./import-frame.js";
 import { inspectLinkInteractionCanvas } from "./inspect-link-interaction.js";
 import { inspectCanvas } from "./inspect.js";
 import { listFlowLinksCanvas } from "./list-flow-links.js";
@@ -42,6 +43,7 @@ const CanvasActions = {
   exportFlowCanvas,
   getDocCanvas,
   getFlowVideoCanvas,
+  importFrameCanvas,
   inspectCanvas,
   inspectLinkInteractionCanvas,
   listFlowLinksCanvas,

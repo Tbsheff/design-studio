@@ -32,6 +32,7 @@
     "./accessibility/errors/status": "./src/accessibility/errors/status.ts",
     "./accessibility/index": "./src/accessibility/index.ts",
     "./accessibility/inspect": "./src/accessibility/inspect.ts",
+    "./accessibility/list-reader-lines": "./src/accessibility/list-reader-lines.ts",
     "./accessibility/routes": "./src/accessibility/routes.ts",
     "./accessibility/run-vision": "./src/accessibility/run-vision.ts",
     "./accessibility/schema": "./src/accessibility/schema.ts",

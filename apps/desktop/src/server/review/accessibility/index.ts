@@ -14,6 +14,8 @@ export { AccessibilityWriter } from "./accessibility-writer.js";
 
 export { VisionRunner } from "./vision-runner.js";
 
+export { ReaderLineStore } from "./reader-line-store.js";
+
 export {
   planAccessibility,
   setAccessibilityAttributes,
@@ -26,6 +28,10 @@ export type {
 } from "./accessibility-run.js";
 
 export type { RunVisionCommand } from "./vision-run.js";
+
+export type { ListReaderLinesCommand } from "./reader-run.js";
+
+export type { ReaderLineStoreApi } from "./reader-line-store.js";
 
 export type { VisionRunnerApi } from "./vision-runner.js";
 

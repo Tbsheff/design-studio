@@ -4,6 +4,7 @@ type PortReads = Pick<typeof McpReadStore.Service, "screenshot">;
 
 interface PortCheckQuery {
   readonly directionId: string | null;
+  readonly limit: number;
   readonly path: string;
   readonly projectId: string;
   readonly routePath: string;

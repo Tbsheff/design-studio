@@ -4,6 +4,7 @@ import { PORT_TASK } from "@design-studio/contracts/port";
 
 interface PortCheckInput {
   readonly directionId: string;
+  readonly limit: number;
   readonly path: string;
   readonly projectId: string;
   readonly routePath: string;
@@ -12,6 +13,8 @@ interface PortCheckInput {
 }
 
 const PORT_CHECK_WIDTH = 1280;
+
+const PORT_AREA_LIMIT = 9;
 
 const PORT_CHECK_TAG = /<port-check [^>]*\/>/u;
 
@@ -64,8 +67,11 @@ const toPortCheckInput = (
     return null;
   }
 
+  const limit = PORT_AREA_LIMIT;
+
   return {
     directionId,
+    limit,
     path,
     projectId,
     routePath,

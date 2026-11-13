@@ -16,6 +16,7 @@ const handle = Effect.fn("port.inspect")(function* run(
 
   return yield* store.inspect(reads, {
     directionId: input.directionId,
+    limit: input.limit,
     path: input.path,
     projectId: input.projectId,
     routePath: input.routePath,

@@ -88,7 +88,7 @@ const readPortMatch = Effect.fn("PortMatchStore.readPortMatch")(function* run(
 
   const match: PortMatch = {
     ...files,
-    areas: toLowAreas(diff.regions),
+    areas: toLowAreas(diff.regions).slice(0, query.limit),
     isLow: diff.score < REFERENCE_LOW_SCORE,
     score: diff.score,
   };

@@ -82,9 +82,23 @@ const PortWidthSchema = Schema.Int.check(
   description: "Width in px to render both pages at. Default 1280.",
 });
 
+const PORT_AREA_MAX = 9;
+
+const PORT_AREA_DEFAULT = Effect.succeed(PORT_AREA_MAX);
+
+const PortAreaLimitSchema = Schema.Int.check(
+  Schema.isBetween({ maximum: PORT_AREA_MAX, minimum: 1 })
+).annotate({
+  description:
+    "How many of the areas under 80 to list, worst first, from 1 to 9. Default 9.",
+});
+
 const PortCheckInputSchema = Schema.Struct({
   directionId: Schema.NullOr(PortCheckDirectionSchema).pipe(
     Schema.withDecodingDefaultKey(NO_DIRECTION)
+  ),
+  limit: PortAreaLimitSchema.pipe(
+    Schema.withDecodingDefaultKey(PORT_AREA_DEFAULT)
   ),
   path: PathTextSchema.check(Schema.isMinLength(1)).annotate({
     description:

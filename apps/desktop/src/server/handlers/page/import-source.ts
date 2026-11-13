@@ -1,5 +1,6 @@
 import type { Input } from "@design-studio/actions/_core/action";
 import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
+import { Conflict } from "@design-studio/actions/_core/errors/conflict";
 import type { importSourcePage } from "@design-studio/actions/page/import-source";
 import { PAGE_IMPORT_WIDTH_DEFAULT } from "@design-studio/contracts/page-import";
 import { Effect } from "effect";
@@ -29,6 +30,9 @@ const toWidth = (viewport: number | null): number => {
   return viewport;
 };
 
+const toConflict = (error: BadRequest): Effect.Effect<never, Conflict> =>
+  Effect.fail(new Conflict({ message: error.message }));
+
 const handle = Effect.fn("page.importSource")(function* run(
   input: ImportSourcePageInput
 ) {
@@ -48,7 +52,10 @@ const handle = Effect.fn("page.importSource")(function* run(
     });
   }
 
-  const upstream = yield* toReadyAppUpstream(entry.appProjectId);
+  const upstream = yield* toReadyAppUpstream(entry.appProjectId).pipe(
+    Effect.catchTag("BadRequest", toConflict)
+  );
+
   const pages = yield* PageWriter;
 
   const imported = yield* pages.import({

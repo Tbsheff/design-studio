@@ -1,0 +1,169 @@
+call-action project.createPrototype on http://127.0.0.1:4990. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 4921 ms, git spawns: not counted (server side)
+{
+  "folder": "/Volumes/DevProjects/code/ds-wt/route-prototype-data/projects/prototypes/route-app/make-it-denser-5",
+  "project": {
+    "appProjectId": "StCVCuHr05",
+    "createdAt": 1794574230430,
+    "directions": [
+      {
+        "branch": "d/main",
+        "createdAt": 1794574230430,
+        "headVersionId": null,
+        "id": "main",
+        "name": "Main",
+        "parentVersionId": null,
+        "sessionId": null,
+        "workTree": "/Volumes/DevProjects/code/ds-wt/route-prototype-data/projects/prototypes/route-app/make-it-denser-5"
+      }
+    ],
+    "entry": "index.html",
+    "id": "VNpgK3xZt7",
+    "imported": {
+      "created": true,
+      "sourcePath": "/Volumes/DevProjects/code/ds-wt/route-prototype-data/projects/prototypes/route-app/make-it-denser-5"
+    },
+    "kind": "html",
+    "name": "Make it denser",
+    "settings": {
+      "allowBash": true,
+      "allowInstall": true,
+      "autoApprove": true,
+      "defaultLevel": "prototype",
+      "disabledSkills": [],
+      "maxTurns": 40,
+      "model": "claude-sonnet-5-5"
+    },
+    "settingsVersion": 2,
+    "updatedAt": 1794574230430
+  },
+  "runId": "P1c1pqbsMB2kiIclrgjE8",
+  "tokensFile": "app/globals.css"
+}
+
+[mcp] ok, 3933 ms, git spawns: not counted (server side)
+{
+  "folder": "/Volumes/DevProjects/code/ds-wt/route-prototype-data/projects/prototypes/route-app/make-it-denser-6",
+  "project": {
+    "appProjectId": "StCVCuHr05",
+    "createdAt": 1794574234354,
+    "directions": [
+      {
+        "branch": "d/main",
+        "createdAt": 1794574234354,
+        "headVersionId": null,
+        "id": "main",
+        "name": "Main",
+        "parentVersionId": null,
+        "sessionId": null,
+        "workTree": "/Volumes/DevProjects/code/ds-wt/route-prototype-data/projects/prototypes/route-app/make-it-denser-6"
+      }
+    ],
+    "entry": "index.html",
+    "id": "8BYXyLzylC",
+    "imported": {
+      "created": true,
+      "sourcePath": "/Volumes/DevProjects/code/ds-wt/route-prototype-data/projects/prototypes/route-app/make-it-denser-6"
+    },
+    "kind": "html",
+    "name": "Make it denser",
+    "settings": {
+      "allowBash": true,
+      "allowInstall": true,
+      "autoApprove": true,
+      "defaultLevel": "prototype",
+      "disabledSkills": [],
+      "maxTurns": 40,
+      "model": "claude-sonnet-5-5"
+    },
+    "settingsVersion": 2,
+    "updatedAt": 1794574234354
+  },
+  "runId": "WTCQfim7Rchi09vnQv6_w",
+  "tokensFile": "app/globals.css"
+}
+
+[agent] ok, 3790 ms, git spawns: not counted (server side)
+{
+  "folder": "/Volumes/DevProjects/code/ds-wt/route-prototype-data/projects/prototypes/route-app/make-it-denser-7",
+  "project": {
+    "appProjectId": "StCVCuHr05",
+    "createdAt": 1794574238273,
+    "directions": [
+      {
+        "branch": "d/main",
+        "createdAt": 1794574238273,
+        "headVersionId": null,
+        "id": "main",
+        "name": "Main",
+        "parentVersionId": null,
+        "sessionId": null,
+        "workTree": "/Volumes/DevProjects/code/ds-wt/route-prototype-data/projects/prototypes/route-app/make-it-denser-7"
+      }
+    ],
+    "entry": "index.html",
+    "id": "RpI4pWcCC-",
+    "imported": {
+      "created": true,
+      "sourcePath": "/Volumes/DevProjects/code/ds-wt/route-prototype-data/projects/prototypes/route-app/make-it-denser-7"
+    },
+    "kind": "html",
+    "name": "Make it denser",
+    "settings": {
+      "allowBash": true,
+      "allowInstall": true,
+      "autoApprove": true,
+      "defaultLevel": "prototype",
+      "disabledSkills": [],
+      "maxTurns": 40,
+      "model": "claude-sonnet-5-5"
+    },
+    "settingsVersion": 2,
+    "updatedAt": 1794574238273
+  },
+  "runId": "jG7fnyTjwcyUmjQQMBpsX",
+  "tokensFile": "app/globals.css"
+}
+
+diff http -> mcp:
+-   "folder": "/Volumes/DevProjects/code/ds-wt/route-prototype-data/projects/prototypes/route-app/make-it-denser-5",
++   "folder": "/Volumes/DevProjects/code/ds-wt/route-prototype-data/projects/prototypes/route-app/make-it-denser-6",
+-     "createdAt": 1794574230430,
++     "createdAt": 1794574234354,
+-         "createdAt": 1794574230430,
++         "createdAt": 1794574234354,
+-         "workTree": "/Volumes/DevProjects/code/ds-wt/route-prototype-data/projects/prototypes/route-app/make-it-denser-5"
++         "workTree": "/Volumes/DevProjects/code/ds-wt/route-prototype-data/projects/prototypes/route-app/make-it-denser-6"
+-     "id": "VNpgK3xZt7",
++     "id": "8BYXyLzylC",
+-       "sourcePath": "/Volumes/DevProjects/code/ds-wt/route-prototype-data/projects/prototypes/route-app/make-it-denser-5"
++       "sourcePath": "/Volumes/DevProjects/code/ds-wt/route-prototype-data/projects/prototypes/route-app/make-it-denser-6"
+-     "updatedAt": 1794574230430
++     "updatedAt": 1794574234354
+-   "runId": "P1c1pqbsMB2kiIclrgjE8",
++   "runId": "WTCQfim7Rchi09vnQv6_w",
+
+diff http -> agent:
+-   "folder": "/Volumes/DevProjects/code/ds-wt/route-prototype-data/projects/prototypes/route-app/make-it-denser-5",
++   "folder": "/Volumes/DevProjects/code/ds-wt/route-prototype-data/projects/prototypes/route-app/make-it-denser-7",
+-     "createdAt": 1794574230430,
++     "createdAt": 1794574238273,
+-         "createdAt": 1794574230430,
++         "createdAt": 1794574238273,
+-         "workTree": "/Volumes/DevProjects/code/ds-wt/route-prototype-data/projects/prototypes/route-app/make-it-denser-5"
++         "workTree": "/Volumes/DevProjects/code/ds-wt/route-prototype-data/projects/prototypes/route-app/make-it-denser-7"
+-     "id": "VNpgK3xZt7",
++     "id": "RpI4pWcCC-",
+-       "sourcePath": "/Volumes/DevProjects/code/ds-wt/route-prototype-data/projects/prototypes/route-app/make-it-denser-5"
++       "sourcePath": "/Volumes/DevProjects/code/ds-wt/route-prototype-data/projects/prototypes/route-app/make-it-denser-7"
+-     "updatedAt": 1794574230430
++     "updatedAt": 1794574238273
+-   "runId": "P1c1pqbsMB2kiIclrgjE8",
++   "runId": "jG7fnyTjwcyUmjQQMBpsX",
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 0 error results
+
+fix: compare the outputs above, then run call-action again with the id project.createPrototype and the same input

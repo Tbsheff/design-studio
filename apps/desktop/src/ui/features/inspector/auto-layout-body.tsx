@@ -3,6 +3,7 @@ import { useCallback, useRef } from "react";
 import type { ReactElement } from "react";
 
 import { AutoLayoutRow } from "./auto-layout-row.js";
+import { AutoLayoutSkipNote } from "./auto-layout-skip-note.js";
 import { FlexControls } from "./flex-controls.js";
 import { GridControls } from "./grid-controls.js";
 import { isFlexDisplay, isGridDisplay } from "./sizing-model.js";
@@ -20,7 +21,7 @@ const AutoLayoutBody = ({ edit, selection }: Props): ReactElement => {
   const isFlex = isFlexDisplay(edit.values.display);
   const isGrid = isGridDisplay(edit.values.display);
   const layout = useAutoLayout(edit, selection);
-  const { handleAdd: addLayout, isPending } = layout;
+  const { handleAdd: addLayout, isPending, skipNote } = layout;
 
   const handleAdd = useCallback((): void => {
     if (
@@ -47,6 +48,7 @@ const AutoLayoutBody = ({ edit, selection }: Props): ReactElement => {
         canAdd={!isFlex && !isGrid && !isPending}
         onAdd={handleAdd}
       />
+      {skipNote !== null && <AutoLayoutSkipNote note={skipNote} />}
       {isFlex && <FlexControls edit={edit} />}
       {isGrid && <GridControls edit={edit} />}
     </div>

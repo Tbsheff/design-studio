@@ -8,6 +8,10 @@ import type {
   CanvasFileFrame,
 } from "@design-studio/contracts/canvas-file";
 import {
+  LINKED_FRAME_GAP,
+  toLinkedSpot,
+} from "@design-studio/contracts/linked-frame";
+import {
   cleanLinkSelector,
   cleanLinkText,
   LINKS_FILE,
@@ -88,8 +92,6 @@ interface WrittenScreen {
 const CLIENT = "ui";
 
 const DEFAULT_LABEL = "New screen";
-
-const FRAME_GAP = 160;
 
 const APP_TEXT =
   "This project is an app. Use create_screen to add a screen to the app.";
@@ -306,15 +308,18 @@ const toPlacedFrame = async (
   await target.runtime.canvas.update(
     target.project,
     (file) => {
+      const seeded = toWithEntryFrame(file, target.direction.id);
+      const spot = toLinkedSpot(seeded.frames, source.frame);
+
       const next = applyPlacement(
-        toWithEntryFrame(file, target.direction.id),
+        seeded,
         [
           {
-            gap: FRAME_GAP,
+            gap: LINKED_FRAME_GAP,
             height: source.frame.height,
             label: source.label,
             path: pagePath,
-            rightOf: source.frame.id,
+            rightOf: spot.neighborId,
             width: source.frame.width,
           },
         ],

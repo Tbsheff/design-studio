@@ -45,6 +45,7 @@
     "./ship": "./src/ship.ts",
     "./spacing": "./src/spacing.ts",
     "./stacking": "./src/stacking.ts",
+    "./start-points": "./src/start-points.ts",
     "./state-styles": "./src/state-styles.ts",
     "./states": "./src/states.ts",
     "./style-search": "./src/style-search.ts",

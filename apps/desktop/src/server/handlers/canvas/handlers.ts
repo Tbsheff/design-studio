@@ -41,6 +41,7 @@ import { handle as setPointCanvasHandle } from "./set-point.js";
 import { handle as setPresenceCanvasHandle } from "./set-presence.js";
 import { handle as setSectionCanvasHandle } from "./set-section.js";
 import { handle as setStartLinkCanvasHandle } from "./set-start-link.js";
+import { handle as setStartPointsCanvasHandle } from "./set-start-points.js";
 import { handle as updateFrameSessionCanvasHandle } from "./update-frame-session.js";
 import { handle as updateFrameCanvasHandle } from "./update-frame.js";
 import { handle as updateLinkCanvasHandle } from "./update-link.js";
@@ -85,6 +86,7 @@ const CanvasEntries = {
   setPresenceCanvas: { handle: setPresenceCanvasHandle },
   setSectionCanvas: { handle: setSectionCanvasHandle },
   setStartLinkCanvas: { handle: setStartLinkCanvasHandle },
+  setStartPointsCanvas: { handle: setStartPointsCanvasHandle },
   updateFrameCanvas: { handle: updateFrameCanvasHandle },
   updateFrameSessionCanvas: { handle: updateFrameSessionCanvasHandle },
   updateLinkCanvas: { handle: updateLinkCanvasHandle },

@@ -1,0 +1,49 @@
+call-action canvas.setStartPoints on http://127.0.0.1:4410. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] error, 4 ms, git spawns: not counted (server side)
+{
+  "_tag": "BadRequest",
+  "code": null,
+  "error": "BadRequest",
+  "message": "Two start points are named a. Use a different name for each."
+}
+
+[mcp] error, 6 ms, git spawns: not counted (server side)
+"Two start points are named a. Use a different name for each."
+
+[agent] error, 2 ms, git spawns: not counted (server side)
+"Two start points are named a. Use a different name for each."
+
+diff http -> mcp:
+- {
++ "Two start points are named a. Use a different name for each."
+-   "_tag": "BadRequest",
++ 
+-   "code": null,
++ 
+-   "error": "BadRequest",
++ 
+-   "message": "Two start points are named a. Use a different name for each."
++ 
+- }
++ 
+
+diff http -> agent:
+- {
++ "Two start points are named a. Use a different name for each."
+-   "_tag": "BadRequest",
++ 
+-   "code": null,
++ 
+-   "error": "BadRequest",
++ 
+-   "message": "Two start points are named a. Use a different name for each."
++ 
+- }
++ 
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 3 error results
+
+fix: compare the outputs above, then run call-action again with the id canvas.setStartPoints and the same input

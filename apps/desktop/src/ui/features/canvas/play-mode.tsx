@@ -19,6 +19,7 @@ import { usePlayTheme } from "./use-play-theme.js";
 import { usePlay } from "./use-play.js";
 import type { PlayState } from "./use-play.js";
 import { useStageSize } from "./use-stage-size.js";
+import { usePlayStart, useRestartOnPick } from "./use-start-points.js";
 
 const toLayerKey = (props: BaseSlotsProps): string => {
   if (props.isHeld) {
@@ -162,7 +163,8 @@ const toTitle = (
 const PlayMode = (props: PlayModeProps): ReactElement => {
   const stageRef = useRef<HTMLDivElement>(null);
   const mode = usePlayCommentMode(props.playComment !== null);
-  const play = usePlay(props, stageRef);
+  const start = usePlayStart(props);
+  const play = usePlay(start.playProps, stageRef);
 
   const { device, onDevice, onRotate, orientation } = usePlayDevice(
     props.projectId
@@ -176,6 +178,7 @@ const PlayMode = (props: PlayModeProps): ReactElement => {
   const shown = toShownFrame(play.slots);
   const { back: onBack, closeOverlay: onCloseOverlay } = play;
   const { restart: onRestart } = play;
+  useRestartOnPick(start.pick, onRestart);
   const { onClose: onExit } = props;
   const { toggle: onToggleComment } = mode;
 
@@ -209,6 +212,7 @@ const PlayMode = (props: PlayModeProps): ReactElement => {
         orientation={orientation}
         isHints={isHints}
         theme={theme}
+        start={start}
         onHints={onHints}
         onDevice={onDevice}
         onRotate={onRotate}

@@ -352,21 +352,6 @@ const writeKeep = async (
   return { kept: done.kept, links: done.file };
 };
 
-const writeStart = async (
-  runtime: LinkRuntime,
-  projectId: string,
-  frameRef: string
-): Promise<LinksFile> => {
-  const context = await toWritableContext(runtime, projectId);
-  const frame = frameOf(await framesOf(context), frameRef);
-
-  return runtime.canvas.links.update(
-    context.project,
-    (file): LinksFile => ({ ...file, start: frame.id }),
-    SOURCE
-  );
-};
-
 export {
   readImplicitList,
   inspectInteractions,
@@ -374,8 +359,8 @@ export {
   writeCreate,
   writeDelete,
   setInteraction,
+  toWritableContext,
   writeKeep,
-  writeStart,
   writeUpdate,
 };
 

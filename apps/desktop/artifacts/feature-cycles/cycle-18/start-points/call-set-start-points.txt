@@ -1,0 +1,59 @@
+call-action canvas.setStartPoints on http://127.0.0.1:4410. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 5 ms, git spawns: not counted (server side)
+{
+  "starts": [
+    {
+      "frame": "f2",
+      "name": "Start"
+    },
+    {
+      "frame": "f4",
+      "name": "Sign in"
+    },
+    {
+      "frame": "f6",
+      "name": "Chart review"
+    }
+  ]
+}
+
+[mcp] ok, 7 ms, git spawns: not counted (server side)
+{
+  "starts": [
+    {
+      "frame": "f2",
+      "name": "Start"
+    },
+    {
+      "frame": "f4",
+      "name": "Sign in"
+    },
+    {
+      "frame": "f6",
+      "name": "Chart review"
+    }
+  ]
+}
+
+[agent] ok, 2 ms, git spawns: not counted (server side)
+{
+  "starts": [
+    {
+      "frame": "f2",
+      "name": "Start"
+    },
+    {
+      "frame": "f4",
+      "name": "Sign in"
+    },
+    {
+      "frame": "f6",
+      "name": "Chart review"
+    }
+  ]
+}
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

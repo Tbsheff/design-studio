@@ -19,6 +19,8 @@ import type {
   LinkTransition,
   PrototypeLink,
 } from "@design-studio/contracts/links";
+import { withStartPoints } from "@design-studio/contracts/start-points";
+import type { StartPoint } from "@design-studio/contracts/start-points";
 import {
   useCallback,
   useEffect,
@@ -250,6 +252,19 @@ const linksApi = {
     });
 
     return writeFile(projectId, links);
+  },
+  setStartPoints: async (
+    projectId: string,
+    starts: readonly StartPoint[]
+  ): Promise<readonly StartPoint[]> => {
+    const saved = await callAction(routes.setStartPointsCanvas, {
+      projectId,
+      starts: [...starts],
+    });
+
+    setFile(projectId, withStartPoints(entryOf(projectId).file, saved.starts));
+
+    return saved.starts;
   },
   update: async (
     projectId: string,

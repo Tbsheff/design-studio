@@ -262,4 +262,19 @@ const copy = {
   zoomOut: "Zoom out",
 } as const;
 
-export { copy };
+const startCopy = {
+  addHere: "Add start point here",
+  addTip: "Add the selected frame as a named start point for Play",
+  empty: "No start points yet. Select a frame, then add one.",
+  full: "This prototype has 12 start points, the most it can have.",
+  menu: "Start points",
+  menuTip: "Named frames where Play can start",
+  name: "Start point name",
+  namePlaceholder: "Name, for example Sign in",
+  noFrame: "Select a frame first",
+  playTip: "Restart Play at a start point",
+  remove: "Remove start point",
+  rename: "Rename start point",
+} as const;
+
+export { copy, startCopy };

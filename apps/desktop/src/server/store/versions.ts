@@ -5,7 +5,6 @@ import {
   cp,
   lstat,
   mkdir,
-  readdir,
   readFile,
   realpath,
   rename,
@@ -75,6 +74,13 @@ import {
   updateIndexPaths,
 } from "./version-index-paths.js";
 import { seedFromUserRepo } from "./version-seed.js";
+import {
+  deleteStaleFiles,
+  toExternalExcludes,
+  toRestorableTree,
+  toRestoreError,
+  updateStoreReport,
+} from "./version-store-upkeep.js";
 import { createChangeTracker } from "./version-tracker.js";
 
 export { runGit, runGitBuffer } from "../platform/git/index.js";
@@ -172,34 +178,6 @@ async function moveFile(source: string, target: string): Promise<void> {
       preserveTimestamps: true,
     });
     await unlink(source);
-  }
-}
-
-const SERVER_STARTED_AT = Date.now();
-
-async function removeStaleLocks(gitDir: string): Promise<void> {
-  if (!existsSync(gitDir)) {
-    return;
-  }
-
-  const top = await readdir(gitDir);
-
-  const refs = existsSync(path.join(gitDir, "refs"))
-    ? (await readdir(path.join(gitDir, "refs"), { recursive: true })).map(
-        (entry) => path.join("refs", entry)
-      )
-    : [];
-
-  const locks = [...top, ...refs].filter((entry) => entry.endsWith(".lock"));
-
-  for (const entry of locks) {
-    const target = path.join(gitDir, entry);
-    const info = await lstat(target).catch(() => null);
-
-    if (info?.isFile() && info.mtimeMs < SERVER_STARTED_AT) {
-      await rm(target, { force: true });
-      console.warn(`[versions] removed stale git lock ${target}`);
-    }
   }
 }
 
@@ -389,8 +367,8 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     const infoDir = path.join(gitDirOf(project), "info");
     await mkdir(infoDir, { recursive: true });
 
-    const base = project.app
-      ? [...GIT_EXCLUDES, ...APP_EXCLUDES]
+    const base = isExternalTree(project)
+      ? await toExternalExcludes(project, [...GIT_EXCLUDES, ...APP_EXCLUDES])
       : GIT_EXCLUDES;
 
     await writeFile(path.join(infoDir, "exclude"), `${base.join("\n")}\n`);
@@ -403,7 +381,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     const base = await writeBaseExclude(project);
     await writeFile(path.join(infoDir, "attributes"), RAW_ATTRIBUTES);
 
-    if (project.app) {
+    if (isExternalTree(project)) {
       const large = await largeUntracked(project);
 
       if (large.length > 0) {
@@ -1522,7 +1500,13 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     let sweep = lockSweeps.get(project.id);
 
     if (!sweep) {
-      sweep = removeStaleLocks(gitDirOf(project)).catch(() => undefined);
+      const gitDir = gitDirOf(project);
+      sweep = deleteStaleFiles(gitDir)
+        .then(() => updateStoreReport(gitDir))
+        .then(
+          () => undefined,
+          () => undefined
+        );
       lockSweeps.set(project.id, sweep);
     }
 
@@ -1561,8 +1545,10 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       const { stdout } = await runGit(repoScope(project), ["count-objects"]);
 
       if (Number(stdout.split(" ")[0]) > LOOSE_OBJECTS_TO_PACK) {
-        await runGit(repoScope(project), ["repack", "-d", "-q"]);
+        await runGit(repoScope(project), ["repack", "-d", "-l", "-q"]);
       }
+
+      await updateStoreReport(gitDirOf(project));
     };
 
     pack().catch((error: unknown) =>
@@ -2020,12 +2006,20 @@ export function createVersionStore(config: ServerConfig): VersionStore {
           target = await requireCommit(project, versionId);
         }
 
+        const targetTree = await toRestorableTree(
+          repoScope(project),
+          await treeOf(project, head),
+          await treeOf(project, target)
+        );
+
         const { kept, fast } = await resetForRestore(
           project,
           direction,
           head,
-          await treeOf(project, target)
-        );
+          targetTree
+        ).catch((error: Error) => {
+          throw toRestoreError(error);
+        });
 
         const title = restoreTitle(kind, await originTitleOf(project, target));
 
@@ -2137,7 +2131,11 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       targetDir: string
     ): Promise<void> {
       const sha = await requireCommit(project, versionId);
-      await checkoutTo(project, sha, path.resolve(targetDir));
+      await checkoutTo(project, sha, path.resolve(targetDir)).catch(
+        (error: Error) => {
+          throw toRestoreError(error);
+        }
+      );
     },
 
     async snapshot(project: Project, versionId: string): Promise<string> {

@@ -70,6 +70,7 @@ const RunSentSchema = Schema.Struct({
 const RunDetailSchema = Schema.Struct({
   events: Schema.Array(RunEventSchema),
   sent: Schema.Array(RunSentSchema),
+  status: Schema.NullOr(Schema.String),
   summary: Schema.NullOr(RunSummarySchema),
 });
 

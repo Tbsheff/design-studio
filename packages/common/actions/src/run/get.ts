@@ -10,7 +10,7 @@ const getRun = defineAction({
   agent: { off: "run-control" },
   confirm: "none",
   description:
-    "Read one run by id. Returns its status, events, the messages sent to it and its summary. Call it after start_run until the status is no longer running. Read only.",
+    "Read one run by id. Returns its status at the top level, events, the messages sent to it and its summary. Call it after start_run until the status is no longer running. Read only.",
   errors: [NotFound],
   http: { method: "GET", path: "/api/projects/:projectId/runs/:runId" },
   id: "run.get",

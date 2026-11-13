@@ -7,7 +7,7 @@ import { otherFrames, resizedSize, snapSize } from "./frame-resize-model.js";
 import type { Size } from "./frame-resize-model.js";
 import { paintSize } from "./frame-resize-paint.js";
 import type { SideStyle } from "./frame-resize-paint.js";
-import { frameSnapStore } from "./frame-snap-store.js";
+import { frameSnapStore, snapLineStore } from "./frame-snap-store.js";
 import type { ResizeEdge } from "./resize-edge-model.js";
 import { snapOff } from "./snap-model.js";
 import type { CanvasFrames } from "./use-canvas-frames.js";
@@ -84,10 +84,12 @@ const startResizeDrag = (init: DragInit): void => {
     };
 
     const isOff = state.hasShift || state.isOff;
+    const lines = snapLineStore.get();
 
     const snapped = snapSize(frame, edge, resizedSize(start, edge, delta), {
       candidates,
       isOff,
+      lines,
       zoom,
     });
 

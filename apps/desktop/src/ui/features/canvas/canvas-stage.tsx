@@ -110,6 +110,7 @@ const CanvasStage = (stageProps: CanvasStageProps): ReactElement => {
         <StageRulers
           artboardRef={artboardRef}
           origin={active}
+          projectId={canvasFrames.projectId}
           selection={unionRect(props.selection)}
         />
       )}

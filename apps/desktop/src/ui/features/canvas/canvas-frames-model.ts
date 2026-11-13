@@ -6,6 +6,7 @@ import {
 } from "@design-studio/contracts/canvas-file";
 import type {
   CanvasFile,
+  CanvasGuide,
   CanvasSection,
 } from "@design-studio/contracts/canvas-file";
 import { useEffect, useSyncExternalStore } from "react";
@@ -51,7 +52,8 @@ const toWriterId = (): string => {
 const toCanvasFile = (
   layout: CanvasLayout | null,
   lofi: readonly string[],
-  sections: readonly CanvasSection[]
+  sections: readonly CanvasSection[],
+  guides: readonly CanvasGuide[]
 ): CanvasFile => {
   const frames = [];
 
@@ -61,6 +63,7 @@ const toCanvasFile = (
 
   return normalizeCanvasFile({
     frames,
+    guides: [...guides],
     lofi: [...lofi],
     sections: [...sections],
     version: 1,
@@ -97,6 +100,7 @@ const fromCanvasFile = (
 };
 
 interface Entry {
+  guides: CanvasGuide[];
   layout: CanvasLayout | null;
   lofi: string[];
   sections: CanvasSection[];
@@ -120,6 +124,7 @@ const entryOf = (projectId: string): Entry => {
   if (!entry) {
     entry = {
       again: false,
+      guides: [],
       hash: null,
       isPending: false,
       layout: null,
@@ -143,8 +148,14 @@ const notify = (): void => {
   }
 };
 
-const fileText = (entry: Pick<Entry, "layout" | "lofi" | "sections">): string =>
-  serializeCanvasFile(toCanvasFile(entry.layout, entry.lofi, entry.sections));
+const toEntryFile = (
+  entry: Pick<Entry, "guides" | "layout" | "lofi" | "sections">
+): CanvasFile =>
+  toCanvasFile(entry.layout, entry.lofi, entry.sections, entry.guides);
+
+const fileText = (
+  entry: Pick<Entry, "guides" | "layout" | "lofi" | "sections">
+): string => serializeCanvasFile(toEntryFile(entry));
 
 const applySnapshot = (
   projectId: string,
@@ -162,6 +173,7 @@ const applySnapshot = (
   entry.hash = hash;
   entry.lofi = canvas?.lofi ?? [];
   entry.sections = canvas?.sections ?? [];
+  entry.guides = canvas?.guides ?? [];
   entry.isPending = false;
   const active = entry.layout?.activeId ?? storedActive(projectId);
   entry.layout = null;
@@ -184,7 +196,7 @@ const migrate = async (
   try {
     const result = await api.putCanvas(projectId, {
       baseHash: entry.hash,
-      canvas: toCanvasFile(legacy, entry.lofi, entry.sections),
+      canvas: toCanvasFile(legacy, entry.lofi, entry.sections, entry.guides),
       migrate: true,
       writer: toWriterId(),
     });
@@ -244,7 +256,7 @@ const flush = async (projectId: string): Promise<void> => {
   try {
     const result = await api.putCanvas(projectId, {
       baseHash: entry.hash,
-      canvas: toCanvasFile(entry.layout, entry.lofi, entry.sections),
+      canvas: toEntryFile(entry),
       writer: toWriterId(),
     });
 
@@ -331,6 +343,8 @@ const NO_LOFI: string[] = [];
 
 const NO_SECTIONS: CanvasSection[] = [];
 
+const NO_GUIDES: CanvasGuide[] = [];
+
 interface SectionChange {
   readonly layout: CanvasLayout | null;
   readonly sections: CanvasSection[];
@@ -339,6 +353,8 @@ interface SectionChange {
 const canvasStore = {
   get: (projectId: string): CanvasLayout | null =>
     entries.get(projectId)?.layout ?? null,
+  guides: (projectId: string): CanvasGuide[] =>
+    entries.get(projectId)?.guides ?? NO_GUIDES,
   load: ensureLoaded,
   loaded: (projectId: string): boolean =>
     entries.get(projectId)?.loaded ?? false,
@@ -351,6 +367,16 @@ const canvasStore = {
     const before = fileText(entry);
     entry.layout = layout;
     saveActive(projectId, layout.activeId);
+    notify();
+
+    if (entry.loaded && fileText(entry) !== before) {
+      schedule(projectId);
+    }
+  },
+  setGuides: (projectId: string, guides: CanvasGuide[]): void => {
+    const entry = entryOf(projectId);
+    const before = fileText(entry);
+    entry.guides = guides;
     notify();
 
     if (entry.loaded && fileText(entry) !== before) {

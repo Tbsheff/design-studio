@@ -7,14 +7,27 @@ const CanvasRulers = lazy(async () => {
   return { default: loaded.CanvasRulers };
 });
 
-const StageRulers = (
-  props: ComponentProps<typeof CanvasRulers>
-): ReactElement => (
+const RulerGuideLayer = lazy(async () => {
+  const loaded = await import("./ruler-guide-layer.js");
+
+  return { default: loaded.RulerGuideLayer };
+});
+
+interface StageRulersProps extends ComponentProps<typeof CanvasRulers> {
+  readonly projectId: string;
+}
+
+const StageRulers = (props: StageRulersProps): ReactElement => (
   <Suspense fallback={null}>
     <CanvasRulers
       artboardRef={props.artboardRef}
       origin={props.origin}
       selection={props.selection}
+    />
+    <RulerGuideLayer
+      artboardRef={props.artboardRef}
+      origin={props.origin}
+      projectId={props.projectId}
     />
   </Suspense>
 );

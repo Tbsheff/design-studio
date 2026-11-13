@@ -310,4 +310,8 @@ const stateCheckCopy = {
   states: " states",
 } as const;
 
-export { copy, scaleCopy, startCopy, stateCheckCopy };
+const rulerGuideCopy = {
+  guide: "Drag to move the guide. Drag it onto the ruler to remove it.",
+} as const;
+
+export { copy, rulerGuideCopy, scaleCopy, startCopy, stateCheckCopy };

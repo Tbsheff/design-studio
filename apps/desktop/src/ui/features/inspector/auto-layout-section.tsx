@@ -1,3 +1,4 @@
+import type { SelectionContext } from "@design-studio/contracts";
 import type { ReactElement, ReactNode } from "react";
 
 import { AutoLayoutBody } from "./auto-layout-body.js";
@@ -8,6 +9,7 @@ import type { DirectEdit } from "./use-direct-edit.js";
 
 interface Props {
   readonly edit: DirectEdit;
+  readonly selection: SelectionContext | null;
   readonly title: string;
   readonly lead: ReactNode;
   readonly children: ReactNode;
@@ -23,13 +25,14 @@ const toRemoveAside = (edit: DirectEdit): ReactNode => {
 
 const AutoLayoutSection = ({
   edit,
+  selection,
   title,
   lead,
   children,
 }: Props): ReactElement => (
   <InspectorSection title={title} aside={toRemoveAside(edit)}>
     {lead}
-    <AutoLayoutBody edit={edit} />
+    <AutoLayoutBody edit={edit} selection={selection} />
     {children}
   </InspectorSection>
 );

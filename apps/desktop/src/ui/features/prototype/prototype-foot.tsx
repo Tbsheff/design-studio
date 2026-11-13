@@ -10,6 +10,7 @@ interface PrototypeFootProps {
   readonly isEmpty: boolean;
   readonly isPending: boolean;
   readonly onCancel: () => void;
+  readonly routePath: string | null;
 }
 
 const PrototypeFoot = ({
@@ -17,6 +18,7 @@ const PrototypeFoot = ({
   isEmpty,
   isPending,
   onCancel,
+  routePath,
 }: PrototypeFootProps): ReactElement => (
   <footer className={styles.foot}>
     {failure !== null && (
@@ -33,7 +35,7 @@ const PrototypeFoot = ({
       disabled={isEmpty || isPending}
       data-testid="prototype-create"
     >
-      {toCreateLabel(isPending)}
+      {toCreateLabel(isPending, routePath)}
     </button>
   </footer>
 );

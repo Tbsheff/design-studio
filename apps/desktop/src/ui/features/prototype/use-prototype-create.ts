@@ -1,7 +1,19 @@
-import { useCallback, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+} from "react";
 import type { ChangeEvent, FormEvent } from "react";
 
-import { call, errorText, projectRoutes } from "./deps.js";
+import {
+  call,
+  clearPrototypeRoute,
+  errorText,
+  projectRoutes,
+  prototypeRoute,
+} from "./deps.js";
 
 interface PrototypeCreate {
   readonly failure: string | null;
@@ -9,15 +21,21 @@ interface PrototypeCreate {
   readonly handleSubmit: (event: FormEvent<HTMLFormElement>) => void;
   readonly isPending: boolean;
   readonly prompt: string;
+  readonly routePath: string | null;
 }
+
+const toInitialRoute = (): string | null => prototypeRoute.get();
 
 const usePrototypeCreate = (
   appProjectId: string,
   onCreated: (projectId: string) => void
 ): PrototypeCreate => {
   const [prompt, setPrompt] = useState("");
+  const route = useMemo(() => toInitialRoute(), []);
   const [failure, setFailure] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => clearPrototypeRoute, []);
 
   const handlePrompt = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>): void => {
@@ -42,7 +60,9 @@ const usePrototypeCreate = (
             name: null,
             projectId: appProjectId,
             prompt: text,
+            routePath: route,
             shouldStartRun: true,
+            viewport: null,
           });
 
           onCreated(created.project.id);
@@ -51,10 +71,17 @@ const usePrototypeCreate = (
         }
       });
     },
-    [appProjectId, onCreated, prompt]
+    [appProjectId, onCreated, prompt, route]
   );
 
-  return { failure, handlePrompt, handleSubmit, isPending, prompt };
+  return {
+    failure,
+    handlePrompt,
+    handleSubmit,
+    isPending,
+    prompt,
+    routePath: route,
+  };
 };
 
 export { usePrototypeCreate };

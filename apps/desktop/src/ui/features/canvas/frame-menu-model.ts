@@ -12,6 +12,9 @@ import {
   SCREEN_CREATE_EVENT,
   SCREEN_DUPLICATE_EVENT,
 } from "../../domain/screen-events.js";
+import { useLive } from "../../platform/live-store.js";
+import { prototypeSource } from "../../platform/prototype-dialog.js";
+import { openRoutePrototype } from "../../platform/prototype-route.js";
 import { copy } from "./copy.js";
 import { toMenuItems } from "./menu-items-model.js";
 
@@ -136,10 +139,50 @@ const useCopyPngEntry = (root: RefObject<HTMLElement | null>): ScreenEntry => {
   );
 };
 
+interface RedesignEntry {
+  readonly icon: "sparkle";
+  readonly id: string;
+  readonly label: string;
+  readonly run: () => void;
+}
+
+const toRoutePath = (path: string | null): string =>
+  `/${(path ?? "").replace(/^\/+/u, "")}`;
+
+const useRedesignEntry = (path: string | null): RedesignEntry | null => {
+  const appProjectId = useLive(prototypeSource);
+
+  const run = useCallback((): void => {
+    if (appProjectId !== null) {
+      openRoutePrototype(appProjectId, toRoutePath(path));
+    }
+  }, [appProjectId, path]);
+
+  return useMemo(() => {
+    if (appProjectId === null) {
+      return null;
+    }
+
+    return {
+      icon: "sparkle",
+      id: "redesign-prototype",
+      label: copy.redesignAsPrototype,
+      run,
+    };
+  }, [appProjectId, run]);
+};
+
 const openScreenCreate = (): void => {
   globalThis.dispatchEvent(new CustomEvent(SCREEN_CREATE_EVENT));
 };
 
-export { menuKeys, openScreenCreate, useCopyPngEntry, useMenu, useScreenEntry };
+export {
+  menuKeys,
+  openScreenCreate,
+  useCopyPngEntry,
+  useMenu,
+  useRedesignEntry,
+  useScreenEntry,
+};
 
-export type { ScreenEntry };
+export type { RedesignEntry, ScreenEntry };

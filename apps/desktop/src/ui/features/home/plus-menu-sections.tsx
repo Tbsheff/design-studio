@@ -6,6 +6,7 @@ import { PlusFilesSection } from "./plus-files-section.js";
 import { PlusItem } from "./plus-item.js";
 import { PlusKindItem } from "./plus-kind-item.js";
 import type { PlusMenuActions } from "./plus-menu-model.js";
+import { PlusRoutesSection } from "./plus-routes-section.js";
 
 interface PlusMenuSectionsProps {
   readonly actions: PlusMenuActions;
@@ -40,6 +41,7 @@ const PlusMenuSections = ({
       />
       <PlusKindItem actions={actions} />
     </div>
+    <PlusRoutesSection onClose={onClose} />
     <PlusDesignsSection actions={actions} onClose={onClose} />
     <div className="ui-menu-section">
       <PlusItem

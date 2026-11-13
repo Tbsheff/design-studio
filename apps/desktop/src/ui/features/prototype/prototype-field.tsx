@@ -1,18 +1,20 @@
 import { useId } from "react";
 import type { ChangeEvent, ReactElement } from "react";
 
-import { copy } from "./copy.js";
+import type { PrototypeText } from "./prototype-model.js";
 
 import styles from "./prototype.module.css";
 
 interface PrototypeFieldProps {
   readonly onPrompt: (event: ChangeEvent<HTMLTextAreaElement>) => void;
   readonly prompt: string;
+  readonly text: PrototypeText;
 }
 
 const PrototypeField = ({
   onPrompt,
   prompt,
+  text,
 }: PrototypeFieldProps): ReactElement => {
   const promptId = useId();
   const hintId = useId();
@@ -20,14 +22,14 @@ const PrototypeField = ({
   return (
     <div className={styles.body}>
       <label className={styles.label} htmlFor={promptId}>
-        {copy.prompt}
+        {text.prompt}
       </label>
       <textarea
         id={promptId}
         name="prompt"
         className={styles.prompt}
         aria-describedby={hintId}
-        placeholder={copy.placeholder}
+        placeholder={text.placeholder}
         rows={4}
         value={prompt}
         onChange={onPrompt}
@@ -35,7 +37,7 @@ const PrototypeField = ({
         data-testid="prototype-prompt"
       />
       <p id={hintId} className={styles.hint}>
-        {copy.hint}
+        {text.hint}
       </p>
     </div>
   );

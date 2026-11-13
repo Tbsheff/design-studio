@@ -9,6 +9,7 @@ import {
   menuKeys,
   useCopyPngEntry,
   useMenu,
+  useRedesignEntry,
   useScreenEntry,
 } from "./frame-menu-model.js";
 import { toMenuItems } from "./menu-items-model.js";
@@ -26,9 +27,11 @@ interface FrameMenuItem {
 const FrameMoreMenu = ({
   name,
   items: own,
+  path,
 }: {
   name: string;
   items: FrameMenuItem[];
+  path: string | null;
 }): ReactElement | null => {
   const menu = useMenu();
   const { close, root, setOpen, trigger } = menu;
@@ -37,6 +40,7 @@ const FrameMoreMenu = ({
   const portEntry = usePortEntry(root, openPortDialog);
   const screenEntry = useScreenEntry(root);
   const copyPngEntry = useCopyPngEntry(root);
+  const redesignEntry = useRedesignEntry(path);
 
   const handleKeys = useCallback(
     (event: KeyboardEvent<HTMLElement>): void => menuKeys(event, close),
@@ -80,6 +84,9 @@ const FrameMoreMenu = ({
         >
           {menu.open && portAvailable() && (
             <FrameMenuItemButton entry={portEntry} close={close} />
+          )}
+          {redesignEntry && (
+            <FrameMenuItemButton entry={redesignEntry} close={close} />
           )}
           <FrameMenuItemButton entry={screenEntry} close={close} />
           <FrameMenuItemButton entry={copyPngEntry} close={close} />

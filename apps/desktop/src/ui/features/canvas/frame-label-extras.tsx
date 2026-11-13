@@ -85,7 +85,11 @@ const FrameLabelExtras = ({
         listPages={listPages}
         onPath={onPath}
       />
-      <FrameMoreMenu name={frame.label ?? frameName(frame)} items={menuItems} />
+      <FrameMoreMenu
+        name={frame.label ?? frameName(frame)}
+        items={menuItems}
+        path={frame.path ?? null}
+      />
     </>
   );
 };

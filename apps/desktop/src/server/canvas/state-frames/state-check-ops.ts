@@ -1,9 +1,9 @@
 import type { Project } from "@design-studio/contracts";
 import { BUILT_IN_STATES } from "@design-studio/contracts/frame-state";
+import pixelmatch from "pixelmatch";
 import { PNG } from "pngjs";
 
 import { NotFoundError } from "../../platform/errors/index.js";
-import { diffPictures } from "../../preview/picture-diff/index.js";
 import { readFrameStates } from "../app-flow/index.js";
 import type { LinkRuntime } from "../links/link-runtime.js";
 import { findFrame } from "../tools.js";
@@ -67,11 +67,48 @@ const getCheckBoard = async (
   return board;
 };
 
+const PIXEL_THRESHOLD = 0.02;
+
+const PERCENT = 100;
+
+const PIXEL_BYTES = 4;
+
+const toCropped = (png: PNG, width: number, height: number): Buffer => {
+  const out = Buffer.alloc(width * height * PIXEL_BYTES);
+  const rowBytes = width * PIXEL_BYTES;
+
+  for (let row = 0; row < height; row += 1) {
+    const start = row * png.width * PIXEL_BYTES;
+
+    png.data.copy(out, row * rowBytes, start, start + rowBytes);
+  }
+
+  return out;
+};
+
 const toDiffPct = (base: string, other: string): number => {
   const first = PNG.sync.read(Buffer.from(base, "base64"));
   const second = PNG.sync.read(Buffer.from(other, "base64"));
+  const width = Math.min(first.width, second.width);
+  const height = Math.min(first.height, second.height);
+  const tallest = Math.max(first.height, second.height);
 
-  return diffPictures(first, second).differsPct;
+  if (width === 0 || height === 0) {
+    return PERCENT;
+  }
+
+  const changed = pixelmatch(
+    toCropped(first, width, height),
+    toCropped(second, width, height),
+    Buffer.alloc(width * height * PIXEL_BYTES),
+    width,
+    height,
+    { threshold: PIXEL_THRESHOLD }
+  );
+
+  const grown = (tallest - height) * width;
+
+  return ((changed + grown) / (width * tallest)) * PERCENT;
 };
 
 export { getCheckBoard, toDiffPct };

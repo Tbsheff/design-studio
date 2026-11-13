@@ -31,6 +31,7 @@ import { queuedText } from "./lifecycle.js";
 import {
   mockCanvasContext,
   runMockCanvas,
+  runMockHtml,
   runMockLinks,
   runMockStates,
   wantsMockCanvas,
@@ -851,22 +852,6 @@ async function runHeadingEdit(
   return finalText;
 }
 
-async function runHtmlEdit(
-  session: MockSession,
-  workTree: string,
-  text: string
-): Promise<string> {
-  const finalText = await writeHtmlChange(
-    session,
-    path.join(workTree, "index.html"),
-    text
-  );
-
-  await session.say(finalText);
-
-  return finalText;
-}
-
 async function runReactEdit(
   session: MockSession,
   workTree: string,
@@ -1200,7 +1185,11 @@ function runMockEdit(
   }
 
   if (ctx.project.kind === "html") {
-    return runHtmlEdit(session, workTree, text);
+    return runMockHtml(
+      session,
+      { request: ctx.request, text, workTree },
+      writeHtmlChange
+    );
   }
 
   return runReactEdit(session, workTree, text);

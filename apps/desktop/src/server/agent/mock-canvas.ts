@@ -318,3 +318,5 @@ export async function runMockLinks(
 
   return result.content.map((part) => part.text).join("\n");
 }
+
+export { runMockHtml } from "./mock-linked-page.js";

@@ -2493,6 +2493,11 @@ export interface CompiledTokenEntry {
   source?: TokenSourceLocation;
 }
 
+export interface AppTokenOrigin {
+  readonly appName: string;
+  readonly file: string;
+}
+
 export interface AppTokenSource {
   kind: "css";
   file: string;
@@ -2500,6 +2505,7 @@ export interface AppTokenSource {
   declarations: number;
   tokens: number;
   darkTokens: number;
+  origin?: AppTokenOrigin | null;
 }
 
 export interface DesignSystemState {

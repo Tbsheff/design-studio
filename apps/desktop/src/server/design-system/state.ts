@@ -10,7 +10,7 @@ import type {
 import type { DesignSystemPromptContext } from "../../shared/server-ports.js";
 import {
   appTokenState,
-  loadAppTokens,
+  getProjectTokens,
   usesAppTokens,
 } from "./app-tokens/source.js";
 import { stripTokenBlock } from "./design-md.js";
@@ -26,7 +26,7 @@ export async function readDesignSystemState(
   const files = await readDesignSystemFiles(direction.workTree);
 
   if (!files && usesAppTokens(project)) {
-    const app = await loadAppTokens(direction.workTree);
+    const app = await getProjectTokens(project, direction.workTree);
 
     if (app) {
       return appTokenState(app);
@@ -66,7 +66,7 @@ export async function loadDesignSystemPromptContext(
   const files = await readDesignSystemFiles(workTree);
 
   if (!files && project && usesAppTokens(project)) {
-    const app = await loadAppTokens(workTree);
+    const app = await getProjectTokens(project, workTree);
 
     return app
       ? {

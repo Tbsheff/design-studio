@@ -12,7 +12,22 @@ export { upsertTokenBlock } from "./design-md.js";
 
 export { DESIGN_MD_FILE } from "./packs.js";
 
-export { loadAppTokens } from "./app-tokens/source.js";
+export {
+  isAppPrototype,
+  loadAppTokens,
+  PROTOTYPE_TOKENS_FILE,
+} from "./app-tokens/source.js";
+
+export {
+  getAppTokensIn,
+  toPrototypeTokenCss,
+  toTokenDiff,
+} from "./app-tokens/prototype-tokens.js";
+
+export type {
+  PrototypeTokenCss,
+  TokenDiff,
+} from "./app-tokens/prototype-tokens.js";
 
 export { harvestNextFonts } from "./extract/next-font.js";
 

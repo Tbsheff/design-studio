@@ -10,6 +10,8 @@ const WALK_ENTRIES = 60_000;
 const WALK_DEPTH = 8;
 const WALK_FILES = 200;
 const NEGATIVE_TTL_MS = 30_000;
+const SHADCN_BONUS = 200;
+const KNOWN_BONUS = 20;
 
 const SKIP_DIRS = new Set([
   "node_modules",
@@ -223,6 +225,37 @@ async function best(
   return top?.file ?? null;
 }
 
+const toAppDirCandidates = async (
+  root: string,
+  dir: string
+): Promise<Map<string, number>> => {
+  const candidates = new Map<string, number>();
+  const fromShadcn = await shadcnCss(root, dir);
+
+  if (fromShadcn) {
+    candidates.set(fromShadcn, SHADCN_BONUS);
+  }
+
+  for (const known of KNOWN_FILES) {
+    candidates.set(`${dir}/${known}`, KNOWN_BONUS);
+  }
+
+  return candidates;
+};
+
+export const getAppDirTokenFile = async (
+  workspaceRoot: string,
+  appDir: string
+): Promise<string | null> => {
+  if (appDir === "" || appDir.startsWith("..")) {
+    return null;
+  }
+
+  const candidates = await toAppDirCandidates(workspaceRoot, appDir);
+
+  return best(workspaceRoot, candidates);
+};
+
 async function detect(root: string): Promise<string | null> {
   const dirs = [
     "",
@@ -237,14 +270,14 @@ async function detect(root: string): Promise<string | null> {
     const fromShadcn = await shadcnCss(root, dir);
 
     if (fromShadcn) {
-      candidates.set(fromShadcn, 200);
+      candidates.set(fromShadcn, SHADCN_BONUS);
     }
 
     for (const known of KNOWN_FILES) {
       const relative = dir ? `${dir}/${known}` : known;
 
       if (!candidates.has(relative)) {
-        candidates.set(relative, 20);
+        candidates.set(relative, KNOWN_BONUS);
       }
     }
   }

@@ -23,6 +23,16 @@ const routes = {
     method: "GET",
     path: "/api/projects/:projectId/tokens/export",
   },
+  importToken: {
+    id: "token.import",
+    invalidates: [
+      "token.listUsage",
+      "direct-edit.getDesignSystem",
+      "version.list",
+    ],
+    method: "POST",
+    path: "/api/projects/:projectId/d/:directionId/tokens/import",
+  },
   listClassesToken: {
     id: "token.listClasses",
     invalidates: [],

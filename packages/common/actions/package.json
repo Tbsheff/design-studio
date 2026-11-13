@@ -640,6 +640,7 @@
     "./token/errors/index": "./src/token/errors/index.ts",
     "./token/errors/status": "./src/token/errors/status.ts",
     "./token/export": "./src/token/export.ts",
+    "./token/import": "./src/token/import.ts",
     "./token/index": "./src/token/index.ts",
     "./token/list-classes": "./src/token/list-classes.ts",
     "./token/list-usage": "./src/token/list-usage.ts",

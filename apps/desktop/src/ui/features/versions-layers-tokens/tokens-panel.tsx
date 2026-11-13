@@ -74,12 +74,7 @@ const TokensPanel = ({
         </Suspense>
       )}
       {tokens.source && (
-        <TokensSource
-          darkTokens={tokens.source.darkTokens}
-          declarations={tokens.source.declarations}
-          file={tokens.source.file}
-          tokens={tokens.source.tokens}
-        />
+        <TokensSource setup={sweep ?? null} source={tokens.source} />
       )}
       <TokensSearch query={query} onQuery={setQuery} />
       {sweep && (

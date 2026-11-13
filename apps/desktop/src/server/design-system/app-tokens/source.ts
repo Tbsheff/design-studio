@@ -1,6 +1,7 @@
 import { readFile, realpath, stat } from "node:fs/promises";
 
 import type {
+  AppTokenOrigin,
   AppTokenSource,
   CompiledTokenEntry,
   DesignSystemState,
@@ -28,10 +29,20 @@ export interface LoadedAppTokens {
 
 const cache = new Map<string, { stamp: string; loaded: LoadedAppTokens }>();
 
+export const PROTOTYPE_TOKENS_FILE = "tokens.css";
+
+export function isAppPrototype(project: Project): boolean {
+  return (
+    project.imported !== null &&
+    project.imported.created === true &&
+    (project.appProjectId ?? "") !== ""
+  );
+}
+
 export function usesAppTokens(project: Project): boolean {
   return (
     project.imported !== null &&
-    project.imported.created !== true &&
+    (project.imported.created !== true || isAppPrototype(project)) &&
     !project.designSystemFor
   );
 }
@@ -103,6 +114,43 @@ export async function loadAppTokens(
   return file ? readAppTokensAt(workTree, file) : null;
 }
 
+const PROTOTYPE_HEADER =
+  /^\/\* Design tokens of (?<appName>.*) \((?<file>[^()]*)\)\. Design Studio writes this file\. \*\//mu;
+
+const NO_TOKEN_FILE = "no token file found";
+
+export function toTokenOrigin(text: string): AppTokenOrigin | null {
+  const groups = PROTOTYPE_HEADER.exec(text)?.groups;
+  const appName = groups?.["appName"] ?? "";
+  const file = groups?.["file"] ?? "";
+
+  if (appName === "" || file === "" || file === NO_TOKEN_FILE) {
+    return null;
+  }
+
+  return { appName, file };
+}
+
+export async function getProjectTokens(
+  project: Project,
+  workTree: string
+): Promise<LoadedAppTokens | null> {
+  if (!isAppPrototype(project)) {
+    return loadAppTokens(workTree);
+  }
+
+  const loaded = await readAppTokensAt(workTree, PROTOTYPE_TOKENS_FILE);
+
+  if (loaded === null) {
+    return null;
+  }
+
+  return {
+    ...loaded,
+    summary: { ...loaded.summary, origin: toTokenOrigin(loaded.text) },
+  };
+}
+
 export async function appTokensFor(
   project: Project,
   direction: Direction
@@ -115,7 +163,7 @@ export async function appTokensFor(
     return null;
   }
 
-  return loadAppTokens(direction.workTree);
+  return getProjectTokens(project, direction.workTree);
 }
 
 export function appTokenState(loaded: LoadedAppTokens): DesignSystemState {

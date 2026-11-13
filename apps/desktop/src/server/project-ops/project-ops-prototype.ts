@@ -12,10 +12,8 @@ import {
 } from "@design-studio/contracts/folders";
 import { Effect } from "effect";
 
-import { harvestNextFonts, loadAppTokens } from "../design-system/index.js";
+import { toPrototypeTokenCss } from "../design-system/index.js";
 import { attemptKnown } from "../platform/attempt/index.js";
-import { toPrototypeCss } from "./engine/to-prototype-css.js";
-import type { PrototypeFonts } from "./engine/to-prototype-css.js";
 import { toPrototypePage } from "./engine/to-prototype-page.js";
 import {
   getFolderContext,
@@ -35,11 +33,6 @@ interface CreatedPrototype {
 interface PrototypeTokens {
   readonly css: string | null;
   readonly file: string | null;
-}
-
-interface FontCandidate {
-  readonly token: string;
-  readonly value?: string;
 }
 
 const PROTOTYPES_FOLDER = "prototypes";
@@ -120,50 +113,15 @@ const toAppDesignMd = Effect.fn("ProjectOpsPrototype.toAppDesignMd")(
   }
 );
 
-const toFontValue = (
-  candidates: readonly FontCandidate[],
-  token: string
-): string | null =>
-  candidates.find((candidate) => candidate.token === token)?.value ?? null;
+const NO_TOKENS: PrototypeTokens = { css: null, file: null };
 
 const toPrototypeTokens = Effect.fn("ProjectOpsPrototype.toPrototypeTokens")(
   function* run(runtime: ProjectOpsRuntime, app: Project) {
-    const workTree = toAppFolder(runtime, app);
+    const built = yield* attemptKnown(() =>
+      toPrototypeTokenCss(toAppFolder(runtime, app), app.name)
+    ).pipe(Effect.orElseSucceed(() => NO_TOKENS));
 
-    const [loaded, harvested] = yield* Effect.all(
-      [
-        attemptKnown(() => loadAppTokens(workTree)).pipe(
-          Effect.orElseSucceed(() => null)
-        ),
-        attemptKnown(() => harvestNextFonts(workTree)).pipe(
-          Effect.orElseSucceed(() => null)
-        ),
-      ],
-      { concurrency: "unbounded" }
-    );
-
-    const candidates = harvested?.candidates ?? [];
-
-    const fonts: PrototypeFonts = {
-      googleFontsUrl: harvested?.googleFontsUrl ?? null,
-      mono: toFontValue(candidates, "font.mono"),
-      sans: toFontValue(candidates, "font.body"),
-    };
-
-    const declarations = (loaded?.sheet.declarations ?? []).map((entry) => ({
-      name: entry.name,
-      scope: entry.scope,
-      value: entry.value,
-    }));
-
-    const file = loaded?.file ?? null;
-    let css: string | null = null;
-
-    if (file !== null || candidates.length > 0) {
-      css = toPrototypeCss({ appName: app.name, declarations, file, fonts });
-    }
-
-    const tokens: PrototypeTokens = { css, file };
+    const tokens: PrototypeTokens = { css: built.css, file: built.file };
 
     return tokens;
   }

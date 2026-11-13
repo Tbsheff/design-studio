@@ -8,6 +8,7 @@ import {
   preview as deleteTokenPreview,
 } from "./delete.js";
 import { handle as exportTokenHandle } from "./export.js";
+import { handle as importTokenHandle } from "./import.js";
 import { handle as listClassesTokenHandle } from "./list-classes.js";
 import { handle as listUsageTokenHandle } from "./list-usage.js";
 import { handle as renameTokenHandle } from "./rename.js";
@@ -17,6 +18,7 @@ const TokenEntries = {
   applyToken: { handle: applyTokenHandle },
   deleteToken: { handle: deleteTokenHandle, preview: deleteTokenPreview },
   exportToken: { handle: exportTokenHandle },
+  importToken: { handle: importTokenHandle },
   listClassesToken: { handle: listClassesTokenHandle },
   listUsageToken: { handle: listUsageTokenHandle },
   renameToken: { handle: renameTokenHandle },

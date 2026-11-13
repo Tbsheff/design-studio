@@ -61,6 +61,17 @@ const withMark = (
   mark,
 ];
 
+const withoutAgent = (
+  marks: readonly PresenceMark[],
+  agent: string
+): readonly PresenceMark[] => {
+  if (!marks.some((mark) => mark.agent === agent)) {
+    return marks;
+  }
+
+  return marks.filter((mark) => mark.agent !== agent);
+};
+
 const toLiveMarks = (
   marks: readonly PresenceMark[],
   now: number
@@ -84,6 +95,7 @@ export {
   toPresenceFrameId,
   toPresenceFrameName,
   withMark,
+  withoutAgent,
 };
 
 export type { PresenceMark, PresenceScope, PresenceTarget };

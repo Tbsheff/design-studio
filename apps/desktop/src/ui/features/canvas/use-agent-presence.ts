@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { toAgentName } from "../../domain/agent-names.js";
 import { useProjectEvents } from "../../platform/events.js";
@@ -8,6 +8,7 @@ import {
   toNextExpiry,
   toPresenceFrameId,
   withMark,
+  withoutAgent,
 } from "./agent-presence-model.js";
 import type { PresenceMark, PresenceTarget } from "./agent-presence-model.js";
 import type { CanvasFrames } from "./use-canvas-frames.js";
@@ -26,6 +27,7 @@ const IN_APP_AGENT = "Studio agent";
 
 const useAgentPresence = (input: AgentPresenceInput): AgentPresence => {
   const [marks, setMarks] = useState<readonly PresenceMark[]>([]);
+  const liveRuns = useRef<Set<string>>(new Set());
   const { layout } = input.frames;
 
   const place = (agent: string, at: number, target: PresenceTarget): void => {
@@ -59,10 +61,19 @@ const useAgentPresence = (input: AgentPresenceInput): AgentPresence => {
     }
 
     if (event.type === "run.tool.started") {
+      liveRuns.current.add(event.runId);
       place(IN_APP_AGENT, event.ts, {
         directionId: event.directionId ?? null,
         frameId: null,
       });
+    }
+
+    if (event.type === "run.finished") {
+      liveRuns.current.delete(event.runId);
+
+      if (liveRuns.current.size === 0) {
+        setMarks((current) => withoutAgent(current, IN_APP_AGENT));
+      }
     }
   });
 

@@ -1,6 +1,6 @@
 import type { Attachment } from "@design-studio/contracts";
 
-import { buildUserText } from "../agent/index.js";
+import { buildUserMessageParts } from "../agent/index.js";
 import type { RunDriver } from "../agent/index.js";
 import { runAgentTool } from "../mcp/index.js";
 import type { ServerConfig } from "../platform/config/index.js";
@@ -99,12 +99,15 @@ const runMockImport = async (
     ctx.direction.sessionId ?? `mock-${ctx.direction.id}-${runId}`
   );
   sink.usage(MOCK_CONTEXT_TOKENS);
+
+  const parts = await buildUserMessageParts(ctx);
+
   sink.sent({
     imageCount: ctx.attachments.length,
     promptHash: "mock",
     recommendedSkills: [],
     resume: ctx.direction.sessionId,
-    text: buildUserText(ctx),
+    text: parts.text,
     updatedInstructions: false,
   });
 

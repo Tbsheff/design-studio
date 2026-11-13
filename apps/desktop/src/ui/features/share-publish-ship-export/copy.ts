@@ -322,4 +322,18 @@ const copy = {
   yourNameInBranches: "Your name in branches",
 } as const;
 
-export { copy };
+const trustedCopy = {
+  add: "Add",
+  addFolder: "Add folder…",
+  envTag: "From STUDIO_MCP_TRUSTED_FOLDERS",
+  folderMany: "folders",
+  folderOne: "folder",
+  note: "MCP clients can make a design system from these folders without asking you.",
+  pathLabel: "Folder path",
+  pathPlaceholder: "/Users/you/code/app",
+  pickTitle: "Choose a trusted folder",
+  remove: "Remove",
+  title: "Trusted folders",
+} as const;
+
+export { copy, trustedCopy };

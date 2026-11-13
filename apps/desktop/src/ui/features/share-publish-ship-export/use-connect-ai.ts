@@ -14,6 +14,7 @@ interface ConnectAiState {
   readonly rotateToken: () => void;
   readonly setEdits: (isAllowed: boolean) => void;
   readonly setEnabled: (isEnabled: boolean) => void;
+  readonly setTrustedFolders: (folders: readonly string[]) => void;
   readonly setup: ConnectSetup | null;
 }
 
@@ -74,6 +75,11 @@ const useConnectAi = (): ConnectAiState => {
     [change]
   );
 
+  const setTrustedFolders = useCallback(
+    (folders: readonly string[]): void => change({ trustedFolders: folders }),
+    [change]
+  );
+
   const rotateToken = useCallback(
     (): void => change({ rotate: true }),
     [change]
@@ -86,6 +92,7 @@ const useConnectAi = (): ConnectAiState => {
     rotateToken,
     setEdits,
     setEnabled,
+    setTrustedFolders,
     setup,
   };
 };

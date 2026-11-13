@@ -5,6 +5,7 @@ const copy = {
   allOn: "All on",
   allowOnce: "Allow once",
   always: "Always ",
+  alwaysFolder: "Always allow this folder",
   approveAndBuild: "Approve and build",
   attachFolder: "Attach folder…",
   attachMentionSkills: "Attach, mention, skills and run settings",

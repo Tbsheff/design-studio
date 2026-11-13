@@ -8,6 +8,7 @@ import type { McpApprovalCard } from "./use-mcp-feed.js";
 
 interface McpApprovalState {
   readonly allow: () => void;
+  readonly allowFolder: () => void;
   readonly deny: () => void;
   readonly error: string | null;
   readonly isPending: boolean;
@@ -21,13 +22,17 @@ const useMcpApproval = (
   const [local, setLocal] = useState<McpApprovalOutcome | null>(null);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const approvalId = card.approval.id;
+  const { folder, id: approvalId } = card.approval;
 
   const answer = useCallback(
-    (isAllowed: boolean): void => {
+    (isAllowed: boolean, trusted: string | null): void => {
       setError(null);
       startTransition(async () => {
         try {
+          if (trusted !== null) {
+            await mcpApi.trustFolder(trusted);
+          }
+
           await mcpApi.answer(approvalId, isAllowed);
           setLocal(pick(isAllowed, "allow", "deny"));
           onAnswer?.(isAllowed);
@@ -45,10 +50,15 @@ const useMcpApproval = (
     [approvalId, onAnswer]
   );
 
-  const allow = useCallback((): void => answer(true), [answer]);
-  const deny = useCallback((): void => answer(false), [answer]);
+  const allow = useCallback((): void => answer(true, null), [answer]);
+  const deny = useCallback((): void => answer(false, null), [answer]);
 
-  return { allow, deny, error, isPending, local };
+  const allowFolder = useCallback(
+    (): void => answer(true, folder),
+    [answer, folder]
+  );
+
+  return { allow, allowFolder, deny, error, isPending, local };
 };
 
 export { useMcpApproval };

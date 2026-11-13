@@ -9,6 +9,16 @@ type ApprovalOutput = RouteOutput<typeof routes.setApprovalConnection>;
 
 type StatusOutput = RouteOutput<typeof routes.setStatusConnection>;
 
+const trustFolder = async (folder: string): Promise<void> => {
+  const setup = await call(routes.getSetupConnection, {});
+
+  if (!setup.trustedFolders.includes(folder)) {
+    await call(routes.setStatusConnection, {
+      trustedFolders: [...setup.trustedFolders, folder],
+    });
+  }
+};
+
 const mcpApi = {
   activity: (pid: string): Promise<ActivityOutput> =>
     call(routes.listActivityConnection, { projectId: pid }),
@@ -22,6 +32,7 @@ const mcpApi = {
     rotate?: boolean;
   }): Promise<StatusOutput> => call(routes.setStatusConnection, input),
   status: (): Promise<StatusOutput> => call(routes.getStatusConnection, {}),
+  trustFolder,
 };
 
 export { mcpApi };

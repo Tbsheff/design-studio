@@ -4,6 +4,7 @@ import type { ReactElement } from "react";
 import type { ConnectSetup } from "./connect-ai-api.js";
 import { ConnectAiTitles } from "./connect-ai-titles.js";
 import { ConnectEditsRow } from "./connect-edits-row.js";
+import { ConnectTrustedRow } from "./connect-trusted-row.js";
 import { copy as uiCopy } from "./copy.js";
 import { pick } from "./pick.js";
 import { ToggleSwitch } from "./toggle-switch.js";
@@ -38,7 +39,8 @@ const ConnectAiServer = ({
   setup,
   state,
 }: ConnectAiServerProps): ReactElement => {
-  const { clients, failure, isBusy, rotateToken, setEdits, setEnabled } = state;
+  const { clients, failure, isBusy, rotateToken } = state;
+  const { setEdits, setEnabled, setTrustedFolders } = state;
 
   const toggleEnabled = useCallback(
     (): void => setEnabled(!setup.isEnabled),
@@ -66,6 +68,13 @@ const ConnectAiServer = ({
           isAllowed={setup.canEdit}
           isBusy={isBusy}
           onChange={setEdits}
+        />
+      )}
+      {setup.isEnabled && (
+        <ConnectTrustedRow
+          isBusy={isBusy}
+          setup={setup}
+          onChange={setTrustedFolders}
         />
       )}
       <div className="export-connect-foot">

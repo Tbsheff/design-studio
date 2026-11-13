@@ -4,7 +4,7 @@ import type { ReactElement } from "react";
 import { cn } from "../../ai/lib/utils.js";
 import { useNow } from "../../platform/clock.js";
 import { GROUP_ROLE } from "./aria-role-model.js";
-import { copy } from "./copy.js";
+import { McpApprovalActions } from "./mcp-approval-actions.js";
 import {
   OUTCOME_VIEW,
   SECOND_MS,
@@ -41,7 +41,7 @@ const McpApproval = ({
 }): ReactElement => {
   const { approval } = card;
   const state = useMcpApproval(card, onAnswer);
-  const { allow, deny } = state;
+  const { allow, allowFolder, deny } = state;
   const now = useNow(card.outcome === null && state.local === null, SECOND_MS);
   const outcome = toOutcome(card, state.local, now);
 
@@ -76,28 +76,14 @@ const McpApproval = ({
       {approval.detail && (
         <p className="mcp-approval-detail">{approval.detail}</p>
       )}
-      <div className="permission-actions">
-        <button
-          type="button"
-          className="btn small primary"
-          disabled={state.isPending}
-          onClick={allow}
-        >
-          {copy.allowOnce}
-        </button>
-        <button
-          type="button"
-          className="btn small"
-          disabled={state.isPending}
-          onClick={deny}
-        >
-          {copy.deny}
-        </button>
-        <span className="mcp-approval-time" aria-live="off">
-          {countdown(approval.expiresAt - now)}
-          {copy.left}
-        </span>
-      </div>
+      <McpApprovalActions
+        folder={approval.folder}
+        isPending={state.isPending}
+        timeLeft={countdown(approval.expiresAt - now)}
+        onAllow={allow}
+        onAllowFolder={allowFolder}
+        onDeny={deny}
+      />
       {state.error && (
         <p className="permission-error" role="alert">
           {state.error}

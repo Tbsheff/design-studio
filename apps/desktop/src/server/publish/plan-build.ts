@@ -8,6 +8,7 @@ import type { ShareFrame } from "@design-studio/contracts/share";
 
 import {
   PUBLISH_MAX_BYTES,
+  PUBLISH_MAX_FILES,
   PUBLISH_MAX_FRAMES,
   type PublishKind,
   type PublishPlanInput,
@@ -18,6 +19,7 @@ import { framesOf } from "../share/frames.js";
 import { captureShare } from "../share/snapshot.js";
 import type { CommentStore } from "../store/comments.js";
 import { buildSiteBundle, BundleError, rootRefPages } from "./bundle.js";
+import type { BundleResult } from "./bundle.js";
 import { createPlayViewer } from "./play-viewer.js";
 import type { PlayViewerFiles } from "./play-viewer.js";
 import type { PublicationRecord } from "./store.js";
@@ -139,12 +141,31 @@ export async function buildViewer(
 const NO_VIEWER =
   "The live viewer was not added: this version has no canvas frames, or the Design Studio UI build is missing. The link opens the first page.";
 
-const toViewerWarnings = (viewer: PlayViewerFiles | null): string[] => {
+const TOO_LARGE_VIEWER =
+  "The live viewer was not added: with it, this version is over the publish limit of files or bytes. The link opens the first page.";
+
+interface ViewerFit {
+  readonly viewer: PlayViewerFiles | null;
+  readonly warnings: readonly string[];
+}
+
+const toViewerFit = (
+  out: BundleResult,
+  viewer: PlayViewerFiles | null
+): ViewerFit => {
   if (viewer === null) {
-    return [NO_VIEWER];
+    return { viewer: null, warnings: [NO_VIEWER] };
   }
 
-  return [];
+  const isTooLarge =
+    out.files.length + viewer.files.length > PUBLISH_MAX_FILES ||
+    out.bytes + viewer.bytes > PUBLISH_MAX_BYTES;
+
+  if (isTooLarge) {
+    return { viewer: null, warnings: [TOO_LARGE_VIEWER] };
+  }
+
+  return { viewer, warnings: [] };
 };
 
 const toViewerFiles = (viewer: PlayViewerFiles | null): string[] => {
@@ -183,11 +204,7 @@ export async function buildSite(
     }),
   ]);
 
-  if (out.bytes + (viewer?.bytes ?? 0) > PUBLISH_MAX_BYTES) {
-    throw new BadRequestError(
-      "This version with its live viewer is larger than 100 MB, so it was not published."
-    );
-  }
+  const fit = toViewerFit(out, viewer);
 
   const warnings =
     absolute.length > 0
@@ -199,12 +216,12 @@ export async function buildSite(
   return {
     kind: "site",
     pages: out.pages,
-    files: [...out.files, ...toViewerFiles(viewer)],
-    bytes: out.bytes + (viewer?.bytes ?? 0),
+    files: [...out.files, ...toViewerFiles(fit.viewer)],
+    bytes: out.bytes + (fit.viewer?.bytes ?? 0),
     comments: 0,
     frames: null,
     frameIds: null,
-    warnings: [...warnings, ...toViewerWarnings(viewer)],
+    warnings: [...warnings, ...fit.warnings],
   };
 }
 

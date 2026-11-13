@@ -41,6 +41,7 @@ const handle = Effect.fn("canvas.importFrame")(function* run(
 
   const written = yield* writer.create({
     directionId: input.directionId ?? canvasOwner(project).id,
+    imagePath: attachment.path,
     name: input.name,
     projectId: input.projectId,
     x: input.x,

@@ -274,6 +274,16 @@ const copy = {
     "The layer changed while you typed, so your text is not saved. Select the layer and type it again:",
   textStyle: "Text style",
   textUseTheImageOnThe: "Use the image on the clipboard",
+  textWrap: "Wrap",
+  textWrapBalance: "Balance",
+  textWrapBalanceTip: "Balance: make the lines about the same length",
+  textWrapDefault: "Default",
+  textWrapDefaultTip: "Default: wrap at the box edge",
+  textWrapLabel: "Text wrap",
+  textWrapNone: "No wrap",
+  textWrapNoneTip: "No wrap: keep the text on one line",
+  textWrapPretty: "Pretty",
+  textWrapPrettyTip: "Pretty: prevent one word alone on the last line",
   theseClassesAreNotAPlain:
     "These classes are not a plain string, so they are not edited here.",
   thisElementAlsoSpreads:

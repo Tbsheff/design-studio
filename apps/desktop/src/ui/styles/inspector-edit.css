@@ -1259,3 +1259,19 @@ dialog.code-edit {
 .edit-pane .ins-numbers > button.on {
   color: var(--accent);
 }
+
+.edit-pane .ins-text-wrap .segmented {
+  flex: 1;
+  min-width: 0;
+  gap: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.edit-pane .ins-text-wrap .segmented button {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 24px;
+  padding: 0 2px;
+}

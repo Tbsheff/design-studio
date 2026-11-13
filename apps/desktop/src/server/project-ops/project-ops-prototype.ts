@@ -1,4 +1,4 @@
-import { access, mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import type { Input } from "@design-studio/actions/_core/action";
@@ -14,6 +14,7 @@ import { Effect } from "effect";
 
 import { toPrototypeTokenCss } from "../design-system/index.js";
 import { attemptKnown } from "../platform/attempt/index.js";
+import { hasFile } from "../platform/local-file/index.js";
 import { toPrototypePage } from "./engine/to-prototype-page.js";
 import {
   getFolderContext,
@@ -248,12 +249,6 @@ const TOKENS_LINK_ATTRS = 'rel="stylesheet" href="tokens.css"';
 
 const HEAD_OPEN = /<head[^>]*>/iu;
 
-const isFilePresent = (file: string): Effect.Effect<boolean> =>
-  attemptKnown(() => access(file)).pipe(
-    Effect.as(true),
-    Effect.orElseSucceed(() => false)
-  );
-
 const toLinkedPage = (html: string): string => {
   if (html.includes('href="tokens.css"')) {
     return html;
@@ -267,7 +262,7 @@ const toLinkedPage = (html: string): string => {
 
 const setPrototypeTokensLink = Effect.fn("ProjectOpsPrototype.setTokensLink")(
   function* run(folder: string, page: string) {
-    const hasTokens = yield* isFilePresent(path.join(folder, TOKENS_FILE));
+    const hasTokens = yield* hasFile(path.join(folder, TOKENS_FILE));
 
     if (!hasTokens) {
       return false;

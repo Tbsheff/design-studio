@@ -18,10 +18,22 @@ const routes = {
     method: "GET",
     path: "/api/projects/:projectId/d/:directionId/pages/matches",
   },
+  inspectSourceChangesPage: {
+    id: "page.inspectSourceChanges",
+    invalidates: [],
+    method: "GET",
+    path: "/api/projects/:projectId/d/:directionId/pages/source/changes",
+  },
   inspectSourcePage: {
     id: "page.inspectSource",
     invalidates: [],
     method: "GET",
+    path: "/api/projects/:projectId/d/:directionId/pages/source",
+  },
+  setSourcePage: {
+    id: "page.setSource",
+    invalidates: ["page.inspectSource", "page.inspectSourceChanges"],
+    method: "PUT",
     path: "/api/projects/:projectId/d/:directionId/pages/source",
   },
   updateMatchesPage: {

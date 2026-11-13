@@ -18,6 +18,8 @@ import { toLayoutCandidates } from "./engine/to-route-files.js";
 
 const RECORD_FILE = path.join(".studio", "route-source.json");
 
+const SNAPSHOT_DIR = path.join(".studio", "route-source", "files");
+
 const MAIN_DIRECTION = "main";
 
 const RouteFileHashSchema = Schema.Struct({
@@ -25,11 +27,18 @@ const RouteFileHashSchema = Schema.Struct({
   sha: Schema.String,
 });
 
+const NO_SNAPSHOT = Effect.succeed(false);
+
+const HasSnapshotSchema = Schema.Boolean.pipe(
+  Schema.withDecodingDefaultKey(NO_SNAPSHOT)
+);
+
 const RouteSourceEntrySchema = Schema.Struct({
   appProjectId: Schema.String,
   copiedAt: Schema.Number,
   files: Schema.Array(RouteFileHashSchema),
   frameId: Schema.String,
+  hasSnapshot: HasSnapshotSchema,
   page: Schema.String,
   routePath: Schema.String,
   viewport: Schema.NullOr(Schema.Number),
@@ -137,34 +146,42 @@ const toRouteFiles = Effect.fn("RouteSource.toRouteFiles")(function* run(
   return [routeFile, ...layouts];
 });
 
-const toFileHashes = Effect.fn("RouteSource.toFileHashes")(function* run(
+const toSnapshotDir = (workTree: string, page: string): string =>
+  path.join(workTree, SNAPSHOT_DIR, encodeURIComponent(toPagePath(page)));
+
+const isInside = (folder: string, file: string): boolean => {
+  const relative = path.relative(folder, path.join(folder, file));
+
+  return relative !== "" && !relative.startsWith("..");
+};
+
+const getSnapshotText = (
   workTree: string,
-  files: readonly string[]
-) {
-  const shas = yield* toShaMap(workTree, files);
+  page: string,
+  file: string
+): Effect.Effect<string | null> => {
+  const folder = toSnapshotDir(workTree, page);
 
-  return files.flatMap((file) => {
-    const sha = shas.get(file) ?? null;
+  if (!isInside(folder, file)) {
+    return Effect.succeed(null);
+  }
 
-    if (sha === null) {
-      return [];
-    }
-
-    return [{ file, sha }];
-  });
-});
+  return readTextFile(path.join(folder, file));
+};
 
 export {
   getRecord,
+  getSnapshotText,
+  isInside,
   toRecordPath,
   hasPage,
   toDirection,
   toEntryOf,
-  toFileHashes,
   toMainDirection,
   toPagePath,
   toRouteFiles,
   toShaMap,
+  toSnapshotDir,
 };
 
 export type { RouteSourceEntry, RouteSourceRecord };

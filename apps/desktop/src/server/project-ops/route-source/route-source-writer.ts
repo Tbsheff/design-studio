@@ -1,12 +1,15 @@
+import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
+import { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import { Context, Effect, Layer } from "effect";
 
 import type { KnownFailure } from "../../platform/attempt/index.js";
 import { ProjectStore } from "../../store/index.js";
 import type { LocalOrgScope } from "../../store/index.js";
-import { toFileHashes, toPagePath, toRouteFiles } from "./route-source-file.js";
+import { getRecord, hasPage, toEntryOf } from "./route-source-file.js";
 import type { RouteSourceEntry } from "./route-source-file.js";
-import { setRecordEntry } from "./route-source-record.js";
-import { toAppWorkTree, toWorkTree } from "./route-source-target.js";
+import { setCopyEntry } from "./route-source-record.js";
+import { toWorkTree } from "./route-source-target.js";
+import type { SourcePageCommand } from "./route-source-target.js";
 
 interface RecordCommand {
   readonly appProjectId: string;
@@ -21,6 +24,9 @@ interface RecordCommand {
 interface RouteSourceWriterApi {
   readonly record: (
     command: RecordCommand
+  ) => Effect.Effect<RouteSourceEntry, KnownFailure, LocalOrgScope>;
+  readonly set: (
+    command: SourcePageCommand
   ) => Effect.Effect<RouteSourceEntry, KnownFailure, LocalOrgScope>;
 }
 
@@ -44,29 +50,35 @@ class RouteSourceWriter extends Context.Service<
             command.directionId
           ).pipe(Effect.provideService(ProjectStore, projects));
 
-          const app = yield* toAppWorkTree(command.appProjectId).pipe(
+          return yield* setCopyEntry(workTree, command).pipe(
             Effect.provideService(ProjectStore, projects)
           );
+        }),
+        set: Effect.fn("RouteSourceWriter.set")(function* run(
+          command: SourcePageCommand
+        ) {
+          const workTree = yield* toWorkTree(
+            command.projectId,
+            command.directionId
+          ).pipe(Effect.provideService(ProjectStore, projects));
 
-          const files = yield* toRouteFiles(
-            app.workTree,
-            app.appDir,
-            command.routePath
+          if (!(yield* hasPage(workTree, command.file))) {
+            return yield* new NotFound({
+              message: `The page ${command.file} does not exist.`,
+            });
+          }
+
+          const saved = toEntryOf(yield* getRecord(workTree), command.file);
+
+          if (saved === null) {
+            return yield* new BadRequest({
+              message: `The page ${command.file} is not a copy of an app route. Only a route prototype page can be marked as current.`,
+            });
+          }
+
+          return yield* setCopyEntry(workTree, saved).pipe(
+            Effect.provideService(ProjectStore, projects)
           );
-
-          const entry: RouteSourceEntry = {
-            appProjectId: command.appProjectId,
-            copiedAt: Date.now(),
-            files: yield* toFileHashes(app.workTree, files),
-            frameId: command.frameId,
-            page: toPagePath(command.page),
-            routePath: command.routePath,
-            viewport: command.viewport,
-          };
-
-          yield* setRecordEntry(workTree, entry);
-
-          return entry;
         }),
       });
     })

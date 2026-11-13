@@ -8,15 +8,19 @@ import {
   useTransition,
 } from "react";
 
+import { selectionRun, sendSelectionPrompt } from "../../platform/ask-chat.js";
+import { useLive } from "../../platform/live-store.js";
 import { subscribeDone, useAction } from "../../platform/query.js";
 import type { CanvasFrame } from "./canvas-layout-types.js";
 import {
   isRouteSourceChanged,
   toCopyFrame,
   toFrameById,
+  toRouteMergePrompt,
   toRouteSourceInput,
   toRouteSourceTip,
 } from "./route-source-model.js";
+import type { RouteSourceInput } from "./route-source-model.js";
 
 interface RouteSourceSetup {
   readonly activate: (frame: CanvasFrame) => void;
@@ -29,12 +33,52 @@ interface RouteSourceSetup {
 interface RouteSourceState {
   readonly copyFrame: CanvasFrame | null;
   readonly error: string | null;
+  readonly input: RouteSourceInput | null;
   readonly isChanged: boolean;
   readonly isPending: boolean;
   readonly tip: string;
   readonly handleCompare: () => void;
   readonly handleCopy: () => void;
 }
+
+interface RouteMergeState {
+  readonly error: string | null;
+  readonly isPending: boolean;
+  readonly isRunning: boolean;
+  readonly handleMark: () => void;
+  readonly handleUpdate: () => void;
+}
+
+const useRouteMerge = (input: RouteSourceInput | null): RouteMergeState => {
+  const setter = useAction(routes.setSourcePage);
+  const { run } = setter;
+  const isRunning = useLive(selectionRun);
+  const [isPending, startTransition] = useTransition();
+
+  const handleUpdate = useCallback((): void => {
+    if (input !== null) {
+      sendSelectionPrompt(toRouteMergePrompt(input.file));
+    }
+  }, [input]);
+
+  const handleMark = useCallback((): void => {
+    if (input === null) {
+      return;
+    }
+
+    startTransition(async () => {
+      await run(input);
+    });
+  }, [input, run]);
+
+  return {
+    error: setter.error?.message ?? null,
+    handleMark,
+    handleUpdate,
+    isPending,
+    isRunning,
+  };
+};
 
 const toNoCleanup = (): null => null;
 
@@ -121,12 +165,13 @@ const useRouteSource = (setup: RouteSourceSetup): RouteSourceState => {
     error,
     handleCompare,
     handleCopy,
+    input,
     isChanged,
     isPending,
     tip,
   };
 };
 
-export { useRouteSource };
+export { useRouteMerge, useRouteSource };
 
-export type { RouteSourceState };
+export type { RouteMergeState, RouteSourceState };

@@ -223,3 +223,11 @@ Shared files:
 10. Touch pointer in Play on phone frames (round 28 pick 5). UI-only view state with no MCP surface, so it ranks low for "headless".
 
 Sources: [venturebeat.com, Figma Make two-way GitHub](https://venturebeat.com/technology/are-designers-the-new-swes-figma-makes-new-two-way-github-integration-turns-designs-into-live-production-code-with-built-in-governance), [chatgate.ai doop](https://chatgate.ai/en/post/doop), [glama.ai doop](https://glama.ai/mcp/servers/kgoedecke/doop), [blog.mean.ceo Figma November 2026](https://blog.mean.ceo/figma-news-november-2026/).
+
+## Results
+
+- Merged with no conflicts, in order: text-wrap, auto-layout-padding, reader-view, frame-select, route-merge. Main at 91240ea2f.
+- Checks: gen-routes --check pass, typecheck 0 errors, lint:gate pass (59661, baseline 89733), build:ui pass, desktop:pack pass.
+- Installed app: :4570 returns 200. Server idle CPU 0.01 CPU-s/min over 60 s.
+- Open: no real-model run for route merge "Update with AI". No Bonaparte test for route merge, reader view or text wrap. Frame select undo label reads "Change canvas frames", and its toast stays after Cmd+Z. Auto layout gives a large right padding on auto-width parents. Route chip "Compare" not wired yet. MCP snapshots not refreshed (user decision).
+- Note: two agents ran `git stash pop` and applied an old shared stash by mistake, then reset their worktrees. The stash entry is unchanged.

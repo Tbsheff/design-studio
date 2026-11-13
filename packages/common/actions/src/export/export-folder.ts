@@ -58,7 +58,7 @@ const exportFolderExport = defineAction({
   agent: { off: "secret" },
   confirm: "user",
   description:
-    "Export a version as PNG, HTML, PDF, a handoff zip or a source zip and write the files to a folder. Returns the file paths. Default folder: the Design Studio data folder, exports/<projectId>. The user approves each export in Design Studio.",
+    "Export a version as PNG, HTML, PDF, a handoff zip or a source zip and write the files to a folder. Returns the file paths. Default folder: the Design Studio data folder, exports/<projectId>. An export to the default folder or a trusted folder runs at once. The user approves an export to any other folder in Design Studio.",
   errors: [BadRequest, Conflict, NotFound],
   http: { method: "POST", path: "/api/projects/:projectId/export/files" },
   id: "export.exportFolder",

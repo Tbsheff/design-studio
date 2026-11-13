@@ -160,7 +160,7 @@ async function plainTarget(
   const source = request.target.source;
 
   if (!source) {
-    throw refuse("This element has no source location; pass targetSource");
+    throw refuse("No source location. Pass target.source from get_layers");
   }
 
   const target = await resolveSource(scope.workTree, source.file);

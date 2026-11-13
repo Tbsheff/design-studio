@@ -1,0 +1,27 @@
+.shared-layers {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  margin: var(--s-2) var(--s-2) 0;
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-lg);
+  background: var(--surface-raised);
+  color: var(--text);
+}
+
+.shared-layers > svg {
+  flex: none;
+  color: var(--accent);
+}
+
+.shared-layers-line {
+  flex: 1 1 0;
+  min-width: 0;
+  color: var(--text);
+}
+
+.shared-layers-error {
+  flex-basis: 100%;
+  color: var(--danger);
+}

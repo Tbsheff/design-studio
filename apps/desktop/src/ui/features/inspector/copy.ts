@@ -217,6 +217,13 @@ const copy = {
   setByCode: "Set by code",
   setEachCorner: "Set each corner",
   shadow: "Shadow ",
+  sharedApplyPages: (count: number): string => `Apply to ${count} pages`,
+  sharedLabel: "Shared layer",
+  sharedMatchPages: (same: number, total: number): string =>
+    `${same} of ${total} pages match`,
+  sharedOnPages: (count: number): string => `On ${count} pages`,
+  sharedTip: (files: string): string =>
+    `The same element is on ${files}. Edit it here, then apply the edit to every page that matches.`,
   showFewer: "Show fewer",
   size: "Size",
   snapOffTip: "Snap to tokens is off: values stay as typed",

@@ -29,6 +29,12 @@ const AppField = ({ form }: { form: PortForm }): ReactElement => {
     return <AttachField error={error} onAttached={attached} />;
   }
 
+  let placeholder: string = COPY.placeholderPickAnApp;
+
+  if (!apps) {
+    placeholder = COPY.placeholderLoadingApps;
+  }
+
   return (
     <div className="field">
       <span id="port-app-label">{COPY.textTargetApp}</span>
@@ -37,7 +43,7 @@ const AppField = ({ form }: { form: PortForm }): ReactElement => {
         value={form.chosenApp}
         options={options}
         onChange={setAppId}
-        placeholder={COPY.placeholderLoadingApps}
+        placeholder={placeholder}
         disabled={!apps}
       />
     </div>

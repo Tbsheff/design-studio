@@ -170,4 +170,27 @@
 
 .share-lan-prompt {
   display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.share-qr-slot {
+  width: 132px;
+  height: 132px;
+  flex: none;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-sm);
+  background: var(--surface-inset);
+}
+
+.share-lan-prompt-body {
+  display: grid;
+  justify-items: start;
+  gap: var(--s-1-5);
+}
+
+.share-lan-prompt-note {
+  margin: 0;
+  color: var(--text-3);
+  font-size: var(--t-xs);
 }

@@ -4,6 +4,7 @@ import {
   ProjectOpsStore,
   ProjectOpsWriter,
   RepoCloneRunner,
+  RouteSourceWriter,
 } from "../../project-ops/index.js";
 import {
   ProjectLibraryStore,
@@ -20,6 +21,7 @@ const ProjectLive = Layer.mergeAll(
   ProjectOpsStore.layer,
   ProjectOpsWriter.layer,
   RepoCloneRunner.layer,
+  RouteSourceWriter.layer.pipe(Layer.provide(ProjectStore.layer)),
   ProjectLibraryStore.layer,
   ProjectLibraryWriter.layer,
   WorkspaceStore.layer,

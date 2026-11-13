@@ -1,0 +1,50 @@
+call-action page.inspectSource on http://127.0.0.1:4282. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 7 ms, git spawns: not counted (server side)
+{
+  "appProjectId": "Nn3EUj0SNg",
+  "changedFiles": [
+    {
+      "change": "changed",
+      "file": "app/settings/page.tsx"
+    }
+  ],
+  "copiedAt": 1794584035395,
+  "isChanged": true,
+  "isRouteCopy": true,
+  "routePath": "/settings"
+}
+
+[mcp] ok, 16 ms, git spawns: not counted (server side)
+{
+  "appProjectId": "Nn3EUj0SNg",
+  "changedFiles": [
+    {
+      "change": "changed",
+      "file": "app/settings/page.tsx"
+    }
+  ],
+  "copiedAt": 1794584035395,
+  "isChanged": true,
+  "isRouteCopy": true,
+  "routePath": "/settings"
+}
+
+[agent] ok, 7 ms, git spawns: not counted (server side)
+{
+  "appProjectId": "Nn3EUj0SNg",
+  "changedFiles": [
+    {
+      "change": "changed",
+      "file": "app/settings/page.tsx"
+    }
+  ],
+  "copiedAt": 1794584035395,
+  "isChanged": true,
+  "isRouteCopy": true,
+  "routePath": "/settings"
+}
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

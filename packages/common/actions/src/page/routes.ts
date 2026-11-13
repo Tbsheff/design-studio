@@ -6,11 +6,23 @@ const routes = {
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/import-page",
   },
+  importSourcePage: {
+    id: "page.importSource",
+    invalidates: ["canvas.getDoc", "version.list", "page.inspectSource"],
+    method: "POST",
+    path: "/api/projects/:projectId/d/:directionId/pages/source",
+  },
   inspectMatchesPage: {
     id: "page.inspectMatches",
     invalidates: [],
     method: "GET",
     path: "/api/projects/:projectId/d/:directionId/pages/matches",
+  },
+  inspectSourcePage: {
+    id: "page.inspectSource",
+    invalidates: [],
+    method: "GET",
+    path: "/api/projects/:projectId/d/:directionId/pages/source",
   },
   updateMatchesPage: {
     id: "page.updateMatches",

@@ -125,8 +125,10 @@ const copy = {
   justify: "Justify",
   keepRawValue: "Use raw",
   kitComponentDefaultProps: "Component, default props",
+  layerKeptItsPlace: "1 layer kept its place",
   layersHint:
     "Layers show for the live preview. Press ⌥1 to open them on the canvas.",
+  layersKeptTheirPlace: " layers kept their place",
   layout: "Layout",
   leaveTitle: "Save your edits?",
   letClaudeChoose: "Let Claude choose",

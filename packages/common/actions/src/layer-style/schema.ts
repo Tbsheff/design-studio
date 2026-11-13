@@ -113,10 +113,15 @@ const LayoutGapSchema = Schema.NullOr(
   Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(GAP_MAX))
 );
 
+const LayoutPaddingSchema = Schema.NullOr(Schema.Literal("auto")).pipe(
+  Schema.withDecodingDefaultKey(Effect.succeed("auto" as const))
+);
+
 const LayerLayoutChangeSchema = Schema.Struct({
   direction: Schema.Literals(["row", "column"]),
   gap: Schema.NullOr(Schema.String),
   movedChildren: Schema.Int,
+  padding: Schema.NullOr(Schema.String),
   skipped: Schema.Array(LayerStyleSkippedSchema),
   versionId: Schema.NullOr(Schema.String),
 });
@@ -131,6 +136,7 @@ export {
   LayerLayoutChangeSchema,
   LayoutGapSchema,
   LayoutKindSchema,
+  LayoutPaddingSchema,
   LayerScaleChangeSchema,
   LayerStyleChangeSchema,
   LayerStyleSchema,

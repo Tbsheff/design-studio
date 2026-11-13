@@ -14,7 +14,9 @@ export type {
   AutoLayoutPlan,
   LayoutChild,
   LayoutDirection,
+  LayoutBox,
   LayoutKind,
+  LayoutPadding,
 } from "./to-auto-layout.js";
 
 export type {

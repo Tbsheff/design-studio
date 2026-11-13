@@ -14,6 +14,7 @@ import type { DirectionIds, DirectionRun, SourceLoc } from "./deps.js";
 import { toAutoLayout } from "./engine/index.js";
 import type {
   AutoLayoutPlan,
+  LayoutBox,
   LayoutDirection,
   LayoutKind,
 } from "./engine/index.js";
@@ -27,6 +28,7 @@ import {
 import type { ChildEdit, FileWork, LayoutStyle } from "./layer-layout-files.js";
 import { toReorderedChildren } from "./layer-layout-order.js";
 import type { LayoutSlot } from "./layer-layout-order.js";
+import { toPaddingStyle, toPaddingText } from "./layer-layout-padding.js";
 import { toProbeLayoutChildren } from "./layer-layout-probe.js";
 import type { LayoutProbeChild } from "./layer-layout-probe.js";
 import { toLayerStyleFailure } from "./layer-style-failure.js";
@@ -42,16 +44,19 @@ interface SetLayerLayoutCommand {
   readonly gap: string | null;
   readonly layerId: string;
   readonly layout: LayoutKind;
+  readonly padding: "auto" | null;
   readonly projectId: string;
 }
 
 interface LayoutTarget {
   readonly children: readonly LayoutProbeChild[];
+  readonly frame: LayoutBox;
   readonly source: SourceLoc;
 }
 
 interface ParentLayout {
   readonly gap: string | null;
+  readonly padding: string | null;
   readonly style: LayoutStyle;
 }
 
@@ -73,6 +78,7 @@ const CHILD_REPEATED =
 
 const CLEAR_POSITION = {
   bottom: null,
+  inset: null,
   left: null,
   position: null,
   right: null,
@@ -154,17 +160,17 @@ const toLayoutTarget = async (
 
   const url = await toPageUrl(run, command.layerId);
 
-  const children = await toProbeLayoutChildren(
+  const probe = await toProbeLayoutChildren(
     run.runtime.preview,
     url,
     root.selector
   );
 
-  if (children === null) {
+  if (probe === null) {
     throw new LayerStyleError(NO_LAYER);
   }
 
-  return { children, source: root.source };
+  return { children: probe.children, frame: probe.frame, source: root.source };
 };
 
 const toSkips = (children: readonly LayoutProbeChild[]): LayoutSkip[] =>
@@ -277,18 +283,32 @@ const toGapStyle = (gap: string | null): LayoutStyle => {
 
 const toParentLayout = (
   plan: AutoLayoutPlan,
-  command: SetLayerLayoutCommand
+  command: SetLayerLayoutCommand,
+  isTailwind: boolean
 ): ParentLayout => {
   const gap = toGapValue(plan, command);
 
   return {
     gap,
+    padding: toPaddingText(plan.padding),
     style: {
       display: "flex",
       ...toDirectionStyle(plan, command),
       ...toGapStyle(gap),
+      ...toPaddingStyle(plan.padding, isTailwind),
     },
   };
+};
+
+const toPaddingFrame = (
+  target: LayoutTarget,
+  command: SetLayerLayoutCommand
+): LayoutBox | null => {
+  if (command.padding === null) {
+    return null;
+  }
+
+  return target.frame;
 };
 
 const toReorder = async (
@@ -342,12 +362,13 @@ const setLayerLayout = async (
       key: String(index),
     })),
     command.layout,
-    site.isTailwind
+    site.isTailwind,
+    toPaddingFrame(target, command)
   );
 
   const works = new Map<string, FileWork>();
   const reorder = await toReorder(run, works, target, plan);
-  const parent = toParentLayout(plan, command);
+  const parent = toParentLayout(plan, command, site.isTailwind);
 
   const edits = [
     ...toChildEdits(target.children, reorder.locs),
@@ -375,6 +396,7 @@ const setLayerLayout = async (
     direction: toWrittenDirection(plan, command),
     gap: parent.gap,
     movedChildren: reorder.moved,
+    padding: parent.padding,
     skipped: toSkips(target.children),
   };
 

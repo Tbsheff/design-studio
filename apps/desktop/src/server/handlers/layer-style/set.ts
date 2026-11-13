@@ -17,6 +17,7 @@ const handle = Effect.fn("layer-style.set")(function* run(
     gap: input.gap,
     layerId: input.layerId,
     layout: input.layout,
+    padding: input.padding,
     projectId: input.projectId,
   });
 }) satisfies Handle<typeof setLayerStyle>;

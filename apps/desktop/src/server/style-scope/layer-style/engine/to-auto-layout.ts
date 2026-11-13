@@ -15,11 +15,19 @@ interface LayoutChild {
   readonly key: string;
 }
 
+interface LayoutPadding {
+  readonly bottom: number;
+  readonly left: number;
+  readonly right: number;
+  readonly top: number;
+}
+
 interface AutoLayoutPlan {
   readonly direction: LayoutDirection;
   readonly gap: number | null;
   readonly hasAbsolute: boolean;
   readonly order: readonly string[];
+  readonly padding: LayoutPadding | null;
 }
 
 const TAILWIND_STEP = 4;
@@ -143,28 +151,63 @@ const toMedianGap = (
   return toSnappedGap(median, isTailwind);
 };
 
+const toSnappedSide = (space: number, isTailwind: boolean): number =>
+  toSnappedGap(Math.max(0, space), isTailwind);
+
+const toPadding = (
+  children: readonly LayoutChild[],
+  frame: LayoutBox | null,
+  isTailwind: boolean
+): LayoutPadding | null => {
+  if (frame === null || children.length === 0) {
+    return null;
+  }
+
+  const lefts = children.map((child) => child.box.x);
+  const tops = children.map((child) => child.box.y);
+  const rights = children.map((child) => child.box.x + child.box.width);
+  const bottoms = children.map((child) => child.box.y + child.box.height);
+
+  return {
+    bottom: toSnappedSide(
+      frame.y + frame.height - Math.max(...bottoms),
+      isTailwind
+    ),
+    left: toSnappedSide(Math.min(...lefts) - frame.x, isTailwind),
+    right: toSnappedSide(
+      frame.x + frame.width - Math.max(...rights),
+      isTailwind
+    ),
+    top: toSnappedSide(Math.min(...tops) - frame.y, isTailwind),
+  };
+};
+
 const toAutoLayout = (
   children: readonly LayoutChild[],
   layout: LayoutKind,
-  isTailwind: boolean
+  isTailwind: boolean,
+  frame: LayoutBox | null
 ): AutoLayoutPlan => {
   const direction = toDirection(children, layout);
   const hasAbsolute = children.some((child) => child.isAbsolute);
-
-  const isAllAbsolute =
-    children.length > 1 && children.every((child) => child.isAbsolute);
+  const isSorted = hasAbsolute && children.length > 1;
 
   let ordered: readonly LayoutChild[] = children;
   let gap: number | null = null;
+  let padding: LayoutPadding | null = null;
 
-  if (isAllAbsolute) {
+  if (isSorted) {
     ordered = toSortedChildren(children, direction);
     gap = toMedianGap(ordered, direction, isTailwind);
   }
 
+  if (hasAbsolute) {
+    padding = toPadding(children, frame, isTailwind);
+  }
+
   const order = ordered.map((child) => child.key);
 
-  return { direction, gap, hasAbsolute, order };
+  return { direction, gap, hasAbsolute, order, padding };
 };
 
 export { toAutoLayout };
@@ -175,4 +218,5 @@ export type {
   LayoutChild,
   LayoutDirection,
   LayoutKind,
+  LayoutPadding,
 };

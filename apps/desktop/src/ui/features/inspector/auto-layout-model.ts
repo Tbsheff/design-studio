@@ -1,5 +1,6 @@
 import type { IconName } from "@design-studio/ui";
 
+import { copy } from "./copy.js";
 import type { DirectEdit } from "./deps.js";
 import type { AlignCell } from "./sizing-model.js";
 
@@ -143,6 +144,17 @@ const toWrapPatch = (wraps: boolean): EditPatch => {
   return { "flex-wrap": "wrap" };
 };
 
+const toSkipNote = (count: number): string => {
+  if (count === 1) {
+    return copy.layerKeptItsPlace;
+  }
+
+  return `${count}${copy.layersKeptTheirPlace}`;
+};
+
+const toSkipTip = (reasons: readonly string[]): string =>
+  [...new Set(reasons)].join(" ");
+
 export {
   DEFAULT_GAP,
   DIRECTIONS,
@@ -160,6 +172,8 @@ export {
   toGapPatch,
   toLastGap,
   toOnClass,
+  toSkipNote,
+  toSkipTip,
   toWrapPatch,
   toWrapTip,
 };

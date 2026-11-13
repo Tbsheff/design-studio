@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 
 import {
+  DIRECT_STYLE_PROPERTIES,
   SOURCE_LOC_ATTR,
   parseDirectEditRequest,
   patchSource,
@@ -10,14 +11,13 @@ import {
   writeAndCommitAll,
 } from "./deps.js";
 import type {
-  DirectEditRequest,
   DirectionRun,
   SourceLoc,
   TailwindTheme,
   WrittenFile,
 } from "./deps.js";
 
-type LayoutStyle = DirectEditRequest["style"];
+type LayoutStyle = Readonly<Record<string, string | null>>;
 
 type FileWork = WrittenFile & { readonly theme: TailwindTheme | null };
 
@@ -25,6 +25,22 @@ interface ChildEdit {
   readonly loc: SourceLoc;
   readonly style: LayoutStyle;
 }
+
+const STYLE_KEYS = new Set<string>(DIRECT_STYLE_PROPERTIES);
+
+interface StyleParts {
+  readonly direct: LayoutStyle;
+  readonly extra: LayoutStyle;
+}
+
+const toStyleParts = (style: LayoutStyle): StyleParts => {
+  const entries = Object.entries(style);
+
+  return {
+    direct: Object.fromEntries(entries.filter(([key]) => STYLE_KEYS.has(key))),
+    extra: Object.fromEntries(entries.filter(([key]) => !STYLE_KEYS.has(key))),
+  };
+};
 
 const toLocText = (loc: SourceLoc): string =>
   `${loc.file}:${loc.line}:${loc.col}`;
@@ -72,11 +88,15 @@ const toPatchedWork = (
   let { code } = work;
 
   for (const edit of sorted) {
-    const request = parseDirectEditRequest({
+    const parts = toStyleParts(edit.style);
+
+    const parsed = parseDirectEditRequest({
       selector: toLocSelector(edit.loc),
       source: edit.loc,
-      style: edit.style,
+      style: parts.direct,
     });
+
+    const request = { ...parsed, style: { ...parsed.style, ...parts.extra } };
 
     ({ code } = patchSource(work.target.relative, code, request, work.theme));
   }

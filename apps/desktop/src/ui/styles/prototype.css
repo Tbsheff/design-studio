@@ -177,6 +177,20 @@ body:has(.ds-toast) .proto-bar,
   bottom: calc(var(--s-4) + 44px);
 }
 
+.proto-bar > .topbar-anchor,
+.proto-bar > .btn {
+  flex: none;
+}
+
+.studio-stage .proto-bar {
+  bottom: calc(var(--dock-gap) * 2 + var(--tools-w));
+}
+
+body:has(.ds-toast) .studio-stage .proto-bar,
+.studio-stage .canvas:has(.frame-undo) .proto-bar {
+  bottom: calc(var(--dock-gap) * 2 + var(--tools-w) + 44px);
+}
+
 .proto-start,
 .proto-editor {
   display: inline-flex;

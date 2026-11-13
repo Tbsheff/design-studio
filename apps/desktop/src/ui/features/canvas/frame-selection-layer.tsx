@@ -2,8 +2,7 @@ import { useMemo } from "react";
 import type { CSSProperties, ReactElement } from "react";
 
 import type { Box, CanvasLayout } from "./canvas-frames-model.js";
-import { copy } from "./copy.js";
-import { FrameAlignBar } from "./frame-align-bar.js";
+import { FrameSelectMenu } from "./frame-select-menu.js";
 import { toGroupFrames, toGroupRect } from "./frame-selection-model.js";
 import { useSelectedFrameIds } from "./use-frame-selection.js";
 
@@ -22,13 +21,16 @@ const toBoxStyle = (box: Box, origin: Origin): CSSProperties => ({
 const FrameSelectionLayer = ({
   layout,
   origin,
+  removeFramesAt,
 }: {
   layout: CanvasLayout;
   origin: Origin;
+  removeFramesAt: (ids: readonly string[]) => void;
 }): ReactElement | null => {
   const ids = useSelectedFrameIds();
 
   const frames = useMemo(() => toGroupFrames(layout, ids), [layout, ids]);
+  const frameIds = useMemo(() => frames.map((frame) => frame.id), [frames]);
   const group = useMemo(() => toGroupRect(frames), [frames]);
 
   const groupStyle = useMemo((): CSSProperties | null => {
@@ -54,11 +56,7 @@ const FrameSelectionLayer = ({
       ))}
       {frames.length > 1 && (
         <div className="frame-select-group" style={groupStyle}>
-          <FrameAlignBar count={frames.length} />
-          <output className="frame-select-count" data-tip={copy.frameSelectTip}>
-            {frames.length}
-            {copy.frameSelectCount}
-          </output>
+          <FrameSelectMenu ids={frameIds} removeFramesAt={removeFramesAt} />
         </div>
       )}
     </div>

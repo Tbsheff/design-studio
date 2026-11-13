@@ -49,18 +49,19 @@ const useCanvasWiring = (
     undoRemove,
     dismissUndo,
     onResizeStart,
-    removeFramesAt: removeMany,
+    removeFramesAt,
     removedCount,
   } = useFrameActions(canvasFrames, pz, artboardRef, clickThrough);
 
   const { setSelection } = props;
+  const selectionCount = props.selection.length;
 
   useFrameSelectionKeys({
     clearLayers: () => setSelection(() => []),
     frames: canvasFrames,
     isBlocked: text.protoOn || text.draw.on,
-    removeFramesAt: removeMany,
-    selectionCount: props.selection.length,
+    removeFramesAt,
+    selectionCount,
   });
 
   const labelProps = useFrameLabels(toLabelInput(props, text, baseLabel));
@@ -95,6 +96,7 @@ const useCanvasWiring = (
     onResizeStart,
     proto,
     registerPassive,
+    removeFramesAt,
     removedCount,
     sandbox,
     stageMode,

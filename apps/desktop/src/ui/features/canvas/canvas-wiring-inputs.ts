@@ -5,6 +5,7 @@ import type { CanvasFrame } from "./canvas-frames-model.js";
 import { commentToolsOf, shellDirectionName } from "./canvas-helpers.js";
 import type { stageCursor, themeSwitch } from "./canvas-helpers.js";
 import type { ViewProps } from "./canvas-types.js";
+import { copy } from "./copy.js";
 import type { FrameMenuItem } from "./frame-more-menu.js";
 import type { PlayCommentOptions } from "./play-comment-types.js";
 import type { useCanvasEdits } from "./use-canvas-edits.js";
@@ -78,6 +79,7 @@ interface CanvasWiring {
   readonly onResizeStart: FrameActions["onResizeStart"];
   readonly proto: ReturnType<typeof usePrototype>;
   readonly registerPassive: FrameActions["registerPassive"];
+  readonly removeFramesAt: FrameActions["removeFramesAt"];
   readonly removedCount: FrameActions["removedCount"];
   readonly sandbox: FrameSandbox | undefined;
   readonly stageMode: ReturnType<typeof stageCursor>;
@@ -117,7 +119,7 @@ const toFrameActions = (
   const item: FrameMenuItem = {
     icon: "layers",
     id: "states",
-    label: "Make states",
+    label: copy.makeStatesWithAi,
     run: () => make(frame),
   };
 

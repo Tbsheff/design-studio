@@ -57,11 +57,7 @@ import {
 } from "./permissions.js";
 import type { ToolPolicy } from "./permissions.js";
 import { runReferencePass } from "./reference-check.js";
-import {
-  buildUserMessageParts,
-  buildUserText,
-  toMockSelectionReply,
-} from "./user-message.js";
+import { buildUserMessageParts, toMockSelectionReply } from "./user-message.js";
 
 const MOCK_USAGE = {
   cacheReadTokens: 0,
@@ -1272,7 +1268,7 @@ async function runMock(
     promptHash: "mock",
     recommendedSkills: [],
     resume: input.ctx.direction.sessionId,
-    text: buildUserText(input.ctx),
+    text: (await buildUserMessageParts(input.ctx)).text,
     updatedInstructions: false,
   });
 

@@ -24,6 +24,7 @@ import type {
 import { referencePagesBlock } from "../design-system/reference-page.js";
 import { referenceBlock, variationBlock } from "../variations/message.js";
 import { toFocusLines } from "./focus-block.js";
+import { toImageListLines } from "./image-list.js";
 import { layoutLines } from "./layout-region.js";
 import type { RunTarget, TargetFrame } from "./run-target.js";
 import { toSelectedElementsEnd, toStylesText } from "./selected-elements.js";
@@ -455,9 +456,10 @@ async function loadImages(attachments: Attachment[]): Promise<ImagePart[]> {
 export async function buildUserMessageParts(
   ctx: AgentRunContext
 ): Promise<UserMessageParts> {
+  const imageList = await toImageListLines(ctx.attachments);
   return {
     images: await loadImages(ctx.attachments),
-    text: buildUserText(ctx),
+    text: [buildUserText(ctx), ...imageList].join("\n\n"),
   };
 }
 

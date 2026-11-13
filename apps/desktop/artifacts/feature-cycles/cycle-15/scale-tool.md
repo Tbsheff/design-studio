@@ -16,9 +16,10 @@ Branch `feat/scale-tool`.
 
 - **UI** (mock dev run, port 4182): pricing card at 50%: W 320 to 160, padding 24 to 12, gap 16 to 8, radius 12 to 6, title 20 to 10 px, 5 layers. Cmd+Z restored all 5 in one step. Token card: radius kept, note shown. Screenshots: `cycle-15/scale-tool/scale-dark.jpg`, `scale-light.jpg`.
 - **Tailwind** (`@tailwindcss/browser@4` page): results above; no arbitrary value where a class is within 1 px.
+- **JSX** (mock React project, CSS classes): card at 50% wrote `style={{ ... }}` on 4 elements; a `Badge` component span that also shows outside the card was skipped with a reason, and `Badge` was not changed.
 - **call-action** `layer-style.update`: same `changed` list on HTTP, MCP and agent; only `versionId` differs (`cycle-15/scale-tool/call-action.txt`).
 - **Factor 5** fails with BadRequest.
-- `pnpm run typecheck` pass, `pnpm run lint:gate` pass, `pnpm run build:ui` pass. `check:scripts` fails on old files only (S11 in `events/event-file.ts`, O12, E16); no finding names a file of this pick.
+- `pnpm run typecheck` pass, `pnpm run lint:gate` pass, `pnpm run build:ui` pass. `check:scripts` fails on old files only (S11 in `events/event-file.ts`, O12, E16); no finding names a file, action or tool of this pick. The new tool `update_layer_style` is not in `artifacts/mcp-snapshots` yet: approve it at merge.
 
 ## Changed from the spec
 
@@ -33,4 +34,5 @@ Branch `feat/scale-tool`.
 - **"N values use tokens" before the write.** The count shows after the write. A count before needs a read action.
 - **Shadow snap on Tailwind.** Shadows become arbitrary `shadow-[...]` classes.
 - **Responsive variants** (`md:p-8`) do not scale.
+- **Components used on other pages.** A child is skipped when it also shows outside the scaled layer on the same page. A component used only on another route still changes there. `layer-style.apply` uses `usedBy` for this; the scale does not yet.
 - **Canvas drag handles** (runner-up 3).

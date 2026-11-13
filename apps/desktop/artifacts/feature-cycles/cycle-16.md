@@ -224,3 +224,11 @@ Shared files:
 10. Touch pointer in Play on phone frames (round 28 pick 5; Figma mobile prototypes).
 
 Sources: [claude.com/design](https://claude.com/design), [blog.mean.ceo](https://blog.mean.ceo/claude-design-news-november-2026/), [figma.com release notes](https://www.figma.com/release-notes/archive/?page=2), [creativeainews.com](https://www.creativeainews.com/articles/figma-make-properties-panel-annotations/), [chatgate.ai doop](https://chatgate.ai/en/post/doop).
+
+## Results
+
+- Merged with no conflicts: import-versions, auto-layout-children, tidy-frames, screen-drop-finish, route-sync. Main at 08f432dce.
+- Route sync and screen drop finish lost their first agents to a network error. Their commits were kept, and new agents finished them.
+- Checks: gen-routes --check pass, typecheck 0 errors, lint:gate pass (59685, baseline 89733), build:ui pass, desktop:pack pass.
+- Installed app: :4570 returns 200. Server idle CPU 0.00 CPU-s/min over 60 s.
+- Open: a frame move alone makes no version. Auto layout does not remove `inset` or derive padding. Route sync has no "App now" label and no Bonaparte test. No real-model runs. MCP snapshots not refreshed (user decision).

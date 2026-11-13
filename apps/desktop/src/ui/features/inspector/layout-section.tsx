@@ -37,7 +37,12 @@ const LayoutSection = ({
   );
 
   return (
-    <AutoLayoutSection edit={edit} title={copy.layout} lead={lead}>
+    <AutoLayoutSection
+      edit={edit}
+      selection={selection}
+      title={copy.layout}
+      lead={lead}
+    >
       <BoxModelMemo edit={edit} declared={toDeclaredMargins(selection)} />
     </AutoLayoutSection>
   );

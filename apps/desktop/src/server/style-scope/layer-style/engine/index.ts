@@ -8,6 +8,15 @@ export {
   toStyleGroups,
 } from "./to-style-groups.js";
 
+export { toAutoLayout } from "./to-auto-layout.js";
+
+export type {
+  AutoLayoutPlan,
+  LayoutChild,
+  LayoutDirection,
+  LayoutKind,
+} from "./to-auto-layout.js";
+
 export type {
   ClassPlan,
   GroupClasses,

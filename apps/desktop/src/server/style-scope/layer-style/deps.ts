@@ -1,19 +1,26 @@
 export {
   SCALE_PROPERTIES,
   classify,
+  htmlElementSpan,
+  jsxElementSpan,
   parseClass,
+  positionAt,
   toScaledStyles,
 } from "../../direct-edit/engine/index.js";
 
 export {
   applyDirectEditBatch,
+  assertCanEdit,
   elementClassInfo,
   parseDirectEditRequest,
+  patchSource,
+  publishVersion,
   resolveSource,
   runDirectionRead,
   runDirectionWrite,
   themeForFile,
   toDirectEditStatusFailure,
+  writeAndCommitAll,
 } from "../../direct-edit/index.js";
 
 export {
@@ -47,6 +54,7 @@ export type {
   DirectEditStatusFailure,
   DirectionIds,
   DirectionRun,
+  WrittenFile,
 } from "../../direct-edit/index.js";
 
 export type {

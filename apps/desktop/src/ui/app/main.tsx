@@ -20,6 +20,7 @@ import "../styles/versions.css";
 import "../styles/canvas.css";
 import "../styles/selection-prompt.css";
 import "../styles/prototype.css";
+import "../styles/linked-frame.css";
 import "../styles/chat.css";
 import "../styles/mcp.css";
 import "../styles/composer.css";

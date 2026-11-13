@@ -9,11 +9,13 @@ import { LinkArrows } from "./link-arrows.js";
 import { LinkDragLine } from "./link-drag-line.js";
 import { LinkHandle } from "./link-handle.js";
 import { linkOfSelection } from "./link-view.js";
+import { LinkedFramePrompt } from "./linked-frame-prompt.js";
 import { toLinkRectsInput } from "./prototype-links-input.js";
 import type { PrototypeOptions } from "./prototype-options-model.js";
 import { toFrameTitle, toLinkTitle } from "./prototype-titles-model.js";
 import { useLinkRects } from "./use-link-rects.js";
 import type { LinkState } from "./use-link-rects.js";
+import { useLinkedFrame } from "./use-linked-frame.js";
 import {
   usePrototypeDrag,
   usePrototypeFile,
@@ -128,7 +130,8 @@ const toBarNode = (scene: PrototypeScene): ReactNode => {
 const usePrototype = (options: PrototypeOptions): PrototypeParts => {
   const prototypeFile = usePrototypeFile(options);
   const view = usePrototypeView(options.on);
-  const drag = usePrototypeDrag(options);
+  const linked = useLinkedFrame(options);
+  const drag = usePrototypeDrag(options, linked.onDrop);
   const urlOf = usePrototypeUrls(options);
   const states = useLinkRects(toLinkRectsInput(options, prototypeFile));
   const single = toSingleSelection(options.selection);
@@ -157,6 +160,7 @@ const usePrototype = (options: PrototypeOptions): PrototypeParts => {
     <>
       {toBarNode(scene)}
       <LinkDragLine drag={drag.drag} />
+      <LinkedFramePrompt control={linked} />
       {view.playing && (
         <Suspense fallback={null}>
           <PlayMode

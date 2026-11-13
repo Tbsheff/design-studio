@@ -3,6 +3,7 @@ import { applyImplicitLinkCanvas } from "./apply-implicit-link.js";
 import { createFlowCanvas } from "./create-flow.js";
 import { createFrameCanvas } from "./create-frame.js";
 import { createLinkCanvas } from "./create-link.js";
+import { createLinkedFrameCanvas } from "./create-linked-frame.js";
 import { createRouteFrameCanvas } from "./create-route-frame.js";
 import { deleteFrameCanvas } from "./delete-frame.js";
 import { deleteLinkCanvas } from "./delete-link.js";
@@ -33,6 +34,7 @@ const CanvasActions = {
   createFlowCanvas,
   createFrameCanvas,
   createLinkCanvas,
+  createLinkedFrameCanvas,
   createRouteFrameCanvas,
   deleteFrameCanvas,
   deleteLinkCanvas,

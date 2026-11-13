@@ -31,6 +31,7 @@
     "./link-interaction": "./src/link-interaction.ts",
     "./link-labels": "./src/link-labels.ts",
     "./link-variable": "./src/link-variable.ts",
+    "./linked-frame": "./src/linked-frame.ts",
     "./links": "./src/links.ts",
     "./motion": "./src/motion.ts",
     "./page-import": "./src/page-import.ts",

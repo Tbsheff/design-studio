@@ -10,6 +10,7 @@ import type { GetLive } from "./frame-label-state.js";
 import { FrameMoreMenu } from "./frame-more-menu.js";
 import type { FrameMenuItem } from "./frame-more-menu.js";
 import { FramePinMark } from "./frame-pin-mark.js";
+import { RouteSourceChip } from "./route-source-chip.js";
 import { useFramePin } from "./use-frame-pin.js";
 import { VariationControls } from "./variation-controls.js";
 import type { FrameVariation } from "./variation-controls.js";
@@ -60,6 +61,9 @@ const FrameLabelExtras = ({
     [getLive]
   );
 
+  const live = getLive();
+  const { activate, layout } = live.frames;
+
   const onPath = useCallback(
     (path: string): void =>
       getLive().frames.update((canvasLayout) =>
@@ -79,6 +83,13 @@ const FrameLabelExtras = ({
         />
       )}
       {pin.isPinned && <FramePinMark />}
+      <RouteSourceChip
+        activate={activate}
+        directionId={did ?? live.directionId}
+        frames={layout.frames}
+        path={frame.path ?? null}
+        projectId={projectId}
+      />
       <FramePageMenu
         path={frame.path ?? ""}
         routes={hasRoutes}

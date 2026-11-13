@@ -85,6 +85,7 @@
     "./canvas/index": "./src/canvas/index.ts",
     "./canvas/inspect": "./src/canvas/inspect.ts",
     "./canvas/inspect-link-interaction": "./src/canvas/inspect-link-interaction.ts",
+    "./canvas/inspect-state-frames": "./src/canvas/inspect-state-frames.ts",
     "./canvas/link/schema": "./src/canvas/link/schema.ts",
     "./canvas/linked-frame/schema": "./src/canvas/linked-frame/schema.ts",
     "./canvas/list-flow-links": "./src/canvas/list-flow-links.ts",

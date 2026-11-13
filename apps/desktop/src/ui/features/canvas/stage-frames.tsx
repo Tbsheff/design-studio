@@ -41,6 +41,7 @@ const StageFrames = ({
       <CanvasSectionsLayer
         projectId={props.projectId}
         freeze={stage.pz.freeze}
+        headVersionId={props.headVersionId}
         offset={active}
         zoom={stage.pz.zoom}
       />

@@ -5,6 +5,7 @@ import { useCanvasSections } from "./use-canvas-sections.js";
 
 interface CanvasSectionsLayerProps {
   readonly freeze: () => void;
+  readonly headVersionId: string | null;
   readonly offset: { readonly x: number; readonly y: number };
   readonly projectId: string;
   readonly zoom: number;
@@ -12,6 +13,7 @@ interface CanvasSectionsLayerProps {
 
 const CanvasSectionsLayer = ({
   freeze,
+  headVersionId,
   offset,
   projectId,
   zoom,
@@ -25,7 +27,9 @@ const CanvasSectionsLayer = ({
           key={section.id}
           api={api}
           freeze={freeze}
+          headVersionId={headVersionId}
           offset={offset}
+          projectId={projectId}
           section={section}
           zoom={zoom}
         />

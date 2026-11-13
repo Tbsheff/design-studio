@@ -33,9 +33,45 @@ const StateFramesCreatedSchema = Schema.Struct({
   reusedFrames: Schema.Array(Schema.String),
 });
 
+const STATE_CHECK_THRESHOLD = 0.98;
+
+const StateCheckFields = {
+  frame: FrameRefSchema.annotate({
+    description:
+      "Frame id or @label of any frame of the state board, or of its page. Call canvas_list for the ids.",
+  }),
+  threshold: Schema.Number.check(
+    Schema.isGreaterThanOrEqualTo(0),
+    Schema.isLessThanOrEqualTo(1)
+  )
+    .annotate({
+      description:
+        "Similarity from 0 to 1 at or above which a state looks like the default. Default 0.98.",
+    })
+    .pipe(Schema.withDecodingDefaultKey(Effect.succeed(STATE_CHECK_THRESHOLD))),
+} as const;
+
+const StateCheckItemSchema = Schema.Struct({
+  frameId: Schema.String,
+  isSameAsDefault: Schema.Boolean,
+  label: Schema.String,
+  similarity: Schema.Number,
+  state: Schema.String,
+  stateName: Schema.String,
+});
+
+const StateCheckSchema = Schema.Struct({
+  items: Schema.Array(StateCheckItemSchema),
+  page: Schema.String,
+});
+
 export {
   STATE_BOARD_MAX,
+  STATE_CHECK_THRESHOLD,
   StateBoardFields,
+  StateCheckFields,
+  StateCheckItemSchema,
+  StateCheckSchema,
   StateFrameSchema,
   StateFramesCreatedSchema,
 };

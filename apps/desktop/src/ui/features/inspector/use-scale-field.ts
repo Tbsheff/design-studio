@@ -7,7 +7,12 @@ import type {
   RefObject,
 } from "react";
 
-import { isTypingTarget } from "../../platform/typing-target.js";
+import { useLive } from "../../platform/live-store.js";
+import {
+  scaleFocusCount,
+  scaleKeepTokens,
+  stopScaleMode,
+} from "../../platform/scale-mode.js";
 import { copy } from "./copy.js";
 import { layerStyleRoutes, useAction } from "./deps.js";
 import {
@@ -54,39 +59,29 @@ interface ScaleTarget {
   readonly shouldKeepTokens: boolean;
 }
 
-const hasNoModifier = (event: KeyboardEvent): boolean =>
-  !(event.metaKey || event.ctrlKey || event.altKey || event.shiftKey);
-
-const isScaleKey = (event: KeyboardEvent): boolean =>
-  event.code === "KeyK" && !event.repeat && hasNoModifier(event);
-
 const isFieldReady = (input: HTMLInputElement | null): boolean =>
   input !== null && !input.disabled && input.closest("[inert]") === null;
 
 const useScaleKey = (inputRef: RefObject<HTMLInputElement | null>): void => {
+  const count = useLive(scaleFocusCount);
+  const seen = useRef(count);
+
   useEffect(() => {
-    const onKey = (event: KeyboardEvent): void => {
-      const input = inputRef.current;
+    const input = inputRef.current;
 
-      if (!isScaleKey(event) || isTypingTarget(event.target)) {
-        return;
-      }
+    if (seen.current === count) {
+      return;
+    }
 
-      if (input === null || !isFieldReady(input)) {
-        return;
-      }
+    seen.current = count;
 
-      event.preventDefault();
-      input.focus();
-      input.select();
-    };
+    if (input === null || !isFieldReady(input)) {
+      return;
+    }
 
-    globalThis.addEventListener("keydown", onKey);
-
-    return (): void => {
-      globalThis.removeEventListener("keydown", onKey);
-    };
-  }, [inputRef]);
+    input.focus();
+    input.select();
+  }, [count, inputRef]);
 };
 
 const useScaleScrub = (
@@ -195,7 +190,7 @@ const useScaleField = (
   selection: SelectionContext
 ): ScaleField => {
   const [draft, setDraft] = useState(FULL_TEXT);
-  const [shouldKeepTokens, setShouldKeepTokens] = useState(true);
+  const shouldKeepTokens = useLive(scaleKeepTokens);
   const inputRef = useRef<HTMLInputElement>(null);
   const layerId = toScaleLayerId(selection);
 
@@ -222,13 +217,14 @@ const useScaleField = (
 
       if (event.key === "Escape") {
         setDraft(FULL_TEXT);
+        stopScaleMode();
       }
     },
     [commit]
   );
 
   const handleToggleTokens = useCallback(() => {
-    setShouldKeepTokens((value) => !value);
+    scaleKeepTokens.set(!scaleKeepTokens.get());
   }, []);
 
   const scrub = useScaleScrub(draft, setDraft, commit);

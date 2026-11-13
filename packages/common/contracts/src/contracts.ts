@@ -1545,6 +1545,7 @@ export type AppKey =
   | "tool-hand"
   | "tool-frame"
   | "tool-text"
+  | "tool-scale"
   | "tool-comment"
   | "tool-link"
   | "column-layers"
@@ -1569,6 +1570,7 @@ const TOOL_APP_KEYS = new Map<string, AppKey>([
   ["KeyC", "tool-comment"],
   ["KeyF", "tool-frame"],
   ["KeyH", "tool-hand"],
+  ["KeyK", "tool-scale"],
   ["KeyL", "tool-link"],
   ["KeyT", "tool-text"],
   ["KeyV", "tool-select"],

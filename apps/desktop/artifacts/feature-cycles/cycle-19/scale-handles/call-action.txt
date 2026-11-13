@@ -1,0 +1,70 @@
+call-action layer-style.update on http://127.0.0.1:4993. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 371 ms, git spawns: not counted (server side)
+{
+  "changed": [
+    "index.html:28:7",
+    "index.html:28:151"
+  ],
+  "skipped": [
+    {
+      "layerId": "index.html:28:7",
+      "property": "border-width",
+      "reason": "Uses a token. Keep tokens is on."
+    }
+  ],
+  "tokenCount": 1,
+  "versionId": "pending-0b288765e7ee5355"
+}
+
+[mcp] ok, 390 ms, git spawns: not counted (server side)
+{
+  "changed": [
+    "index.html:28:7",
+    "index.html:28:155"
+  ],
+  "skipped": [
+    {
+      "layerId": "index.html:28:7",
+      "property": "border-width",
+      "reason": "Uses a token. Keep tokens is on."
+    }
+  ],
+  "tokenCount": 1,
+  "versionId": "pending-10ed1b1a30822cae"
+}
+
+[agent] ok, 253 ms, git spawns: not counted (server side)
+{
+  "changed": [
+    "index.html:28:7",
+    "index.html:28:157"
+  ],
+  "skipped": [
+    {
+      "layerId": "index.html:28:7",
+      "property": "border-width",
+      "reason": "Uses a token. Keep tokens is on."
+    }
+  ],
+  "tokenCount": 1,
+  "versionId": "pending-939d061705b6c033"
+}
+
+diff http -> mcp:
+-     "index.html:28:151"
++     "index.html:28:155"
+-   "versionId": "pending-0b288765e7ee5355"
++   "versionId": "pending-10ed1b1a30822cae"
+
+diff http -> agent:
+-     "index.html:28:151"
++     "index.html:28:157"
+-   "versionId": "pending-0b288765e7ee5355"
++   "versionId": "pending-939d061705b6c033"
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 0 error results
+
+fix: compare the outputs above, then run call-action again with the id layer-style.update and the same input

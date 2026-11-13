@@ -1046,6 +1046,35 @@ fieldset.compare-modes {
   cursor: nwse-resize;
 }
 
+.resize-handle.scale.nw {
+  left: 0;
+  top: 0;
+  cursor: nwse-resize;
+}
+
+.resize-handle.scale.ne {
+  left: 100%;
+  top: 0;
+  cursor: nesw-resize;
+}
+
+.resize-handle.scale.sw {
+  left: 0;
+  top: 100%;
+  cursor: nesw-resize;
+}
+
+.resize-handle.scale {
+  border-radius: 50%;
+}
+
+.scale-ghost {
+  position: absolute;
+  border: calc(var(--stroke) * 1) dashed var(--select);
+  background: color-mix(in oklch, var(--select) 8%, transparent);
+  pointer-events: none;
+}
+
 .resize-frame.compact .resize-handle.se {
   margin: 0;
   transform-origin: 0 0;

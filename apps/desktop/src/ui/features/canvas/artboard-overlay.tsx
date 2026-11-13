@@ -96,7 +96,7 @@ const ArtboardOverlay = ({
           />
         );
       })}
-      {!resize?.live && spacing}
+      {!resize?.live && !resize?.ghost && spacing}
       {resize?.target && (
         <ResizeHandles control={resize} rect={resize.target.rect} zoom={zoom} />
       )}

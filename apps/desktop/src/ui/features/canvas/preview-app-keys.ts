@@ -3,6 +3,7 @@ import type { AppKey } from "@design-studio/contracts";
 import { requestCanvasTool } from "../../platform/canvas-tool.js";
 import type { CanvasToolId } from "../../platform/canvas-tool.js";
 import { findElement } from "../../platform/find-element.js";
+import { requestScaleMode } from "../../platform/scale-mode.js";
 
 const TOOL_OF_KEY: Partial<Record<AppKey, CanvasToolId>> = {
   "tool-comment": "comment",
@@ -28,7 +29,19 @@ const COMMAND_OF_KEY: Partial<Record<AppKey, string>> = {
 const isPlaying = (): boolean =>
   findElement(document.body, ".play-bar") !== null;
 
+const runPreviewScaleKey = (): boolean => {
+  if (!isPlaying()) {
+    requestScaleMode();
+  }
+
+  return true;
+};
+
 const runPreviewToolKey = (id: AppKey): boolean => {
+  if (id === "tool-scale") {
+    return runPreviewScaleKey();
+  }
+
   const tool = TOOL_OF_KEY[id];
 
   if (!tool) {

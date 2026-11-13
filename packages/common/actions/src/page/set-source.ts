@@ -12,7 +12,7 @@ const setSourcePage = defineAction({
   agent: {
     lean: false,
     name: "set_source_page",
-    set: "app",
+    set: "tweak",
     short:
       "Mark a route copy page as current with the app, after you apply the app changes. The page file does not change.",
   },

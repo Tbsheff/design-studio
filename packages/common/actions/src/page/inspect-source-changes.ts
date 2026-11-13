@@ -12,7 +12,7 @@ const inspectSourceChangesPage = defineAction({
   agent: {
     lean: false,
     name: "inspect_source_changes_page",
-    set: "app",
+    set: "tweak",
     short:
       "Show line diffs of the app route files since a route copy page was made. Use it to apply app changes to an edited page.",
   },

@@ -29,6 +29,7 @@ import {
   LinkVariableFields,
   LinkWhenSchema,
 } from "./link/schema.js";
+import { StartPointSchema } from "./start/schema.js";
 
 const FRAME_REF_MAX = 120;
 
@@ -189,6 +190,7 @@ const PrototypeLinkSchema = Schema.Struct({
 const LinksFileSchema = Schema.Struct({
   links: Schema.Array(PrototypeLinkSchema),
   start: Schema.optionalKey(Schema.String),
+  starts: Schema.optionalKey(Schema.Array(StartPointSchema)),
   version: Schema.Number,
 });
 

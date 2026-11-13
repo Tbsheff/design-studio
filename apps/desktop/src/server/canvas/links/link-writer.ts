@@ -1,4 +1,5 @@
 import type { LinksFile, PrototypeLink } from "@design-studio/contracts/links";
+import type { StartPoint } from "@design-studio/contracts/start-points";
 import { Context, Effect, Layer } from "effect";
 
 import {
@@ -6,7 +7,6 @@ import {
   writeDelete,
   setInteraction,
   writeKeep,
-  writeStart,
   writeUpdate,
 } from "./link-ops.js";
 import type {
@@ -18,6 +18,8 @@ import type {
 } from "./link-ops.js";
 import { attemptLink } from "./link-runtime.js";
 import type { LinkFailure } from "./link-runtime.js";
+import { setFirstStart, setStartList } from "./start-points.js";
+import type { StartPointsQuery } from "./start-points.js";
 
 interface LinkWriterApi {
   readonly create: (
@@ -40,6 +42,9 @@ interface LinkWriterApi {
     projectId: string,
     frame: string
   ) => Effect.Effect<LinksFile, LinkFailure>;
+  readonly setStartPoints: (
+    query: StartPointsQuery
+  ) => Effect.Effect<readonly StartPoint[], LinkFailure>;
   readonly update: (
     query: LinkUpdateQuery
   ) => Effect.Effect<LinkSaved, LinkFailure>;
@@ -79,8 +84,13 @@ class LinkWriter extends Context.Service<LinkWriter, LinkWriterApi>()(
         frame: string
       ) {
         return yield* attemptLink((runtime) =>
-          writeStart(runtime, projectId, frame)
+          setFirstStart(runtime, projectId, frame)
         );
+      }),
+      setStartPoints: Effect.fn("LinkWriter.setStartPoints")(function* run(
+        query: StartPointsQuery
+      ) {
+        return yield* attemptLink((runtime) => setStartList(runtime, query));
       }),
       update: Effect.fn("LinkWriter.update")(function* run(
         query: LinkUpdateQuery

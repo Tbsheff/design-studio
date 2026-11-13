@@ -28,6 +28,7 @@ import { setPointCanvas } from "./set-point.js";
 import { setPresenceCanvas } from "./set-presence.js";
 import { setSectionCanvas } from "./set-section.js";
 import { setStartLinkCanvas } from "./set-start-link.js";
+import { setStartPointsCanvas } from "./set-start-points.js";
 import { updateFrameSessionCanvas } from "./update-frame-session.js";
 import { updateFrameCanvas } from "./update-frame.js";
 import { updateLinkCanvas } from "./update-link.js";
@@ -62,6 +63,7 @@ const CanvasActions = {
   setPresenceCanvas,
   setSectionCanvas,
   setStartLinkCanvas,
+  setStartPointsCanvas,
   updateFrameCanvas,
   updateFrameSessionCanvas,
   updateLinkCanvas,

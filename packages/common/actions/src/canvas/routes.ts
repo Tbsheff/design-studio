@@ -183,6 +183,16 @@ const routes = {
     method: "PUT",
     path: "/api/projects/:projectId/links/start",
   },
+  setStartPointsCanvas: {
+    id: "canvas.setStartPoints",
+    invalidates: [
+      "canvas.listImplicitLinks",
+      "canvas.listLinks",
+      "canvas.listFlowLinks",
+    ],
+    method: "PUT",
+    path: "/api/projects/:projectId/links/starts",
+  },
   updateFrameCanvas: {
     id: "canvas.updateFrame",
     invalidates: ["canvas.inspect"],

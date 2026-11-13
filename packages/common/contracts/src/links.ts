@@ -31,6 +31,12 @@ import type {
   LinkVariableSet,
   LinkWhen,
 } from "@design-studio/contracts/link-variable";
+import {
+  isStartPointList,
+  startFrameOf,
+  toStartFields,
+} from "@design-studio/contracts/start-points";
+import type { StartPoint } from "@design-studio/contracts/start-points";
 
 export const LINKS_FILE = ".studio/links.json";
 export const LINKS_FILE_VERSION = 1;
@@ -102,6 +108,7 @@ export interface PrototypeLink extends LinkPopoverFields {
 export interface LinksFile {
   version: number;
   start?: string;
+  starts?: readonly StartPoint[];
   links: PrototypeLink[];
 }
 
@@ -352,7 +359,7 @@ export function normalizeLinksFile(file: LinksFile): LinksFile {
     .slice(0, LINKS_MAX);
   return {
     version: LINKS_FILE_VERSION,
-    ...(file.start && isFrameId(file.start) ? { start: file.start } : {}),
+    ...toStartFields(file),
     links,
   };
 }
@@ -367,6 +374,7 @@ export function parseLinksFile(raw: unknown): LinksFile | null {
   return normalizeLinksFile({
     version: LINKS_FILE_VERSION,
     ...(isFrameId(record.start) ? { start: record.start } : {}),
+    ...(isStartPointList(record.starts) ? { starts: record.starts } : {}),
     links,
   });
 }
@@ -440,15 +448,7 @@ export function staticLinkIssue(
   return null;
 }
 
-export function startFrameOf(
-  file: LinksFile | null,
-  frames: readonly FrameLike[]
-): string {
-  const all = knownFrames(frames);
-  const start = file?.start;
-  if (start && all.some((frame) => frame.id === start)) return start;
-  return all[0]?.id ?? "f1";
-}
+export { startFrameOf };
 
 export function implicitId(
   from: Pick<LinkSource, "frame" | "selector" | "text">

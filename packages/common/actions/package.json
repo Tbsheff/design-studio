@@ -102,6 +102,7 @@
     "./canvas/set-presence": "./src/canvas/set-presence.ts",
     "./canvas/set-section": "./src/canvas/set-section.ts",
     "./canvas/set-start-link": "./src/canvas/set-start-link.ts",
+    "./canvas/set-start-points": "./src/canvas/set-start-points.ts",
     "./canvas/tidy/schema": "./src/canvas/tidy/schema.ts",
     "./canvas/update-frame": "./src/canvas/update-frame.ts",
     "./canvas/update-frame-session": "./src/canvas/update-frame-session.ts",

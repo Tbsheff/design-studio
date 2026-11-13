@@ -83,7 +83,7 @@ const StageOverlay = ({
           zoom={pz.zoom}
         />
       </Suspense>
-      <ChangeOverlay frames={frames} props={props} pz={pz} />
+      <ChangeOverlay frames={frames} props={props} stage={stage} />
     </>
   );
 };

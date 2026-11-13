@@ -1,5 +1,6 @@
 import type { ZoomKey } from "@design-studio/contracts";
-import type { ReactElement } from "react";
+import type { ReactElement, RefObject } from "react";
+import { createPortal } from "react-dom";
 
 import { ChangePill } from "./change-pill.js";
 import { ChangeRings } from "./change-rings.js";
@@ -12,28 +13,33 @@ interface ChangeOverlayProps {
     readonly directionId: string | null;
     readonly projectId: string;
   };
-  readonly pz: {
-    readonly applyZoomKey: (key: ZoomKey) => void;
-    readonly zoom: number;
+  readonly stage: {
+    readonly pz: {
+      readonly applyZoomKey: (key: ZoomKey) => void;
+      readonly zoom: number;
+    };
+    readonly stageRef: RefObject<HTMLDivElement | null>;
   };
 }
 
 const ChangeOverlay = ({
   frames: frameApi,
   props,
-  pz,
+  stage,
 }: ChangeOverlayProps): ReactElement => {
   const changes = useChangeRings({
     directionId: props.directionId,
     frames: frameApi,
     projectId: props.projectId,
-    zoomKey: pz.applyZoomKey,
+    stageRef: stage.stageRef,
+    zoomKey: stage.pz.applyZoomKey,
   });
 
   return (
     <div className="overlay change-overlay">
-      <ChangeRings spot={changes.spot} />
-      <ChangePill control={changes} zoom={pz.zoom} />
+      <ChangeRings spot={changes.spot} zoom={stage.pz.zoom} />
+      {changes.host &&
+        createPortal(<ChangePill control={changes} />, changes.host)}
     </div>
   );
 };

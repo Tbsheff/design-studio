@@ -5,13 +5,14 @@
 .change-ring {
   position: absolute;
   box-sizing: border-box;
-  border: calc(var(--stroke) * 2) solid var(--accent);
+  border: 2px solid var(--info);
   border-radius: 2px;
   animation: change-ring-fade 4s var(--ease) forwards;
 }
 
 .change-ring[data-kind="added"] {
   border-color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 8%, transparent);
 }
 
 .change-ring[data-kind="text"] {
@@ -19,7 +20,7 @@
 }
 
 .change-ring[data-kind="style"] {
-  border-color: var(--accent);
+  border-color: var(--warn);
 }
 
 .change-ring[data-kind="removed"] {
@@ -40,8 +41,9 @@
 
 .change-pill {
   position: absolute;
-  bottom: 100%;
+  top: 48px;
   left: 50%;
+  z-index: 30;
   display: inline-flex;
   align-items: center;
   gap: 2px;
@@ -54,7 +56,7 @@
   color: var(--text);
   font: var(--w-medium) 12px / 1 var(--font);
   white-space: nowrap;
-  transform-origin: bottom center;
+  transform: translateX(-50%);
   pointer-events: auto;
 }
 

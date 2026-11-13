@@ -163,11 +163,18 @@ const toStepRing = (spot: ChangeSpot | null): ChangeRing | null => {
   return spot.rings[spot.step] ?? null;
 };
 
-const toSpotWithout = (spot: ChangeSpot, ring: ChangeRing): ChangeSpot => {
+const toSpotWithout = (
+  spot: ChangeSpot,
+  ring: ChangeRing
+): ChangeSpot | null => {
   const kept = spot.rings.filter(
     (entry) =>
       entry.item.hunk !== ring.item.hunk || entry.item.file !== ring.item.file
   );
+
+  if (kept.length === 0) {
+    return null;
+  }
 
   return { ...spot, rings: kept, step: null };
 };

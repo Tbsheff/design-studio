@@ -1,4 +1,4 @@
-import type { CSSProperties, MouseEvent, ReactElement } from "react";
+import type { MouseEvent, ReactElement } from "react";
 import { useCallback } from "react";
 
 import { copy } from "./copy.js";
@@ -6,14 +6,7 @@ import type { ChangeRings } from "./use-change-rings.js";
 
 interface ChangePillProps {
   readonly control: ChangeRings;
-  readonly zoom: number;
 }
-
-const PILL_GAP_PX = 6;
-
-const toPillStyle = (zoom: number): CSSProperties => ({
-  transform: `translate(-50%, ${-PILL_GAP_PX / zoom}px) scale(${1 / zoom})`,
-});
 
 const toCountText = (count: number): string => {
   if (count === 1) {
@@ -31,10 +24,7 @@ const toStepText = (step: number | null, count: number): string | null => {
   return `${step + 1}${copy.changeSpotOf}${count}`;
 };
 
-const ChangePill = ({
-  control,
-  zoom,
-}: ChangePillProps): ReactElement | null => {
+const ChangePill = ({ control }: ChangePillProps): ReactElement | null => {
   const { clear, isPending, message, spot, step, undo } = control;
 
   const onStep = useCallback(
@@ -58,7 +48,7 @@ const ChangePill = ({
   const stepText = toStepText(spot.step, count);
 
   return (
-    <div className="change-pill" style={toPillStyle(zoom)}>
+    <div className="change-pill">
       <button
         type="button"
         className="change-pill-count"

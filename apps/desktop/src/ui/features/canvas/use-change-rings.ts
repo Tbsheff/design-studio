@@ -5,7 +5,7 @@ import type {
   ZoomKey,
 } from "@design-studio/contracts";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
-import type { MutableRefObject } from "react";
+import type { MutableRefObject, RefObject } from "react";
 
 import { errorText } from "../../api.js";
 import { useProjectEvents } from "../../platform/events.js";
@@ -45,11 +45,13 @@ interface ChangeRingsInput {
   readonly directionId: string | null;
   readonly frames: SpotFrames;
   readonly projectId: string;
+  readonly stageRef: RefObject<HTMLDivElement | null>;
   readonly zoomKey: (key: ZoomKey) => void;
 }
 
 interface ChangeRings {
   readonly clear: () => void;
+  readonly host: HTMLDivElement | null;
   readonly isPending: boolean;
   readonly message: string | null;
   readonly spot: ChangeSpot | null;
@@ -58,6 +60,7 @@ interface ChangeRings {
 }
 
 interface SpotStore {
+  readonly host: HTMLDivElement | null;
   readonly pair: string;
   readonly spot: ChangeSpot | null;
 }
@@ -163,7 +166,12 @@ const focusRing = (
     return;
   }
 
-  post({ selector: ring.selector, type: "select-selector" });
+  post({
+    sourceLoc: ring.item.layerId,
+    tag: ring.item.tag,
+    text: "",
+    type: "select-source",
+  });
   globalThis.setTimeout(() => zoomKey("selection"), ZOOM_WAIT_MS);
 };
 
@@ -213,18 +221,27 @@ const useEscClear = (spot: ChangeSpot | null, clear: () => void): void => {
   }, [clear, spot]);
 };
 
-const useChangeRings = (input: ChangeRingsInput): ChangeRings => {
-  const { projectId, zoomKey } = input;
-  const { post } = input.frames;
-  const pair = toPair(input);
-  const latest = useLatest(input);
-  const [store, setStore] = useState<SpotStore>({ pair, spot: null });
-  const [message, setMessage] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
-  const since = useMountTime();
-  const spot = toPairSpot(store, pair);
+const toEmptyStore = (at: string): SpotStore => ({
+  host: null,
+  pair: at,
+  spot: null,
+});
 
-  useProjectEvents(projectId, (event: StudioEvent) => {
+const toSpotStore = (prev: SpotStore, next: ChangeSpot | null): SpotStore => ({
+  ...prev,
+  spot: next,
+});
+
+const useSpotEvents = (
+  input: ChangeRingsInput,
+  setStore: (store: SpotStore) => void,
+  setMessage: (message: string | null) => void
+): void => {
+  const latest = useLatest(input);
+  const since = useMountTime();
+  const [, startTransition] = useTransition();
+
+  useProjectEvents(input.projectId, (event: StudioEvent) => {
     const target = toLiveTarget(event, latest, since);
 
     if (!target) {
@@ -236,16 +253,29 @@ const useChangeRings = (input: ChangeRingsInput): ChangeRings => {
     startTransition(async () => {
       try {
         const next = await loadSpot(latest.current, target);
-        setStore({ pair: at, spot: next });
+        const host = latest.current.stageRef.current;
+        setStore({ host, pair: at, spot: next });
         setMessage(null);
       } catch (error) {
         setMessage(errorText(error));
       }
     });
   });
+};
+
+const useChangeRings = (input: ChangeRingsInput): ChangeRings => {
+  const { projectId, zoomKey } = input;
+  const { post } = input.frames;
+  const pair = toPair(input);
+  const [store, setStore] = useState<SpotStore>(() => toEmptyStore(pair));
+  const [message, setMessage] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const spot = toPairSpot(store, pair);
+
+  useSpotEvents(input, setStore, setMessage);
 
   const clear = useCallback((): void => {
-    setStore({ pair, spot: null });
+    setStore(toEmptyStore(pair));
     setMessage(null);
   }, [pair, setMessage, setStore]);
 
@@ -255,11 +285,10 @@ const useChangeRings = (input: ChangeRingsInput): ChangeRings => {
     }
 
     const next = toNextStep(spot);
-    const ring = toRingAt(spot, next);
 
-    setStore({ pair, spot: { ...spot, step: next } });
-    focusRing(ring, post, zoomKey);
-  }, [pair, post, setStore, spot, zoomKey]);
+    setStore(toSpotStore(store, { ...spot, step: next }));
+    focusRing(toRingAt(spot, next), post, zoomKey);
+  }, [post, setStore, spot, store, zoomKey]);
 
   const undo = useCallback((): void => {
     const ring = toStepRing(spot);
@@ -274,17 +303,19 @@ const useChangeRings = (input: ChangeRingsInput): ChangeRings => {
           routes.applyHunkVersion,
           toRevertInput(projectId, spot, ring)
         );
-        setStore({ pair, spot: toSpotWithout(spot, ring) });
+        setStore(toSpotStore(store, toSpotWithout(spot, ring)));
         setMessage(null);
       } catch (error) {
         setMessage(errorText(error));
       }
     });
-  }, [pair, projectId, setMessage, setStore, spot, startTransition]);
+  }, [projectId, setMessage, setStore, spot, startTransition, store]);
 
   useEscClear(spot, clear);
 
-  return { clear, isPending, message, spot, step, undo };
+  const { host } = store;
+
+  return { clear, host, isPending, message, spot, step, undo };
 };
 
 export { useChangeRings };

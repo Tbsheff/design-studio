@@ -1,16 +1,27 @@
-import type { ReactElement } from "react";
+import type { CSSProperties, ReactElement } from "react";
 
 import type { ChangeRing, ChangeSpot } from "./change-rings-model.js";
 import { toRectStyle } from "./overlay-styles.js";
 
 interface ChangeRingsProps {
   readonly spot: ChangeSpot | null;
+  readonly zoom: number;
 }
+
+const RING_PX = 2;
 
 const toRingKey = (ring: ChangeRing): string =>
   `${ring.item.kind}-${ring.item.layerId}`;
 
-const ChangeRings = ({ spot }: ChangeRingsProps): ReactElement | null => {
+const toRingStyle = (ring: ChangeRing, zoom: number): CSSProperties => {
+  if (!ring.rect) {
+    return {};
+  }
+
+  return { ...toRectStyle(ring.rect, null), borderWidth: RING_PX / zoom };
+};
+
+const ChangeRings = ({ spot, zoom }: ChangeRingsProps): ReactElement | null => {
   if (!spot) {
     return null;
   }
@@ -28,7 +39,7 @@ const ChangeRings = ({ spot }: ChangeRingsProps): ReactElement | null => {
             className="change-ring"
             data-kind={ring.item.kind}
             data-layer-id={ring.item.layerId}
-            style={toRectStyle(ring.rect, null)}
+            style={toRingStyle(ring, zoom)}
           />
         );
       })}

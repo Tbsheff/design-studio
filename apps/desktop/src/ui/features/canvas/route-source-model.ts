@@ -82,9 +82,21 @@ const toCopyFrame = (
   return copies.at(-1) ?? null;
 };
 
+const toFrameById = (
+  frames: readonly CanvasFrame[],
+  frameId: string | null
+): CanvasFrame | null => {
+  if (frameId === null) {
+    return null;
+  }
+
+  return frames.find((frame) => frame.id === frameId) ?? null;
+};
+
 export {
   isRouteSourceChanged,
   toCopyFrame,
+  toFrameById,
   toRouteSourceInput,
   toRouteSourceTip,
 };

@@ -253,7 +253,36 @@ const VisionReportSchema = Schema.Struct({
   sheetPath: Schema.String,
 });
 
+const ReaderLineStatesSchema = Schema.Struct({
+  isChecked: Schema.NullOr(Schema.Boolean),
+  isDisabled: Schema.Boolean,
+  isExpanded: Schema.NullOr(Schema.Boolean),
+  level: Schema.NullOr(Schema.Int),
+});
+
+const ReaderLineSchema = Schema.Struct({
+  depth: Schema.Int,
+  isNameMissing: Schema.Boolean,
+  layerId: Schema.NullOr(Schema.String),
+  name: Schema.String,
+  role: Schema.String,
+  selector: Schema.String,
+  states: ReaderLineStatesSchema,
+});
+
+const ReaderLineFields = {
+  frame: AccessibilityFrameSchema,
+} as const;
+
+const ReaderLinesTotalsFields = {
+  frame: Schema.String,
+  total: Schema.Int,
+} as const;
+
 export {
+  ReaderLineFields,
+  ReaderLineSchema,
+  ReaderLinesTotalsFields,
   VISION_KINDS,
   VISION_LIST_MAX,
   VisionFields,

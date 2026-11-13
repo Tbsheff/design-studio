@@ -23,11 +23,43 @@ const copy = {
   noText: "No text on this layer to check.",
   ratio: (ratio: number, need: number): string =>
     `${ratio.toFixed(2)}:1 (needs ${need}:1)`,
+  readerChecked: (isChecked: boolean): string => {
+    if (isChecked) {
+      return "checked";
+    }
+
+    return "not checked";
+  },
+  readerCount: (count: number): string => `${count} lines`,
+  readerDisabled: "dimmed",
+  readerEmpty: "The screen reader finds nothing to read in this frame.",
+  readerExpanded: (isExpanded: boolean): string => {
+    if (isExpanded) {
+      return "expanded";
+    }
+
+    return "collapsed";
+  },
+  readerItem: "Reader",
+  readerLevel: (role: string, level: number): string =>
+    `${role} level ${level}`,
+  readerList: "Screen reader lines",
+  readerLoading: "Reading the frame…",
+  readerMenu: "Accessibility overlay",
+  readerMenuTip: "Show the tab order or the screen reader lines of the frame",
+  readerNoName: "no name",
+  readerNoNameTip: "No accessible name. A screen reader says only the role",
+  readerNote:
+    "Follows the browser accessibility tree. Not a real VoiceOver or NVDA run.",
+  readerRowTip: "Hover to outline the layer. Click to select it",
+  readerText: "Reader",
+  readerTitle: "Screen reader",
   role: "Role",
   roleTip: "ARIA role of the layer",
   tabIndex: "Tab index",
   tabIndexTip: "0 puts the layer in the tab order. -1 takes it out",
   tabOrder: "Show tab order",
+  tabOrderItem: "Tab order",
   tabOrderOff: "Hide tab order",
   tabOrderTip:
     "Shows the tab order of the frame with numbered badges. Red badges have no accessible name",

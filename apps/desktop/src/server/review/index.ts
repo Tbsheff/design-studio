@@ -19,6 +19,7 @@ export { ScenarioRunner, ScenarioStore } from "./scenario/index.js";
 export {
   AccessibilityStore,
   AccessibilityWriter,
+  ReaderLineStore,
   VisionRunner,
 } from "./accessibility/index.js";
 

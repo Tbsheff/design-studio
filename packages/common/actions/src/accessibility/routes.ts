@@ -6,6 +6,12 @@ const routes = {
     method: "GET",
     path: "/api/projects/:projectId/d/:directionId/accessibility",
   },
+  listReaderLinesAccessibility: {
+    id: "accessibility.listReaderLines",
+    invalidates: [],
+    method: "GET",
+    path: "/api/projects/:projectId/d/:directionId/accessibility/reader-lines",
+  },
   runVisionAccessibility: {
     id: "accessibility.runVision",
     invalidates: ["accessibility.inspect"],

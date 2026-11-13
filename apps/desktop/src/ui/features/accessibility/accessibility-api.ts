@@ -12,6 +12,7 @@ import type {
   SelectionContext,
   StyleReplaceResult,
 } from "./deps.js";
+import type { ReaderLine } from "./reader-model.js";
 
 interface AccessibilityIds {
   readonly directionId: string;
@@ -26,6 +27,10 @@ interface InspectQuery {
 
 const NO_SOURCE = "The layer has no source location.";
 
+const READER_PAGE = 200;
+
+const READER_PAGES_MAX = 10;
+
 const readAccessibility = (
   ids: AccessibilityIds,
   query: InspectQuery
@@ -38,6 +43,34 @@ const readAccessibility = (
     projectId: ids.projectId,
     selector: query.selector,
   });
+
+const readReaderPages = async (
+  ids: AccessibilityIds,
+  frameId: string,
+  pageCursor: string | null,
+  pagesLeft: number
+): Promise<ReaderLine[]> => {
+  const page = await call(accessibilityRoutes.listReaderLinesAccessibility, {
+    cursor: pageCursor,
+    directionId: ids.directionId,
+    frame: frameId,
+    limit: READER_PAGE,
+    projectId: ids.projectId,
+  });
+
+  if (page.next === null || pagesLeft <= 1) {
+    return [...page.items];
+  }
+
+  const rest = await readReaderPages(ids, frameId, page.next, pagesLeft - 1);
+
+  return [...page.items, ...rest];
+};
+
+const readReaderLines = (
+  ids: AccessibilityIds,
+  frame: string
+): Promise<ReaderLine[]> => readReaderPages(ids, frame, null, READER_PAGES_MAX);
 
 const writeAccessibility = (
   ids: AccessibilityIds,
@@ -70,6 +103,11 @@ const applyContrastFix = (
     token: fix.token,
   });
 
-export { applyContrastFix, readAccessibility, writeAccessibility };
+export {
+  applyContrastFix,
+  readAccessibility,
+  readReaderLines,
+  writeAccessibility,
+};
 
 export type { AccessibilityIds, InspectQuery };

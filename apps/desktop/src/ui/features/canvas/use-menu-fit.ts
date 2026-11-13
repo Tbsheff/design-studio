@@ -64,16 +64,22 @@ const toSize = (menu: HTMLElement): MenuSize => ({
   width: menu.offsetWidth,
 });
 
+const toCurrentShift = (menu: HTMLElement): MenuSize => ({
+  height: toPixels(menu.style.getPropertyValue(SHIFT_Y)),
+  width: toPixels(menu.style.getPropertyValue(SHIFT_X)),
+});
+
 const toLayoutOrigin = (menu: HTMLElement): MenuBox => {
   const parent = menu.offsetParent;
+  const shift = toCurrentShift(menu);
 
   if (parent === null) {
     return menu.getBoundingClientRect();
   }
 
   const origin = parent.getBoundingClientRect();
-  const start = origin.left + menu.offsetLeft;
-  const head = origin.top + menu.offsetTop;
+  const start = origin.left + menu.offsetLeft - shift.width;
+  const head = origin.top + menu.offsetTop - shift.height;
 
   return {
     bottom: head + menu.offsetHeight,
@@ -103,7 +109,7 @@ const toSubmenuTop = (menu: HTMLElement, hostRect: DOMRect): number => {
     return hostRect.top - SUBMENU_LIFT;
   }
 
-  return hostRect.top + menu.offsetTop;
+  return hostRect.top + menu.offsetTop - toCurrentShift(menu).height;
 };
 
 const toSubmenuFit = (menu: HTMLElement, hostRect: DOMRect): MenuFit =>

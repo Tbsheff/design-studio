@@ -1617,7 +1617,9 @@ dialog.canvas-menu {
 }
 
 [data-menu-fit] {
-  translate: var(--menu-shift-x) var(--menu-shift-y);
+  margin-top: var(--menu-shift-y);
+  margin-right: calc(var(--menu-shift-x) * -1);
+  margin-left: var(--menu-shift-x);
 }
 
 .project-menu.preview-submenu[data-side="left"] {
@@ -1630,7 +1632,7 @@ dialog.canvas-menu {
   top: var(--menu-top, 0px);
   left: var(--menu-left, 0px);
   right: auto;
-  translate: none;
+  margin: 0;
 }
 
 .preview-submenu-tag {

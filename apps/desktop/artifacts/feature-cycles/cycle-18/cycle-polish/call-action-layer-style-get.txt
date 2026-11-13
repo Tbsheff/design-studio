@@ -1,0 +1,161 @@
+call-action layer-style.get on http://127.0.0.1:4482. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 7 ms, git spawns: not counted (server side)
+{
+  "groups": [
+    {
+      "classes": [],
+      "declarations": [],
+      "group": "fill"
+    },
+    {
+      "classes": [
+        "text-lg",
+        "text-pretty",
+        "text-gray-900"
+      ],
+      "declarations": [],
+      "group": "text"
+    },
+    {
+      "classes": [],
+      "declarations": [],
+      "group": "spacing"
+    },
+    {
+      "classes": [],
+      "declarations": [],
+      "group": "size"
+    },
+    {
+      "classes": [],
+      "declarations": [],
+      "group": "border"
+    },
+    {
+      "classes": [],
+      "declarations": [],
+      "group": "radius"
+    },
+    {
+      "classes": [],
+      "declarations": [],
+      "group": "effect"
+    },
+    {
+      "classes": [],
+      "declarations": [],
+      "group": "layout"
+    }
+  ],
+  "layerId": "index.html:5:1",
+  "mode": "tailwind"
+}
+
+[mcp] ok, 11 ms, git spawns: not counted (server side)
+{
+  "groups": [
+    {
+      "classes": [],
+      "declarations": [],
+      "group": "fill"
+    },
+    {
+      "classes": [
+        "text-lg",
+        "text-pretty",
+        "text-gray-900"
+      ],
+      "declarations": [],
+      "group": "text"
+    },
+    {
+      "classes": [],
+      "declarations": [],
+      "group": "spacing"
+    },
+    {
+      "classes": [],
+      "declarations": [],
+      "group": "size"
+    },
+    {
+      "classes": [],
+      "declarations": [],
+      "group": "border"
+    },
+    {
+      "classes": [],
+      "declarations": [],
+      "group": "radius"
+    },
+    {
+      "classes": [],
+      "declarations": [],
+      "group": "effect"
+    },
+    {
+      "classes": [],
+      "declarations": [],
+      "group": "layout"
+    }
+  ],
+  "layerId": "index.html:5:1",
+  "mode": "tailwind"
+}
+
+[agent] ok, 7 ms, git spawns: not counted (server side)
+{
+  "groups": [
+    {
+      "classes": [],
+      "declarations": [],
+      "group": "fill"
+    },
+    {
+      "classes": [
+        "text-lg",
+        "text-pretty",
+        "text-gray-900"
+      ],
+      "declarations": [],
+      "group": "text"
+    },
+    {
+      "classes": [],
+      "declarations": [],
+      "group": "spacing"
+    },
+    {
+      "classes": [],
+      "declarations": [],
+      "group": "size"
+    },
+    {
+      "classes": [],
+      "declarations": [],
+      "group": "border"
+    },
+    {
+      "classes": [],
+      "declarations": [],
+      "group": "radius"
+    },
+    {
+      "classes": [],
+      "declarations": [],
+      "group": "effect"
+    },
+    {
+      "classes": [],
+      "declarations": [],
+      "group": "layout"
+    }
+  ],
+  "layerId": "index.html:5:1",
+  "mode": "tailwind"
+}
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

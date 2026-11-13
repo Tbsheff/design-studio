@@ -28,9 +28,13 @@ import {
 import type { ChildEdit, FileWork, LayoutStyle } from "./layer-layout-files.js";
 import { toReorderedChildren } from "./layer-layout-order.js";
 import type { LayoutSlot } from "./layer-layout-order.js";
-import { toPaddingStyle, toPaddingText } from "./layer-layout-padding.js";
+import {
+  toFitPadding,
+  toPaddingStyle,
+  toPaddingText,
+} from "./layer-layout-padding.js";
 import { toProbeLayoutChildren } from "./layer-layout-probe.js";
-import type { LayoutProbeChild } from "./layer-layout-probe.js";
+import type { LayoutFit, LayoutProbeChild } from "./layer-layout-probe.js";
 import { toLayerStyleFailure } from "./layer-style-failure.js";
 import { toResolvedLayers } from "./layer-style-resolve.js";
 import { loadLayerSite } from "./layer-style-site.js";
@@ -50,6 +54,7 @@ interface SetLayerLayoutCommand {
 
 interface LayoutTarget {
   readonly children: readonly LayoutProbeChild[];
+  readonly fit: LayoutFit;
   readonly frame: LayoutBox;
   readonly source: SourceLoc;
 }
@@ -170,7 +175,12 @@ const toLayoutTarget = async (
     throw new LayerStyleError(NO_LAYER);
   }
 
-  return { children: probe.children, frame: probe.frame, source: root.source };
+  return {
+    children: probe.children,
+    fit: probe.fit,
+    frame: probe.frame,
+    source: root.source,
+  };
 };
 
 const toSkips = (children: readonly LayoutProbeChild[]): LayoutSkip[] =>
@@ -355,7 +365,7 @@ const setLayerLayout = async (
     target.source
   );
 
-  const plan = toAutoLayout(
+  const drawn = toAutoLayout(
     target.children.map((child, index) => ({
       box: child,
       isAbsolute: child.isAbsolute,
@@ -365,6 +375,8 @@ const setLayerLayout = async (
     site.isTailwind,
     toPaddingFrame(target, command)
   );
+
+  const plan = { ...drawn, padding: toFitPadding(drawn.padding, target.fit) };
 
   const works = new Map<string, FileWork>();
   const reorder = await toReorder(run, works, target, plan);

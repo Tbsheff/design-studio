@@ -12,6 +12,8 @@ import { selectionRun, sendSelectionPrompt } from "../../platform/ask-chat.js";
 import { useLive } from "../../platform/live-store.js";
 import { subscribeDone, useAction } from "../../platform/query.js";
 import type { CanvasFrame } from "./canvas-layout-types.js";
+import { setSelectedIds } from "./frame-selection-store.js";
+import { requestFrameZoom } from "./frame-zoom-store.js";
 import {
   isRouteSourceChanged,
   toCopyFrame,
@@ -25,6 +27,7 @@ import type { RouteSourceInput } from "./route-source-model.js";
 interface RouteSourceSetup {
   readonly activate: (frame: CanvasFrame) => void;
   readonly directionId: string | null;
+  readonly frameId: string;
   readonly frames: readonly CanvasFrame[];
   readonly path: string | null;
   readonly projectId: string;
@@ -100,7 +103,7 @@ const useAppDoneRefetch = (
 };
 
 const useRouteSource = (setup: RouteSourceSetup): RouteSourceState => {
-  const { activate, directionId, frames, path, projectId } = setup;
+  const { activate, directionId, frameId, frames, path, projectId } = setup;
 
   const input = useMemo(
     () => toRouteSourceInput(projectId, directionId, path),
@@ -151,10 +154,15 @@ const useRouteSource = (setup: RouteSourceSetup): RouteSourceState => {
   }, [frames, input]);
 
   const handleCompare = useCallback((): void => {
-    if (copyFrame !== null) {
-      activate(copyFrame);
+    if (copyFrame === null) {
+      return;
     }
-  }, [activate, copyFrame]);
+
+    const ids = [frameId, copyFrame.id];
+
+    setSelectedIds(projectId, ids);
+    requestFrameZoom(projectId, ids);
+  }, [copyFrame, frameId, projectId]);
 
   const error = importer.error?.message ?? null;
   const isChanged = isRouteSourceChanged(source);

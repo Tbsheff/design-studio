@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
+import { useUndoDismiss } from "./use-undo-dismiss.js";
 
 const SET_TIMEOUT_8000 = 8000;
 
@@ -23,6 +24,8 @@ const FrameUndoBar = ({
   onDismiss: () => void;
 }): ReactElement | null => {
   const isShown = onUndo !== null;
+
+  useUndoDismiss(isShown, onDismiss);
 
   useEffect(() => {
     if (!isShown) {

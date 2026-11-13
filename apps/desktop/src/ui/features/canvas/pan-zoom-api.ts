@@ -1,5 +1,6 @@
 import type { ZoomKey } from "@design-studio/contracts";
 
+import type { Box } from "./canvas-frames-model.js";
 import {
   applyZoomKey,
   fitZoom,
@@ -8,6 +9,7 @@ import {
   zoomStep,
   zoomTo,
   zoomToActive,
+  zoomToBox,
 } from "./pan-zoom-actions.js";
 import { applyFrameWheel } from "./pan-zoom-frame-wheel.js";
 import type { PanZoomState } from "./pan-zoom-state.js";
@@ -22,6 +24,7 @@ interface PanZoomApi {
   zoomStep: (direction: 1 | -1) => void;
   zoomTo: (zoom: number) => void;
   zoomToActive: () => void;
+  zoomToBox: (box: Box) => void;
 }
 
 const toPanZoomApi = (state: PanZoomState): PanZoomApi => ({
@@ -33,6 +36,7 @@ const toPanZoomApi = (state: PanZoomState): PanZoomApi => ({
   zoomStep: (direction) => zoomStep(state, direction),
   zoomTo: (zoom) => zoomTo(state, zoom),
   zoomToActive: () => zoomToActive(state),
+  zoomToBox: (box) => zoomToBox(state, box),
 });
 
 export { toPanZoomApi };

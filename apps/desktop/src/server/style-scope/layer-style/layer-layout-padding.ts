@@ -1,5 +1,6 @@
 import type { LayoutPadding } from "./engine/index.js";
 import type { LayoutStyle } from "./layer-layout-files.js";
+import type { LayoutFit } from "./layer-layout-probe.js";
 
 const CLEAR_SIDES = {
   "padding-bottom": null,
@@ -54,4 +55,20 @@ const toPaddingStyle = (
   return { ...CLEAR_SIDES, padding: text };
 };
 
-export { toPaddingStyle, toPaddingText };
+const toFitPadding = (
+  padding: LayoutPadding | null,
+  fit: LayoutFit
+): LayoutPadding | null => {
+  if (padding === null) {
+    return null;
+  }
+
+  return {
+    bottom: fit.bottom ?? padding.bottom,
+    left: padding.left,
+    right: fit.right ?? padding.right,
+    top: padding.top,
+  };
+};
+
+export { toFitPadding, toPaddingStyle, toPaddingText };

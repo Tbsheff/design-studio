@@ -1,0 +1,53 @@
+call-action layer-style.set on http://127.0.0.1:4482. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 20 ms, git spawns: not counted (server side)
+{
+  "direction": "row",
+  "gap": "40px",
+  "movedChildren": 0,
+  "padding": "24px 24px 192px",
+  "skipped": [],
+  "versionId": "pending-d0d9e9eac91d7a31"
+}
+
+[mcp] ok, 286 ms, git spawns: not counted (server side)
+{
+  "direction": "row",
+  "gap": null,
+  "movedChildren": 0,
+  "padding": null,
+  "skipped": [],
+  "versionId": null
+}
+
+[agent] ok, 9 ms, git spawns: not counted (server side)
+{
+  "direction": "row",
+  "gap": null,
+  "movedChildren": 0,
+  "padding": null,
+  "skipped": [],
+  "versionId": null
+}
+
+diff http -> mcp:
+-   "gap": "40px",
++   "gap": null,
+-   "padding": "24px 24px 192px",
++   "padding": null,
+-   "versionId": "pending-d0d9e9eac91d7a31"
++   "versionId": null
+
+diff http -> agent:
+-   "gap": "40px",
++   "gap": null,
+-   "padding": "24px 24px 192px",
++   "padding": null,
+-   "versionId": "pending-d0d9e9eac91d7a31"
++   "versionId": null
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 0 error results
+
+fix: compare the outputs above, then run call-action again with the id layer-style.set and the same input

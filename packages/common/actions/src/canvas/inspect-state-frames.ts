@@ -18,7 +18,7 @@ const inspectStateFramesCanvas = defineAction({
   },
   confirm: "none",
   description:
-    "Compare each frame of the state board of one page with the default frame of that page. The tool takes a screenshot of each frame in its state and gives the similarity to the default. A state at or above the threshold looks like the default, so the page has no UI of its own for that state. Captures run one at a time.",
+    "Compare each frame of the state board of one page with the default frame of that page. The tool takes a screenshot of each frame in its state and gives the similarity to the default. A state at or above the threshold looks like the default, so the page has no UI of its own for that state. Captures run one at a time. To design the missing states, call start_run once per item with isSameAsDefault true, with canvas set to its frame, and wait with get_run before the next run.",
   errors: [BadRequest, Conflict, NotFound],
   http: { method: "GET", path: "/api/projects/:projectId/canvas/state-frames" },
   id: "canvas.inspectStateFrames",

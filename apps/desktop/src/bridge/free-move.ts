@@ -175,7 +175,7 @@ export function nudgeBaseOf(element: Element): NudgeBase {
   const lockY = authored.top === "auto";
   const x = num(cs.marginLeft);
   const y = num(cs.marginTop);
-  const hasMargin = (x !== 0 && !lockX) || (y !== 0 && !lockY);
+  const hasMargin = !lockX || !lockY;
   return {
     mode: hasMargin ? "margin" : "none",
     x,

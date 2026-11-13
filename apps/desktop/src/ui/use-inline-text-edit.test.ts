@@ -2,7 +2,13 @@ import { describe, expect, it } from "vitest";
 
 import { MAX_INLINE_TEXT, parseTextCommit } from "./features/canvas/index.js";
 
-const base = { at: 1, ns: "studio", token: "t", type: "text-commit" } as const;
+const base = {
+  at: 1,
+  isHeld: false,
+  ns: "studio",
+  token: "t",
+  type: "text-commit",
+} as const;
 
 const BAD_TEXT_MESSAGE = JSON.parse(
   '{"at":1,"ns":"studio","selector":"h1","text":7,"token":"t","type":"text-commit"}'
@@ -14,7 +20,11 @@ describe(parseTextCommit, () => {
 
     expect(
       parseTextCommit({ ...base, selector: "body > main > h1", text: "Hello" })
-    ).toStrictEqual({ selector: "body > main > h1", text: "Hello" });
+    ).toStrictEqual({
+      isHeld: false,
+      selector: "body > main > h1",
+      text: "Hello",
+    });
   }, 0);
 
   it("refuses bad shapes and long text", () => {

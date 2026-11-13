@@ -237,7 +237,7 @@ const runSessionBegin = async (
 
 const isOutsideVersion = (event: ProjectEvent): boolean =>
   event.type === VERSION_CREATED &&
-  (event.version.meta.kind !== "manual" || event.version.meta.origin === "mcp");
+  (event.version.meta.kind !== "manual" || Boolean(event.version.meta.origin));
 
 const useSessionRefresh = (
   ctx: SessionContext,

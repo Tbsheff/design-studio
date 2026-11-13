@@ -24,12 +24,16 @@ type TextCommitHandler = (selector: string, text: string) => void;
 
 const parseTextCommit = (
   message: TextEditMessage
-): { selector: string; text: string } | null => {
+): { selector: string; text: string; isHeld: boolean } | null => {
   if (message.type !== "text-commit") {
     return null;
   }
 
-  const { selector, text } = message as { selector: unknown; text: unknown };
+  const { selector, text, isHeld } = message as {
+    selector: unknown;
+    text: unknown;
+    isHeld: unknown;
+  };
 
   if (!isText(selector) || selector === "" || selector.length > LENGTH_2000) {
     return null;
@@ -39,7 +43,7 @@ const parseTextCommit = (
     return null;
   }
 
-  return { selector, text };
+  return { isHeld: isHeld === true, selector, text };
 };
 
 interface InlineTextEdit {

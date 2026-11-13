@@ -14,6 +14,7 @@ import type {
 import type { ApiError } from "../../api.js";
 import { api, errorText } from "../../api.js";
 import type { PreviewPort } from "../../platform/bridge.js";
+import { copy } from "./copy.js";
 import { toChangedProps } from "./css-value-model.js";
 import type { StyleValues } from "./css-value-model.js";
 import {
@@ -40,6 +41,7 @@ interface EditCore {
   readonly timer: TimerRef;
   readonly inflight: MutableRefObject<Promise<void> | null>;
   readonly isAgain: MutableRefObject<boolean>;
+  readonly isTextForced: MutableRefObject<boolean>;
   readonly forced: RefObject<Set<DirectStyleProperty>>;
   readonly storeDraft: (next: Partial<StyleValues>) => void;
   readonly storeTextDraft: (next: string | null) => void;
@@ -81,6 +83,7 @@ const runSelectorPost = (core: EditCore): void => {
 const stopEdit = (core: EditCore): void => {
   stopTimer(core.timer);
   core.isAgain.current = false;
+  core.isTextForced.current = false;
   core.forced.current.clear();
   core.storeDraft({});
   core.storeTextDraft(null);
@@ -96,11 +99,23 @@ const toErrorStatus = (error: Error): SaveStatus => {
   return { kind: "error", message };
 };
 
+const toStaleText = (core: EditCore, message: string): string => {
+  const typed = core.textRef.current;
+
+  if (typed === null) {
+    return message;
+  }
+
+  return `${copy.textNotSaved} "${typed}"`;
+};
+
 const applyEditFailure = (core: EditCore, error: Error): void => {
   if (isStaleSelection(error)) {
+    const notice = toStaleText(core, error.message);
+
     stopEdit(core);
     runPreviewPost(core, { type: "preview-reset" });
-    core.opts.current.onStale(error.message);
+    core.opts.current.onStale(notice);
 
     return;
   }
@@ -152,8 +167,15 @@ const toKeptStyle = (core: EditCore): Partial<StyleValues> => {
 
 const toPendingText = (core: EditCore, current: Options): string | null => {
   const pending = core.textRef.current;
+  const isForced = core.isTextForced.current;
 
-  if (pending !== null && pending !== current.selection.text) {
+  core.isTextForced.current = false;
+
+  if (pending === null) {
+    return null;
+  }
+
+  if (isForced || pending !== current.selection.text) {
     return pending;
   }
 

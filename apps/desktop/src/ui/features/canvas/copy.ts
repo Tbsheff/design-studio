@@ -148,6 +148,7 @@ const copy = {
   styleReference: "Style reference for new runs",
   text: "Text",
   text2: "%",
+  textKept: "Claude changed this text while you typed. Your text is kept.",
   times: "×",
   times2: " × ",
   toSignInFor:

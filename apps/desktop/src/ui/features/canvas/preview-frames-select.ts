@@ -2,7 +2,11 @@ import type { SelectMove } from "@design-studio/contracts";
 import { startTransition } from "react";
 
 import { frontFrame, postFront } from "./preview-frames-core.js";
-import { settleSwap } from "./preview-frames-swap.js";
+import {
+  holdSwapForCommit,
+  holdSwapForSelect,
+  settleSwap,
+} from "./preview-frames-swap.js";
 import type { PreviewState, TextEditMessage } from "./preview-frames-types.js";
 import {
   manySelection,
@@ -24,6 +28,11 @@ const releaseToolbarFocus = (state: PreviewState): void => {
 
 const onTextMessage = (state: PreviewState, message: TextEditMessage): void => {
   state.textEditing = message.type === "text-edit" && message.state === "start";
+
+  if (message.type === "text-commit") {
+    holdSwapForCommit(state);
+  }
+
   state.opts.onTextEdit?.(message);
   const swap = state.pendingSwap;
 
@@ -74,6 +83,7 @@ const onSelectMessage = (
   message: SelectMessage | SelectManyMessage
 ): void => {
   releaseToolbarFocus(state);
+  holdSwapForSelect(state);
 
   if (message.type === "select-many") {
     selectMany(state, message);

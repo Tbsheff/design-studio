@@ -3,6 +3,9 @@ const SYSTEM_TEXT =
 
 const EDIT_DESIGN_LABEL = "Edit DESIGN.md";
 
+const TEXT_NOT_SAVED_PREFIX =
+  "The layer changed while you typed, so your text is not saved. Select the layer and type it again:";
+
 const COLUMN_COPY = {
   assetsIcons: "Icons",
   assetsNote:
@@ -18,4 +21,4 @@ const COLUMN_COPY = {
   tokensEmpty: "This project has no tokens yet.",
 } as const;
 
-export { COLUMN_COPY, EDIT_DESIGN_LABEL, SYSTEM_TEXT };
+export { COLUMN_COPY, EDIT_DESIGN_LABEL, SYSTEM_TEXT, TEXT_NOT_SAVED_PREFIX };

@@ -113,6 +113,8 @@ interface PreviewState {
   handledChange: ChangeInfo | null;
   heldRects: RectsMessage | null;
   hmrFallback: Timer | null;
+  holdTimer: Timer | null;
+  holdUntil: number;
   openReported: boolean;
   opts: PreviewOptions;
   pendingReact: PendingReact | null;

@@ -7,6 +7,7 @@ import {
 } from "../../features/comments";
 import { useCanvasCommandsHost } from "../canvas-commands-host";
 import type { CenterView } from "../shell/center-view";
+import { TEXT_NOT_SAVED_PREFIX } from "./copy";
 import { nameOf } from "./project-model";
 import { neverRan, runStepOf } from "./run-model";
 import { renderSpeedSlot } from "./speed-slot";
@@ -93,6 +94,7 @@ const onTextCommit =
     }
 
     ui.port.current?.post({ type: "preview-reset" });
+    ui.setStaleNotice(`${TEXT_NOT_SAVED_PREFIX} "${text}"`);
   };
 
 const canvasProps = (ctx: StudioCtx): CanvasProps => {

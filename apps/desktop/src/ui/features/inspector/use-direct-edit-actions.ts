@@ -213,6 +213,7 @@ const toCommitActions = (core: EditCore): CommitActions => {
 
     stopTimer(core.timer);
     core.storeTextDraft(text);
+    core.isTextForced.current = true;
     startEditFlush(core);
 
     return true;

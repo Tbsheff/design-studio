@@ -13,6 +13,7 @@ import type { useCanvasPreview } from "./use-canvas-preview.js";
 import type { useCanvasStage } from "./use-canvas-stage.js";
 import { useCanvasVectorTools } from "./use-canvas-vector-tools.js";
 import { useFreeMove } from "./use-free-move.js";
+import { useHeldTextNotice } from "./use-held-text-notice.js";
 import { useResizeHandles } from "./use-resize-handles.js";
 
 type CanvasStageState = ReturnType<typeof useCanvasStage>;
@@ -177,6 +178,7 @@ const useCanvasEdits = (
   const { notify } = tools.layerEdits;
   const onError = notify;
   const isEnabled = handles.handlesOn;
+  useHeldTextNotice(listen, notify);
 
   useElementNudge({
     directionId,

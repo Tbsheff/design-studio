@@ -104,6 +104,7 @@ const useEditModel = (input: ModelInput): EditModel => {
   const timer: TimerRef = useCell(null);
   const inflight = useCell<Promise<void> | null>(null);
   const isAgain = useCell(false);
+  const isTextForced = useCell(false);
   const forced = useCell(new Set<DirectStyleProperty>());
 
   return useMemo(() => {
@@ -113,6 +114,7 @@ const useEditModel = (input: ModelInput): EditModel => {
       forced,
       inflight,
       isAgain,
+      isTextForced,
       opts,
       setStatus,
       setTailwind,
@@ -132,6 +134,7 @@ const useEditModel = (input: ModelInput): EditModel => {
     forced,
     inflight,
     isAgain,
+    isTextForced,
     opts,
     setStatus,
     setTailwind,

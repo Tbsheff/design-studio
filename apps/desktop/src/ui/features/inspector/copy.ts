@@ -242,6 +242,8 @@ const copy = {
   text7: ")",
   textAlign: "Text align",
   textContent: "Text content",
+  textNotSaved:
+    "The layer changed while you typed, so your text is not saved. Select the layer and type it again:",
   textStyle: "Text style",
   textUseTheImageOnThe: "Use the image on the clipboard",
   theseClassesAreNotAPlain:

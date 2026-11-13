@@ -13,6 +13,8 @@ const VERSION_PARAM = "v";
 const SWAP_FALLBACK_MS = 1500;
 const LOAD_GRACE_MS = 500;
 const HMR_FALLBACK_MS = 2500;
+const SELECT_HOLD_MS = 900;
+const COMMIT_HOLD_MS = 2000;
 
 interface FilesChangeInput {
   readonly baseUrl: string | null;
@@ -47,6 +49,33 @@ const swapTo = (state: PreviewState, token: string): void => {
   }
 };
 
+const retrySwapLater = (
+  state: PreviewState,
+  wait: number,
+  retry: () => void
+): void => {
+  if (state.holdTimer !== null) {
+    globalThis.clearTimeout(state.holdTimer);
+  }
+
+  state.holdTimer = globalThis.setTimeout(() => {
+    state.holdTimer = null;
+    retry();
+  }, wait);
+};
+
+const holdSwapFor = (state: PreviewState, ms: number): void => {
+  state.holdUntil = Math.max(state.holdUntil, Date.now() + ms);
+};
+
+const holdSwapForSelect = (state: PreviewState): void => {
+  holdSwapFor(state, SELECT_HOLD_MS);
+};
+
+const holdSwapForCommit = (state: PreviewState): void => {
+  holdSwapFor(state, COMMIT_HOLD_MS);
+};
+
 const settleSwap = (state: PreviewState, token: string): void => {
   const swap = state.pendingSwap;
 
@@ -57,6 +86,16 @@ const settleSwap = (state: PreviewState, token: string): void => {
   if (state.textEditing || state.dragHold) {
     swap.due = true;
     swap.loaded = true;
+
+    return;
+  }
+
+  const wait = state.holdUntil - Date.now();
+
+  if (wait > 0) {
+    swap.due = true;
+    swap.loaded = true;
+    retrySwapLater(state, wait, () => settleSwap(state, token));
 
     return;
   }
@@ -269,4 +308,12 @@ const holdSwap = (
   globalThis.setTimeout(() => releaseSwap(state, swap), SWAP_FALLBACK_MS);
 };
 
-export { applyFilesChange, holdSwap, loadFresh, onFrameLoad, settleSwap };
+export {
+  applyFilesChange,
+  holdSwap,
+  holdSwapForCommit,
+  holdSwapForSelect,
+  loadFresh,
+  onFrameLoad,
+  settleSwap,
+};

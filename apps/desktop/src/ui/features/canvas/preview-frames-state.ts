@@ -39,6 +39,8 @@ const createPreviewState = (
   handledChange: null,
   heldRects: null,
   hmrFallback: null,
+  holdTimer: null,
+  holdUntil: 0,
   host: services,
   hover: createLiveStore<HoverBox | null>(null),
   lastPaintAt: {},

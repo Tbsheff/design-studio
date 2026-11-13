@@ -135,6 +135,16 @@ const createModeHandlers = (
   };
 };
 
+const isHeldForText = (context: BridgeContext, selector: unknown): boolean => {
+  if (!isString(selector)) {
+    return false;
+  }
+
+  const element = queryElement(selector);
+
+  return element !== null && context.textEditor.holdFor(element);
+};
+
 const createPreviewHandlers = (
   context: BridgeContext
 ): Pick<
@@ -166,8 +176,13 @@ const createPreviewHandlers = (
   return {
     "lofi-preview": (message) => previewStyles.apply("lofi", message.css),
     "open-steps": (message) => openSteps.set(cleanOpenSteps(message.steps)),
-    "optimistic-apply": (message) =>
-      optimistic.apply(message.id, message.patch, message.written === true),
+    "optimistic-apply": (message) => {
+      if (isHeldForText(context, message.patch?.selector)) {
+        return;
+      }
+
+      optimistic.apply(message.id, message.patch, message.written === true);
+    },
     "optimistic-drop": () => optimistic.drop(),
     "optimistic-settle": (message) =>
       optimistic.settle(

@@ -19,6 +19,7 @@ export interface TextEditDeps {
 export interface TextEditor {
   editing(): boolean;
   owns(element: Element | null): boolean;
+  holdFor(element: Element): boolean;
   allow(on: boolean): void;
   canEdit(element: Element | null): element is HTMLElement;
   start(element: HTMLElement, at?: { x: number; y: number }): void;
@@ -60,6 +61,7 @@ interface Session {
   data: Map<Node, string>;
   original: string;
   hadEditable: string | null;
+  isHeld: boolean;
 }
 
 function ensureStyle(): void {
@@ -212,6 +214,7 @@ export function createTextEditor(deps: TextEditDeps): TextEditor {
       selector: current.selector,
       text,
       at: performance.timeOrigin + performance.now(),
+      isHeld: current.isHeld,
     });
   };
 
@@ -255,6 +258,7 @@ export function createTextEditor(deps: TextEditDeps): TextEditor {
       data,
       original: element.textContent ?? "",
       hadEditable: element.getAttribute("contenteditable"),
+      isHeld: false,
     };
     deps.onStart(element);
     ensureStyle();
@@ -323,6 +327,20 @@ export function createTextEditor(deps: TextEditDeps): TextEditor {
     editing: () => session !== null,
     owns: (element) =>
       session !== null && element !== null && session.element.contains(element),
+    holdFor: (element) => {
+      if (
+        session === null ||
+        !(
+          element.contains(session.element) || session.element.contains(element)
+        )
+      ) {
+        return false;
+      }
+
+      session.isHeld = true;
+
+      return true;
+    },
     allow: (on) => {
       allowed = on;
 

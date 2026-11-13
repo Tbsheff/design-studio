@@ -5,6 +5,8 @@ import type { Project } from "@design-studio/contracts";
 
 import { writeAtomic } from "../platform/atomic-write/index.js";
 import { toStarterPage } from "./engine/to-starter-page.js";
+import { toStarterRoles } from "./engine/to-starter-roles.js";
+import type { StarterRoles } from "./engine/to-starter-roles.js";
 import { applyPack } from "./packs.js";
 import type { LoadedPack } from "./packs.js";
 
@@ -24,6 +26,14 @@ const isStarterPageWanted = (project: Project): boolean =>
   project.kind === "html" &&
   !project.designSystemFor &&
   (!project.imported || project.imported.created === true);
+
+const toPackRoles = (pack: LoadedPack): StarterRoles | null => {
+  if (pack.source !== "user") {
+    return null;
+  }
+
+  return toStarterRoles(pack.entries.map((entry) => entry.cssVar));
+};
 
 const applyCreatedPack = async (
   project: Project,
@@ -46,6 +56,7 @@ const applyCreatedPack = async (
     toStarterPage({
       googleFontsUrl: pack.manifest.fonts.googleFontsUrl ?? null,
       packName: pack.manifest.name,
+      roles: toPackRoles(pack),
       title: project.name,
     }),
     { createDir: true }

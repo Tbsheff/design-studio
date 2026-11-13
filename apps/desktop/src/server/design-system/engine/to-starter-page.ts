@@ -1,6 +1,9 @@
+import type { StarterRoles } from "./to-starter-roles.js";
+
 interface StarterPageSource {
   readonly googleFontsUrl: string | null;
   readonly packName: string;
+  readonly roles: StarterRoles | null;
   readonly title: string;
 }
 
@@ -22,22 +25,28 @@ const toFontImport = (url: string | null): string => {
   return `\n      @import url("${url}");`;
 };
 
-const STARTER_STYLE = `
+const toRef = (
+  roles: StarterRoles | null,
+  role: string,
+  fallback: string
+): string => roles?.get(role) ?? `var(--${role}, ${fallback})`;
+
+const toStarterStyle = (roles: StarterRoles | null): string => `
       * { box-sizing: border-box; }
-      body { margin: 0; background: var(--bg, #ffffff); color: var(--fg, #111111); font-family: var(--font-body, system-ui, sans-serif); font-size: var(--text-base, 16px); line-height: 1.5; }
-      main { max-width: 1040px; margin: 0 auto; padding: var(--space-12, 48px) var(--space-6, 24px); display: grid; gap: var(--space-10, 40px); }
-      .hero { display: grid; gap: var(--space-4, 16px); }
-      .badge { justify-self: start; padding: var(--space-1, 4px) var(--space-3, 12px); border-radius: var(--radius-pill, 999px); background: var(--accent, #eeeeee); color: var(--accent-fg, #111111); font-size: var(--text-xs, 12px); font-weight: 600; }
-      h1 { margin: 0; font-family: var(--font-display, inherit); font-size: var(--text-4xl, 40px); line-height: 1.1; }
-      .lead { margin: 0; max-width: 60ch; color: var(--fg-muted, #555555); font-size: var(--text-lg, 18px); }
-      .actions { display: flex; flex-wrap: wrap; gap: var(--space-3, 12px); }
-      .button { padding: var(--space-3, 12px) var(--space-5, 20px); border: 1px solid transparent; border-radius: var(--radius-md, 8px); font: inherit; font-weight: 600; cursor: pointer; }
-      .button-primary { background: var(--primary, #111111); color: var(--primary-fg, #ffffff); }
-      .button-secondary { background: transparent; color: var(--fg, #111111); border-color: var(--border, #dddddd); }
-      .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-4, 16px); }
-      .card { display: grid; gap: var(--space-2, 8px); padding: var(--space-6, 24px); background: var(--surface, #fafafa); border: 1px solid var(--border, #dddddd); border-radius: var(--radius-lg, 12px); box-shadow: var(--shadow-sm, none); }
-      .card h2 { margin: 0; font-family: var(--font-display, inherit); font-size: var(--text-xl, 20px); }
-      .card p { margin: 0; color: var(--fg-muted, #555555); }
+      body { margin: 0; background: ${toRef(roles, "bg", "#ffffff")}; color: ${toRef(roles, "fg", "#111111")}; font-family: ${toRef(roles, "font-body", "system-ui, sans-serif")}; font-size: var(--text-base, 16px); line-height: 1.5; }
+      main { max-width: 1040px; margin: 0 auto; padding: ${toRef(roles, "space-12", "48px")} ${toRef(roles, "space-6", "24px")}; display: grid; gap: ${toRef(roles, "space-10", "40px")}; }
+      .hero { display: grid; gap: ${toRef(roles, "space-4", "16px")}; }
+      .badge { justify-self: start; padding: ${toRef(roles, "space-1", "4px")} ${toRef(roles, "space-3", "12px")}; border-radius: var(--radius-pill, 999px); background: ${toRef(roles, "accent", "#eeeeee")}; color: ${toRef(roles, "accent-fg", "#111111")}; font-size: var(--text-xs, 12px); font-weight: 600; }
+      h1 { margin: 0; font-family: ${toRef(roles, "font-display", "inherit")}; font-size: var(--text-4xl, 40px); line-height: 1.1; }
+      .lead { margin: 0; max-width: 60ch; color: ${toRef(roles, "fg-muted", "#555555")}; font-size: var(--text-lg, 18px); }
+      .actions { display: flex; flex-wrap: wrap; gap: ${toRef(roles, "space-3", "12px")}; }
+      .button { padding: ${toRef(roles, "space-3", "12px")} ${toRef(roles, "space-5", "20px")}; border: 1px solid transparent; border-radius: ${toRef(roles, "radius-md", "8px")}; font: inherit; font-weight: 600; cursor: pointer; }
+      .button-primary { background: ${toRef(roles, "primary", "#111111")}; color: ${toRef(roles, "primary-fg", "#ffffff")}; }
+      .button-secondary { background: transparent; color: ${toRef(roles, "fg", "#111111")}; border-color: ${toRef(roles, "border", "#dddddd")}; }
+      .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: ${toRef(roles, "space-4", "16px")}; }
+      .card { display: grid; gap: ${toRef(roles, "space-2", "8px")}; padding: ${toRef(roles, "space-6", "24px")}; background: ${toRef(roles, "surface", "#fafafa")}; border: 1px solid ${toRef(roles, "border", "#dddddd")}; border-radius: ${toRef(roles, "radius-lg", "12px")}; box-shadow: var(--shadow-sm, none); }
+      .card h2 { margin: 0; font-family: ${toRef(roles, "font-display", "inherit")}; font-size: var(--text-xl, 20px); }
+      .card p { margin: 0; color: ${toRef(roles, "fg-muted", "#555555")}; }
     `;
 
 const toStarterPage = (source: StarterPageSource): string => {
@@ -51,7 +60,7 @@ const toStarterPage = (source: StarterPageSource): string => {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>${title}</title>
     <link rel="stylesheet" href="design-system/tokens.css">
-    <style>${toFontImport(source.googleFontsUrl)}${STARTER_STYLE}</style>
+    <style>${toFontImport(source.googleFontsUrl)}${toStarterStyle(source.roles)}</style>
   </head>
   <body>
     <main>

@@ -13,6 +13,7 @@ import { listHistoryVersion } from "./list-history.js";
 import { listHunksVersion } from "./list-hunks.js";
 import { listVersion } from "./list.js";
 import { renameVersion } from "./rename.js";
+import { restoreChangeVersion } from "./restore-change.js";
 import { restoreHeadVersion } from "./restore-head.js";
 import { restoreHistoryVersion } from "./restore-history.js";
 import { restoreWorkTreeVersion } from "./restore-work-tree.js";
@@ -33,6 +34,7 @@ const VersionActions = {
   listHunksVersion,
   listVersion,
   renameVersion,
+  restoreChangeVersion,
   restoreHeadVersion,
   restoreHistoryVersion,
   restoreVersion,

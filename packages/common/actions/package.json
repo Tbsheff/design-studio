@@ -665,6 +665,7 @@
     "./version/list-hunks": "./src/version/list-hunks.ts",
     "./version/rename": "./src/version/rename.ts",
     "./version/restore": "./src/version/restore.ts",
+    "./version/restore-change": "./src/version/restore-change.ts",
     "./version/restore-head": "./src/version/restore-head.ts",
     "./version/restore-history": "./src/version/restore-history.ts",
     "./version/restore-work-tree": "./src/version/restore-work-tree.ts",

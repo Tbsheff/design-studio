@@ -22,17 +22,26 @@ const ChangedLayersSchema = Schema.Struct({
   to: Schema.String,
 });
 
+const RestoredChangeSchema = Schema.Struct({
+  file: Schema.String,
+  kind: ChangeKindSchema,
+  versionId: Schema.String,
+});
+
 type ChangeKind = typeof ChangeKindSchema.Type;
 
 type ChangedLayer = typeof ChangedLayerSchema.Type;
 
 type ChangedLayers = typeof ChangedLayersSchema.Type;
 
+type RestoredChange = typeof RestoredChangeSchema.Type;
+
 export {
   CHANGE_ITEM_MAX,
   ChangeKindSchema,
   ChangedLayerSchema,
   ChangedLayersSchema,
+  RestoredChangeSchema,
 };
 
-export type { ChangeKind, ChangedLayer, ChangedLayers };
+export type { ChangeKind, ChangedLayer, ChangedLayers, RestoredChange };

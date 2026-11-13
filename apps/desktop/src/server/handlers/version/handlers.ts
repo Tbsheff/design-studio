@@ -19,6 +19,7 @@ import { handle as listHistoryVersionHandle } from "./list-history.js";
 import { handle as listHunksVersionHandle } from "./list-hunks.js";
 import { handle as listVersionHandle } from "./list.js";
 import { handle as renameVersionHandle } from "./rename.js";
+import { handle as restoreChangeVersionHandle } from "./restore-change.js";
 import { handle as restoreHeadVersionHandle } from "./restore-head.js";
 import { handle as restoreHistoryVersionHandle } from "./restore-history.js";
 import { handle as restoreWorkTreeVersionHandle } from "./restore-work-tree.js";
@@ -42,6 +43,7 @@ const VersionEntries = {
   listHunksVersion: { handle: listHunksVersionHandle },
   listVersion: { handle: listVersionHandle },
   renameVersion: { handle: renameVersionHandle },
+  restoreChangeVersion: { handle: restoreChangeVersionHandle },
   restoreHeadVersion: { handle: restoreHeadVersionHandle },
   restoreHistoryVersion: { handle: restoreHistoryVersionHandle },
   restoreVersion: { handle: restoreVersionHandle },

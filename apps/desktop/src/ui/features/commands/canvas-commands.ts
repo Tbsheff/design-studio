@@ -1,3 +1,4 @@
+import { TIDY_FRAMES_EVENT } from "../../domain/tidy-frames-events.js";
 import type { CanvasActions } from "./canvas-actions.js";
 import { toReason, toTitle, withDisabled } from "./command-disabled.js";
 import { animationTimeline, uiStore } from "./deps.js";
@@ -89,6 +90,15 @@ const sectionCommands = (canvasActions: CanvasActions): Command[] => [
     keywords: "group frames section container",
     run: canvasActions.addSection,
     title: "Add section around selected frames",
+  },
+  {
+    group: "View",
+    icon: "frame",
+    id: "view.tidy-frames",
+    keyId: "tidy-up",
+    keywords: "arrange align grid row gap frames section clean",
+    run: () => globalThis.dispatchEvent(new CustomEvent(TIDY_FRAMES_EVENT)),
+    title: "Tidy up frames",
   },
 ];
 

@@ -206,6 +206,7 @@ const copy = {
   textKept: "Claude changed this text while you typed. Your text is kept.",
   textPlaceHint: "Click to add a text box. Esc stops.",
   textPlaceTool: "Text tool",
+  tidyUpFrames: "Tidy up frames",
   times: "×",
   times2: " × ",
   toSignInFor:

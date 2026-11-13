@@ -11,6 +11,7 @@ import {
 } from "./frame-label-state.js";
 import type { GetLive, LabelState } from "./frame-label-state.js";
 import type { LabelProps } from "./frame-label.js";
+import { SameAsDefaultNote } from "./same-as-default-note.js";
 import type { FrameVariation } from "./variation-model.js";
 
 const toBadge = (
@@ -81,6 +82,13 @@ const toFrameLabel = (
     ...input.baseLabel(frame),
     directionId: did,
     extras,
+    note: (
+      <SameAsDefaultNote
+        frameId={frame.id}
+        headVersionId={input.headVersionId}
+        projectId={input.projectId}
+      />
+    ),
     number,
   };
 

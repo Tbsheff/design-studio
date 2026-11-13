@@ -5,6 +5,7 @@ import { canHideFrame, setFrameHidden } from "./canvas-frame-ops.js";
 import { canvasStore } from "./canvas-frames-model.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import type { CanvasDirections, Props } from "./canvas-types.js";
+import { copy } from "./copy.js";
 import type { FrameMenuItem } from "./frame-more-menu.js";
 import { sectionCopy } from "./section-copy.js";
 import type { useCanvasFrames } from "./use-canvas-frames.js";
@@ -21,6 +22,7 @@ interface LabelInput {
   selection: SelectionContext[];
   setSelection: Props["setSelection"];
   frames: ReturnType<typeof useCanvasFrames>;
+  headVersionId: string | null;
   baseLabel: ReturnType<typeof useFrameActions>["labelProps"];
   directionName: string | null;
   frameActions?: (
@@ -89,7 +91,20 @@ const frameMenuItems = (
     section.disabled = sectionCopy.full;
   }
 
-  return [...extra, section, hide];
+  const base = input.baseLabel(frame);
+
+  const remove: FrameMenuItem = {
+    icon: "trash",
+    id: "remove-frame",
+    label: copy.removeFrame,
+    run: () => base.onRemove(frame),
+  };
+
+  if (!base.removable) {
+    remove.disabled = copy.removeFrameLast;
+  }
+
+  return [...extra, section, hide, remove];
 };
 
 const toVariationSig = (variation: FrameVariation | undefined): string => {
@@ -132,6 +147,7 @@ const frameLabelSig = (
     input.directionName,
     input.kind,
     Boolean(input.appPages),
+    input.headVersionId,
     toVariationSig(toVariation(input, did)),
     toItemsSig(frameMenuItems(input, frame, did)),
   ]);

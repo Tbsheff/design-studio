@@ -50,7 +50,7 @@ const FRAME_MENU_GROUPS: readonly FrameMenuGroupSpec[] = [
   },
   {
     group: { icon: "frame", id: "arrange", label: copy.frameMenuArrange },
-    items: ["tidy-frames", "section", "layout-grid", "hide"],
+    items: ["tidy-frames", "section", "layout-grid", "hide", "remove-frame"],
   },
 ];
 

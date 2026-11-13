@@ -6,6 +6,7 @@ import { createVersion } from "./create.js";
 import { deleteSessionVersion } from "./delete-session.js";
 import { exportVersion } from "./export.js";
 import { getVersion } from "./get.js";
+import { inspectChangesVersion } from "./inspect-changes.js";
 import { inspectDiffVersion } from "./inspect-diff.js";
 import { inspectPreviewVersion } from "./inspect-preview.js";
 import { listHistoryVersion } from "./list-history.js";
@@ -25,6 +26,7 @@ const VersionActions = {
   deleteSessionVersion,
   exportVersion,
   getVersion,
+  inspectChangesVersion,
   inspectDiffVersion,
   inspectPreviewVersion,
   listHistoryVersion,

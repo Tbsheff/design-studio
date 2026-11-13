@@ -72,6 +72,12 @@ const routes = {
     method: "GET",
     path: "/api/projects/:projectId/versions/:versionId",
   },
+  inspectChangesVersion: {
+    id: "version.inspectChanges",
+    invalidates: [],
+    method: "GET",
+    path: "/api/projects/:projectId/d/:directionId/changes",
+  },
   inspectDiffVersion: {
     id: "version.inspectDiff",
     invalidates: [],

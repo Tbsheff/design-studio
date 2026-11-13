@@ -4,18 +4,18 @@ import type { ReactElement } from "react";
 import { activeFrameOf, commentToolsOf, inEditPane } from "./canvas-helpers.js";
 import type { StageSlotProps } from "./canvas-stage-types.js";
 import { CanvasComments } from "./canvas-tool-slots.js";
+import { ChangeOverlay } from "./change-overlay.js";
 import { LiveOverlay } from "./live-overlay.js";
 
 const StageOverlay = ({
   edits,
-  preview,
+  preview: { frames },
   props,
   slots,
   stage,
   variant,
 }: StageSlotProps): ReactElement => {
   const { active, comment, draw, layout, pane, pz, viewport } = stage;
-  const { frames } = preview;
   const { resize, spacingHost } = edits;
   const { Grid, Spacing } = slots;
 
@@ -83,6 +83,7 @@ const StageOverlay = ({
           zoom={pz.zoom}
         />
       </Suspense>
+      <ChangeOverlay frames={frames} props={props} stage={stage} />
     </>
   );
 };

@@ -1,0 +1,56 @@
+call-action version.inspectChanges on http://127.0.0.1:4870. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 17 ms, git spawns: not counted (server side)
+{
+  "from": "c1bd41abced5a503665795bc274881c143d164ec",
+  "isTruncated": false,
+  "items": [
+    {
+      "file": "index.html",
+      "hunk": 1,
+      "kind": "removed",
+      "layerId": "index.html:33:3",
+      "line": 33,
+      "tag": "p"
+    }
+  ],
+  "to": "50dee30304b0d565d2e34c286d9b6d07b6617f56"
+}
+
+[mcp] ok, 19 ms, git spawns: not counted (server side)
+{
+  "from": "c1bd41abced5a503665795bc274881c143d164ec",
+  "isTruncated": false,
+  "items": [
+    {
+      "file": "index.html",
+      "hunk": 1,
+      "kind": "removed",
+      "layerId": "index.html:33:3",
+      "line": 33,
+      "tag": "p"
+    }
+  ],
+  "to": "50dee30304b0d565d2e34c286d9b6d07b6617f56"
+}
+
+[agent] ok, 15 ms, git spawns: not counted (server side)
+{
+  "from": "c1bd41abced5a503665795bc274881c143d164ec",
+  "isTruncated": false,
+  "items": [
+    {
+      "file": "index.html",
+      "hunk": 1,
+      "kind": "removed",
+      "layerId": "index.html:33:3",
+      "line": 33,
+      "tag": "p"
+    }
+  ],
+  "to": "50dee30304b0d565d2e34c286d9b6d07b6617f56"
+}
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

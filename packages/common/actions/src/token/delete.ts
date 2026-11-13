@@ -18,7 +18,7 @@ const deleteToken = defineAction({
   },
   confirm: "user",
   description:
-    "Delete one design token that nothing uses. Removes its CSS custom property declarations from the app CSS files in one version. Fails with Conflict and the use count when the token has any use. The approval card lists the definition and the use count.",
+    "Delete one design token that nothing uses, in one version. In a studio design system it removes the token from tokens.json and rebuilds tokens.css and DESIGN.md. In an imported app folder it removes the CSS custom property declarations from the app CSS files. Fails with Conflict and the use count when the token has any use, before the approval card shows.",
   errors: [BadRequest, Conflict, NotFound],
   http: {
     method: "DELETE",

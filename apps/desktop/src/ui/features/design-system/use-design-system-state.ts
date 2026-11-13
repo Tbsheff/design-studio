@@ -9,6 +9,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { TokenMode } from "../../../shared/token-match.js";
 import { api } from "../../api.js";
+import { subscribeDone } from "../../platform/query.js";
 import type { FilesChange } from "../home/use-studio-data.js";
 
 interface DesignTokens {
@@ -74,6 +75,7 @@ interface StateRequest {
   readonly packId: string | null;
   readonly projectId: string;
   readonly stamp: number;
+  readonly writeCount: number;
 }
 
 const readState = async (
@@ -86,6 +88,22 @@ const readState = async (
   }
 };
 
+const useWriteCount = (): number => {
+  const [writeCount, setWriteCount] = useState(0);
+
+  useEffect(
+    () =>
+      subscribeDone((done): void => {
+        if (done.invalidates.includes("direct-edit.getDesignSystem")) {
+          setWriteCount((count) => count + 1);
+        }
+      }),
+    []
+  );
+
+  return writeCount;
+};
+
 const useDesignSystemState = (
   projectId: string,
   project: Project | null,
@@ -93,6 +111,7 @@ const useDesignSystemState = (
   lastChange: FilesChange | null
 ): DesignSystemView => {
   const [loaded, setLoaded] = useState<Loaded | null>(null);
+  const writeCount = useWriteCount();
 
   const packId = project?.packId ?? null;
 
@@ -126,6 +145,7 @@ const useDesignSystemState = (
         packId,
         projectId,
         stamp,
+        writeCount,
       });
 
       if (state && !cancelled && live.current === want) {
@@ -138,7 +158,7 @@ const useDesignSystemState = (
     return (): void => {
       cancelled = true;
     };
-  }, [projectId, directionId, packId, headVersionId, stamp]);
+  }, [projectId, directionId, packId, headVersionId, stamp, writeCount]);
 
   const replace = useCallback(
     (state: DesignSystemState) => setLoaded({ key: live.current, state }),

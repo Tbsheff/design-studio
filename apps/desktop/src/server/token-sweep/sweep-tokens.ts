@@ -1,9 +1,12 @@
 import path from "node:path";
 
+import { TOKENS_CSS_FILE, TOKENS_FILE } from "@design-studio/contracts";
+
 import {
   assertCanEdit,
   BadRequestError,
   ConflictError,
+  DESIGN_MD_FILE,
   getTokenUse,
   loadAppTokens,
   NotFoundError,
@@ -37,10 +40,18 @@ import {
   requireSafe,
   runRewrite,
 } from "./source-files.js";
+import {
+  isGeneratedFile,
+  isSystemToken,
+  toSystemDelete,
+  toSystemRename,
+} from "./system-token-files.js";
+import type { SystemEdit, SystemTexts } from "./system-token-files.js";
 import type {
   FileChange,
   RemoveCommand,
   RenameCommand,
+  Rewrite,
   TokenEditResult,
   TokenScope,
 } from "./token-edit-types.js";
@@ -302,13 +313,64 @@ const toEditEntry = (
     throw new NotFoundError(`No token ${name}. Use get_tokens for the names.`);
   }
 
-  if (!entry.source) {
-    throw new BadRequestError(
-      "Only CSS tokens of an imported app folder can change this way."
-    );
+  return entry;
+};
+
+const toOptionalText = async (
+  workTree: string,
+  relative: string
+): Promise<string | null> => {
+  try {
+    return await readSource(workTree, relative);
+  } catch {
+    return null;
+  }
+};
+
+const toSystemTexts = async (workTree: string): Promise<SystemTexts> => {
+  const system = await readDesignSystemFiles(workTree);
+  let themeMode: SystemTexts["mode"] = "light";
+
+  if (system?.manifest?.mode === "dark") {
+    themeMode = "dark";
   }
 
-  return entry;
+  return {
+    css: (await toOptionalText(workTree, TOKENS_CSS_FILE)) ?? "",
+    markdown: await toOptionalText(workTree, DESIGN_MD_FILE),
+    mode: themeMode,
+    tokens: await readSource(workTree, TOKENS_FILE),
+  };
+};
+
+const toSystemFiles = async (
+  workTree: string,
+  entry: CompiledTokenEntry,
+  plan: (texts: SystemTexts) => SystemEdit
+): Promise<readonly FileChange[]> => {
+  if (!isSystemToken(entry)) {
+    return [];
+  }
+
+  const edit = plan(await toSystemTexts(workTree));
+
+  if (edit.problem !== null) {
+    throw new BadRequestError(edit.problem);
+  }
+
+  if (edit.conflict !== null) {
+    throw new ConflictError(edit.conflict);
+  }
+
+  return edit.files;
+};
+
+const toMerged = (rewrite: Rewrite, system: readonly FileChange[]): Rewrite => {
+  if (system.length === 0) {
+    return rewrite;
+  }
+
+  return { count: rewrite.count + 1, files: [...rewrite.files, ...system] };
 };
 
 const toEditResult = (
@@ -328,7 +390,7 @@ const renameTokenIn = async (
   const { workTree } = scope.direction;
   const entries = await entriesOf(workTree);
 
-  toEditEntry(entries, command.name);
+  const entry = toEditEntry(entries, command.name);
 
   if (command.newName === command.name) {
     throw new BadRequestError("The new name is the same as the old name.");
@@ -346,13 +408,24 @@ const renameTokenIn = async (
     throw new BadRequestError(plan.reason);
   }
 
-  const rewrite = await runRewrite(workTree, (text) =>
-    toRenamedText(text, plan)
+  const system = await toSystemFiles(workTree, entry, (texts) =>
+    toSystemRename(texts, entry, command.newName)
+  );
+
+  const rewrite = toMerged(
+    await runRewrite(workTree, (text, relative) => {
+      if (isGeneratedFile(entry, relative)) {
+        return { count: 0, text };
+      }
+
+      return toRenamedText(text, plan);
+    }),
+    system
   );
 
   const versionId = await commitChanges(runtime, scope, rewrite.files, {
     count: rewrite.count,
-    title: "Rename token",
+    title: `Rename token ${command.name} to ${command.newName}`,
   });
 
   return toEditResult(rewrite, versionId);
@@ -366,7 +439,7 @@ const deleteTokenIn = async (
   const { workTree } = scope.direction;
   const entries = await entriesOf(workTree);
 
-  toEditEntry(entries, command.name);
+  const entry = toEditEntry(entries, command.name);
 
   const use = await getTokenUse(
     workTree,
@@ -382,13 +455,20 @@ const deleteTokenIn = async (
     );
   }
 
-  const rewrite = await runRewrite(workTree, (text, relative) => {
-    if (!relative.endsWith(".css")) {
-      return { count: 0, text };
-    }
+  const system = await toSystemFiles(workTree, entry, (texts) =>
+    toSystemDelete(texts, entry)
+  );
 
-    return toDeletedText(text, command.name);
-  });
+  const rewrite = toMerged(
+    await runRewrite(workTree, (text, relative) => {
+      if (!relative.endsWith(".css") || isSystemToken(entry)) {
+        return { count: 0, text };
+      }
+
+      return toDeletedText(text, command.name);
+    }),
+    system
+  );
 
   if (rewrite.files.length === 0) {
     throw new NotFoundError(`No declaration of ${command.name} found.`);
@@ -396,7 +476,7 @@ const deleteTokenIn = async (
 
   const versionId = await commitChanges(runtime, scope, rewrite.files, {
     count: rewrite.count,
-    title: "Delete token",
+    title: `Delete token ${command.name}`,
   });
 
   return toEditResult(rewrite, versionId);

@@ -1,4 +1,3 @@
-import { REQUIRED_TOKENS } from "@design-studio/contracts";
 import type {
   CompiledTokenEntry,
   TokenFile,
@@ -44,7 +43,7 @@ const CORE_GROUPS = [
   "breakpoint",
 ] as const;
 
-const GROUP_DEFAULT_TYPES: Record<string, TokenType> = {
+export const GROUP_DEFAULT_TYPES: Record<string, TokenType> = {
   breakpoint: "dimension",
   color: "color",
   font: "fontFamily",
@@ -305,23 +304,6 @@ function checkDuplicates(tokens: RawToken[], errors: string[]): void {
       );
     } else {
       seen.set(token.cssVar, token.path);
-    }
-  }
-}
-
-function checkRequired(byPath: Map<string, RawToken>, errors: string[]): void {
-  for (const [group, names] of Object.entries(REQUIRED_TOKENS)) {
-    for (const name of names) {
-      const token = byPath.get(`${group}.${name}`);
-      const expected = GROUP_DEFAULT_TYPES[group];
-
-      if (!token) {
-        errors.push(`missing required token ${group}.${name}`);
-      } else if (token.type !== expected) {
-        errors.push(
-          `${group}.${name}: required token must have $type ${expected}, not ${token.type}`
-        );
-      }
     }
   }
 }
@@ -715,7 +697,6 @@ export function compileTokens(
   const tokens = collectTokens(file, errors);
   const rawByPath = new Map(tokens.map((token) => [token.path, token]));
   checkDuplicates(tokens, errors);
-  checkRequired(rawByPath, errors);
   const inCycle = checkCycles(tokens, errors);
 
   const compiled = tokens

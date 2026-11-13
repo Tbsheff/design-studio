@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { TokenDeleteConfirm } from "./token-delete-confirm.js";
 import { TokenRenameField } from "./token-rename-field.js";
 import { TokenRowLine } from "./token-row-line.js";
 import type { TokenRowProps } from "./token-row-types.js";
@@ -32,6 +33,9 @@ const TokenRowHead = ({
           rename={tools.rename}
           useCount={tools.useCount}
         />
+      )}
+      {tools.remove.isConfirming && (
+        <TokenDeleteConfirm name={row.entry.cssVar} remove={tools.remove} />
       )}
     </>
   );

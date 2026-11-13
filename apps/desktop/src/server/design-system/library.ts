@@ -23,7 +23,7 @@ import {
   isNodeError,
 } from "../platform/errors/index.js";
 import { createKeyedMutex } from "../platform/mutex/index.js";
-import { checkDesignSystemFiles } from "./check.js";
+import { checkDesignSystemFiles, toCoreTokenErrors } from "./check.js";
 import { compileTokens, parseTokenFile } from "./compile.js";
 import { removeTokenBlock } from "./design-md.js";
 import { toDarkModeField } from "./extract/dark-trigger.js";
@@ -163,10 +163,11 @@ export function buildPackFiles(
   }
 
   const compiled = compileTokens(parsed.file, { mode: input.mode });
+  const errors = [...compiled.errors, ...toCoreTokenErrors(compiled.entries)];
 
-  if (compiled.errors.length > 0) {
+  if (errors.length > 0) {
     throw new BadRequestError(
-      `invalid tokens.json: ${buildErrorMessage(compiled.errors)}`
+      `invalid tokens.json: ${buildErrorMessage(errors)}`
     );
   }
 

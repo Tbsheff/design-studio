@@ -8,6 +8,7 @@ import type {
 import { colorDistance, parseColor } from "./color.js";
 import type { ParsedColor } from "./color.js";
 import { toFilterToken } from "./filter-token.js";
+import { toKeywordClass } from "./keyword-classes.js";
 import type { TailwindTheme, ThemeNamespace } from "./theme-model.js";
 import { emValue, lengthToPx, percent, plainNumber } from "./units.js";
 
@@ -52,152 +53,6 @@ const FRACTIONS: [number, string][] = [
   [1100 / 12, "11/12"],
 ];
 
-const KEYWORDS: Record<string, Record<string, string>> = {
-  display: {
-    flex: "flex",
-    block: "block",
-    "inline-block": "inline-block",
-    inline: "inline",
-    grid: "grid",
-    "inline-grid": "inline-grid",
-    "inline-flex": "inline-flex",
-    none: "hidden",
-    contents: "contents",
-    table: "table",
-    "flow-root": "flow-root",
-    "list-item": "list-item",
-  },
-  "flex-direction": {
-    column: "flex-col",
-    row: "flex-row",
-    "column-reverse": "flex-col-reverse",
-    "row-reverse": "flex-row-reverse",
-  },
-  "flex-wrap": {
-    wrap: "flex-wrap",
-    nowrap: "flex-nowrap",
-    "wrap-reverse": "flex-wrap-reverse",
-  },
-  "align-items": {
-    center: "items-center",
-    "flex-start": "items-start",
-    start: "items-start",
-    "flex-end": "items-end",
-    end: "items-end",
-    baseline: "items-baseline",
-    stretch: "items-stretch",
-    normal: "items-normal",
-  },
-  "align-self": {
-    auto: "self-auto",
-    center: "self-center",
-    "flex-start": "self-start",
-    start: "self-start",
-    "flex-end": "self-end",
-    end: "self-end",
-    stretch: "self-stretch",
-    baseline: "self-baseline",
-  },
-  position: {
-    static: "static",
-    relative: "relative",
-    absolute: "absolute",
-    fixed: "fixed",
-    sticky: "sticky",
-  },
-  "justify-items": {
-    center: "justify-items-center",
-    start: "justify-items-start",
-    "flex-start": "justify-items-start",
-    end: "justify-items-end",
-    "flex-end": "justify-items-end",
-    stretch: "justify-items-stretch",
-    normal: "justify-items-normal",
-  },
-  "justify-content": {
-    center: "justify-center",
-    "flex-start": "justify-start",
-    start: "justify-start",
-    "flex-end": "justify-end",
-    end: "justify-end",
-    "space-between": "justify-between",
-    "space-around": "justify-around",
-    "space-evenly": "justify-evenly",
-    stretch: "justify-stretch",
-    normal: "justify-normal",
-  },
-  "text-align": {
-    left: "text-left",
-    center: "text-center",
-    right: "text-right",
-    justify: "text-justify",
-    start: "text-start",
-    end: "text-end",
-  },
-  "font-style": { italic: "italic", normal: "not-italic" },
-  "text-transform": {
-    uppercase: "uppercase",
-    lowercase: "lowercase",
-    capitalize: "capitalize",
-    none: "normal-case",
-  },
-  "text-decoration-line": {
-    underline: "underline",
-    overline: "overline",
-    "line-through": "line-through",
-    none: "no-underline",
-  },
-  overflow: {
-    hidden: "overflow-hidden",
-    auto: "overflow-auto",
-    scroll: "overflow-scroll",
-    visible: "overflow-visible",
-    clip: "overflow-clip",
-  },
-  "object-fit": {
-    contain: "object-contain",
-    cover: "object-cover",
-    fill: "object-fill",
-    none: "object-none",
-    "scale-down": "object-scale-down",
-  },
-  "object-position": {
-    center: "object-center",
-    "50% 50%": "object-center",
-    top: "object-top",
-    bottom: "object-bottom",
-    left: "object-left",
-    right: "object-right",
-  },
-  "background-size": {
-    cover: "bg-cover",
-    contain: "bg-contain",
-    auto: "bg-auto",
-  },
-  "background-position": {
-    center: "bg-center",
-    "50% 50%": "bg-center",
-    top: "bg-top",
-    bottom: "bg-bottom",
-    left: "bg-left",
-    right: "bg-right",
-  },
-  "background-repeat": {
-    repeat: "bg-repeat",
-    "no-repeat": "bg-no-repeat",
-    "repeat-x": "bg-repeat-x",
-    "repeat-y": "bg-repeat-y",
-  },
-  "border-style": {
-    solid: "border-solid",
-    dashed: "border-dashed",
-    dotted: "border-dotted",
-    double: "border-double",
-    hidden: "border-hidden",
-    none: "border-none",
-  },
-};
-
 const SINGLE_PROPS: Record<string, SingleGroup> = {
   color: "color",
   "background-color": "bg",
@@ -223,6 +78,7 @@ const SINGLE_PROPS: Record<string, SingleGroup> = {
   "font-style": "font-style",
   "text-decoration-line": "decoration",
   "text-transform": "case",
+  "text-wrap": "text-wrap",
   overflow: "overflow",
   "text-shadow": "text-shadow",
   transform: "transform",
@@ -883,7 +739,7 @@ function singleToken(
   value: string,
   theme: TailwindTheme
 ): string {
-  const keyword = KEYWORDS[prop]?.[value.trim().toLowerCase()];
+  const keyword = toKeywordClass(prop, value);
 
   if (keyword) {
     return keyword;

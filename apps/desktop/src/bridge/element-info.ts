@@ -67,6 +67,7 @@ const STYLE_KEYS = [
   "-webkit-box-orient",
   "aspect-ratio",
   "font-variant-numeric",
+  "text-wrap",
 ];
 
 const MAX_SELECTOR_DEPTH = 8;

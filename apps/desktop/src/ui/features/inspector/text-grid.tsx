@@ -19,6 +19,7 @@ import {
 } from "./simple-model.js";
 import { SpecNumberField } from "./spec-number-field.js";
 import { TextStyleToggles } from "./text-style-toggles.js";
+import { TextWrapRow } from "./text-wrap-row.js";
 import { TruncateRow } from "./truncate-row.js";
 import type { TokenUi } from "./use-token-snap.js";
 
@@ -70,6 +71,7 @@ const TextGrid = ({
       <TruncateRow edit={edit} selection={selection} classes={classes} />
     )}
     <NumberStyleRow edit={edit} selection={selection} classes={classes} />
+    <TextWrapRow edit={edit} selection={selection} classes={classes} />
   </div>
 );
 

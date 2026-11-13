@@ -36,7 +36,17 @@ const PageMatchVersionSchema = Schema.NullOr(
   })
 ).pipe(Schema.withDecodingDefaultKey(Effect.succeed(null)));
 
-const PageMatchTargetSchema = Schema.Struct(PageMatchSourceFields);
+const PageMatchHashSchema = Schema.NullOr(
+  Schema.String.annotate({
+    description:
+      "The markupHash that inspect_matches_page gave for this page. The page is left out when its element changed since. Leave out to skip the check.",
+  })
+).pipe(Schema.withDecodingDefaultKey(Effect.succeed(null)));
+
+const PageMatchTargetSchema = Schema.Struct({
+  ...PageMatchSourceFields,
+  markupHash: PageMatchHashSchema,
+});
 
 const PageMatchTargetsSchema = Schema.Array(PageMatchTargetSchema)
   .check(Schema.isMinLength(1), Schema.isMaxLength(PAGE_MATCH_MAX))
@@ -49,6 +59,7 @@ const PageMatchSchema = Schema.Struct({
   file: Schema.String,
   frameId: Schema.NullOr(Schema.String),
   isSame: Schema.Boolean,
+  markupHash: Schema.String,
   selector: Schema.String,
 });
 
@@ -58,8 +69,14 @@ const PageMatchesSchema = Schema.Struct({
   ),
 });
 
+const PageMatchSkipSchema = Schema.Struct({
+  file: Schema.String,
+  reason: Schema.Literals(["changed", "missing"]),
+});
+
 const PageMatchesUpdatedSchema = Schema.Struct({
   files: Schema.Array(Schema.String),
+  skipped: Schema.Array(PageMatchSkipSchema),
   versionId: Schema.String,
 });
 
@@ -69,6 +86,8 @@ type PageMatches = typeof PageMatchesSchema.Type;
 
 type PageMatchesUpdated = typeof PageMatchesUpdatedSchema.Type;
 
+type PageMatchSkip = typeof PageMatchSkipSchema.Type;
+
 type PageMatchTarget = typeof PageMatchTargetSchema.Type;
 
 export {
@@ -76,10 +95,17 @@ export {
   PageMatchesSchema,
   PageMatchesUpdatedSchema,
   PageMatchSchema,
+  PageMatchSkipSchema,
   PageMatchSourceFields,
   PageMatchTargetSchema,
   PageMatchTargetsSchema,
   PageMatchVersionSchema,
 };
 
-export type { PageMatch, PageMatches, PageMatchesUpdated, PageMatchTarget };
+export type {
+  PageMatch,
+  PageMatches,
+  PageMatchesUpdated,
+  PageMatchSkip,
+  PageMatchTarget,
+};

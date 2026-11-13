@@ -6,7 +6,7 @@ import {
   toElementSpot,
   toSelectorOf,
 } from "./to-element-spot.js";
-import type { HtmlElement } from "./to-element-spot.js";
+import type { ElementSpot, HtmlElement } from "./to-element-spot.js";
 import { MARK_CLASSES } from "./to-marked-markup.js";
 
 type HtmlNode = DefaultTreeAdapterMap["childNode"];
@@ -20,6 +20,7 @@ interface PageSource {
 
 interface PageHit {
   readonly isSame: boolean;
+  readonly normal: string;
   readonly selector: string;
 }
 
@@ -102,6 +103,9 @@ const toPageSource = (html: string, selector: string): PageSource | null => {
   return { markup, normal, selector, tag };
 };
 
+const toElementNormal = (spot: ElementSpot): string =>
+  toNormalNode(spot.element);
+
 const isSameElement = (source: PageSource, element: HtmlElement): boolean =>
   element.tagName === source.tag && toNormalNode(element) === source.normal;
 
@@ -110,25 +114,37 @@ const toPageHit = (source: PageSource, html: string): PageHit | null => {
   const same = all.find((element) => isSameElement(source, element)) ?? null;
 
   if (same !== null) {
-    return { isSame: true, selector: toSelectorOf(same, all) };
+    return {
+      isSame: true,
+      normal: source.normal,
+      selector: toSelectorOf(same, all),
+    };
   }
 
   const spot = toElementSpot(html, source.selector);
 
   if (spot?.tag === source.tag) {
-    return { isSame: false, selector: toSelectorOf(spot.element, all) };
+    return {
+      isSame: false,
+      normal: toNormalNode(spot.element),
+      selector: toSelectorOf(spot.element, all),
+    };
   }
 
   const tagged = all.filter((element) => element.tagName === source.tag);
   const only = tagged.at(0) ?? null;
 
   if (tagged.length === 1 && only !== null) {
-    return { isSame: false, selector: toSelectorOf(only, all) };
+    return {
+      isSame: false,
+      normal: toNormalNode(only),
+      selector: toSelectorOf(only, all),
+    };
   }
 
   return null;
 };
 
-export { toPageHit, toPageSource };
+export { toElementNormal, toPageHit, toPageSource };
 
 export type { PageHit, PageSource };

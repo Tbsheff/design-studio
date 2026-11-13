@@ -133,6 +133,27 @@ export function revertCanvas(
   return { ...current, frames, lofi, sections };
 }
 
+const isSameStart = (left: LinksFile, right: LinksFile): boolean =>
+  same(left.start, right.start) && same(left.starts, right.starts);
+
+const toRestoredStart = (
+  current: LinksFile,
+  back: LinksFile,
+  links: LinksFile["links"]
+): LinksFile => {
+  const restored: LinksFile = { links, version: current.version };
+
+  if (back.start) {
+    restored.start = back.start;
+  }
+
+  if (back.starts) {
+    restored.starts = back.starts;
+  }
+
+  return restored;
+};
+
 export function revertLinks(
   current: LinksFile,
   made: LinksFile,
@@ -144,20 +165,34 @@ export function revertLinks(
     return null;
   }
 
-  if (same(made.start, back.start)) {
+  if (isSameStart(made, back)) {
     return { ...current, links };
   }
 
-  if (!same(current.start, made.start)) {
+  if (!isSameStart(current, made)) {
     return null;
   }
 
-  const { start: _start, ...rest } = current;
-
-  return back.start === undefined
-    ? { ...rest, links }
-    : { ...rest, links, start: back.start };
+  return toRestoredStart(current, back, links);
 }
+
+const toStartNames = (file: LinksFile): string[] =>
+  (file.starts ?? []).map((point) => point.name);
+
+const toStartLabel = (before: LinksFile, after: LinksFile): string | null => {
+  if (isSameStart(before, after)) {
+    return null;
+  }
+
+  if (
+    same(toStartNames(before), toStartNames(after)) &&
+    !same(before.start, after.start)
+  ) {
+    return "Set start frame";
+  }
+
+  return "Change start points";
+};
 
 function frameName(frame: CanvasFileFrame): string {
   const name =
@@ -302,10 +337,11 @@ function linksLabel(before: LinksFile, after: LinksFile): string | null {
   const diff = diffItems(before.links, after.links);
   const counts = [diff.added.length, diff.removed.length, diff.changed.length];
   const total = counts.reduce((sum, count) => sum + count, 0);
-  const startChanged = !same(before.start, after.start);
+  const startLabel = toStartLabel(before, after);
+  const startChanged = startLabel !== null;
 
   if (total === 0) {
-    return startChanged ? "Set start frame" : null;
+    return startLabel;
   }
 
   if (startChanged || counts.filter((count) => count > 0).length > 1) {

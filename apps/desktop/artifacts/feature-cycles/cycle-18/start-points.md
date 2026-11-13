@@ -37,3 +37,10 @@ Branch `feat/start-points`.
 - `src/ui/features/canvas/play-mode.tsx`: 4 lines to use the chosen start.
 - `src/ui/styles/prototype.css`: one block at the end.
 - `src/server/canvas/links/link-ops.ts`: `writeStart` moved to `start-points.ts`; `toWritableContext` exported.
+
+## Undo fix
+
+- `src/server/canvas/layout-history.ts`: `revertLinks` compares and restores `start` and `starts` together. `linksLabel` records a step when only `starts` changes: "Change start points", or "Set start frame" when only the first frame moves and the names stay.
+- Checked in the app (mock agent): add a point, rename it to "Sign in", add "Home", remove "Sign in". Four Cmd+Z steps gave each earlier list exactly (the last gives no starts); four Cmd+Shift+Z steps gave each later list exactly.
+- MCP `set_start_points_canvas` (3 points), then Cmd+Z in the UI: the list went back to `[Home f2]`; Cmd+Shift+Z gave the 3 points back.
+- `pnpm run typecheck`, `pnpm run lint:gate`, `pnpm run build:ui` pass.

@@ -10,18 +10,8 @@ import {
   NotFoundError,
 } from "../platform/errors/index.js";
 import type { LinkRuntime } from "./links/link-runtime.js";
-import {
-  PlaceError,
-  findFrame,
-  inspectCanvasListing,
-  updateCanvasPlacement,
-} from "./tools.js";
-import type {
-  CanvasListing,
-  CanvasToolContext,
-  PlaceOutcome,
-  PlaceSpec,
-} from "./tools.js";
+import { PlaceError, findFrame, updateCanvasPlacement } from "./tools.js";
+import type { CanvasToolContext, PlaceOutcome, PlaceSpec } from "./tools.js";
 
 interface FrameTarget {
   readonly directionId: string | null;
@@ -159,12 +149,6 @@ const toPlaced = async (
     throw error;
   }
 };
-
-const inspectCanvasFrames = async (
-  runtime: LinkRuntime,
-  target: FrameTarget
-): Promise<CanvasListing> =>
-  inspectCanvasListing(await getCanvasContext(runtime, target));
 
 const updateCanvasFrames = async (
   runtime: LinkRuntime,
@@ -467,7 +451,6 @@ export {
   getCanvasContext,
   getCanvasDeleteCard,
   getWritableContext,
-  inspectCanvasFrames,
   setCanvasPoint,
   updateCanvasFrames,
 };

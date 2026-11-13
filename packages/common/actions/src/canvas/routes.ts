@@ -161,6 +161,12 @@ const routes = {
     method: "PUT",
     path: "/api/projects/:projectId/frame-states/frames/:frame",
   },
+  setGuidesCanvas: {
+    id: "canvas.setGuides",
+    invalidates: ["canvas.inspect"],
+    method: "POST",
+    path: "/api/projects/:projectId/canvas/guides",
+  },
   setLinkInteractionCanvas: {
     id: "canvas.setLinkInteraction",
     invalidates: [

@@ -2,6 +2,7 @@ import type { CanvasWriteSource, Project } from "@design-studio/contracts";
 import type {
   CanvasFile,
   CanvasFileFrame,
+  CanvasGuide,
   CanvasSection,
   LayoutChange,
 } from "@design-studio/contracts/canvas-file";
@@ -116,6 +117,20 @@ function revertSet(
   return [...current.filter((item) => !added.includes(item)), ...removed];
 }
 
+const toGuides = (file: CanvasFile): CanvasGuide[] => file.guides ?? [];
+
+const toRevertedGuides = (
+  current: CanvasFile,
+  made: CanvasFile,
+  back: CanvasFile
+): CanvasGuide[] | null => {
+  if (same(toGuides(made), toGuides(back))) {
+    return toGuides(current);
+  }
+
+  return same(toGuides(current), toGuides(made)) ? toGuides(back) : null;
+};
+
 export function revertCanvas(
   current: CanvasFile,
   made: CanvasFile,
@@ -125,13 +140,32 @@ export function revertCanvas(
   const lofi = revertSet(current.lofi, made.lofi, back.lofi);
 
   const sections = revertItems(current.sections, made.sections, back.sections);
+  const guides = toRevertedGuides(current, made, back);
 
-  if (frames === null || lofi === null || sections === null) {
+  if (frames === null || lofi === null || sections === null || !guides) {
     return null;
   }
 
-  return { ...current, frames, lofi, sections };
+  return { ...current, frames, guides, lofi, sections };
 }
+
+const toGuidesLabel = (
+  before: CanvasFile,
+  after: CanvasFile
+): string | null => {
+  const from = toGuides(before);
+  const to = toGuides(after);
+
+  if (same(from, to)) {
+    return null;
+  }
+
+  if (to.length > from.length) {
+    return "Add guide";
+  }
+
+  return to.length < from.length ? "Remove guide" : "Move guide";
+};
 
 const isSameStart = (left: LinksFile, right: LinksFile): boolean =>
   same(left.start, right.start) && same(left.starts, right.starts);
@@ -321,6 +355,14 @@ function toFramesLabel(before: CanvasFile, after: CanvasFile): string | null {
 }
 
 function canvasLabel(before: CanvasFile, after: CanvasFile): string | null {
+  const guidesLabel = toGuidesLabel(before, after);
+
+  if (guidesLabel !== null) {
+    return toFramesLabel(before, after) === null
+      ? guidesLabel
+      : "Change canvas";
+  }
+
   const sectionLabel = toSectionsLabel(before, after);
 
   if (sectionLabel === null) {

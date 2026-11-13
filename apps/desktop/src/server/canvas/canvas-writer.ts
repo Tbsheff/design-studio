@@ -38,6 +38,8 @@ import type {
   FrameRemoved,
   FrameRouteQuery,
 } from "./frame-ops.js";
+import { setCanvasGuides } from "./guide-ops.js";
+import type { GuidesSet, GuidesSetQuery } from "./guide-ops.js";
 import { deleteCanvasSection, setCanvasSection } from "./section-ops.js";
 import type {
   SectionDeleteQuery,
@@ -80,6 +82,9 @@ interface CanvasWriterApi {
   readonly setFrameState: (
     query: FrameStateQuery
   ) => Effect.Effect<FrameStateSet, CanvasFailure>;
+  readonly setGuides: (
+    query: GuidesSetQuery
+  ) => Effect.Effect<GuidesSet, CanvasFailure>;
   readonly setSection: (
     query: SectionSetQuery
   ) => Effect.Effect<SectionSet, CanvasFailure>;
@@ -161,6 +166,13 @@ class CanvasWriter extends Context.Service<CanvasWriter, CanvasWriterApi>()(
         query: FrameStateQuery
       ) {
         return yield* attemptCanvas((runtime) => writeState(runtime, query));
+      }),
+      setGuides: Effect.fn("CanvasWriter.setGuides")(function* run(
+        query: GuidesSetQuery
+      ) {
+        return yield* attemptCanvas((runtime) =>
+          setCanvasGuides(runtime, query)
+        );
       }),
       setPoint: Effect.fn("CanvasWriter.setPoint")(function* run(
         query: FramePointQuery

@@ -11,6 +11,7 @@ export const CANVAS_LABEL_MAX = 40;
 export const CANVAS_GAP = 80;
 export const CANVAS_MAX_SECTIONS = 12;
 export const CANVAS_SECTION_MIN_SIDE = 80;
+export const CANVAS_MAX_GUIDES = 50;
 
 const FRAME_ID_RE = /^f\d{1,4}$/;
 const SECTION_ID_RE = /^s\d{1,4}$/;
@@ -39,11 +40,17 @@ export interface CanvasSection {
   height: number;
 }
 
+export interface CanvasGuide {
+  axis: "x" | "y";
+  at: number;
+}
+
 export interface CanvasFile {
   version: number;
   frames: CanvasFileFrame[];
   lofi: string[];
   sections: CanvasSection[];
+  guides?: CanvasGuide[];
 }
 
 export type LayoutChange =
@@ -207,6 +214,35 @@ export function parseCanvasSection(raw: unknown): CanvasSection | null {
   };
 }
 
+export function parseCanvasGuide(raw: unknown): CanvasGuide | null {
+  if (!raw || typeof raw !== "object") {
+    return null;
+  }
+
+  const g = raw as Record<string, unknown>;
+  const at = coord(g.at);
+
+  if ((g.axis !== "x" && g.axis !== "y") || at === null) {
+    return null;
+  }
+
+  return { axis: g.axis, at };
+}
+
+export function cleanCanvasGuides(
+  guides: readonly CanvasGuide[] | undefined
+): CanvasGuide[] {
+  const seen = new Set<string>();
+
+  return (guides ?? [])
+    .filter((guide) => {
+      const key = `${guide.axis}:${guide.at}`;
+
+      return seen.has(key) ? false : (seen.add(key), true);
+    })
+    .slice(0, CANVAS_MAX_GUIDES);
+}
+
 export function nextSectionId(sections: readonly { id: string }[]): string {
   let n = sections.length + 1;
 
@@ -242,7 +278,19 @@ export function normalizeCanvasFile(file: CanvasFile): CanvasFile {
     )
     .slice(0, CANVAS_MAX_SECTIONS);
 
-  return { version: CANVAS_FILE_VERSION, frames, lofi, sections };
+  const guides = cleanCanvasGuides(file.guides);
+  const clean: CanvasFile = {
+    version: CANVAS_FILE_VERSION,
+    frames,
+    lofi,
+    sections,
+  };
+
+  if (guides.length > 0) {
+    clean.guides = guides;
+  }
+
+  return clean;
 }
 
 export function parseCanvasFile(raw: unknown): CanvasFile | null {
@@ -270,11 +318,18 @@ export function parseCanvasFile(raw: unknown): CanvasFile | null {
         .filter((section): section is CanvasSection => section !== null)
     : [];
 
+  const guides = Array.isArray(record.guides)
+    ? record.guides
+        .map(parseCanvasGuide)
+        .filter((guide): guide is CanvasGuide => guide !== null)
+    : [];
+
   return normalizeCanvasFile({
     version: CANVAS_FILE_VERSION,
     frames,
     lofi,
     sections,
+    guides,
   });
 }
 
@@ -326,6 +381,10 @@ export function serializeCanvasFile(file: CanvasFile): string {
 
   if (clean.sections.length > 0) {
     body.sections = clean.sections;
+  }
+
+  if (clean.guides) {
+    body.guides = clean.guides;
   }
 
   return `${JSON.stringify(sortedValue(body), null, 2)}\n`;

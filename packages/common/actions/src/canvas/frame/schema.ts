@@ -1,6 +1,7 @@
 import { Schema } from "effect";
 
 import { DirectionIdSchema } from "../../_core/ids.js";
+import { GuideSchema } from "../guide/schema.js";
 
 const FRAME_REF_FIELD_MAX = 60;
 
@@ -209,6 +210,7 @@ const CanvasUserViewSchema = Schema.Struct({
 
 const CanvasListedSchema = Schema.Struct({
   frames: Schema.Array(FrameViewSchema),
+  guides: Schema.Array(GuideSchema),
   lofi: Schema.Array(Schema.String),
   note: Schema.NullOr(Schema.String),
   sections: Schema.Array(CanvasSectionViewSchema),

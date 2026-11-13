@@ -316,4 +316,27 @@ const stateRunCopy = {
   stopTip: "Stop this run and skip the other states",
 } as const;
 
-export { copy, scaleCopy, startCopy, stateCheckCopy, stateRunCopy };
+const layoutGridCopy = {
+  columns: "Columns",
+  columns12: "12 columns",
+  columns4: "4 columns",
+  failed: "Could not set the layout grid",
+  gutter: "Gutter",
+  margin: "Margin",
+  menu: "Layout grid…",
+  remove: "Remove",
+  rowStep: "Row step",
+  rowStepNone: "None",
+  rows8: "8 px rows",
+  showCommand: "Show layout grids",
+  title: "Layout grid",
+} as const;
+
+export {
+  copy,
+  layoutGridCopy,
+  scaleCopy,
+  startCopy,
+  stateCheckCopy,
+  stateRunCopy,
+};

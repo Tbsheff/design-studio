@@ -161,6 +161,12 @@ const routes = {
     method: "PUT",
     path: "/api/projects/:projectId/frame-states/frames/:frame",
   },
+  setLayoutGridCanvas: {
+    id: "canvas.setLayoutGrid",
+    invalidates: ["canvas.inspect"],
+    method: "POST",
+    path: "/api/projects/:projectId/canvas/layout-grid",
+  },
   setLinkInteractionCanvas: {
     id: "canvas.setLinkInteraction",
     invalidates: [

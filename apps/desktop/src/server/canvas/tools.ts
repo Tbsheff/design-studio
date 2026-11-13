@@ -16,6 +16,7 @@ import type {
 } from "@design-studio/contracts/canvas-file";
 
 import { NO_LAYOUT_NOTE, NO_WINDOW_NOTE } from "./canvas-notes.js";
+import { toFrameView } from "./frame-view.js";
 import type { CanvasService } from "./service.js";
 
 export const CANVAS_VIEWPORTS = {
@@ -83,21 +84,6 @@ function text(value: unknown): ToolText {
 
 function failure(message: string): ToolText {
   return { content: [{ text: message, type: "text" }], isError: true };
-}
-
-function describeFrame(frame: CanvasFileFrame, ownerId: string) {
-  return {
-    direction:
-      frame.directionId ?? `${ownerId} (follows the current direction)`,
-    height: frame.height,
-    id: frame.id,
-    label: frame.label ?? null,
-    page: frame.path ?? "(entry page)",
-    width: frame.width,
-    x: frame.x,
-    y: frame.y,
-    ...(frame.hidden ? { hidden: true } : {}),
-  };
 }
 
 export function findFrame(
@@ -349,6 +335,7 @@ function withOptional(
     path?: string;
     label?: string;
     hidden?: boolean;
+    layoutGrid?: CanvasFileFrame["layoutGrid"];
   }
 ): CanvasFileFrame {
   const out = { ...frame };
@@ -367,6 +354,10 @@ function withOptional(
 
   if (extra.hidden) {
     out.hidden = true;
+  }
+
+  if (extra.layoutGrid) {
+    out.layoutGrid = extra.layoutGrid;
   }
 
   return out;
@@ -397,6 +388,7 @@ function placeOne(
     directionId: existing ? existing.directionId : directionId,
     hidden: spec.hidden ?? existing?.hidden,
     label: labelOf(spec, existing, frames),
+    layoutGrid: existing?.layoutGrid,
     path: pathOf(spec, existing),
   });
 }
@@ -464,7 +456,7 @@ export async function inspectCanvasListing(
   const frames = canvas?.frames ?? [];
 
   return {
-    frames: frames.map((frame) => describeFrame(frame, owner.id)),
+    frames: frames.map((frame) => toFrameView(frame, owner.id)),
     lofi: canvas?.lofi ?? [],
     note: frames.length === 0 ? NO_LAYOUT_NOTE : null,
     sections: canvas?.sections ?? [],
@@ -554,7 +546,7 @@ export async function updateCanvasPlacement(
   return {
     frames: result.canvas?.frames.length ?? 0,
     placed: placed.map((frame) =>
-      describeFrame(frame, ctx.canvas.ownerOf(ctx.project).id)
+      toFrameView(frame, ctx.canvas.ownerOf(ctx.project).id)
     ),
     warnings,
   };

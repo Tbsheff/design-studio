@@ -1,3 +1,5 @@
+import { toLayoutGrid } from "@design-studio/contracts/layout-grid";
+import type { CanvasLayoutGrid } from "@design-studio/contracts/layout-grid";
 import type { LinksFile } from "@design-studio/contracts/links";
 
 export const CANVAS_FILE = ".studio/canvas.json";
@@ -28,6 +30,7 @@ export interface CanvasFileFrame {
   path?: string;
   label?: string;
   hidden?: boolean;
+  layoutGrid?: CanvasLayoutGrid;
 }
 
 export interface CanvasSection {
@@ -173,6 +176,12 @@ export function parseCanvasFrame(raw: unknown): CanvasFileFrame | null {
 
   if (f.hidden === true) {
     frame.hidden = true;
+  }
+
+  const layoutGrid = toLayoutGrid(f.layoutGrid as CanvasLayoutGrid | null);
+
+  if (layoutGrid) {
+    frame.layoutGrid = layoutGrid;
   }
 
   return frame;

@@ -1,3 +1,5 @@
+import type { CanvasLayoutGrid } from "@design-studio/contracts/layout-grid";
+
 import type { Viewport } from "../../platform/storage.js";
 
 interface CanvasFrame {
@@ -10,6 +12,7 @@ interface CanvasFrame {
   path?: string;
   label?: string;
   hidden?: boolean;
+  layoutGrid?: CanvasLayoutGrid;
 }
 
 interface CanvasLayout {

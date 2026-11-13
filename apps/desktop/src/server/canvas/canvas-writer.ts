@@ -38,6 +38,8 @@ import type {
   FrameRemoved,
   FrameRouteQuery,
 } from "./frame-ops.js";
+import { setCanvasLayoutGrid } from "./layout-grid-ops.js";
+import type { LayoutGridQuery, LayoutGridSet } from "./layout-grid-ops.js";
 import { deleteCanvasSection, setCanvasSection } from "./section-ops.js";
 import type {
   SectionDeleteQuery,
@@ -80,6 +82,9 @@ interface CanvasWriterApi {
   readonly setFrameState: (
     query: FrameStateQuery
   ) => Effect.Effect<FrameStateSet, CanvasFailure>;
+  readonly setLayoutGrid: (
+    query: LayoutGridQuery
+  ) => Effect.Effect<LayoutGridSet, CanvasFailure>;
   readonly setSection: (
     query: SectionSetQuery
   ) => Effect.Effect<SectionSet, CanvasFailure>;
@@ -161,6 +166,13 @@ class CanvasWriter extends Context.Service<CanvasWriter, CanvasWriterApi>()(
         query: FrameStateQuery
       ) {
         return yield* attemptCanvas((runtime) => writeState(runtime, query));
+      }),
+      setLayoutGrid: Effect.fn("CanvasWriter.setLayoutGrid")(function* run(
+        query: LayoutGridQuery
+      ) {
+        return yield* attemptCanvas((runtime) =>
+          setCanvasLayoutGrid(runtime, query)
+        );
       }),
       setPoint: Effect.fn("CanvasWriter.setPoint")(function* run(
         query: FramePointQuery

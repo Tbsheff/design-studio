@@ -12,6 +12,7 @@ import {
   useScreenEntry,
   useTidyEntry,
 } from "./frame-menu-model.js";
+import { useLayoutGridEntry } from "./use-layout-grid.js";
 
 interface FrameMenuRowsInput {
   readonly own: readonly FrameMenuEntry[];
@@ -28,9 +29,15 @@ const useFrameMenuRows = (
   const copyPngEntry = useCopyPngEntry(root);
   const redesignEntry = useRedesignEntry(path);
   const tidyEntry = useTidyEntry(root);
+  const layoutGridEntry = useLayoutGridEntry(root);
 
   return useMemo(() => {
-    const entries: FrameMenuEntry[] = [screenEntry, copyPngEntry, tidyEntry];
+    const entries: FrameMenuEntry[] = [
+      screenEntry,
+      copyPngEntry,
+      tidyEntry,
+      layoutGridEntry,
+    ];
 
     if (port) {
       entries.push(port);
@@ -41,7 +48,15 @@ const useFrameMenuRows = (
     }
 
     return toFrameMenuRows([...entries, ...own]);
-  }, [copyPngEntry, own, port, redesignEntry, screenEntry, tidyEntry]);
+  }, [
+    copyPngEntry,
+    layoutGridEntry,
+    own,
+    port,
+    redesignEntry,
+    screenEntry,
+    tidyEntry,
+  ]);
 };
 
 export { useFrameMenuRows };

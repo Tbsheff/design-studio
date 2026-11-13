@@ -2028,6 +2028,7 @@ export const DIRECT_STYLE_PROPERTIES = [
   "-webkit-box-orient",
   "aspect-ratio",
   "font-variant-numeric",
+  "text-wrap",
 ] as const;
 
 export type DirectStyleProperty = (typeof DIRECT_STYLE_PROPERTIES)[number];

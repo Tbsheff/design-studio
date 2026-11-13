@@ -1,3 +1,4 @@
+import { KEYWORD_GROUPS } from "./keyword-groups.js";
 import type { TailwindTheme } from "./theme-model.js";
 import { lengthToPx } from "./units.js";
 
@@ -62,7 +63,8 @@ export type SingleGroup =
   | "bg-image"
   | "bg-size"
   | "bg-position"
-  | "bg-repeat";
+  | "bg-repeat"
+  | "text-wrap";
 
 export type Group = SidedGroup | SingleGroup;
 
@@ -126,66 +128,6 @@ const CORNER_SIDES: Record<string, Side[]> = {
   se: ["tr"],
   ee: ["br"],
   es: ["bl"],
-};
-
-const KEYWORD_GROUPS: Record<string, SingleGroup> = {
-  block: "display",
-  "inline-block": "display",
-  inline: "display",
-  flex: "display",
-  "inline-flex": "display",
-  grid: "display",
-  "inline-grid": "display",
-  hidden: "display",
-  contents: "display",
-  table: "display",
-  "flow-root": "display",
-  "list-item": "display",
-  italic: "font-style",
-  "not-italic": "font-style",
-  underline: "decoration",
-  overline: "decoration",
-  "line-through": "decoration",
-  "no-underline": "decoration",
-  uppercase: "case",
-  lowercase: "case",
-  capitalize: "case",
-  "normal-case": "case",
-  "flex-row": "flex-direction",
-  "flex-col": "flex-direction",
-  "flex-row-reverse": "flex-direction",
-  "flex-col-reverse": "flex-direction",
-  "flex-wrap": "flex-wrap",
-  "flex-nowrap": "flex-wrap",
-  "flex-wrap-reverse": "flex-wrap",
-  border: "border-width",
-  shadow: "shadow",
-  filter: "filter",
-  "filter-none": "filter",
-  transform: "transform",
-  "transform-none": "transform",
-  "transform-gpu": "transform",
-  "transform-cpu": "transform",
-  static: "position",
-  relative: "position",
-  absolute: "position",
-  fixed: "position",
-  sticky: "position",
-  "object-contain": "object-fit",
-  "object-cover": "object-fit",
-  "object-fill": "object-fit",
-  "object-none": "object-fit",
-  "object-scale-down": "object-fit",
-  "bg-cover": "bg-size",
-  "bg-contain": "bg-size",
-  "bg-auto": "bg-size",
-  "bg-repeat": "bg-repeat",
-  "bg-no-repeat": "bg-repeat",
-  "bg-repeat-x": "bg-repeat",
-  "bg-repeat-y": "bg-repeat",
-  "bg-repeat-round": "bg-repeat",
-  "bg-repeat-space": "bg-repeat",
-  "bg-none": "bg-image",
 };
 
 const TEXT_ALIGN = new Set([
@@ -309,6 +251,7 @@ const ARBITRARY_PROPERTY: Record<string, SingleGroup> = {
   "font-style": "font-style",
   "text-decoration-line": "decoration",
   "text-transform": "case",
+  "text-wrap": "text-wrap",
   overflow: "overflow",
   "text-shadow": "text-shadow",
   transform: "transform",
@@ -724,7 +667,7 @@ export function classify(
     return single(ARBITRARY_PROPERTY[property[1] ?? ""] ?? null);
   }
 
-  const keyword = KEYWORD_GROUPS[utility];
+  const keyword = KEYWORD_GROUPS.get(utility);
 
   if (keyword) {
     return single(keyword);

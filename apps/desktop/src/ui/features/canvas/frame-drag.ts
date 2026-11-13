@@ -2,6 +2,11 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 
 import type { Box, CanvasFrame, CanvasLayout } from "./canvas-frames-model.js";
 import { otherFrames } from "./frame-resize-model.js";
+import {
+  toGroupFrames,
+  toGroupRect,
+  toOutsideFrames,
+} from "./frame-selection-model.js";
 import { frameSnapStore } from "./frame-snap-store.js";
 import { snapOff, snapRect } from "./snap-model.js";
 
@@ -12,8 +17,15 @@ interface Point {
   y: number;
 }
 
+interface DragGroup {
+  readonly ids: ReadonlySet<string>;
+  readonly hasActive: boolean;
+  readonly passive: Record<string, HTMLDivElement | null>;
+}
+
 interface DragState {
-  frame: CanvasFrame;
+  frame: Box;
+  group: DragGroup | null;
   isActive: boolean;
   zoom: number;
   passive: HTMLDivElement[];
@@ -22,6 +34,7 @@ interface DragState {
 
 interface DragHost {
   readonly artboard: () => HTMLDivElement | null;
+  readonly group: readonly string[];
   readonly layout: CanvasLayout;
   readonly onMoved: (frame: CanvasFrame, world: Point) => void;
   readonly onTap: (frame: CanvasFrame, point: Point | null) => void;
@@ -104,6 +117,52 @@ const toTranslate = (isClear: boolean, x: number, y: number): string => {
   return `${x}px ${y}px`;
 };
 
+const toGroupShift = (isOn: boolean, value: number): number => {
+  if (isOn) {
+    return value;
+  }
+
+  return 0;
+};
+
+const toPassiveShift = (group: DragGroup, id: string, world: Point): Point => {
+  const isMember = group.ids.has(id);
+
+  return {
+    x: toGroupShift(isMember, world.x) - toGroupShift(group.hasActive, world.x),
+    y: toGroupShift(isMember, world.y) - toGroupShift(group.hasActive, world.y),
+  };
+};
+
+const placeGroupDrag = (
+  group: DragGroup,
+  artboard: HTMLDivElement | null,
+  world: Point,
+  zoom: number
+): void => {
+  const isClear = world.x === 0 && world.y === 0;
+
+  if (artboard) {
+    artboard.style.translate = toTranslate(
+      isClear || !group.hasActive,
+      world.x * zoom,
+      world.y * zoom
+    );
+  }
+
+  for (const [id, element] of Object.entries(group.passive)) {
+    if (element) {
+      const shift = toPassiveShift(group, id, world);
+
+      element.style.translate = toTranslate(
+        shift.x === 0 && shift.y === 0,
+        shift.x,
+        shift.y
+      );
+    }
+  }
+};
+
 const placeDrag = (
   state: DragState,
   artboard: HTMLDivElement | null,
@@ -113,6 +172,12 @@ const placeDrag = (
   const worldX = dx / state.zoom;
   const worldY = dy / state.zoom;
   const isClear = dx === 0 && dy === 0;
+
+  if (state.group) {
+    placeGroupDrag(state.group, artboard, { x: worldX, y: worldY }, state.zoom);
+
+    return;
+  }
 
   if (!state.isActive) {
     if (state.own) {
@@ -131,9 +196,48 @@ const placeDrag = (
   }
 };
 
+const toDragGroup = (host: DragHost, frame: CanvasFrame): DragGroup | null => {
+  if (host.group.length < 2 || !host.group.includes(frame.id)) {
+    return null;
+  }
+
+  return {
+    hasActive: host.group.includes(host.layout.activeId),
+    ids: new Set(host.group),
+    passive: host.passive,
+  };
+};
+
+const toDragBox = (host: DragHost, frame: CanvasFrame): Box => {
+  if (toDragGroup(host, frame) === null) {
+    return frame;
+  }
+
+  return toGroupRect(toGroupFrames(host.layout, host.group)) ?? frame;
+};
+
+const toCandidates = (host: DragHost, frame: CanvasFrame): Box[] => {
+  if (toDragGroup(host, frame) === null) {
+    return otherFrames(host.layout, frame.id);
+  }
+
+  return toOutsideFrames(host.layout, host.group);
+};
+
+const isActiveDrag = (host: DragHost, frame: CanvasFrame): boolean => {
+  const group = toDragGroup(host, frame);
+
+  if (group) {
+    return group.hasActive;
+  }
+
+  return frame.id === host.layout.activeId;
+};
+
 const toDragState = (host: DragHost, frame: CanvasFrame): DragState => ({
-  frame,
-  isActive: frame.id === host.layout.activeId,
+  frame: toDragBox(host, frame),
+  group: toDragGroup(host, frame),
+  isActive: isActiveDrag(host, frame),
   own: host.passive[frame.id] ?? null,
   passive: Object.values(host.passive).filter(
     (element): element is HTMLDivElement => element !== null
@@ -190,7 +294,7 @@ const startFrameDrag = (
   const progress: DragProgress = { isMoved: false, world: { x: 0, y: 0 } };
 
   const origin = {
-    candidates: otherFrames(host.layout, frame.id),
+    candidates: toCandidates(host, frame),
     start: { x: event.clientX, y: event.clientY },
   };
 

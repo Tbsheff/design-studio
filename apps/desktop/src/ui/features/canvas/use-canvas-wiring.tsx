@@ -24,6 +24,7 @@ import {
 import { useClickThrough } from "./use-click-through.js";
 import { useFrameActions } from "./use-frame-actions.js";
 import { useFrameLabels } from "./use-frame-labels.js";
+import { useFrameSelectionKeys } from "./use-frame-selection.js";
 import { usePrototype } from "./use-prototype.js";
 
 const useCanvasWiring = (
@@ -48,7 +49,19 @@ const useCanvasWiring = (
     undoRemove,
     dismissUndo,
     onResizeStart,
+    removeFramesAt: removeMany,
+    removedCount,
   } = useFrameActions(canvasFrames, pz, artboardRef, clickThrough);
+
+  const { setSelection } = props;
+
+  useFrameSelectionKeys({
+    clearLayers: () => setSelection(() => []),
+    frames: canvasFrames,
+    isBlocked: text.protoOn || text.draw.on,
+    removeFramesAt: removeMany,
+    selectionCount: props.selection.length,
+  });
 
   const labelProps = useFrameLabels(toLabelInput(props, text, baseLabel));
   const proto = usePrototype(toPrototypeInput(props, text, pv, ed));
@@ -82,6 +95,7 @@ const useCanvasWiring = (
     onResizeStart,
     proto,
     registerPassive,
+    removedCount,
     sandbox,
     stageMode,
     undoRemove,

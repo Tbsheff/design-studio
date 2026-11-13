@@ -7,6 +7,7 @@ import type { CanvasStageProps } from "./canvas-stage-types.js";
 import { FrameLabel } from "./frame-label.js";
 import { FrameResizeHandles } from "./frame-resize-handles.js";
 import type { ResizeEdge } from "./frame-resize-handles.js";
+import { FrameSelectionLayer } from "./frame-selection-layer.js";
 import { FrameSnapLayer } from "./frame-snap-layer.js";
 import { OtherFrames } from "./other-frames.js";
 
@@ -73,6 +74,7 @@ const StageFrames = ({
         projectId={props.projectId}
         zoomPercent={stage.pz.zoomPercent}
       />
+      <FrameSelectionLayer layout={stage.canvasFrames.layout} origin={active} />
       <FrameSnapLayer origin={active} />
       {proto.artboard}
     </>

@@ -14,6 +14,7 @@ import { FrameNameButton } from "./frame-name-button.js";
 import { FrameRemoveButton } from "./frame-remove-button.js";
 import type { ResizeEdge } from "./frame-resize-handles.js";
 import { FrameStateMenu } from "./frame-state-menu.js";
+import { useIsFrameSelected } from "./use-frame-selection.js";
 
 interface LabelProps {
   frame: CanvasFrame;
@@ -41,6 +42,14 @@ interface LabelProps {
   ) => void;
 }
 
+const toSelectedClass = (className: string, isSelected: boolean): string => {
+  if (isSelected) {
+    return `${className} selected`;
+  }
+
+  return className;
+};
+
 const FrameLabel = ({
   frame,
   active,
@@ -56,6 +65,8 @@ const FrameLabel = ({
   onNudge,
 }: LabelProps): ReactElement => {
   const view = toLabelView(frame, badge, title, active);
+  const isSelected = useIsFrameSelected(frame.id);
+  const className = toSelectedClass(view.className, isSelected);
 
   const style = useMemo(
     () => ({ "--frame-w": `${frame.width}px` }) as CSSProperties,
@@ -70,7 +81,7 @@ const FrameLabel = ({
 
   return (
     <div
-      className={view.className}
+      className={className}
       data-frame-id={frame.id}
       data-direction-id={directionId}
       data-testid={testId}

@@ -60,6 +60,7 @@ const activateFrameId = (projectId: string, frameId: string): void => {
 };
 
 interface CanvasFrames {
+  projectId: string;
   layout: CanvasLayout;
   active: CanvasFrame;
   update: (fn: (layout: CanvasLayout) => CanvasLayout) => void;
@@ -91,7 +92,7 @@ const useCanvasFrames = (
     }
   };
 
-  return { activate, active, layout, update };
+  return { activate, active, layout, projectId, update };
 };
 
 export { activateFrameId, passiveSrc, unionRect, useCanvasFrames };

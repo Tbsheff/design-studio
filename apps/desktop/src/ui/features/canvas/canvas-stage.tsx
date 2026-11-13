@@ -6,16 +6,18 @@ import { CommentModePill } from "../comments/comment-layer.js";
 import { useEditVariant } from "../inspector/index.js";
 import { AgentPresenceLine } from "./agent-presence-line.js";
 import { frameName } from "./canvas-frame-ops.js";
-import { dropQuietFocus, quietOnPointer } from "./canvas-helpers.js";
+import { dropQuietFocus } from "./canvas-helpers.js";
 import type { CanvasStageProps } from "./canvas-stage-types.js";
 import { copy } from "./copy.js";
 import { DrawBar } from "./draw-bar.js";
 import { EditNotice } from "./edit-notice.js";
+import { FrameMarquee } from "./frame-marquee.js";
 import { FrameUndoBar } from "./frame-undo-bar.js";
 import { StageArtboard } from "./stage-artboard.js";
 import { StageMessage } from "./stage-message.js";
 import { StageRulers } from "./stage-rulers.js";
 import { unionRect } from "./use-canvas-frames.js";
+import { useStagePointerDown } from "./use-frame-selection.js";
 
 const LazySpacingHandles = lazy(async () => {
   const loaded = await import("../spacing/index.js");
@@ -58,6 +60,13 @@ const CanvasStage = (stageProps: CanvasStageProps): ReactElement => {
   const { layerEdits, pointBadge, presence } = edits;
   const { layout } = canvasFrames;
 
+  const onStagePointerDown = useStagePointerDown({
+    artboardRef: stage.artboardRef,
+    frames: canvasFrames,
+    isBlocked: draw.on || comment.on || stage.protoOn,
+    pz: stage.pz,
+  });
+
   const nameOf = useCallback(
     (id: string): string => {
       const found = layout.frames.find((item) => item.id === id);
@@ -78,7 +87,7 @@ const CanvasStage = (stageProps: CanvasStageProps): ReactElement => {
       className={`stage ${wiring.stageMode}${toPanningClass(pz.panning)}`}
       tabIndex={-1}
       aria-label={copy.canvas}
-      onPointerDown={quietOnPointer(pz.onPointerDown)}
+      onPointerDown={onStagePointerDown}
       onBlur={dropQuietFocus}
     >
       <StageMessage
@@ -107,7 +116,12 @@ const CanvasStage = (stageProps: CanvasStageProps): ReactElement => {
       <DrawBar draw={draw} />
       <CommentModePill mode={comment} control={props.comments} />
       {wiring.capture && <div className="capture" data-testid="pan-capture" />}
-      <FrameUndoBar onUndo={undoRemove} onDismiss={dismissUndo} />
+      <FrameMarquee />
+      <FrameUndoBar
+        count={wiring.removedCount}
+        onUndo={undoRemove}
+        onDismiss={dismissUndo}
+      />
       <EditNotice edits={layerEdits} />
       <Suspense fallback={null}>
         <McpPointBadge badge={pointBadge} frameName={nameOf} />

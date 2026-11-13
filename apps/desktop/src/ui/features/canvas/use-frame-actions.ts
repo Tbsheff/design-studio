@@ -3,6 +3,8 @@ import type { PointerEvent as ReactPointerEvent, RefObject } from "react";
 
 import { addFrame, moveFrame } from "./canvas-frame-ops.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
+import { isGroupMember, toMovedLayout } from "./frame-selection-model.js";
+import { toSelectedIds } from "./frame-selection-store.js";
 import type { CanvasFrames } from "./use-canvas-frames.js";
 import type { ClickThrough } from "./use-click-through.js";
 import { useFramePointer } from "./use-frame-pointer.js";
@@ -34,6 +36,8 @@ interface FrameActions {
   labelProps: (frame: CanvasFrame) => FrameLabelBase;
   onResizeStart: ResizeStart;
   registerPassive: (id: string, element: HTMLDivElement | null) => void;
+  removeFramesAt: (ids: readonly string[]) => void;
+  removedCount: number;
   undoRemove: (() => void) | null;
 }
 
@@ -62,6 +66,14 @@ const useFrameActions = (
 
   const onNudge = (frame: CanvasFrame, dx: number, dy: number): void => {
     pz.freeze();
+    const ids = toSelectedIds(frames.projectId);
+
+    if (isGroupMember(ids, frame.id)) {
+      frames.update((current) => toMovedLayout(current, ids, { x: dx, y: dy }));
+
+      return;
+    }
+
     frames.update((current) => moveFrame(current, frame.id, dx, dy));
   };
 
@@ -79,6 +91,7 @@ const useFrameActions = (
   const { onFramePointerDown: onBodyPointerDown } = pointer;
   const { onTitlePointerDown: onPointerDown } = pointer;
   const { dismissUndo, removeFrameAt: onRemove, undoRemove } = removal;
+  const { removeFramesAt, removedCount } = removal;
   const removable = layout.frames.length > 1;
 
   const labelProps = (frame: CanvasFrame): FrameLabelBase => ({
@@ -100,6 +113,8 @@ const useFrameActions = (
     labelProps,
     onResizeStart,
     registerPassive,
+    removeFramesAt,
+    removedCount,
     undoRemove,
   };
 };

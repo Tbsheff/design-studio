@@ -11,6 +11,7 @@ const VersionMetaSchema = Schema.Struct({
     "keep",
     "fork",
     "manual",
+    "layout",
   ]),
   level: Schema.optionalKey(
     Schema.Literals(["wireframe", "prototype", "polish"])

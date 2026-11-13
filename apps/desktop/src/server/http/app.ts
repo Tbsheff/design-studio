@@ -17,6 +17,7 @@ import { registerDirectEditRoutes } from "./app-direct-edit-routes.js";
 import { toErrorReply } from "./app-errors.js";
 import { registerEventsRoutes } from "./app-events-routes.js";
 import { registerAppExportRoutes } from "./app-export-routes.js";
+import { startLayoutVersions } from "./app-layout-versions.js";
 import { createMcpSlot, registerAppMcpRoutes } from "./app-mcp-routes.js";
 import { registerAppPacksRoutes } from "./app-packs-routes.js";
 import {
@@ -50,6 +51,7 @@ export function createApp(deps: AppDeps): Hono {
   });
 
   registerSessionRoutes(app, ctx);
+  startLayoutVersions(ctx);
 
   registerLoopbackGuard(app, ctx);
 

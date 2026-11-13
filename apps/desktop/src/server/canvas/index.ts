@@ -51,6 +51,8 @@ export type { CanvasToolContext, PlaceSpec, ToolText } from "./tools.js";
 
 export { recordLayout, stepLayout, toLayoutSteps } from "./layout-steps.js";
 
+export { layoutLabel } from "./layout-history.js";
+
 export { toRecordVersionId } from "./variation-steps.js";
 
 export {

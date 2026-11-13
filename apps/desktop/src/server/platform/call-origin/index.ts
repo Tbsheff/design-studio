@@ -65,7 +65,7 @@ const isOwnEdit = (meta: VersionMeta): boolean =>
   meta.kind === "manual" && !meta.origin;
 
 const isOutsideEdit = (meta: VersionMeta): boolean =>
-  Boolean(meta.origin) || meta.kind === "run";
+  Boolean(meta.origin) || meta.kind === "run" || meta.kind === "layout";
 
 export {
   isAgentRequest,

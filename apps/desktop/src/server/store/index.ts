@@ -1,5 +1,7 @@
 export { SkillStore } from "./skill-store.js";
 
+export { createLayoutVersionQueue } from "./layout-version-queue.js";
+
 export { ChangeStore } from "./change-store.js";
 
 export { ChangeRestoreWriter } from "./change-restore-writer.js";

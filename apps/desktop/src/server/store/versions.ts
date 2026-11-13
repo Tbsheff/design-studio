@@ -80,6 +80,8 @@ import {
   updateLayoutPaths,
   updateSplitPaths,
 } from "./version-index-paths.js";
+import { applyLayout, toLiveLayout, toStoredLayout } from "./version-layout.js";
+import type { LiveLayout } from "./version-layout.js";
 import { toOriginMeta } from "./version-origin.js";
 import { seedFromUserRepo } from "./version-seed.js";
 import {
@@ -982,7 +984,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       await treeOf(project, parent),
       "keep"
     );
-    await writeLayout(live, true);
+    await applyLayout(live, true);
 
     return { version: null, head: parent, changed, remapped };
   };
@@ -995,7 +997,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
   ): Promise<void> => {
     const live = await readLayout(project, direction);
     await resetWorkTree(project, direction, from, to, "keep");
-    await writeLayout(live, true);
+    await applyLayout(live, true);
   };
 
   const listUntracked = async (scope: GitScope): Promise<string[]> => {
@@ -1188,41 +1190,11 @@ export function createVersionStore(config: ServerConfig): VersionStore {
   const layoutOf = (direction: Direction, file: string): string =>
     path.join(direction.workTree, ...file.split("/"));
 
-  type LiveLayout = {
-    relative: string;
-    target: string;
-    bytes: Buffer | null;
-  }[];
-
   const readLayout = (
     project: Project,
     direction: Direction
   ): Promise<LiveLayout> =>
-    Promise.all(
-      layoutFilesOf(project).map(async (relative) => ({
-        relative,
-        target: layoutOf(direction, relative),
-        bytes: await readFile(layoutOf(direction, relative)).catch(() => null),
-      }))
-    );
-
-  const writeLayout = async (
-    live: LiveLayout,
-    removeMissing: boolean
-  ): Promise<void> => {
-    for (const { target, bytes } of live) {
-      if (bytes === null) {
-        if (removeMissing) {
-          await rm(target, { force: true });
-        }
-
-        continue;
-      }
-
-      await mkdir(path.dirname(target), { recursive: true });
-      await writeFile(target, bytes);
-    }
-  };
+    toLiveLayout(layoutFilesOf(project), direction.workTree);
 
   const treeWithLayout = async (
     project: Project,
@@ -1401,7 +1373,10 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     tree: string
   ): Promise<{ fast: boolean; kept: string }> => {
     const headTree = await treeOf(project, head);
-    const live = await readLayout(project, direction);
+    const live = await toStoredLayout(
+      await readLayout(project, direction),
+      (relative) => readBlobAt(objectsOf(project), tree, relative)
+    );
 
     const planned = (await rawFastOk(project, direction))
       ? await layoutTree(project, tree, live)
@@ -1411,13 +1386,13 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       planned !== null &&
       (await direct.reset(project, direction, headTree, tree))
     ) {
-      await writeLayout(live, true);
+      await applyLayout(live, true);
 
       return { fast: true, kept: planned };
     }
 
     await resetWorkTree(project, direction, headTree, tree, "keep");
-    await writeLayout(live, true);
+    await applyLayout(live, true);
 
     if (live.length === 0) {
       return { fast: false, kept: tree };
@@ -1946,7 +1921,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
 
         const kept = await readLayout(project, direction);
         await resetWorkTree(project, direction, tree, tree, "trash");
-        await writeLayout(kept, false);
+        await applyLayout(kept, false);
 
         return statusOf(project, direction);
       });

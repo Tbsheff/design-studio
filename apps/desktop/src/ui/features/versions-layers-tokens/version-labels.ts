@@ -28,6 +28,11 @@ const KIND_INFO: Record<
     icon: "check",
     label: "Kept",
   },
+  layout: {
+    hint: "You moved, aligned or changed frames on the canvas",
+    icon: "frame",
+    label: "Layout",
+  },
   restore: {
     hint: "Brought back an earlier version",
     icon: "restore",

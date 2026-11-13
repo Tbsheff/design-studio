@@ -1,5 +1,6 @@
 import type { WireOutput } from "@design-studio/actions/_core/action";
 import type { inspectSourcePage } from "@design-studio/actions/page/inspect-source";
+import type { IconName } from "@design-studio/ui";
 
 import type { CanvasFrame } from "./canvas-layout-types.js";
 import { copy } from "./copy.js";
@@ -93,12 +94,96 @@ const toFrameById = (
   return frames.find((frame) => frame.id === frameId) ?? null;
 };
 
+const toRouteMergePrompt = (file: string): string =>
+  [
+    copy.routeMerge.promptStart,
+    file,
+    copy.routeMerge.promptMiddle,
+    file,
+    copy.routeMerge.promptEnd,
+  ].join("");
+
+interface RouteSourceMenuEntry {
+  readonly disabled?: string;
+  readonly icon: IconName;
+  readonly id: string;
+  readonly label: string;
+  readonly run: () => void;
+}
+
+interface RouteSourceMenuSetup {
+  readonly hasCopyFrame: boolean;
+  readonly isRunning: boolean;
+  readonly handleCompare: () => void;
+  readonly handleCopy: () => void;
+  readonly handleMark: () => void;
+  readonly handleUpdate: () => void;
+}
+
+const toUpdateEntry = (setup: RouteSourceMenuSetup): RouteSourceMenuEntry => {
+  const entry = {
+    icon: "sparkle" as const,
+    id: "update-with-ai",
+    label: copy.routeMerge.updateWithAi,
+    run: setup.handleUpdate,
+  };
+
+  if (setup.isRunning) {
+    return { ...entry, disabled: copy.routeMerge.running };
+  }
+
+  return entry;
+};
+
+const toCompareEntries = (
+  setup: RouteSourceMenuSetup
+): RouteSourceMenuEntry[] => {
+  if (!setup.hasCopyFrame) {
+    return [];
+  }
+
+  return [
+    {
+      icon: "compare",
+      id: "compare-app-copy",
+      label: copy.compareAppCopy,
+      run: setup.handleCompare,
+    },
+  ];
+};
+
+const toRouteSourceEntries = (
+  setup: RouteSourceMenuSetup
+): RouteSourceMenuEntry[] => [
+  {
+    icon: "reload",
+    id: "copy-app-again",
+    label: copy.copyAppAgain,
+    run: setup.handleCopy,
+  },
+  ...toCompareEntries(setup),
+  toUpdateEntry(setup),
+  {
+    icon: "check",
+    id: "mark-as-current",
+    label: copy.routeMerge.markCurrent,
+    run: setup.handleMark,
+  },
+];
+
 export {
   isRouteSourceChanged,
   toCopyFrame,
   toFrameById,
+  toRouteMergePrompt,
   toRouteSourceInput,
   toRouteSourceTip,
+  toRouteSourceEntries,
 };
 
-export type { PageSourceWire, RouteSourceInput };
+export type {
+  PageSourceWire,
+  RouteSourceInput,
+  RouteSourceMenuEntry,
+  RouteSourceMenuSetup,
+};

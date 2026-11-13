@@ -6,7 +6,8 @@ import type { CanvasFrame } from "./canvas-layout-types.js";
 import { copy } from "./copy.js";
 import { FrameMenuItemButton } from "./frame-menu-item.js";
 import { menuKeys, useMenu } from "./frame-menu-model.js";
-import { useRouteSource } from "./use-route-source.js";
+import { toRouteSourceEntries } from "./route-source-model.js";
+import { useRouteMerge, useRouteSource } from "./use-route-source.js";
 import { stop } from "./variation-model.js";
 
 interface RouteSourceChipProps {
@@ -19,33 +20,35 @@ interface RouteSourceChipProps {
 
 const RouteSourceChip = (props: RouteSourceChipProps): ReactElement | null => {
   const source = useRouteSource(props);
+  const merge = useRouteMerge(source.input);
   const menu = useMenu();
   const { close, root, setOpen, trigger } = menu;
   const toggle = useCallback(() => setOpen((value) => !value), [setOpen]);
+  const isCopyShown = source.copyFrame !== null;
 
   const handleKeys = useCallback(
     (event: KeyboardEvent<HTMLElement>): void => menuKeys(event, close),
     [close]
   );
 
-  const copyEntry = useMemo(
-    () => ({
-      icon: "reload" as const,
-      id: "copy-app-again",
-      label: copy.copyAppAgain,
-      run: source.handleCopy,
-    }),
-    [source.handleCopy]
-  );
-
-  const compareEntry = useMemo(
-    () => ({
-      icon: "compare" as const,
-      id: "compare-app-copy",
-      label: copy.compareAppCopy,
-      run: source.handleCompare,
-    }),
-    [source.handleCompare]
+  const entries = useMemo(
+    () =>
+      toRouteSourceEntries({
+        handleCompare: source.handleCompare,
+        handleCopy: source.handleCopy,
+        handleMark: merge.handleMark,
+        handleUpdate: merge.handleUpdate,
+        hasCopyFrame: isCopyShown,
+        isRunning: merge.isRunning,
+      }),
+    [
+      isCopyShown,
+      merge.handleMark,
+      merge.handleUpdate,
+      merge.isRunning,
+      source.handleCompare,
+      source.handleCopy,
+    ]
   );
 
   if (!source.isChanged) {
@@ -69,8 +72,8 @@ const RouteSourceChip = (props: RouteSourceChipProps): ReactElement | null => {
         aria-label={`${copy.appChanged}. ${source.tip}`}
         onPointerDown={stop}
         onClick={toggle}
-        disabled={source.isPending}
-        data-tip={source.error ?? source.tip}
+        disabled={source.isPending || merge.isPending}
+        data-tip={source.error ?? merge.error ?? source.tip}
       >
         <Icon name="alert" size={12} />
         {label}
@@ -83,10 +86,9 @@ const RouteSourceChip = (props: RouteSourceChipProps): ReactElement | null => {
           aria-label={copy.appChanged}
           onKeyDown={handleKeys}
         >
-          <FrameMenuItemButton entry={copyEntry} close={close} />
-          {source.copyFrame && (
-            <FrameMenuItemButton entry={compareEntry} close={close} />
-          )}
+          {entries.map((entry) => (
+            <FrameMenuItemButton key={entry.id} entry={entry} close={close} />
+          ))}
         </div>
       )}
     </div>

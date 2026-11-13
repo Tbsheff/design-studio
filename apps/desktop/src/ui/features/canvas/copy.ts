@@ -165,6 +165,17 @@ const copy = {
   removeLink: "Remove link",
   removeStyleReference: "Remove style reference",
   restart: "Restart",
+  routeMerge: {
+    markCurrent: "Mark as current",
+    promptEnd:
+      '" so that the page shows as current. Do not copy the route again, and do not change other pages.',
+    promptMiddle:
+      '". It gives the line diffs of the app route files since the copy. Apply only those app changes to the page HTML, and keep every edit that the prototype has: text, colors, layout and added layers. When a diff line has no match in the page, skip it and say which line. When hasSnapshot is false, say that the diffs are not available and stop. Then call set_source_page with file "',
+    promptStart:
+      'Update the route prototype page with the app changes. Call inspect_source_changes_page with file "',
+    running: "Running",
+    updateWithAi: "Update with AI",
+  },
   routesInThe: "Routes in the flow",
   rulers: "Rulers",
   sampleValue: "Sample value",

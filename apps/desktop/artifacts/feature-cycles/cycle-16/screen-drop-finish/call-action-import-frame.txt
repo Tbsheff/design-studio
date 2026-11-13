@@ -1,0 +1,24 @@
+
+diff http -> agent:
+-   "frameId": "f2",
++   "frameId": "f4",
+-   "path": "imported-screen.html",
++   "path": "imported-screen-3.html",
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 0 error results
+
+fix: compare the outputs above, then run call-action again with the id canvas.importFrame and the same input
+
+diff http -> agent:
+-   "frameId": "f5",
++   "frameId": "f7",
+-   "path": "imported-screen-4.html",
++   "path": "imported-screen-6.html",
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 0 error results
+
+fix: compare the outputs above, then run call-action again with the id canvas.importFrame and the same input

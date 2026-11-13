@@ -35,7 +35,7 @@ const FramesFieldSchema = FrameRefsSchema.annotate({
 
 const LiveFieldSchema = Schema.Boolean.annotate({
   description:
-    "Live link: viewers get new PNG snapshots each time a version is saved, and their cursors show on the studio canvas.",
+    "Live link: the viewer follows each saved version, and viewer cursors show on the studio canvas.",
 });
 
 const ProjectFieldSchema = ProjectIdSchema.annotate({
@@ -57,11 +57,11 @@ const createShare = defineAction({
     name: "create_share_link",
     set: "core",
     short:
-      "Make a read-only share link of canvas frames as PNG snapshots. The user must click Allow in Design Studio first.",
+      "Make a read-only share link: a clickable prototype of the live canvas frames. The user must click Allow in Design Studio first.",
   },
   confirm: "user",
   description:
-    "Make a read-only share link for canvas frames so other people can view the design and comment. The user must click Allow in Design Studio first. Returns the link URL once. Viewers see only PNG snapshots, served on a separate listener on this computer unless the user turns on Allow on local network. Viewer comments land as drafts in the Comments pane. A live link swaps in new snapshots after each saved version. The link ends after its expiry and can be revoked.",
+    "Make a read-only share link for canvas frames so people can view the design and comment. The user must click Allow in Design Studio first. Returns the link URL once. For an HTML project the link opens a clickable prototype: the live frames on a canvas with pan and zoom, and Play runs the prototype links. A phone opens in Play. Other projects get PNG snapshots. It is served on a separate listener on this computer unless the user turns on Allow on local network. Viewer comments land as drafts in the Comments pane. A live link follows each saved version. It ends at its expiry and can be revoked.",
   errors: [BadRequest, Conflict, NotFound, Unauthenticated, Unavailable],
   http: { method: "POST", path: "/api/projects/:projectId/shares" },
   id: "share.create",

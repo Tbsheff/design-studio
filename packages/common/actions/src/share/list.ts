@@ -16,7 +16,7 @@ const listShare = defineAction({
   },
   confirm: "none",
   description:
-    "List the share links of a project: id, title, frames, expiry, whether each is active or live, viewer count and how many viewer comments came in, plus the share listener state. Read only; it never returns tokens or URLs. Read viewer comments with list_comments. A share link is a read-only PNG snapshot of canvas frames, served on a separate listener on this computer unless the user turns on Allow on local network.",
+    "List the share links of a project: id, title, frames, expiry, whether each is active or live, viewer count and how many viewer comments came in, plus the share listener state. Read only; it never returns tokens or URLs. Read viewer comments with list_comments. A share link is a read-only, clickable prototype of the canvas frames (PNG snapshots for projects that are not HTML), served on a separate listener on this computer unless the user turns on Allow on local network.",
   errors: [],
   http: { method: "GET", path: "/api/projects/:projectId/shares" },
   id: "share.list",

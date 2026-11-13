@@ -31,6 +31,8 @@ const registerAppMcpRoutes = (
     dataDir: config.dataDir,
     studioToken: config.studioToken,
     projectsFolder: () => ctx.defaultFolder.ensure(),
+    trustedFolders: () => ctx.defaultFolder.trustedFolders(),
+    saveFirstVersion: (project) => ctx.commitInit(project),
     appOpen: ctx.appOpen,
     history: ctx.editHistory,
     keepVariant: variations.keepVariant,

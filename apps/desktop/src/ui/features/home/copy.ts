@@ -86,7 +86,12 @@ const copy = {
   dropAnAppFolderAn:
     "Drop an app folder, a zip, a PDF, a Markdown file, an image or a link",
   dropAnywhereTheFolderGoes: "Drop anywhere: the folder goes on the prompt",
-  editApp: "Edit app",
+  editApp: "Edit app files",
+  editAppConfirmAction: "Edit app files",
+  editAppConfirmLead: "Claude will edit files in ",
+  editAppConfirmNote:
+    ". These are the real app files, not a prototype. Prototypes stay beside the folder.",
+  editAppConfirmTitle: "Edit the real app files?",
   editedPrefix: "Edited",
   edits: "For ",
   emptyTheTrash: "Empty the trash?",
@@ -279,7 +284,7 @@ const copy = {
   starter: " starter",
   starterBesideSub:
     "Beside the folder, with its tokens. The folder does not change.",
-  starterEditAppSub: "Prompts change the app source",
+  starterEditAppSub: "Claude edits the real files in this folder",
   starterHtmlPrototypeSub:
     "Uses the app tokens. Saved in the Design Studio folder",
   starterNewAppSub: "Builds on the app code and its styles",

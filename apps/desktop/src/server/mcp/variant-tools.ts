@@ -1,6 +1,8 @@
 import type { Direction, Project, Version } from "@design-studio/contracts";
 import type { CanvasFile } from "@design-studio/contracts/canvas-file";
 
+import { toRecordVersionId } from "../canvas/index.js";
+import type { VariationSettle } from "../events/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { EditError } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
@@ -142,7 +144,9 @@ async function settle(
   project: Project,
   directions: Direction[],
   keptId: string | null
-): Promise<void> {
+): Promise<VariationSettle[]> {
+  const settles: VariationSettle[] = [];
+
   for (const direction of directions) {
     if (!direction.variation) {
       continue;
@@ -153,6 +157,12 @@ async function settle(
     if (direction.variation.settled === settled) {
       continue;
     }
+
+    settles.push({
+      after: settled,
+      before: direction.variation.settled ?? null,
+      directionId: direction.id,
+    });
 
     const updated = await deps.projects.updateDirection(
       project.id,
@@ -167,24 +177,73 @@ async function settle(
       direction: updated,
     });
   }
+
+  return settles;
 }
+
+interface DroppedFrames {
+  removed: number;
+  before: CanvasFile | null;
+  after: CanvasFile | null;
+}
+
+interface VariationStep {
+  readonly label: string;
+  readonly dropped: DroppedFrames;
+  readonly groupIds: string[];
+  readonly settles: VariationSettle[];
+}
+
+const isStepEmpty = (step: VariationStep): boolean =>
+  step.dropped.removed === 0 && step.settles.length === 0;
+
+const createVariationStep = (
+  deps: EditDeps,
+  project: Project,
+  step: VariationStep
+): void => {
+  const owner = deps.canvas.ownerOf(project);
+  const versionId = toRecordVersionId(project, owner, step.groupIds);
+  const { after, before } = step.dropped;
+
+  if (!deps.history || versionId === null || isStepEmpty(step)) {
+    return;
+  }
+
+  if (!after || !before) {
+    return;
+  }
+
+  deps.history.record({
+    directionId: owner.id,
+    directionIds: step.groupIds,
+    files: [],
+    label: step.label,
+    layout: { after, before, kind: "canvas" },
+    projectId: project.id,
+    settles: step.settles,
+    versionId,
+  });
+};
 
 async function dropFrames(
   deps: EditDeps,
   project: Project,
   drop: Set<string>
-): Promise<number> {
-  let removed = 0;
+): Promise<DroppedFrames> {
+  const dropped: DroppedFrames = { after: null, before: null, removed: 0 };
   await deps.canvas.update(
     project,
     (file: CanvasFile) => {
+      dropped.before = file;
+      dropped.after = file;
       const frames = file.frames.filter(
         (frame) => !frame.directionId || !drop.has(frame.directionId)
       );
 
-      removed = file.frames.length - frames.length;
+      dropped.removed = file.frames.length - frames.length;
 
-      if (removed === 0) {
+      if (dropped.removed === 0) {
         return null;
       }
 
@@ -194,12 +253,14 @@ async function dropFrames(
         );
       }
 
-      return { ...file, frames };
+      dropped.after = { ...file, frames };
+
+      return dropped.after;
     },
-    { source: "agent" }
+    { source: "restore" }
   );
 
-  return removed;
+  return dropped;
 }
 
 function labelOf(direction: Direction): string {
@@ -263,13 +324,21 @@ const keepPageVariation = defineTool(
     refuseRunning(deps, project, group);
     const others = group.filter((item) => item.id !== direction.id);
 
-    const removed = await dropFrames(
+    const dropped = await dropFrames(
       deps,
       project,
       new Set(others.map((item) => item.id))
     );
 
-    await settle(deps, project, group, direction.id);
+    const settles = await settle(deps, project, group, direction.id);
+
+    createVariationStep(deps, project, {
+      groupIds: group.map((item) => item.id),
+      label: `Keep page variation ${labelOf(direction)}`,
+      dropped,
+      settles,
+    });
+    const removed = dropped.removed;
 
     return {
       result: ok({
@@ -313,8 +382,16 @@ const discardPageVariation = defineTool(
       );
     }
 
-    const removed = await dropFrames(deps, project, new Set([direction.id]));
-    await settle(deps, project, [direction], null);
+    const dropped = await dropFrames(deps, project, new Set([direction.id]));
+    const settles = await settle(deps, project, [direction], null);
+
+    createVariationStep(deps, project, {
+      groupIds: group.map((item) => item.id),
+      label: `Discard page variation ${labelOf(direction)}`,
+      dropped,
+      settles,
+    });
+    const removed = dropped.removed;
 
     return {
       result: ok({

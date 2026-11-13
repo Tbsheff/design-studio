@@ -22,6 +22,7 @@ import type {
   EditRecord,
   EditStepResult,
   HistoryStep,
+  VariationSettle,
 } from "../../events/index.js";
 import { isNodeError } from "../../platform/errors/index.js";
 import { DirectEditError } from "../engine/errors.js";
@@ -39,6 +40,11 @@ interface HistoryOptions {
     change: LayoutChange,
     kind: HistoryStep
   ) => Promise<boolean>;
+  settle?: (
+    project: Project,
+    settles: readonly VariationSettle[],
+    kind: HistoryStep
+  ) => Promise<void>;
   limit?: number;
 }
 
@@ -51,9 +57,22 @@ const STALE_MESSAGE =
   "The file changed after this edit. Undo history was cleared.";
 const STEP_WORD: Record<HistoryStep, string> = { undo: "Undo", redo: "Redo" };
 
+function isFor(record: EditRecord | undefined, directionId: string): boolean {
+  if (record === undefined) return false;
+
+  return (
+    record.directionId === directionId ||
+    (record.directionIds ?? []).includes(directionId)
+  );
+}
+
+function toDirectionIds(record: EditRecord): string[] {
+  return [...new Set([record.directionId, ...(record.directionIds ?? [])])];
+}
+
 function lastFor(records: EditRecord[], directionId: string): number {
   for (let index = records.length - 1; index >= 0; index -= 1)
-    if (records[index]?.directionId === directionId) return index;
+    if (isFor(records[index], directionId)) return index;
   return -1;
 }
 
@@ -177,7 +196,7 @@ export function createEditHistory(options: HistoryOptions): EditHistory {
     const stacks = projects.get(projectId);
     const entries = (records: EditRecord[]): EditHistoryEntry[] =>
       records
-        .filter((record) => record.directionId === directionId)
+        .filter((record) => isFor(record, directionId))
         .slice(-max)
         .reverse()
         .map((record) => ({
@@ -202,12 +221,8 @@ export function createEditHistory(options: HistoryOptions): EditHistory {
   const forget = (projectId: string, directionId: string): void => {
     const stacks = projects.get(projectId);
     if (stacks) {
-      stacks.undo = stacks.undo.filter(
-        (entry) => entry.directionId !== directionId
-      );
-      stacks.redo = stacks.redo.filter(
-        (entry) => entry.directionId !== directionId
-      );
+      stacks.undo = stacks.undo.filter((entry) => !isFor(entry, directionId));
+      stacks.redo = stacks.redo.filter((entry) => !isFor(entry, directionId));
     }
     changed(projectId, directionId);
   };
@@ -259,11 +274,16 @@ export function createEditHistory(options: HistoryOptions): EditHistory {
       clear(project.id, direction.id);
       throw stale();
     }
+
+    if (record.settles && record.settles.length > 0)
+      await options.settle?.(project, record.settles, kind);
+
     const stacks = stacksOf(project.id);
     const from = kind === "undo" ? stacks.undo : stacks.redo;
     from.splice(from.indexOf(record), 1);
     push(kind === "undo" ? stacks.redo : stacks.undo, record);
-    changed(project.id, direction.id);
+    for (const id of new Set([direction.id, ...toDirectionIds(record)]))
+      changed(project.id, id);
     return {
       label: record.label,
       state: state(project.id, direction.id),
@@ -366,10 +386,13 @@ export function createEditHistory(options: HistoryOptions): EditHistory {
     sequence += 1;
     recorded.set(stored, sequence);
     push(stacks.undo, stored);
+
+    const ids = toDirectionIds(stored);
+
     for (let index = stacks.redo.length - 1; index >= 0; index -= 1)
-      if (stacks.redo[index]?.directionId === entry.directionId)
+      if (ids.some((id) => isFor(stacks.redo[index], id)))
         stacks.redo.splice(index, 1);
-    changed(entry.projectId, entry.directionId);
+    for (const id of ids) changed(entry.projectId, id);
   };
 
   const unsaved = async (

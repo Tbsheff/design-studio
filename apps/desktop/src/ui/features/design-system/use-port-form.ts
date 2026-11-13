@@ -52,15 +52,11 @@ const toIsReady = (
 const toDefaultApp = (targets: Targets): string => {
   const linked = targets.linkedApp;
 
-  if (linked === null) {
-    return targets.apps?.[0]?.id ?? "";
-  }
-
   if (targets.apps?.some((app) => app.id === linked)) {
-    return linked;
+    return linked ?? "";
   }
 
-  return "";
+  return targets.apps?.[0]?.id ?? "";
 };
 
 const usePortForm = (

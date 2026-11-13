@@ -5,6 +5,7 @@ import type { ReactElement } from "react";
 import type { RunMap } from "../chat/run-state-model.js";
 import { ElementVariantsDialog } from "../inspector/element-variants-dialog.js";
 import { BriefCardLayer } from "./brief-card-layer.js";
+import { restoreVariationFrames } from "./canvas-variations-model.js";
 import { DraftStatus } from "./draft-status.js";
 import { useElementAsk } from "./use-element-ask.js";
 import { useShownGroup } from "./use-shown-group.js";
@@ -26,10 +27,24 @@ const VariationsTop = ({
   state,
 }: TopProps): ReactElement => {
   const group = useShownGroup(project, state, direction);
-  const { ask, draft, keepNotice, kept } = state;
+  const { ask, draft, keepNotice, kept, keptLayout } = state;
   const { dismiss: onDismissDraft } = state;
   const { onCancel, onStart } = useElementAsk(state, project, ask);
   const onDismissKept = useCallback((): void => keepNotice(null), [keepNotice]);
+
+  const onUndoKept = useCallback((): void => {
+    if (keptLayout) {
+      restoreVariationFrames(project.id, keptLayout);
+    }
+
+    keepNotice(null);
+  }, [keepNotice, keptLayout, project.id]);
+
+  let undoKept: (() => void) | null = null;
+
+  if (keptLayout) {
+    undoKept = onUndoKept;
+  }
 
   return (
     <>
@@ -45,6 +60,7 @@ const VariationsTop = ({
       {kept && (
         <VariationNotice
           onDismiss={onDismissKept}
+          onUndo={undoKept}
           testId="variation-kept"
           text={kept}
         />

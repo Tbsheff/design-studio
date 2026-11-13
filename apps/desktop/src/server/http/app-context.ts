@@ -27,7 +27,7 @@ import type { FrameStateDeps } from "../canvas/app-flow/index.js";
 import {
   createCanvasService,
   recordLayout,
-  stepLayout,
+  toLayoutSteps,
 } from "../canvas/index.js";
 import type { CanvasService } from "../canvas/index.js";
 import { previewOrigin } from "../components/props-service.js";
@@ -139,8 +139,7 @@ const createAppContext = (deps: AppDeps) => {
     deps.editHistory ??
     createEditHistory({
       bus,
-      layout: (project, change, kind) =>
-        stepLayout(canvas, project, change, kind),
+      ...toLayoutSteps(() => canvas, projects, bus),
       onRestored: (workTree) => invalidateTokenSource(workTree),
     });
 

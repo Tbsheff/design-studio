@@ -60,6 +60,7 @@ const VariationBar = ({
       {noticeText && (
         <VariationNotice
           onDismiss={onDismiss}
+          onUndo={null}
           testId={null}
           text={noticeText}
         />

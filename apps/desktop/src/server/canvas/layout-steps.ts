@@ -2,6 +2,11 @@ import type { CanvasWriteSource, Project } from "@design-studio/contracts";
 import type { LayoutChange } from "@design-studio/contracts/canvas-file";
 
 import type { EditRecorder } from "../direct-edit/index.js";
+import type {
+  EventBus,
+  HistoryStep,
+  VariationSettle,
+} from "../events/index.js";
 import {
   layoutLabel,
   recordsLayout,
@@ -10,6 +15,25 @@ import {
 } from "./layout-history.js";
 import type { LayoutStep } from "./layout-history.js";
 import type { CanvasService } from "./service.js";
+import {
+  applySettles,
+  toRecordVersionId,
+  toVariationGroupIds,
+} from "./variation-steps.js";
+import type { SettleProjects } from "./variation-steps.js";
+
+interface LayoutSteps {
+  readonly layout: (
+    project: Project,
+    change: LayoutChange,
+    kind: HistoryStep
+  ) => Promise<boolean>;
+  readonly settle: (
+    project: Project,
+    settles: readonly VariationSettle[],
+    kind: HistoryStep
+  ) => Promise<void>;
+}
 
 export function recordLayout(
   history: EditRecorder,
@@ -24,18 +48,21 @@ export function recordLayout(
 
   const owner = canvas.ownerOf(project);
   const label = layoutLabel(change);
+  const groupIds = toVariationGroupIds(project, change);
+  const versionId = toRecordVersionId(project, owner, groupIds);
 
-  if (label === null || owner.headVersionId === null) {
+  if (label === null || versionId === null) {
     return;
   }
 
   history.record({
     directionId: owner.id,
+    directionIds: groupIds,
     files: [],
     label,
     layout: change,
     projectId: project.id,
-    versionId: owner.headVersionId,
+    versionId,
   });
 }
 
@@ -84,4 +111,17 @@ export async function stepLayout(
   );
 
   return applied;
+}
+
+export function toLayoutSteps(
+  canvasOf: () => Pick<CanvasService, "update" | "links">,
+  projects: SettleProjects,
+  bus: Pick<EventBus, "emit">
+): LayoutSteps {
+  return {
+    layout: (project, change, kind) =>
+      stepLayout(canvasOf(), project, change, kind),
+    settle: (project, settles, kind) =>
+      applySettles(projects, bus, project, { kind, settles }),
+  };
 }

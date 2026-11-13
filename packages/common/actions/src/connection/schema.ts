@@ -13,6 +13,7 @@ const McpStatusSchema = Schema.Struct({
 
 const McpSetupSchema = Schema.Struct({
   canEdit: Schema.Boolean,
+  envTrustedFolders: Schema.Array(Schema.String),
   isEnabled: Schema.Boolean,
   isRunning: Schema.Boolean,
   name: Schema.String,

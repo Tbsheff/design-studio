@@ -7,10 +7,10 @@ import { RunDetailSchema } from "./schema.js";
 
 const getRun = defineAction({
   access: "read",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "run-control" },
   confirm: "none",
   description:
-    "Read one run by id. Returns its events, the messages sent to it and its summary. Read only.",
+    "Read one run by id. Returns its status, events, the messages sent to it and its summary. Call it after start_run until the status is no longer running. Read only.",
   errors: [NotFound],
   http: { method: "GET", path: "/api/projects/:projectId/runs/:runId" },
   id: "run.get",
@@ -19,7 +19,7 @@ const getRun = defineAction({
     runId: RunIdSchema,
   }),
   invalidates: [],
-  mcp: { off: "ui-bootstrap" },
+  mcp: { name: "get_run" },
   needs: "project.read",
   output: RunDetailSchema,
   scope: "project",

@@ -9,7 +9,7 @@ import {
   VARIATION_BRIEF_MAX,
   VARIATION_MAX,
   VARIATION_MAX_REACT,
-  VARIATION_MIN,
+  VARIATION_RUN_MIN,
   type ProjectKind,
   type VariationBrief,
   type VariationBriefsResult,
@@ -54,10 +54,10 @@ export function countProblem(count: unknown, kind: ProjectKind): string | null {
   if (
     typeof count !== "number" ||
     !Number.isInteger(count) ||
-    count < VARIATION_MIN ||
+    count < VARIATION_RUN_MIN ||
     count > max
   ) {
-    return `count must be an integer from ${VARIATION_MIN} to ${max}${kind === "react" ? " for React projects" : ""}`;
+    return `count must be an integer from ${VARIATION_RUN_MIN} to ${max}${kind === "react" ? " for React projects" : ""}`;
   }
   return null;
 }
@@ -177,7 +177,10 @@ export function validateUserBriefs(
 ): VariationBrief[] {
   if (!Array.isArray(raw)) throw new Error("briefs must be an array");
   const problem = countProblem(raw.length, kind);
-  if (problem) throw new Error(problem.replace("count", "briefs"));
+  if (problem)
+    throw new Error(
+      `briefs must have ${VARIATION_RUN_MIN} to ${maxVariations(kind)} items, got ${raw.length}`
+    );
   const items = raw.map((item, index) => {
     const parsed = decodeBriefItem(item);
     if (parsed._tag === "Failure")

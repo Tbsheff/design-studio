@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react";
 
 import { readStored, writeStored } from "../../platform/storage.js";
+import { isString } from "../../platform/value-guards.js";
 
 type HomeView = "list" | "grid";
 
@@ -14,21 +15,25 @@ const FILTERS: ReadonlyMap<string, HomeFilter> = new Map([
 ]);
 
 interface HomePrefs {
+  readonly editAppFolders: string[];
   readonly favorites: string[];
   readonly isFavoritesOnly: boolean;
   readonly view: HomeView;
   readonly hasTemplatesShown: boolean;
   readonly filter: HomeFilter;
+  readonly lastWorkspaceId: string | null;
   readonly shouldAskFirst: boolean;
 }
 
 const KEY = "studio.home.v1";
 
 const DEFAULTS: HomePrefs = {
+  editAppFolders: [],
   favorites: [],
   filter: "all",
   hasTemplatesShown: false,
   isFavoritesOnly: false,
+  lastWorkspaceId: null,
   shouldAskFirst: false,
   view: "list",
 };
@@ -42,22 +47,32 @@ type StoredValue =
   | { readonly [key: string]: StoredValue };
 
 interface StoredPrefs {
+  readonly editAppFolders: StoredValue;
   readonly favorites: StoredValue;
   readonly favoritesOnly: StoredValue;
   readonly filter: StoredValue;
   readonly hasTemplatesShown: StoredValue;
   readonly isFavoritesOnly: StoredValue;
+  readonly lastWorkspaceId: StoredValue;
   readonly shouldAskFirst: StoredValue;
   readonly templatesShown: StoredValue;
   readonly view: StoredValue;
 }
 
-const toFavorites = (value: StoredValue): string[] => {
+const toStringList = (value: StoredValue): string[] => {
   if (!Array.isArray(value)) {
     return [];
   }
 
   return value.filter((id): id is string => typeof id === "string");
+};
+
+const toLastWorkspaceId = (value: StoredValue): string | null => {
+  if (isString(value) && value !== "") {
+    return value;
+  }
+
+  return null;
 };
 
 const toFilter = (value: StoredValue): HomeFilter =>
@@ -80,12 +95,14 @@ const getPrefs = (): HomePrefs => {
     }
 
     return {
-      favorites: toFavorites(raw.favorites),
+      editAppFolders: toStringList(raw.editAppFolders),
+      favorites: toStringList(raw.favorites),
       filter: toFilter(raw.filter),
       hasTemplatesShown:
         raw.hasTemplatesShown === true || raw.templatesShown === true,
       isFavoritesOnly:
         raw.isFavoritesOnly === true || raw.favoritesOnly === true,
+      lastWorkspaceId: toLastWorkspaceId(raw.lastWorkspaceId),
       shouldAskFirst: raw.shouldAskFirst === true,
       view: toView(raw.view),
     };

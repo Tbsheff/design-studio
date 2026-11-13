@@ -39,7 +39,9 @@ export type { LinkInteractionRequest } from "./links/index.js";
 
 export type { CanvasToolContext, PlaceSpec, ToolText } from "./tools.js";
 
-export { recordLayout, stepLayout } from "./layout-steps.js";
+export { recordLayout, stepLayout, toLayoutSteps } from "./layout-steps.js";
+
+export { toRecordVersionId } from "./variation-steps.js";
 
 export {
   canvasOwner,

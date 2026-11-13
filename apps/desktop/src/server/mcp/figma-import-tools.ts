@@ -15,6 +15,7 @@ import { callAction } from "./action-call.js";
 import {
   approve,
   EditError,
+  isTrustedFolder,
   loadTarget,
   oneLine,
   refuseWhileRunning,
@@ -147,7 +148,11 @@ async function readNodesFile(
     deps.dataDir
   ).catch(() => null);
 
-  if (projects === null || !isInside(file, projects)) {
+  const isTrusted =
+    (projects !== null && isInside(file, projects)) ||
+    (await isTrustedFolder(deps, path.dirname(file)));
+
+  if (!isTrusted) {
     await approve(deps, {
       tool: "import_figma_frame",
       action: "Read a Figma nodes file",

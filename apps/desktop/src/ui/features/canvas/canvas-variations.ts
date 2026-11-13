@@ -68,14 +68,15 @@ const toVariationOf = (
     costText: `${money(run.costUsd)} spent`,
     label: variation.label,
     onKeep: () => {
-      keepVariationFrame(
+      const before = keepVariationFrame(
         project.id,
         directionId,
         group.map((member) => member.id)
       );
+
       setDirectionId(directionId);
       state.setGroupId(variation.groupId);
-      state.keepNotice(keptText(direction));
+      state.keepWithUndo(keptText(direction), before);
     },
     onMix: async (to, element) => {
       await state.mix(directionId, to, element, project.settings.defaultLevel);

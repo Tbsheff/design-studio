@@ -11,6 +11,8 @@ import type {
 import { homePrefs } from "./home-prefs-model.js";
 import { useActivity } from "./use-activity.js";
 import type { ActivityState } from "./use-activity.js";
+import { useEditAppConfirm } from "./use-edit-app-confirm.js";
+import type { EditAppConfirm } from "./use-edit-app-confirm.js";
 import { setComposerFocus, useHomeKeys } from "./use-home-keys.js";
 import type { WorkspaceNav } from "./use-workspace-nav.js";
 import type { WorkspaceTarget } from "./use-workspace-target.js";
@@ -34,6 +36,7 @@ interface HomeIdeInput {
 interface HomeIde {
   readonly activity: ActivityState;
   readonly defaultLine: string | null;
+  readonly editConfirm: EditAppConfirm;
   readonly isEditApp: boolean;
   readonly nav: WorkspaceNav;
   readonly onAttach: () => void;
@@ -55,17 +58,18 @@ const setTemplatesShown = (): void => {
 
 const useStarter = (
   input: HomeIdeInput,
-  nav: WorkspaceNav
+  nav: WorkspaceNav,
+  editConfirm: EditAppConfirm
 ): ((id: StarterId) => void) => {
   const { onSample } = input;
   const { setIsEditApp } = input.target;
   const anchorId = nav.selected?.anchor?.id ?? null;
+  const { onRequest } = editConfirm;
 
   return useCallback(
     (id: StarterId): void => {
       if (id === "edit") {
-        setIsEditApp(true);
-        setComposerFocus();
+        onRequest();
       } else if (id === "prototype" && anchorId !== null) {
         setIsEditApp(false);
         openPrototypeDialog(anchorId);
@@ -77,7 +81,7 @@ const useStarter = (
         setComposerFocus();
       }
     },
-    [anchorId, onSample, setIsEditApp]
+    [anchorId, onRequest, onSample, setIsEditApp]
   );
 };
 
@@ -128,11 +132,12 @@ const useCommandSource = (input: HomeIdeInput, nav: WorkspaceNav): void => {
 
 const useHomeIde = (input: HomeIdeInput): HomeIde => {
   const { onAttach, onLayer, onTrashOpen } = input;
-  const { isEditApp, nav } = input.target;
+  const { isEditApp, nav, setIsEditApp } = input.target;
   const { onSelect, selected, workspaces } = nav;
   const count = workspaces.length;
   const activity = useActivity();
-  const onStarter = useStarter(input, nav);
+  const editConfirm = useEditAppConfirm(selected?.folder ?? null, setIsEditApp);
+  const onStarter = useStarter(input, nav, editConfirm);
 
   const packName = toPackName(
     input.packs,
@@ -155,6 +160,7 @@ const useHomeIde = (input: HomeIdeInput): HomeIde => {
   return {
     activity,
     defaultLine,
+    editConfirm,
     isEditApp,
     nav,
     onAttach,

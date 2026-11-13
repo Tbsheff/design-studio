@@ -110,6 +110,14 @@ interface EditFileChange {
   created?: boolean;
 }
 
+type VariationSettledState = "kept" | "discarded" | null;
+
+interface VariationSettle {
+  readonly directionId: string;
+  readonly before: VariationSettledState;
+  readonly after: VariationSettledState;
+}
+
 interface EditRecord {
   projectId: string;
   directionId: string;
@@ -117,6 +125,8 @@ interface EditRecord {
   versionId: string;
   files: EditFileChange[];
   layout?: LayoutChange;
+  directionIds?: readonly string[];
+  settles?: readonly VariationSettle[];
 }
 
 interface EditRecorder {
@@ -195,4 +205,6 @@ export type {
   PlannedDirectEdit,
   ResolvedSource,
   SourcePosition,
+  VariationSettle,
+  VariationSettledState,
 };

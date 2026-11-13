@@ -80,6 +80,7 @@ export interface Direction {
 }
 
 export const VARIATION_MIN = 2;
+export const VARIATION_RUN_MIN = 1;
 export const VARIATION_MAX = 4;
 export const VARIATION_MAX_REACT = 3;
 export const VARIATION_DEFAULT = 3;

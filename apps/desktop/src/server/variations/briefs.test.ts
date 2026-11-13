@@ -97,8 +97,8 @@ describe("brief parsing and validation", () => {
       ["A", "Workshop ledger"],
       ["B", "Calm booking"],
     ]);
-    expect(() => validateUserBriefs([THREE[0]], "html")).toThrow(
-      /briefs must be an integer from 2/
+    expect(() => validateUserBriefs([], "html")).toThrow(
+      /briefs must have 1 to 4 items/
     );
     expect(() =>
       validateUserBriefs([THREE[0], { title: "", brief: "short" }], "html")

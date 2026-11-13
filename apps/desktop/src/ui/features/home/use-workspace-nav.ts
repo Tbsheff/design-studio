@@ -1,8 +1,9 @@
 import type { Project } from "@design-studio/contracts";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { homePrefs } from "./home-prefs-model.js";
 import type { AppChipState } from "./use-app-chip.js";
-import { toIndexFor, toWorkspaces } from "./workspace-model.js";
+import { PROTOTYPES_ID, toIndexFor, toWorkspaces } from "./workspace-model.js";
 import type { Workspace } from "./workspace-model.js";
 
 interface WorkspaceNav {
@@ -81,10 +82,14 @@ const useWorkspaceNav = (
   app: AppChipState
 ): WorkspaceNav => {
   const workspaces = useMemo(() => toWorkspaces(projects), [projects]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const [selectedId, setSelectedId] = useState<string>(
+    () => homePrefs.get().lastWorkspaceId ?? PROTOTYPES_ID
+  );
+
   const [expanded, setExpanded] = useState<Expanded>(new Map());
   const [openGroups, setOpenGroups] = useState<ReadonlySet<string>>(new Set());
-  const selectedIndex = toIndexFor(workspaces, selectedId ?? "");
+  const selectedIndex = toIndexFor(workspaces, selectedId);
   const selected = workspaces[selectedIndex] ?? null;
   const selectedKey = selected?.id ?? null;
 
@@ -101,6 +106,7 @@ const useWorkspaceNav = (
 
       if (target) {
         setSelectedId(target.id);
+        homePrefs.set({ lastWorkspaceId: target.id });
         setExpanded(new Map([[target.id, true]]));
       }
     },

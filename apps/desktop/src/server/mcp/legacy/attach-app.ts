@@ -5,7 +5,7 @@ import type { AppServerStatus, Project } from "@design-studio/contracts";
 import { attachReadiness } from "../../app/first-version.js";
 import type { AttachResponse } from "../../app/first-version.js";
 import { callAction } from "../action-call.js";
-import { approve, oneLine } from "../edit-guards.js";
+import { approve, isTrustedFolder, oneLine } from "../edit-guards.js";
 import type { EditDeps } from "../edit-guards.js";
 import { ok } from "../edit-kit.js";
 import type { Done } from "../edit-kit.js";
@@ -67,7 +67,7 @@ const askToAttach = async (
     (project) => project.app && sameFolderOrRoot(project, folder, workspace)
   );
 
-  if (known) {
+  if (known || (await isTrustedFolder(deps, folder))) {
     return;
   }
 

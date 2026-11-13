@@ -884,6 +884,10 @@ fieldset.compare-modes {
   font-size: var(--t-sm);
 }
 
+.studio-stage .frame-undo {
+  bottom: calc(var(--dock-gap) * 2 + var(--tools-w));
+}
+
 .layers-eye {
   position: relative;
   margin-left: auto;

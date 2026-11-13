@@ -12,7 +12,11 @@ import {
 } from "./deps.js";
 import type { DirectionIds, DirectionRun, SourceLoc } from "./deps.js";
 import { toAutoLayout } from "./engine/index.js";
-import type { AutoLayoutPlan, LayoutKind } from "./engine/index.js";
+import type {
+  AutoLayoutPlan,
+  LayoutDirection,
+  LayoutKind,
+} from "./engine/index.js";
 import { LayerStyleError } from "./errors.js";
 import {
   toCommitted,
@@ -252,6 +256,17 @@ const toDirectionStyle = (
   return {};
 };
 
+const toWrittenDirection = (
+  plan: AutoLayoutPlan,
+  command: SetLayerLayoutCommand
+): LayoutDirection => {
+  if (plan.hasAbsolute || command.layout !== "auto") {
+    return plan.direction;
+  }
+
+  return "row";
+};
+
 const toGapStyle = (gap: string | null): LayoutStyle => {
   if (gap === null) {
     return {};
@@ -357,7 +372,7 @@ const setLayerLayout = async (
   );
 
   const base = {
-    direction: plan.direction,
+    direction: toWrittenDirection(plan, command),
     gap: parent.gap,
     movedChildren: reorder.moved,
     skipped: toSkips(target.children),
@@ -370,7 +385,7 @@ const setLayerLayout = async (
   const versionId = await toCommitted(
     run,
     changed,
-    `Auto layout: ${plan.direction}`
+    `Auto layout: ${base.direction}`
   );
 
   return { ...base, versionId };

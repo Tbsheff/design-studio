@@ -1829,6 +1829,7 @@ export type ParentToBridge =
     }
   | { ns: "studio"; token: string; type: "text-edit-allowed"; allowed: boolean }
   | { ns: "studio"; token: string; type: "text-edit-stop" }
+  | { ns: "studio"; token: string; type: "text-edit-start"; selector: string }
   | {
       ns: "studio";
       token: string;

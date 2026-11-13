@@ -55,6 +55,26 @@ const NON_TEXT_ELEMENTS = new Set([
   "plaintext",
 ]);
 
+const PHRASING_PARENTS = new Set([
+  "a",
+  "b",
+  "button",
+  "code",
+  "em",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "i",
+  "label",
+  "p",
+  "small",
+  "span",
+  "strong",
+]);
+
 function isElement(node: ChildNode | ParentNode): node is Element {
   return "tagName" in node;
 }
@@ -266,6 +286,12 @@ function insertSplice(
     throw new DirectEditError(
       "invalid_request",
       `Elements cannot be added inside <${element.tagName}>`
+    );
+  }
+  if (PHRASING_PARENTS.has(element.tagName)) {
+    throw new DirectEditError(
+      "invalid_request",
+      `<${element.tagName}> holds text only. Select its container to add an element, or edit the text`
     );
   }
   const lineStart =

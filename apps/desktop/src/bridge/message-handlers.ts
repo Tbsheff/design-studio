@@ -150,8 +150,6 @@ const createPreviewHandlers = (
   | "preview-text"
   | "request-authored"
   | "set-theme"
-  | "text-edit-allowed"
-  | "text-edit-stop"
   | "tokens-preview"
   | "tweaks-preview"
 > => {
@@ -208,13 +206,49 @@ const createPreviewHandlers = (
       });
     },
     "set-theme": (message) => themeControl.set(message.theme),
-    "text-edit-allowed": (message) =>
-      context.textEditor.allow(message.allowed === true),
-    "text-edit-stop": () => context.textEditor.cancel(),
     "tokens-preview": (message) => previewStyles.apply("tokens", message.css),
     "tweaks-preview": (message) => previewStyles.apply("tweaks", message.css),
   };
 };
+
+const TEXT_EDIT_RETRIES = 20;
+
+const TEXT_EDIT_RETRY_MS = 50;
+
+const startTextEdit = (
+  context: BridgeContext,
+  selector: string,
+  left: number
+): void => {
+  const element = queryElement(selector);
+
+  if (context.textEditor.canEdit(element)) {
+    context.textEditor.start(element);
+
+    return;
+  }
+
+  if (left > 0) {
+    window.setTimeout(
+      () => startTextEdit(context, selector, left - 1),
+      TEXT_EDIT_RETRY_MS
+    );
+  }
+};
+
+const createTextEditHandlers = (
+  context: BridgeContext
+): Pick<
+  MessageHandlers,
+  "text-edit-allowed" | "text-edit-start" | "text-edit-stop"
+> => ({
+  "text-edit-allowed": (message) =>
+    context.textEditor.allow(message.allowed === true),
+  "text-edit-start": (message) => {
+    startTextEdit(context, message.selector, TEXT_EDIT_RETRIES);
+  },
+  "text-edit-stop": () => context.textEditor.cancel(),
+});
 
 const lockAndPost = async (
   context: BridgeContext,
@@ -304,6 +338,7 @@ const installMessageHandlers = (
   const messageHandlers: MessageHandlers = {
     ...createModeHandlers(context),
     ...createPreviewHandlers(context),
+    ...createTextEditHandlers(context),
     ...createTrackingHandlers(context),
     ...createSelectionHandlers(context),
     ...createKeyboardHandlers(context, postNudge),

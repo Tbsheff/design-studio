@@ -81,8 +81,18 @@ function moduleList(): Plugin {
   };
 }
 
+interface BuiltUrl {
+  readonly relative: boolean;
+}
+
+const toBuiltUrl = (
+  _filename: string,
+  context: { hostType: "js" | "css" | "html" }
+): BuiltUrl => ({ relative: context.hostType !== "html" });
+
 export default defineConfig({
   root,
+  experimental: { renderBuiltUrl: toBuiltUrl },
   resolve: {
     alias: [
       {

@@ -1,5 +1,11 @@
 export { LinkedShareWriter } from "./linked-share-writer.js";
 
+export { isPlayable, toPublishPlayData } from "./play-data.js";
+
+export { toShellParts } from "./play-shell.js";
+
+export type { PublishPlaySource } from "./play-data.js";
+
 export { LiveRefresher } from "./live-refresher.js";
 
 export { ShareLinkStore } from "./share-link-store.js";

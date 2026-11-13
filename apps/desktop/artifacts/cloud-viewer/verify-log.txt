@@ -1,0 +1,30 @@
+desktop-light: landed at http://127.0.0.1:4992/d/cloud-viewer-mock-d0l5en/~/view/
+desktop-light: canvas frames=3
+desktop-light: frame body contentEditable=false
+desktop-light: popover frame open=true
+desktop-light: after Get started swipe frame=true, bar=
+desktop-light: token/api in page=false, token/api requests=0, hosts=127.0.0.1:4992, requests=132
+desktop-light: errors=[]
+phone-light: tap Get started -> swipe frame shown=true
+phone-light: after swipe iframes=["index.html:visible"]
+phone-light: View canvas shows frames=3
+phone-light: token/api in page=false, token/api requests=0, hosts=127.0.0.1:4992, requests=132
+phone-light: errors=[]
+desktop-dark: landed at http://127.0.0.1:4992/d/cloud-viewer-mock-d0l5en/~/view/
+desktop-dark: canvas frames=3
+desktop-dark: frame body contentEditable=false
+desktop-dark: popover frame open=true
+desktop-dark: after Get started swipe frame=true, bar=
+desktop-dark: token/api in page=false, token/api requests=0, hosts=127.0.0.1:4992, requests=132
+desktop-dark: errors=[]
+phone-dark: tap Get started -> swipe frame shown=true
+phone-dark: after swipe iframes=["index.html:visible"]
+phone-dark: View canvas shows frames=3
+phone-dark: token/api in page=false, token/api requests=0, hosts=127.0.0.1:4992, requests=132
+phone-dark: errors=[]
+local worker (miniflare via apps/publish/scripts/local.mjs, port 4992), publish through the desktop local backend
+password publication: root/view/play.json/bridge 401 before unlock; after unlock 302 to ~k/<pass>/~/view/, shell, play.json and frames 200, Play and swipe pass in browser
+unpublished publication: ~/view/, play.json, p/index.html, bridge.js all 410
+project with no canvas frames: root serves index.html 200, ~/view/ 404 (old behavior)
+comments off: GET comments {"comments":[]}, POST 403 {"error":"Comments are off for this design."}
+desktop app deep route /p/<id> with relative JS/CSS asset URLs: 0 asset failures

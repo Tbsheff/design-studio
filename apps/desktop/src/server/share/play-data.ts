@@ -14,6 +14,12 @@ interface PlayDataDeps {
   readonly projectDir: (projectId: string) => string;
 }
 
+interface PublishPlaySource {
+  readonly directionId: string;
+  readonly project: Project;
+  readonly title: string;
+}
+
 const FRAME_GAP = 80;
 
 const toCanvasFrames = async (
@@ -101,9 +107,73 @@ const toPlayData = async (
   };
 };
 
+const isPublishFrame = (
+  frame: CanvasFileFrame,
+  directionId: string
+): boolean => {
+  if (frame.hidden === true) {
+    return false;
+  }
+
+  return (frame.directionId ?? directionId) === directionId;
+};
+
+const toFrameLabel = (frame: CanvasFileFrame): string | null => {
+  const label = frame.label?.trim() ?? "";
+
+  if (label === "") {
+    return null;
+  }
+
+  return label;
+};
+
+const toPublishFrame = (
+  frame: CanvasFileFrame,
+  position: number
+): SharePlayFrame => ({
+  height: frame.height,
+  id: frame.id,
+  index: position,
+  label: toFrameLabel(frame),
+  left: frame.x,
+  path: frame.path ?? null,
+  top: frame.y,
+  width: frame.width,
+});
+
+const toPublishPlayData = async (
+  deps: PlayDataDeps,
+  source: PublishPlaySource
+): Promise<SharePlayData | null> => {
+  const [canvas, linked] = await Promise.all([
+    toCanvasFrames(deps, source.project),
+    toLinksOrEmpty(source.project.id),
+  ]);
+
+  const playFrames = canvas
+    .filter((frame) => isPublishFrame(frame, source.directionId))
+    .toSorted((left, right) => left.order - right.order)
+    .map((frame, index) => toPublishFrame(frame, index));
+
+  if (playFrames.length === 0) {
+    return null;
+  }
+
+  return {
+    expiresAt: 0,
+    frames: playFrames,
+    implicit: linked.implicit,
+    isLive: false,
+    links: linked.links,
+    rev: 0,
+    title: source.title,
+  };
+};
+
 const isPlayable = (project: Project): boolean =>
   project.kind === "html" && !project.app;
 
-export { isPlayable, toPlayData };
+export { isPlayable, toPlayData, toPublishPlayData };
 
-export type { PlayDataDeps };
+export type { PlayDataDeps, PublishPlaySource };

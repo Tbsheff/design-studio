@@ -356,7 +356,7 @@ export function createPublishService(deps: PublishDeps): PublishService {
     await mkdir(assets, { recursive: true });
 
     return kindOf(project) === "site"
-      ? buildSite(deps, source, assets)
+      ? buildSite(deps, source, direction, assets)
       : buildViewer(deps, {
           source,
           direction,

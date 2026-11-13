@@ -11,6 +11,7 @@ const toPublishDeps = (ctx: AppContext): PublishDeps => ({
   preview: ctx.preview,
   projects: ctx.projects,
   secrets: [ctx.config.studioToken],
+  uiDir: ctx.uiDir,
   versions: ctx.versions,
 });
 

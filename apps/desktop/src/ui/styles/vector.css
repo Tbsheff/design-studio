@@ -15,6 +15,10 @@
   cursor: copy;
 }
 
+.vector-layer.text-place {
+  cursor: text;
+}
+
 .vector-preview {
   position: absolute;
   inset: 0;

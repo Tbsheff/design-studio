@@ -42,6 +42,14 @@ export function placeStyle(box: VectorBox, html: boolean): string {
     : ` style={{ position: 'absolute', left: ${left}, top: ${top} }}`;
 }
 
+export function toPairedElement(
+  tag: string,
+  attrs: string,
+  body: string
+): string {
+  return `<${tag}${attrs}>${body}</${tag}>`;
+}
+
 export function elementText(tag: string, attrs: Attrs, html: boolean): string {
   return `<${tag}${attrText(attrs, html)} />`;
 }

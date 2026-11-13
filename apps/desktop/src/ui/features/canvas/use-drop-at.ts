@@ -11,7 +11,8 @@ interface DropWaiter {
 
 const useDropAt = (
   post: VectorLayerProps["post"],
-  listen: VectorLayerProps["listen"]
+  listen: VectorLayerProps["listen"],
+  isContainer: boolean
 ): ((point: Point) => Promise<Drop>) => {
   const waiter = useRef<DropWaiter>({ nextId: 0, waiting: new Map() });
 
@@ -46,11 +47,17 @@ const useDropAt = (
           resolve({ inside: false, selection: null });
         }
       }, DROP_WAIT_MS);
-      post({ requestId: id, type: "element-at", x: point.x, y: point.y });
+      post({
+        container: isContainer,
+        requestId: id,
+        type: "element-at",
+        x: point.x,
+        y: point.y,
+      });
 
       return promise;
     },
-    [post]
+    [isContainer, post]
   );
 };
 

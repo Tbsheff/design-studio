@@ -39,6 +39,29 @@ const TEXT_TAGS = new Set([
   "th",
 ]);
 
+const NO_TEXT_PARENT_TAGS = new Set([
+  "a",
+  "b",
+  "button",
+  "code",
+  "dl",
+  "em",
+  "i",
+  "label",
+  "ol",
+  "picture",
+  "select",
+  "small",
+  "span",
+  "strong",
+  "table",
+  "tbody",
+  "tfoot",
+  "thead",
+  "tr",
+  "ul",
+]);
+
 export function insideTarget(element: Element): boolean {
   const tag = element.tagName.toLowerCase();
 
@@ -70,4 +93,27 @@ export function dropElement(x: number, y: number): Element | null {
   const svg = element.closest("svg");
 
   return svg?.parentElement ?? element;
+}
+
+export function toDropTarget(message: {
+  readonly x: number;
+  readonly y: number;
+  readonly container?: boolean;
+}): Element | null {
+  let element = dropElement(message.x, message.y);
+
+  if (message.container !== true) {
+    return element;
+  }
+
+  while (
+    element &&
+    element !== document.body &&
+    (!insideTarget(element) ||
+      NO_TEXT_PARENT_TAGS.has(element.tagName.toLowerCase()))
+  ) {
+    element = element.parentElement;
+  }
+
+  return element;
 }

@@ -40,7 +40,7 @@ const toHandlers = (
 const VectorLayer = (props: VectorLayerProps): ReactElement | null => {
   const { tool } = useVectorTool();
   const root = useRef<HTMLDivElement>(null);
-  const dropAt = useDropAt(props.post, props.listen);
+  const dropAt = useDropAt(props.post, props.listen, false);
   const commit = useVectorCommit(props, dropAt);
   const { frame, zoom } = props;
 

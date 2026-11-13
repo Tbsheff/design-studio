@@ -20,7 +20,7 @@ const setVectorDirectEdit = defineAction({
   agent: { off: "legacy-agent" },
   confirm: "none",
   description:
-    "Insert a vector shape or path, run a boolean on two shapes, or paint a shape. Saves one version.",
+    "Insert a vector shape, a path or a positioned text box, run a boolean on two shapes, or paint a shape. Saves one version.",
   errors: [
     Forbidden,
     BadRequest,
@@ -52,6 +52,7 @@ const setVectorDirectEdit = defineAction({
     strokeWidth: Schema.optionalKey(Schema.Unknown),
     target: Schema.optionalKey(Schema.Unknown),
     targets: Schema.optionalKey(Schema.Unknown),
+    text: Schema.optionalKey(Schema.String),
   }),
   invalidates: ["direct-edit.getTree", "version.list", "version.listHistory"],
   mcp: { off: "legacy-mcp" },

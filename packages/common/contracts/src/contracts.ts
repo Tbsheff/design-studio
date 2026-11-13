@@ -1846,6 +1846,7 @@ export type ParentToBridge =
       requestId: string;
       x: number;
       y: number;
+      container?: boolean;
     }
   | {
       ns: "studio";

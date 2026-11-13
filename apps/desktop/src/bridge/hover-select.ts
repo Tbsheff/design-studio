@@ -8,7 +8,7 @@ import {
   shortLabel,
   textOf,
 } from "./element-info.js";
-import { dropElement, insideTarget } from "./insert-target.js";
+import { dropElement, insideTarget, toDropTarget } from "./insert-target.js";
 import { elementBySource } from "./reorder.js";
 import { isMatchKind, matchingElements } from "./select-match.js";
 import { APP_MODE, SELECT_RETRIES, SELECT_RETRY_MS } from "./session.js";
@@ -70,7 +70,7 @@ const createLookupHandlers = (
         return;
       }
 
-      const element = dropElement(message.x, message.y);
+      const element = toDropTarget(message);
 
       if (element) {
         postHover(element);

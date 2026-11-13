@@ -7,12 +7,9 @@ import { parse, type DefaultTreeAdapterMap } from "parse5";
 
 import {
   BOOLEAN_OPS,
-  DEFAULT_PEN_STROKE,
-  DEFAULT_SHAPE_FILL,
   VECTOR_COLOR,
   VECTOR_PATH_MAX,
   VECTOR_SHAPES,
-  type VectorBox,
   type VectorPaint,
   type VectorRequest,
   type VectorResult,
@@ -22,13 +19,7 @@ import { toDecoder } from "../../platform/decode/index.js";
 import type { InsertScope } from "../components-ops/insert.js";
 import { DirectEditError } from "../engine/errors.js";
 import { planBoolean } from "../engine/vector-boolean.js";
-import {
-  boxOfPoints,
-  pathRings,
-  round,
-  translatePath,
-} from "../engine/vector-geometry.js";
-import { elementText, jsxAttrName, svgText } from "../engine/vector-snippet.js";
+import { jsxAttrName } from "../engine/vector-snippet.js";
 import { isHtmlFile, vectorDoc, type VNode } from "../engine/vector-source.js";
 import {
   TargetSchema,
@@ -40,6 +31,11 @@ import { patchSource, resolveSource } from "./edit-source.js";
 import { setHtmlAttrs, setJsxAttrs, type AttrChanges } from "./image-attrs.js";
 import { planInsertJsx } from "./jsx-insert.js";
 import { assertCanEdit, publishVersion } from "./publish.js";
+import {
+  toPaintWidth,
+  toPlacedSnippet,
+  type PlacedRequest,
+} from "./vector-snippets.js";
 
 type Element = DefaultTreeAdapterMap["element"];
 
@@ -50,8 +46,6 @@ export interface VectorPlan {
   select: VectorResult["select"];
   title: string;
 }
-
-const MIN_SIZE = 1;
 
 const coord = Schema.Finite.check(
   Schema.isBetween({ maximum: 100_000, minimum: -100_000 })
@@ -101,6 +95,13 @@ const schema = Schema.Union([
     ...paint,
   }),
   Schema.Struct({
+    box,
+    name: Schema.optional(toTrimmed(1, 60)),
+    op: Schema.Literal("text"),
+    text: Schema.optional(toTrimmed(1, 200)),
+    ...place,
+  }),
+  Schema.Struct({
     d: toTrimmed(1, VECTOR_PATH_MAX),
     name: Schema.optional(toTrimmed(1, 60)),
     op: Schema.Literal("path"),
@@ -133,103 +134,6 @@ export function parseVectorRequest(raw: unknown): VectorRequest {
   }
 
   return parsed.success as VectorRequest;
-}
-
-function paintAttrs(
-  request: VectorPaint,
-  fill: string,
-  stroke: string | undefined,
-  width: number | undefined
-): Record<string, string | number | undefined> {
-  const strokeColor =
-    request.stroke === null ? undefined : (request.stroke ?? stroke);
-
-  const strokeWidth =
-    request.strokeWidth === null ? undefined : (request.strokeWidth ?? width);
-
-  return {
-    fill: request.fill === null ? "none" : (request.fill ?? fill),
-    stroke: strokeColor,
-    "stroke-width": strokeColor ? strokeWidth : undefined,
-  };
-}
-
-function shapeSnippet(
-  request: Extract<VectorRequest, { op: "shape" }>,
-  html: boolean
-): string {
-  const width = Math.max(MIN_SIZE, round(request.box.width));
-  const height = Math.max(MIN_SIZE, round(request.box.height));
-  const colors = paintAttrs(request, DEFAULT_SHAPE_FILL, undefined, 1);
-
-  const child =
-    request.shape === "rect"
-      ? elementText("rect", { width, height, ...colors }, html)
-      : elementText(
-          "ellipse",
-          {
-            cx: round(width / 2),
-            cy: round(height / 2),
-            rx: round(width / 2),
-            ry: round(height / 2),
-            ...colors,
-          },
-          html
-        );
-
-  return svgText(
-    request.name ?? (request.shape === "rect" ? "Rectangle" : "Ellipse"),
-    { x: request.box.x, y: request.box.y, width, height },
-    child,
-    html
-  );
-}
-
-function pathSnippet(
-  request: Extract<VectorRequest, { op: "path" }>,
-  html: boolean
-): string {
-  const bounds =
-    boxOfPoints(pathRings(request.d).flat()) ??
-    boxOfPoints(pointsOfMove(request.d));
-
-  if (!bounds) {
-    throw new DirectEditError("invalid_request", "The path has no points");
-  }
-
-  const colors = paintAttrs(request, "none", DEFAULT_PEN_STROKE, 2);
-
-  const pad = colors.stroke
-    ? Math.ceil(Number(colors["stroke-width"] ?? 1) / 2)
-    : 0;
-
-  const frame: VectorBox = {
-    x: bounds.x - pad,
-    y: bounds.y - pad,
-    width: Math.max(MIN_SIZE, bounds.width + pad * 2),
-    height: Math.max(MIN_SIZE, bounds.height + pad * 2),
-  };
-
-  const d = translatePath(request.d, -frame.x, -frame.y);
-
-  const child = elementText(
-    "path",
-    {
-      d,
-      ...colors,
-      "stroke-linecap": colors.stroke ? "round" : undefined,
-      "stroke-linejoin": colors.stroke ? "round" : undefined,
-    },
-    html
-  );
-
-  return svgText(request.name ?? "Vector", frame, child, html);
-}
-
-function pointsOfMove(d: string): [number, number][] {
-  const match = /[Mm]\s*([-+]?[\d.]+)[\s,]*([-+]?[\d.]+)/.exec(d);
-
-  return match ? [[Number(match[1]), Number(match[2])]] : [];
 }
 
 function relativeTo(
@@ -272,8 +176,8 @@ function pageFile(scope: InsertScope, page: string | undefined): string {
 
 async function bodyTarget(
   scope: InsertScope,
-  request: Extract<VectorRequest, { op: "shape" | "path" }>
-): Promise<Extract<VectorRequest, { op: "shape" | "path" }>> {
+  request: PlacedRequest
+): Promise<PlacedRequest> {
   if (
     request.target.source ||
     request.target.tag !== "body" ||
@@ -323,38 +227,26 @@ async function bodyTarget(
 
 async function planPlaced(
   scope: InsertScope,
-  raw: Extract<VectorRequest, { op: "shape" | "path" }>
+  raw: PlacedRequest
 ): Promise<VectorPlan> {
   const request = await bodyTarget(scope, raw);
   const file = request.target.source?.file ?? "";
   const html = isHtmlFile(file);
 
-  const jsx =
-    request.op === "shape"
-      ? shapeSnippet(request, html)
-      : pathSnippet(request, html);
+  const placed = toPlacedSnippet(request, html);
 
   const plan = await planInsertJsx(scope, {
     target: request.target,
     position: "inside",
-    jsx,
+    jsx: placed.jsx,
   });
-
-  const code = relativeTo(plan, request);
-
-  const what =
-    request.op === "shape"
-      ? request.shape === "rect"
-        ? "rectangle"
-        : "ellipse"
-      : "vector path";
 
   return {
     target: plan.target,
     original: plan.original,
-    code,
+    code: relativeTo(plan, request),
     select: plan.select,
-    title: `Draw ${what} in ${request.target.tag ? `<${request.target.tag}>` : plan.target.relative}`,
+    title: `${placed.verb} in ${request.target.tag ? `<${request.target.tag}>` : plan.target.relative}`,
   };
 }
 
@@ -450,7 +342,7 @@ function paintChanges(request: VectorPaint): AttrChanges {
 
   if (request.strokeWidth !== undefined) {
     out["stroke-width"] =
-      request.strokeWidth === null ? null : String(round(request.strokeWidth));
+      request.strokeWidth === null ? null : toPaintWidth(request.strokeWidth);
   }
 
   return out;
@@ -546,7 +438,11 @@ export async function planVector(
 ): Promise<VectorPlan> {
   const request = parseVectorRequest(raw);
 
-  if (request.op === "shape" || request.op === "path") {
+  if (
+    request.op === "shape" ||
+    request.op === "path" ||
+    request.op === "text"
+  ) {
     return planPlaced(scope, request);
   }
 

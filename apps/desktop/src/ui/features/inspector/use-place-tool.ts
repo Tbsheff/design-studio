@@ -18,8 +18,8 @@ interface PlaceOptions {
   readonly selection: SelectionContext[];
 }
 
-const isPlaceTool = (tool: HeldTool | null): tool is "frame" | "text" =>
-  tool === "frame" || tool === "text";
+const isPlaceTool = (tool: HeldTool | null): tool is "frame" =>
+  tool === "frame";
 
 const usePlaceTool = (options: PlaceOptions): void => {
   const held = useLive(heldTool);

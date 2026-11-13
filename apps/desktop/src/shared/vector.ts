@@ -59,6 +59,7 @@ export const VECTOR_COLOR =
   /^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,30}|(?:rgb|rgba|hsl|hsla|oklch|oklab)\([^()]{1,80}\)|var\(--[\w-]{1,60}\))$/;
 
 export const DEFAULT_SHAPE_FILL = "#D9D9D9";
+export const DEFAULT_FIGURE_FILL = DEFAULT_SHAPE_FILL;
 export const DEFAULT_PEN_STROKE = "#1E1E1E";
 
 export interface VectorBox {
@@ -89,6 +90,12 @@ export type VectorRequest =
     } & PlaceFields &
       VectorPaint)
   | ({ op: "path"; d: string; name?: string } & PlaceFields & VectorPaint)
+  | ({
+      op: "text";
+      box: VectorBox;
+      name?: string;
+      text?: string;
+    } & PlaceFields)
   | {
       op: "boolean";
       boolean: BooleanOpName;

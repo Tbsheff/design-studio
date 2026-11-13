@@ -6,9 +6,9 @@ Branch `feat/route-sync`. A route prototype page now shows "App changed" when th
 
 - **Record:** `project.createPrototype` with `routePath` writes `.studio/route-source.json` in the prototype folder: one entry per page with `appProjectId`, `routePath`, `viewport`, `page`, `frameId`, `copiedAt` and `files` (the route file from `listAppRoutes` plus each `layout.*` on its folder chain up to the app router folder, with a sha256). `.studio/*` is not versioned, so undo and restore do not touch it.
 - **Action `page.inspectSource`:** `GET /api/projects/:projectId/d/:directionId/pages/source`, read, MCP and agent `inspect_source_page` (lean, set `app`). It hashes the files again. No git and no dev server on the read path. A page with no entry, or a page file that is gone, gives `isRouteCopy: false`.
-- **Action `page.importSource`:** `POST` on the same path, edit, MCP and agent `import_source_page` (set `app`). It starts the app dev server when it is off, copies the route with `PageWriter` as `<page>-app.html` and a new frame, and adds a new record entry for that page. The source entry does not change. One version and one undo step. Errors: `NotFound` (no page, or app gone), `BadRequest` (not a route copy, or the dev server did not start).
-- **Server:** `project-ops/route-source/` holds `RouteSourceStore` (read), `RouteSourceWriter` (write), pure engines `to-route-files.ts` and `to-changed-files.ts`, and `toReadyAppUpstream`, which moved out of `create-prototype.ts` so both handlers share the 2-minute dev server wait.
-- **UI:** `route-source-chip.tsx` in `frame-label-extras.tsx`. A red "App changed" chip on a frame whose page changed. `data-tip` lists the changed files (deleted files are marked). The menu has "Copy app again" and "Compare with app copy" (makes the latest `<page>-app*` frame active). The check runs when the canvas opens and after each `page.importSource`, never on a timer.
+- **Action `page.importSource`:** `POST` on the same path, edit, MCP and agent `import_source_page` (set `app`). It starts the app dev server when it is off, copies the route with `PageWriter` as `<page>-app.html` and a new frame, and adds a new record entry for that page. The source entry does not change. One version and one undo step. Errors: `NotFound` (no page, or app gone), `BadRequest` (not a route copy), `Conflict` (409, the dev server did not start).
+- **Server:** `project-ops/route-source/` holds `RouteSourceStore` (read), `RouteSourceWriter` (write), pure engines `to-route-files.ts` and `to-changed-files.ts`, and `toReadyAppUpstream`, which moved out of `create-prototype.ts` so both handlers share the 2-minute dev server wait. It ignores a `failed` status from a run that started before its own start call, so a retry after a failed start does not fail at once.
+- **UI:** `route-source-chip.tsx` in `frame-label-extras.tsx`. A red "App changed" chip on a frame whose page changed. `data-tip` lists the changed files (deleted files are marked). The menu has "Copy app again" and "Compare with app copy" (makes the latest `<page>-app*` frame active). "Copy app again" makes the new frame active when it shows on the canvas. The check runs when the canvas opens, after each `page.importSource`, and on each `action.done` event for the app project, never on a timer.
 
 ## Checked
 
@@ -17,20 +17,24 @@ Branch `feat/route-sync`. A route prototype page now shows "App changed" when th
 - "Copy app again" in the UI: a new frame on the right shows the new heading "Your account". The new frame has no chip. The source frame keeps its chip and its page.
 - Cmd+Z: "Undid import page index-app.html". The page and frame left `canvas.json`, and `inspect_source_page` on `index-app.html` gives `isRouteCopy: false`.
 - Moved the route file away: the change is `deleted`.
-- `call-action.ts page.inspectSource`: pass, 3 surfaces, 0 diffs (unchanged, changed, removed page).
-- `call-action.ts page.importSource`: all 3 surfaces ran with no error. The outputs differ only in `frameId`, `page` (`index-app`, `-2`, `-3`) and `versionId`, because each surface makes its own copy (`route-sync/call-action-import.txt`).
+- `call-action.ts page.inspectSource`: pass, 3 surfaces, 0 diffs (unchanged, changed, removed page). Run again after the fixes: pass (`route-sync/call-action-inspect.txt`).
+- `call-action.ts page.importSource`: all 3 surfaces ran with no error. The outputs differ only in `frameId`, `page` (`index-app`, `-2`, `-3`) and `versionId`, because each surface makes its own copy (`route-sync/call-action-import.txt`, run again after the fixes).
 - HTTP: a missing page gives `NotFound`, a plain HTML page gives `BadRequest`.
-- Screenshots: `route-sync/route-sync-menu-dark.jpg`, `route-sync-copied-dark.jpg`, `route-sync-menu-light.jpg`.
-- `pnpm run typecheck`, `pnpm run lint:gate` (pass, 59683 against 89733), `pnpm run build:ui` and `gen-routes --check` pass.
+- `next` stub that exits 1: `page.importSource` gives 409 `Conflict` in 1 s. After the stub came back, with the app status still `failed`, "Copy app again" in the UI worked (before the fix it gave 409 again).
+- "Copy app again" in the UI: the header page and the chat chip change to the new page (`index-app-4`, `index-app-5`), so the new frame is active.
+- `action.done`: with the canvas open, a change to `app/settings/page.tsx` showed no new chip. A `dev-server.stop` call on the app project then showed the chip on all 6 copies.
+- Screenshots: `route-sync/route-sync-menu-dark.jpg`, `route-sync-menu-light.jpg`, `route-sync-copied-dark.jpg`, `route-sync-copied-light.jpg`.
+- `pnpm run typecheck`, `pnpm run lint:gate` (pass, 59683 against 89733), `pnpm run build:ui` and `gen-routes --check` pass after the fixes.
 - `check-actions` fails on main already (277 findings). It adds one O12 row for `page.inspectSource` (`changedFiles` has no `limit`), the same row that most read actions on main have. `changedFiles` has a max of 50.
 
 ## Left out
 
 - The new frame keeps the page title as its label, not "App now", and goes where `applyPlacement` puts it (to the right on this canvas). A label or position needs a change in `share/page-import/**` (not owned) or a second canvas write (a second undo step).
-- "Copy app again" does not make the new frame active. "Compare" makes the copy frame active. The canvas has no multi-frame selection, so it does not select both frames.
+- "Compare" makes the copy frame active. The canvas has no multi-frame selection, so it does not select both frames.
 - No token sweep on the new copy (it would add a second version).
-- The chip does not refresh when the agent edits the app in another project. It refreshes when the canvas opens and after `page.importSource`.
+- The chip refreshes only on an `action.done` event for the app project. An app file change with no action (an edit in an outside editor) shows when the canvas opens again.
 - Permissions are `project.read` and `project.update`, as every other `page` action, not `studio.read` and `studio.write` from the spec.
-- The dev-server failure is still `BadRequest` (shared with `create-prototype`), not `Conflict`.
+- `project.createPrototype` still gives `BadRequest` for a dev server failure. Its action (not owned) does not list `Conflict`.
 - MCP snapshot files are not changed. `inspect_source_page` and `import_source_page` wait for approval at merge.
+- Not tested on a Bonaparte copy. The fake Next app covers the app router route and layout chain.
 - Found on main, not fixed: a route prototype of an app with fewer than 4 CSS tokens fails with a defect, because `setPrototypeTokensLink` (`project-ops-prototype.ts`) uses `attemptKnown(access)`, which dies on ENOENT. The fake app got 5 tokens to get past it.

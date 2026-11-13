@@ -1,47 +1,47 @@
 call-action page.importSource on http://127.0.0.1:4282. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
 
-[http] ok, 3738 ms, git spawns: not counted (server side)
+[http] ok, 4498 ms, git spawns: not counted (server side)
 {
-  "frameId": "f3",
-  "page": "index-app.html",
+  "frameId": "f8",
+  "page": "index-app-6.html",
   "routePath": "/settings",
   "sourcePage": "index.html",
-  "versionId": "f4508688a82e6e74955ec9e8807dbed8586b4d1f"
+  "versionId": "bec7d70767876f436fa37fc8b5a407291a97c2ea"
 }
 
-[mcp] ok, 3386 ms, git spawns: not counted (server side)
+[mcp] ok, 3424 ms, git spawns: not counted (server side)
 {
-  "frameId": "f4",
-  "page": "index-app-2.html",
+  "frameId": "f9",
+  "page": "index-app-7.html",
   "routePath": "/settings",
   "sourcePage": "index.html",
-  "versionId": "720d0ddf3bdce5cd18f1e1d7e9b334cd34cc075f"
+  "versionId": "6e89fadd3c9529b9e51a6b34b7ca9abc930ffadc"
 }
 
-[agent] ok, 3396 ms, git spawns: not counted (server side)
+[agent] ok, 3686 ms, git spawns: not counted (server side)
 {
-  "frameId": "f5",
-  "page": "index-app-3.html",
+  "frameId": "f10",
+  "page": "index-app-8.html",
   "routePath": "/settings",
   "sourcePage": "index.html",
-  "versionId": "c6b8a2bc921ace015d435d43b41c83594de38424"
+  "versionId": "30b98cacc4c12c5858a6e26dfcdbff418ff23f49"
 }
 
 diff http -> mcp:
--   "frameId": "f3",
-+   "frameId": "f4",
--   "page": "index-app.html",
-+   "page": "index-app-2.html",
--   "versionId": "f4508688a82e6e74955ec9e8807dbed8586b4d1f"
-+   "versionId": "720d0ddf3bdce5cd18f1e1d7e9b334cd34cc075f"
+-   "frameId": "f8",
++   "frameId": "f9",
+-   "page": "index-app-6.html",
++   "page": "index-app-7.html",
+-   "versionId": "bec7d70767876f436fa37fc8b5a407291a97c2ea"
++   "versionId": "6e89fadd3c9529b9e51a6b34b7ca9abc930ffadc"
 
 diff http -> agent:
--   "frameId": "f3",
-+   "frameId": "f5",
--   "page": "index-app.html",
-+   "page": "index-app-3.html",
--   "versionId": "f4508688a82e6e74955ec9e8807dbed8586b4d1f"
-+   "versionId": "c6b8a2bc921ace015d435d43b41c83594de38424"
+-   "frameId": "f8",
++   "frameId": "f10",
+-   "page": "index-app-6.html",
++   "page": "index-app-8.html",
+-   "versionId": "bec7d70767876f436fa37fc8b5a407291a97c2ea"
++   "versionId": "30b98cacc4c12c5858a6e26dfcdbff418ff23f49"
 
 answered approval cards: none
 

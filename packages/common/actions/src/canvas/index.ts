@@ -19,6 +19,7 @@ import { listFlowParamsCanvas } from "./list-flow-params.js";
 import { listFrameStatesCanvas } from "./list-frame-states.js";
 import { listImplicitLinksCanvas } from "./list-implicit-links.js";
 import { listLinksCanvas } from "./list-links.js";
+import { moveFramesCanvas } from "./move-frames.js";
 import { setDocCanvas } from "./set-doc.js";
 import { setFrameStateCanvas } from "./set-frame-state.js";
 import { setLinkInteractionCanvas } from "./set-link-interaction.js";
@@ -51,6 +52,7 @@ const CanvasActions = {
   listFrameStatesCanvas,
   listImplicitLinksCanvas,
   listLinksCanvas,
+  moveFramesCanvas,
   setDocCanvas,
   setFrameStateCanvas,
   setLinkInteractionCanvas,

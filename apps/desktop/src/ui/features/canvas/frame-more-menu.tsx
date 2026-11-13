@@ -11,6 +11,7 @@ import {
   useMenu,
   useRedesignEntry,
   useScreenEntry,
+  useTidyEntry,
 } from "./frame-menu-model.js";
 import { toMenuItems } from "./menu-items-model.js";
 import { usePortEntry } from "./use-port-entry.js";
@@ -41,6 +42,7 @@ const FrameMoreMenu = ({
   const screenEntry = useScreenEntry(root);
   const copyPngEntry = useCopyPngEntry(root);
   const redesignEntry = useRedesignEntry(path);
+  const tidyEntry = useTidyEntry(root);
 
   const handleKeys = useCallback(
     (event: KeyboardEvent<HTMLElement>): void => menuKeys(event, close),
@@ -90,6 +92,7 @@ const FrameMoreMenu = ({
           )}
           <FrameMenuItemButton entry={screenEntry} close={close} />
           <FrameMenuItemButton entry={copyPngEntry} close={close} />
+          <FrameMenuItemButton entry={tidyEntry} close={close} />
           {own.map((item) => (
             <FrameMenuItemButton key={item.id} entry={item} close={close} />
           ))}

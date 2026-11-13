@@ -9,6 +9,7 @@ import { CanvasStage } from "./canvas-stage.js";
 import { CopyPngHost } from "./copy-png-host.js";
 import { FrameStateSlotContext } from "./frame-state-slot-context.js";
 import type { FrameStateSlotArgs } from "./frame-state-slot-context.js";
+import { useTidyFrames } from "./use-tidy-frames.js";
 
 const CanvasBody = ({
   edits,
@@ -24,6 +25,11 @@ const CanvasBody = ({
   const { layerEdits } = edits;
 
   const { closeLayers, place } = pane;
+
+  useTidyFrames({
+    projectId: props.projectId,
+    selectionCount: props.selection.length,
+  });
 
   const selectMode = useCallback(() => setSelectMode(true), [setSelectMode]);
 

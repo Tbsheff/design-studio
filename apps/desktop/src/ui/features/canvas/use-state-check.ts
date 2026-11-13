@@ -8,7 +8,7 @@ import {
   useSyncExternalStore,
 } from "react";
 
-import { selectionRun, sendSelectionPrompt } from "../../platform/ask-chat.js";
+import { selectionRun } from "../../platform/ask-chat.js";
 import { useLive } from "../../platform/live-store.js";
 import { useAction } from "../../platform/query.js";
 import { canvasStore } from "./canvas-frames-model.js";
@@ -18,7 +18,8 @@ import {
   toStateCheckView,
 } from "./state-check-model.js";
 import type { StateCheckView } from "./state-check-model.js";
-import { activateFrameId } from "./use-canvas-frames.js";
+import type { StateRunPhase } from "./state-run-model.js";
+import { useStateRuns } from "./use-state-runs.js";
 
 interface StateCheckInput {
   readonly headVersionId: string | null;
@@ -29,7 +30,9 @@ interface StateCheckInput {
 interface StateCheck extends StateCheckView {
   readonly isRunning: boolean;
   readonly isShown: boolean;
+  readonly phase: StateRunPhase;
   readonly handleDesign: () => void;
+  readonly handleStop: () => void;
 }
 
 const STATE_CHECK_THRESHOLD = 0.98;
@@ -51,12 +54,6 @@ const useBoardFrameId = (
   }, [layout, section]);
 };
 
-const useActiveId = (projectId: string): string | null =>
-  useSyncExternalStore(
-    canvasStore.subscribe,
-    () => canvasStore.get(projectId)?.activeId ?? null
-  );
-
 const useVersionRecheck = (
   headVersionId: string | null,
   refetch: () => Promise<void>
@@ -76,9 +73,7 @@ const useVersionRecheck = (
 const useStateCheck = (input: StateCheckInput): StateCheck => {
   const { headVersionId, projectId, section } = input;
   const frameId = useBoardFrameId(projectId, section);
-  const activeId = useActiveId(projectId);
   const isRunning = useLive(selectionRun);
-  const pending = useRef<string | null>(null);
 
   const query = useMemo(() => {
     if (frameId === null) {
@@ -99,37 +94,22 @@ const useStateCheck = (input: StateCheckInput): StateCheck => {
 
   const view = useMemo(() => toStateCheckView(data), [data]);
 
-  useEffect(() => {
-    const prompt = pending.current;
-
-    if (prompt !== null && activeId === view.targetId) {
-      pending.current = null;
-      sendSelectionPrompt(prompt);
-    }
-  }, [activeId, view.targetId]);
+  const runs = useStateRuns({ projectId, query, refetch });
+  const { handleStart } = runs;
 
   const handleDesign = useCallback((): void => {
-    const { prompt, targetId } = view;
-
-    if (prompt === null || targetId === null) {
-      return;
+    if (view.plan !== null) {
+      handleStart(view.plan);
     }
-
-    if (canvasStore.get(projectId)?.activeId === targetId) {
-      sendSelectionPrompt(prompt);
-
-      return;
-    }
-
-    pending.current = prompt;
-    activateFrameId(projectId, targetId);
-  }, [projectId, view]);
+  }, [handleStart, view.plan]);
 
   return {
     ...view,
     handleDesign,
+    handleStop: runs.handleStop,
     isRunning,
     isShown: query !== null && error === null,
+    phase: runs.phase,
   };
 };
 

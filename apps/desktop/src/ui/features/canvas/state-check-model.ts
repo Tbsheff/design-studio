@@ -4,6 +4,8 @@ import type { CanvasSection } from "@design-studio/contracts/canvas-file";
 
 import type { CanvasFrame } from "./canvas-layout-types.js";
 import { stateCheckCopy } from "./copy.js";
+import { toStateRunPlan } from "./state-run-model.js";
+import type { StateRunPlan } from "./state-run-model.js";
 
 type StateCheckWire = WireOutput<typeof inspectStateFramesCanvas>;
 
@@ -11,8 +13,7 @@ type StateCheckRow = StateCheckWire["items"][number];
 
 interface StateCheckView {
   readonly line: string;
-  readonly prompt: string | null;
-  readonly targetId: string | null;
+  readonly plan: StateRunPlan | null;
 }
 
 const DEFAULT_STATE = "default";
@@ -76,27 +77,20 @@ const toLine = (same: number, total: number): string => {
   return `${same}${stateCheckCopy.of}${total}${stateCheckCopy.states}${tail}`;
 };
 
-const toDesignPrompt = (page: string, same: readonly StateCheckRow[]): string =>
-  `${stateCheckCopy.promptStart}${toNameList(same)}${stateCheckCopy.promptOf}/${page}${stateCheckCopy.promptEnd}`;
-
 const toStateCheckView = (wire: StateCheckWire | null): StateCheckView => {
   if (wire === null) {
-    return { line: stateCheckCopy.checking, prompt: null, targetId: null };
+    return { line: stateCheckCopy.checking, plan: null };
   }
 
   const same = toSameRows(wire.items);
   const line = toLine(same.length, toStateCount(wire.items));
-  const [first] = same;
+  const plan = toStateRunPlan(wire);
 
-  if (!first) {
-    return { line, prompt: null, targetId: null };
+  if (plan === null) {
+    return { line, plan };
   }
 
-  return {
-    line: `${line}: ${toNameList(same)}`,
-    prompt: toDesignPrompt(wire.page, same),
-    targetId: first.frameId,
-  };
+  return { line: `${line}: ${toNameList(same)}`, plan };
 };
 
 export { isStateBoardSection, toBoardFrameId, toStateCheckView };

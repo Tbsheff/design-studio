@@ -42,7 +42,7 @@
 .chat-scroll-btn {
   position: absolute;
   z-index: 10;
-  bottom: var(--s-3);
+  bottom: 0;
   gap: var(--s-1);
   padding-inline: var(--s-2) var(--s-3);
   left: 50%;
@@ -57,6 +57,14 @@
 .chat-earlier {
   align-self: center;
   color: var(--text-3);
+}
+
+.chat-conversation:has(.chat-scroll-btn:not([data-at-bottom="true"])) .chat {
+  mask-image: linear-gradient(
+    to bottom,
+    #000 calc(100% - 72px),
+    transparent calc(100% - 28px)
+  );
 }
 
 .chat-scroll-btn[data-at-bottom="true"] {
@@ -1035,9 +1043,11 @@
 }
 
 .run-change .ui-file-chip {
-  height: 28px;
+  min-width: 0;
+  height: 24px;
+  padding: 0 var(--s-2);
   border-radius: var(--r-control-sm);
-  font-size: var(--t-xs);
+  font-size: var(--t-2xs);
   font-weight: var(--w-medium);
 }
 
@@ -1061,19 +1071,23 @@
 
 .run-foot {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 2px;
+  gap: 0;
   min-height: 24px;
-  margin-left: -4px;
   color: var(--text-3);
   font-size: var(--t-2xs);
 }
 
 .run-foot .icon-btn.small {
-  width: 28px;
-  height: 28px;
-  margin: -2px 0;
+  width: 24px;
+  height: 24px;
   border-radius: var(--r-control-sm);
+}
+
+.run-foot-actions {
+  display: flex;
+  align-items: center;
 }
 
 .chat .run-error {
@@ -1149,7 +1163,7 @@
 
 .run-foot .status {
   flex: none;
-  margin: 0 var(--s-1);
+  margin: 0 var(--s-2) 0 0;
   font-size: var(--t-2xs);
   white-space: nowrap;
 }
@@ -1177,15 +1191,15 @@
 }
 
 .run-foot-meta {
-  margin-left: var(--s-1);
+  margin-right: var(--s-1);
   white-space: nowrap;
 }
 
 .btn.run-foot-details {
-  height: 28px;
+  height: 24px;
   border-radius: var(--r-control-sm);
-  margin: -2px 0 -2px auto;
-  padding: 0 var(--s-2);
+  margin: 0;
+  padding: 0 var(--s-1);
   color: var(--text-3);
   font-size: var(--t-2xs);
 }

@@ -11,7 +11,7 @@ const RunFootActions = ({
   onReview: (() => void) | null;
   onDetails: () => void;
 }): ReactElement => (
-  <span className="ml-auto flex items-center gap-1">
+  <span className="run-foot-actions">
     {onReview && hasChanges && (
       <button
         type="button"

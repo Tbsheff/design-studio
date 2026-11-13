@@ -35,11 +35,7 @@ const RunFootRow = ({
 
   return (
     <div className="run-foot" data-status={run.status}>
-      {done && <RunThumbs thumb={thumb} onChange={onThumb} />}
       {!done && !isFailed && <RunStatusBadge status={run.status} />}
-      {run.status !== "running" && !isFailed && readReply() && (
-        <ReplyCopy getText={readReply} />
-      )}
       {summary && <RunFootMeta summary={summary} />}
       {!hasCard && (
         <RunFootActions
@@ -47,6 +43,10 @@ const RunFootRow = ({
           onReview={onReview}
           onDetails={onDetails}
         />
+      )}
+      {done && <RunThumbs thumb={thumb} onChange={onThumb} />}
+      {run.status !== "running" && !isFailed && readReply() && (
+        <ReplyCopy getText={readReply} />
       )}
     </div>
   );

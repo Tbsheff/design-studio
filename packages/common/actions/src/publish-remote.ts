@@ -115,7 +115,65 @@ const SHA256_HEX = /^[0-9a-f]{64}$/u;
 
 const PUBLICATION_ID = /^[A-Za-z0-9_-]{8,32}$/u;
 
-export { LIMITS, PUBLICATION_ID, SCHEMA_VERSION, SHA256_HEX, WORKER_NAME };
+const PLAY_VIEWER = {
+  assets: "assets",
+  bridge: "bridge.js",
+  comments: "comments",
+  data: "play.json",
+  dir: "_studio-viewer",
+  favicon: "favicon.svg",
+  frames: "p",
+  route: "~/view",
+  shell: "share.html",
+} as const;
+
+const BRIDGE_OPEN_TAGS = ["head", "html"] as const;
+
+const toTagEnd = (lower: string, open: string): number => {
+  const start = lower.indexOf(`<${open}`);
+
+  if (start === -1) {
+    return -1;
+  }
+
+  const end = lower.indexOf(">", start);
+
+  if (end === -1) {
+    return -1;
+  }
+
+  return end + 1;
+};
+
+const toBridgeOffset = (source: string): number => {
+  const lower = source.toLowerCase();
+
+  for (const open of BRIDGE_OPEN_TAGS) {
+    const end = toTagEnd(lower, open);
+
+    if (end !== -1) {
+      return end;
+    }
+  }
+
+  return Math.max(0, toTagEnd(lower, "!doctype"));
+};
+
+const toBridgedHtml = (source: string, tag: string): string => {
+  const offset = toBridgeOffset(source);
+
+  return `${source.slice(0, offset)}${tag}${source.slice(offset)}`;
+};
+
+export {
+  LIMITS,
+  PLAY_VIEWER,
+  PUBLICATION_ID,
+  SCHEMA_VERSION,
+  SHA256_HEX,
+  toBridgedHtml,
+  WORKER_NAME,
+};
 
 export type {
   ApiErrorBody,

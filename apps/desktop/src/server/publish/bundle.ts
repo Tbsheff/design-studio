@@ -8,6 +8,7 @@ import {
 } from "node:fs/promises";
 import path from "node:path";
 
+import { PLAY_VIEWER } from "@design-studio/actions/publish-remote";
 import {
   BRIDGE_SCRIPT_PATH,
   BRIDGE_TOKEN_PARAM,
@@ -63,6 +64,7 @@ const SKIP_DIRS = new Set([
   "snapshots",
   "coverage",
   "handoff",
+  PLAY_VIEWER.dir,
 ]);
 
 const SKIP_FILES =
@@ -147,7 +149,11 @@ export function cleanHtml(html: string): string {
     .replaceAll(new RegExp(`[?&]${BRIDGE_TOKEN_PARAM}=[^"'&\\s]*`, "g"), "");
 }
 
-function assertClean(relative: string, text: string, secrets: string[]): void {
+export function assertClean(
+  relative: string,
+  text: string,
+  secrets: string[]
+): void {
   for (const secret of secrets) {
     if (secret.length >= 8 && text.includes(secret)) {
       throw new BundleError(

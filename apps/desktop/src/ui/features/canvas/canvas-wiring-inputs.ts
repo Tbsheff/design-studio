@@ -167,7 +167,7 @@ const toLabelInput = (
   baseLabel: LabelInput["baseLabel"]
 ): LabelInput => {
   const { projectId, directionId, kind, selection, setSelection } = props;
-  const { directions } = props;
+  const { directions, headVersionId } = props;
   const activeId = text.active.id;
   const appPages = appRoutePages(projectId, props.app);
   const directionName = shellDirectionName(props.shell);
@@ -187,6 +187,7 @@ const toLabelInput = (
     directions,
     frameActions,
     frames,
+    headVersionId,
     kind,
     projectId,
     selection,

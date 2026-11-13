@@ -22,6 +22,7 @@ interface LabelInput {
   selection: SelectionContext[];
   setSelection: Props["setSelection"];
   frames: ReturnType<typeof useCanvasFrames>;
+  headVersionId: string | null;
   baseLabel: ReturnType<typeof useFrameActions>["labelProps"];
   directionName: string | null;
   frameActions?: (
@@ -146,6 +147,7 @@ const frameLabelSig = (
     input.directionName,
     input.kind,
     Boolean(input.appPages),
+    input.headVersionId,
     toVariationSig(toVariation(input, did)),
     toItemsSig(frameMenuItems(input, frame, did)),
   ]);

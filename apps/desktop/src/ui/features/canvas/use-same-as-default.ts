@@ -1,5 +1,5 @@
 import { routes } from "@design-studio/actions/canvas/routes";
-import { useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 
 import { useAction } from "../../platform/query.js";
 import { canvasStore } from "./canvas-frames-model.js";
@@ -31,7 +31,31 @@ const toBoardId = (projectId: string, frameId: string): string | null => {
   return toBoardFrameId(frames, section);
 };
 
-const useSameAsDefault = (projectId: string, frameId: string): boolean => {
+interface SameAsDefaultInput {
+  readonly frameId: string;
+  readonly headVersionId: string | null;
+  readonly projectId: string;
+}
+
+const useVersionRecheck = (
+  headVersionId: string | null,
+  refetch: () => Promise<void>
+): void => {
+  const seen = useRef(headVersionId);
+
+  useEffect(() => {
+    if (seen.current === headVersionId) {
+      return;
+    }
+
+    seen.current = headVersionId;
+    void refetch();
+  }, [headVersionId, refetch]);
+};
+
+const useSameAsDefault = (input: SameAsDefaultInput): boolean => {
+  const { frameId, headVersionId, projectId } = input;
+
   const boardId = useSyncExternalStore(canvasStore.subscribe, () =>
     toBoardId(projectId, frameId)
   );
@@ -46,7 +70,9 @@ const useSameAsDefault = (projectId: string, frameId: string): boolean => {
     return { frame: boardId, projectId, threshold };
   }, [boardId, projectId]);
 
-  const { data } = useAction(routes.inspectStateFramesCanvas, query);
+  const { data, refetch } = useAction(routes.inspectStateFramesCanvas, query);
+
+  useVersionRecheck(headVersionId, refetch);
 
   if (query === null || data === null) {
     return false;

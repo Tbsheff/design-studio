@@ -82,7 +82,13 @@ const toFrameLabel = (
     ...input.baseLabel(frame),
     directionId: did,
     extras,
-    note: <SameAsDefaultNote projectId={input.projectId} frameId={frame.id} />,
+    note: (
+      <SameAsDefaultNote
+        frameId={frame.id}
+        headVersionId={input.headVersionId}
+        projectId={input.projectId}
+      />
+    ),
     number,
   };
 

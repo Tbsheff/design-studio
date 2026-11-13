@@ -4,13 +4,15 @@ import { copy } from "./copy.js";
 import { useSameAsDefault } from "./use-same-as-default.js";
 
 const SameAsDefaultNote = ({
-  projectId,
   frameId,
+  headVersionId,
+  projectId,
 }: {
-  readonly projectId: string;
   readonly frameId: string;
+  readonly headVersionId: string | null;
+  readonly projectId: string;
 }): ReactElement | null => {
-  const isSame = useSameAsDefault(projectId, frameId);
+  const isSame = useSameAsDefault({ frameId, headVersionId, projectId });
 
   if (!isSame) {
     return null;

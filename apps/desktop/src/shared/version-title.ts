@@ -4,7 +4,7 @@ export const RUN_TITLE_MAX = 60;
 
 const CLAUSE_END = /[:;]\s|\.\s|\s[—–-]\s|\n/;
 const LEGACY_WRAP = /^(?:Undo to|Restore) "(.*)"$/s;
-const CURRENT_WRAP = /^(?:Back to|Restored) (.+)$/s;
+const CURRENT_WRAP = /^(?:Back to|Undo:|Restored) (.+)$/s;
 
 function cutAtWord(text: string, max: number): string {
   if (text.length <= max) {
@@ -52,8 +52,14 @@ export function baseTitle(title: string, kind: VersionKind): string {
   return current;
 }
 
+const UNDO_PREFIX = "Undo: ";
+
 export function restoreTitle(kind: "undo" | "restore", base: string): string {
   const shown = base.trim() || "an earlier version";
 
-  return kind === "undo" ? `Back to ${shown}` : `Restored ${shown}`;
+  if (kind === "undo" && shown.startsWith(UNDO_PREFIX)) {
+    return `Redo: ${shown.slice(UNDO_PREFIX.length)}`;
+  }
+
+  return kind === "undo" ? `Undo: ${shown}` : `Restored ${shown}`;
 }

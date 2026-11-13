@@ -153,6 +153,17 @@ const plainTitle = (version: Version): string => {
   return toRunTitle(version);
 };
 
+const titleSourceOf = (
+  version: Version,
+  index: VersionIndex
+): Version | null => {
+  if (version.meta.kind !== "undo") {
+    return originOf(version, index);
+  }
+
+  return index.get(version.parentId ?? "") ?? null;
+};
+
 const autoTitle = (version: Version, index: VersionIndex): string => {
   const { kind } = version.meta;
 
@@ -160,7 +171,7 @@ const autoTitle = (version: Version, index: VersionIndex): string => {
     return toRunTitle(version);
   }
 
-  const origin = originOf(version, index);
+  const origin = titleSourceOf(version, index);
   let base = baseTitle(version.title, kind);
 
   if (origin) {

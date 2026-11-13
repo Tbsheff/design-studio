@@ -1978,19 +1978,18 @@ export function createVersionStore(config: ServerConfig): VersionStore {
         }
 
         let target: string;
-
+        let undone = "";
         if (kind === "undo") {
           const from = SHA_PATTERN.test(versionId)
             ? await requireCommit(project, versionId)
             : head;
 
           const fromInfo = await commitInfo(project, from);
-
           if (fromInfo.parentId === null) {
             throw new BadRequestError("nothing to undo");
           }
-
           target = fromInfo.parentId;
+          undone = fromInfo.title;
         } else {
           target = await requireCommit(project, versionId);
         }
@@ -2010,7 +2009,8 @@ export function createVersionStore(config: ServerConfig): VersionStore {
           throw toRestoreError(error);
         });
 
-        const title = restoreTitle(kind, await originTitleOf(project, target));
+        const base = undone || (await originTitleOf(project, target));
+        const title = restoreTitle(kind, base);
 
         const version = await commitTree(
           project,

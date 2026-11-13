@@ -13,6 +13,7 @@ import type {
 import type { DraftStore } from "../../platform/storage.js";
 import type { ComposerMode } from "./composer-mode-model.js";
 import type { VariationsPromptProps } from "./prompt-box-model.js";
+import type { FrameFocus } from "./run-focus-model.js";
 import type { MentionRequest } from "./use-mentions.js";
 import type { RunCanvasChip } from "./use-run-canvas.js";
 
@@ -38,6 +39,7 @@ interface PromptBoxProps {
   selection: SelectionContext[];
   onRemoveSelection: (selector: string) => void;
   canvasChip?: RunCanvasChip | null;
+  frameFocus?: FrameFocus | null;
   running: boolean;
   disabled: boolean;
   onSend: PromptSend;

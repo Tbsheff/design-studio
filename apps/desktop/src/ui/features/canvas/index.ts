@@ -47,6 +47,8 @@ export { pageName } from "./page-name-model.js";
 
 export { nextSelection } from "./preview-selection-model.js";
 
+export { useFrameFocusFiles } from "./use-frame-focus-files.js";
+
 export { runVector } from "./vector-tool-model.js";
 
 export { historyKeyOf, routeHistoryCommand } from "./use-undo-shortcut.js";
@@ -58,6 +60,8 @@ export {
 } from "./use-inline-text-edit.js";
 
 export type { CanvasCommentTools, CanvasDirections } from "./canvas-types.js";
+
+export type { FrameFocusFiles } from "./frame-focus-model.js";
 
 export type { ShortcutState } from "./use-undo-shortcut.js";
 

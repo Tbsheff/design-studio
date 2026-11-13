@@ -30,7 +30,7 @@ const usePromptInput = (
   const { components, directionId, projectId, tokens } = props;
   const request = props.mentionRequest;
 
-  const focus = useRunFocus(props.selection);
+  const focus = useRunFocus(props.selection, props.frameFocus ?? null);
   const onFocus = focus.add;
 
   const mentions = useMentions({

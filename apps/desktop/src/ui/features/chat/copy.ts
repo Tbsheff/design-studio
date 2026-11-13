@@ -70,7 +70,11 @@ const copy = {
   fixOrRemoveThe:
     "Fix or remove the SKILL.md in that folder, then open this list again.",
   focusFiles: "Files this run may change",
+  focusFramesLeftOut: " left out: no page file in the project",
+  focusFramesTip: "Add the page file of each selected frame",
   focusOnFile: "Focus on this file",
+  focusOnFrames: "Focus on ",
+  focusOnFramesTail: " frames",
   fromBase: " from base",
   guessed: " guessed",
   hide: "Hide",

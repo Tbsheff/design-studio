@@ -2,6 +2,7 @@ import type { SelectionContext } from "@design-studio/contracts";
 import type { ComponentProps } from "react";
 
 import { api } from "../../api";
+import type { FrameFocusFiles } from "../../features/canvas/index";
 import { shownPending } from "../../features/chat/run-state-model";
 import { toFixPrompt } from "../../features/review/index";
 import type { LeftPane } from "../shell/left-pane";
@@ -82,7 +83,10 @@ const errorsProps = (ctx: StudioCtx): LeftProps["errors"] => ({
     ctx.ui.draft.set(toFixPrompt(error)),
 });
 
-const promptProps = (ctx: StudioCtx): LeftProps["prompt"] => {
+const promptProps = (
+  ctx: StudioCtx,
+  frameFocus: FrameFocusFiles
+): LeftProps["prompt"] => {
   const { project, ui, core, run } = ctx;
   const { variations, chatState, draftChrome, componentList } = core;
 
@@ -90,6 +94,7 @@ const promptProps = (ctx: StudioCtx): LeftProps["prompt"] => {
     canvasChip: core.runCanvas.chip,
     disabled: !core.directionId,
     draft: ui.draft,
+    frameFocus,
     model: project.settings.model,
     onRemoveSelection: (selector: string): void =>
       ui.setSelection((prev): SelectionContext[] =>

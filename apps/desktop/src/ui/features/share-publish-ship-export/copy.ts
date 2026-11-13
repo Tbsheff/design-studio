@@ -90,7 +90,7 @@ const copy = {
   editsOffNote:
     "Off: Claude Code can only read. Turn on to let it edit the design and the canvas directly.",
   editsOnNote:
-    "Claude Code can also edit files and elements, arrange frames, comment, restore versions, apply design systems, create projects and export. Each edit is a version you can undo. It cannot start or stop Claude runs in the studio. Reconnect the server in Claude Code after you change this.",
+    "Claude Code can also edit files and elements, arrange frames, comment, restore versions, apply design systems, create projects and export. Each edit is a version you can undo. It can start, read and stop Claude runs in the studio with start_run, get_run and stop_run. Reconnect the server in Claude Code after you change this.",
   endsWord: "Ends",
   everyPageOfThe:
     "Every page of the saved version goes up as a static site: HTML, CSS, scripts, images and fonts. Source files, .env, node_modules and studio scripts stay on this Mac.",

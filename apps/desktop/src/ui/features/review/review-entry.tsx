@@ -91,10 +91,10 @@ const ReviewEntry = (props: Props): ReactElement => {
 
   const spelling = useSpelling({
     changeStamp: toChangeStamp(props.lastChange, directionId),
-    directionId,
+    directionId: props.directionId,
     frameId: frame.id,
     isLive: live && isOpen,
-    projectId,
+    projectId: props.projectId,
   });
 
   const button = (

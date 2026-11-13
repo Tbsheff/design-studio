@@ -21,6 +21,26 @@ interface Pending {
 
 type ClickThrough = (point: { x: number; y: number }, isMenu: boolean) => void;
 
+const toClickType = (isMenu: boolean): "menu-at" | "select-at" => {
+  if (isMenu) {
+    return "menu-at";
+  }
+
+  return "select-at";
+};
+
+interface Timers {
+  current: ReturnType<typeof setTimeout>[];
+}
+
+const stopTimers = (timers: Timers): void => {
+  for (const target of timers.current) {
+    globalThis.clearTimeout(target);
+  }
+
+  timers.current = [];
+};
+
 const useClickThrough = (port: Port, enabled: boolean): ClickThrough => {
   const pending = useRef<Pending | null>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -43,18 +63,8 @@ const useClickThrough = (port: Port, enabled: boolean): ClickThrough => {
       return;
     }
 
-    if (pointValue.isMenu) {
-      live.current.port.post({
-        type: "menu-at",
-        x: pointValue.x,
-        y: pointValue.y,
-      });
-
-      return;
-    }
-
     live.current.port.post({
-      type: "select-at",
+      type: toClickType(pointValue.isMenu),
       x: pointValue.x,
       y: pointValue.y,
     });
@@ -85,27 +95,21 @@ const useClickThrough = (port: Port, enabled: boolean): ClickThrough => {
     [listen, later]
   );
 
-  useEffect(
-    () => (): void => {
-      for (const target of timers.current) {
-        globalThis.clearTimeout(target);
-      }
-    },
-    []
-  );
+  useEffect(() => (): void => stopTimers(timers), []);
 
   return useCallback(
-    (point, isMenu) => {
+    (point, isMenuClick) => {
       if (!live.current.enabled) {
         return;
       }
 
-      for (const targetValue of timers.current) {
-        globalThis.clearTimeout(targetValue);
-      }
-
-      timers.current = [];
-      pending.current = { at: Date.now(), isMenu, x: point.x, y: point.y };
+      stopTimers(timers);
+      pending.current = {
+        at: Date.now(),
+        isMenu: isMenuClick,
+        x: point.x,
+        y: point.y,
+      };
       later(NO_RELOAD_MS);
     },
     [later]

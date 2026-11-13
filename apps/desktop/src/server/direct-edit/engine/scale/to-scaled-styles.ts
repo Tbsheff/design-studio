@@ -58,7 +58,10 @@ interface ScaleOptions {
 interface ScaledStyles {
   readonly style: Readonly<Record<string, string>>;
   readonly tokens: readonly ScaleProperty[];
+  readonly tooLong: readonly ScaleProperty[];
 }
+
+const VALUE_LIMIT = 200;
 
 const SCALE_SET: ReadonlySet<string> = new Set(SCALE_PROPERTIES);
 
@@ -285,6 +288,7 @@ const toScaledStyles = (
 ): ScaledStyles => {
   const style: Record<string, string> = {};
   const tokens: ScaleProperty[] = [];
+  const tooLong: ScaleProperty[] = [];
   const theme = toSnapTheme(layer.site);
 
   for (const [property, kind] of toKinds(layer)) {
@@ -293,19 +297,22 @@ const toScaledStyles = (
     }
 
     const computed = layer.computed[property] ?? "";
-
     const next = toScaledValue(property, computed, options.factor, theme);
-
     const isKept = kind === "token" && options.shouldKeepTokens;
+    const isChanged = next !== null && next !== computed.trim() && !isKept;
 
-    if (next !== null && next !== computed.trim() && !isKept) {
+    if (isChanged && next.length > VALUE_LIMIT) {
+      tooLong.push(property);
+    }
+
+    if (isChanged && next.length <= VALUE_LIMIT) {
       style[property] = next;
     }
   }
 
   toJoinedGap(style);
 
-  return { style, tokens };
+  return { style, tokens, tooLong };
 };
 
 export { SCALE_PROPERTIES, toScaledStyles };

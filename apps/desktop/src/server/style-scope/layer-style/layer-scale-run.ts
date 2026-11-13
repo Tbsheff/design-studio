@@ -54,6 +54,8 @@ const NO_SOURCE = "This layer has no source location in the project files.";
 
 const TOKEN_KEPT = "Uses a token. Keep tokens is on.";
 
+const TOO_LONG = "The new value is too long to write. Edit it by hand.";
+
 const DYNAMIC =
   "The class list is built in code. Edit the code, or ask the agent.";
 
@@ -134,6 +136,12 @@ const toPlannedScale = async (
     return [{ layerId: layer.loc, property: name, reason: TOKEN_KEPT }];
   });
 
+  const long = scaled.tooLong.map((name) => ({
+    layerId: layer.loc,
+    property: name,
+    reason: TOO_LONG,
+  }));
+
   let request: DirectEditRequest | null = null;
 
   if (Object.keys(scaled.style).length > 0) {
@@ -147,7 +155,7 @@ const toPlannedScale = async (
   return {
     edit: request,
     layerId: layer.loc,
-    skipped: kept,
+    skipped: [...kept, ...long],
     tokenCount: scaled.tokens.length,
   };
 };

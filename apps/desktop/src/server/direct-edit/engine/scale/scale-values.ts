@@ -1,4 +1,5 @@
 import type { TailwindTheme } from "../tailwind/theme-model.js";
+import { toVisibleShadow } from "./shadow-layers.js";
 
 const SNAP_PX = 1;
 
@@ -139,15 +140,23 @@ const toScaledList = (computed: string, factor: number): string =>
     .map((part) => toScaledPart(part, factor))
     .join("");
 
+const toSourceText = (property: string, computed: string): string | null => {
+  if (property === "box-shadow") {
+    return toVisibleShadow(computed.trim());
+  }
+
+  return computed.trim();
+};
+
 const toScaledValue = (
   property: string,
   computed: string,
   factor: number,
   theme: TailwindTheme | null
 ): string | null => {
-  const text = computed.trim();
+  const text = toSourceText(property, computed);
 
-  if (!text.includes("px")) {
+  if (text === null || !text.includes("px")) {
     return null;
   }
 

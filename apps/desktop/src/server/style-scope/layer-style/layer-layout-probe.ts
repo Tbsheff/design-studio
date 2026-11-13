@@ -1,5 +1,6 @@
 import { SOURCE_LOC_ATTR, probeOnPage } from "./deps.js";
 import type { DirectEditRuntime } from "./deps.js";
+import type { LayoutBox } from "./engine/index.js";
 
 interface LayoutProbeChild {
   readonly height: number;
@@ -10,6 +11,11 @@ interface LayoutProbeChild {
   readonly width: number;
   readonly x: number;
   readonly y: number;
+}
+
+interface LayoutProbe {
+  readonly children: readonly LayoutProbeChild[];
+  readonly frame: LayoutBox;
 }
 
 const PROBE_VIEWPORT = { height: 900, width: 1440 } as const;
@@ -33,15 +39,17 @@ const toLayoutProbeExpression = (selector: string): string =>
       const isInlinePosition = el.style.position !== '' || el.classList.contains('absolute') || el.classList.contains('fixed');
       out.push({ height: rect.height, isAbsolute, isInlinePosition, loc, pageCount, width: rect.width, x: rect.x, y: rect.y });
     }
-    return out;
+    const box = root.getBoundingClientRect();
+    const frame = { height: root.clientHeight, width: root.clientWidth, x: box.x + root.clientLeft, y: box.y + root.clientTop };
+    return { children: out, frame };
   })(${JSON.stringify(selector)}, ${JSON.stringify(SOURCE_LOC_ATTR)})`;
 
 const toProbeLayoutChildren = (
   preview: DirectEditRuntime["preview"],
   url: string,
   selector: string
-): Promise<LayoutProbeChild[] | null> =>
-  probeOnPage<LayoutProbeChild[] | null>(
+): Promise<LayoutProbe | null> =>
+  probeOnPage<LayoutProbe | null>(
     preview,
     url,
     PROBE_VIEWPORT,
@@ -50,4 +58,4 @@ const toProbeLayoutChildren = (
 
 export { toProbeLayoutChildren };
 
-export type { LayoutProbeChild };
+export type { LayoutProbe, LayoutProbeChild };

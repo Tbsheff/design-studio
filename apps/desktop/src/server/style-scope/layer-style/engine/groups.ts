@@ -76,6 +76,7 @@ const SINGLE_GROUPS: ReadonlyMap<string, LayerStyleGroup> = new Map([
   ["shadow", "effect"],
   ["text-align", "text"],
   ["text-shadow", "text"],
+  ["text-wrap", "text"],
   ["tracking", "text"],
 ]);
 
@@ -128,6 +129,7 @@ const CSS_PROPERTIES: Readonly<Record<LayerStyleGroup, readonly string[]>> = {
     "text-decoration-line",
     "text-transform",
     "text-shadow",
+    "text-wrap",
   ],
 };
 

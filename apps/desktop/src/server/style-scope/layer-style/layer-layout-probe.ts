@@ -13,8 +13,14 @@ interface LayoutProbeChild {
   readonly y: number;
 }
 
+interface LayoutFit {
+  readonly bottom: number | null;
+  readonly right: number | null;
+}
+
 interface LayoutProbe {
   readonly children: readonly LayoutProbeChild[];
+  readonly fit: LayoutFit;
   readonly frame: LayoutBox;
 }
 
@@ -41,7 +47,21 @@ const toLayoutProbeExpression = (selector: string): string =>
     }
     const box = root.getBoundingClientRect();
     const frame = { height: root.clientHeight, width: root.clientWidth, x: box.x + root.clientLeft, y: box.y + root.clientTop };
-    return { children: out, frame };
+    const isAutoSize = (name, size) => {
+      const value = root.style.getPropertyValue(name);
+      const priority = root.style.getPropertyPriority(name);
+      root.style.setProperty(name, 'auto', 'important');
+      const next = root.getBoundingClientRect()[name];
+      if (value === '') root.style.removeProperty(name);
+      else root.style.setProperty(name, value, priority);
+      return Math.abs(next - size) < 1;
+    };
+    const rootStyle = getComputedStyle(root);
+    const fit = {
+      bottom: isAutoSize('height', box.height) ? parseFloat(rootStyle.paddingBottom) || 0 : null,
+      right: isAutoSize('width', box.width) ? parseFloat(rootStyle.paddingRight) || 0 : null,
+    };
+    return { children: out, fit, frame };
   })(${JSON.stringify(selector)}, ${JSON.stringify(SOURCE_LOC_ATTR)})`;
 
 const toProbeLayoutChildren = (
@@ -58,4 +78,4 @@ const toProbeLayoutChildren = (
 
 export { toProbeLayoutChildren };
 
-export type { LayoutProbe, LayoutProbeChild };
+export type { LayoutFit, LayoutProbe, LayoutProbeChild };

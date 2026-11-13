@@ -38,7 +38,9 @@ Branch `feat/change-spotlight`. Spec: `cycle-13.md` section 2.
 
 ## Left out or limited
 
-- **Undo granularity.** Undo works on one git hunk. Changes 3 lines apart or closer merge into one hunk, so "Undo this change" can revert more than the ringed layer. In the 6-edit batch, one hunk held all 6 edits. A finer undo needs a new write action.
+- **Undo granularity.** Undo works on one git hunk. Changes 3 lines apart or closer merge into one hunk, so the undo can revert more than the ringed layer. In the 6-edit batch, one hunk held all 6 edits. The button says so: it reads "Undo N changes" when N rings share the hunk, and "Undo this change" only when one ring does. A finer undo needs a new write action.
+- **Pill place.** The spec puts the pill at the frame label. It is at the top center of the stage instead. A pill on the frame went under the inspector, or off screen when a step zoomed in.
+- **Scope of the test.** All checks ran on the main direction of an HTML project. The UI uses "main" when the canvas has no direction id.
 - **Ghost box.** A removed element has no ghost box at its old rect, because the old DOM is gone. The dashed red ring goes on its parent or neighbor instead.
 - **Right-click menu.** The ring has no right-click menu. Undo is on the pill for the current step, because the rings let clicks pass through to the frame.
 - **Other pages and CSS.** The canvas rings only the front frame. Changes on other pages count in the pill but have no ring. A CSS-only change gives no items.

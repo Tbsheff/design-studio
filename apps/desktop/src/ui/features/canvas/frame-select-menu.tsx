@@ -6,6 +6,7 @@ import { copy } from "./copy.js";
 import { menuKeys, toRootMenuItems } from "./frame-menu-model.js";
 import { FrameMenuRows } from "./frame-menu-rows.js";
 import { useFrameSelectMenu } from "./use-frame-select-menu.js";
+import { useMenuFit } from "./use-menu-fit.js";
 
 interface FrameSelectMenuProps {
   readonly ids: readonly string[];
@@ -20,6 +21,7 @@ const FrameSelectMenu = ({
   removeFramesAt,
 }: FrameSelectMenuProps): ReactElement => {
   const { menu, rows, toggle } = useFrameSelectMenu(ids, removeFramesAt);
+  const fitMenu = useMenuFit("root", null);
   const { close, open, root, trigger } = menu;
 
   const handleKeys = useCallback(
@@ -60,6 +62,7 @@ const FrameSelectMenu = ({
       </button>
       {open && (
         <div
+          ref={fitMenu}
           className="ui-menu project-menu canvas-menu frame-menu frame-select-menu"
           role="menu"
           tabIndex={-1}

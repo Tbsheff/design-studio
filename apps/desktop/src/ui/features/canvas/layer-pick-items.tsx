@@ -8,6 +8,7 @@ import { LayerPickRowView } from "./layer-pick-row.js";
 import { toNextIndex } from "./preview-menu-model.js";
 import { SubmenuContext } from "./submenu-context.js";
 import type { LayerPickHandle } from "./use-layer-pick.js";
+import { useMenuFit } from "./use-menu-fit.js";
 import { useMenuItemRefs } from "./use-menu-item-refs.js";
 
 interface LayerPickItemsProps {
@@ -22,6 +23,7 @@ const LayerPickItems = ({
   pick,
 }: LayerPickItemsProps): ReactElement => {
   const { bind, focusItem, list } = useMenuItemRefs();
+  const fitMenu = useMenuFit("submenu", null);
   const { focusTick, onExit } = useContext(SubmenuContext);
   const { onHover, onPick } = pick;
   const rows = useMemo(() => toPickRows(layers), [layers]);
@@ -72,6 +74,7 @@ const LayerPickItems = ({
 
   return (
     <div
+      ref={fitMenu}
       className="project-menu preview-submenu"
       role="menu"
       tabIndex={-1}

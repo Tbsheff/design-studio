@@ -46,8 +46,25 @@ const keepVariationFrame = (
   projectId: string,
   keepId: string,
   groupIds: string[]
+): CanvasLayout | null => {
+  const before = canvasStore.get(projectId) ?? null;
+
+  const next = apply(projectId, (layout) =>
+    keepDirection(layout, keepId, groupIds)
+  );
+
+  if (next === before) {
+    return null;
+  }
+
+  return before;
+};
+
+const restoreVariationFrames = (
+  projectId: string,
+  before: CanvasLayout
 ): void => {
-  apply(projectId, (layout) => keepDirection(layout, keepId, groupIds));
+  apply(projectId, () => before);
 };
 
 const framesOnCanvas = (projectId: string, directionIds: string[]): number => {
@@ -65,4 +82,9 @@ const framesOnCanvas = (projectId: string, directionIds: string[]): number => {
   return 0;
 };
 
-export { framesOnCanvas, keepVariationFrame, showVariationFrames };
+export {
+  framesOnCanvas,
+  keepVariationFrame,
+  restoreVariationFrames,
+  showVariationFrames,
+};

@@ -5,17 +5,29 @@ import { copy } from "./copy.js";
 
 interface VariationNoticeProps {
   readonly onDismiss: () => void;
+  readonly onUndo: (() => void) | null;
   readonly testId: string | null;
   readonly text: string;
 }
 
 const VariationNotice = ({
   onDismiss,
+  onUndo,
   testId,
   text,
 }: VariationNoticeProps): ReactElement => (
   <output className="variations-notice alert inline" data-testid={testId}>
     <span>{text}</span>
+    {onUndo && (
+      <button
+        type="button"
+        className="link"
+        data-testid="variation-undo"
+        onClick={onUndo}
+      >
+        {copy.undo}
+      </button>
+    )}
     <button
       type="button"
       className="icon-btn small"

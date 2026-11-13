@@ -14,6 +14,7 @@ const DraftStatus = ({
 }): ReactElement => (
   <VariationNotice
     onDismiss={onDismiss}
+    onUndo={null}
     testId="draft-status"
     text={`${copy.writing}${toDraftsLabel(draft.count)}${copy.ellipsis}`}
   />

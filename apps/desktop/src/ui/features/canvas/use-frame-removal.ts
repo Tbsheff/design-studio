@@ -6,6 +6,11 @@ import type { CanvasFrame, CanvasLayout } from "./canvas-frames-model.js";
 import type { CanvasFrames } from "./use-canvas-frames.js";
 import type { PanZoom } from "./use-pan-zoom.js";
 
+interface RemovalResult {
+  before: CanvasLayout | null;
+  next: CanvasFrame | null;
+}
+
 interface FrameRemoval {
   dismissUndo: () => void;
   removeFrameAt: (frame: CanvasFrame) => void;
@@ -22,25 +27,45 @@ const toUndo = (
   }
 
   return (): void => {
+    const active = activeFrame(removed);
+
     frames.update(() => removed);
-    uiStore.set({ viewport: viewportOf(activeFrame(removed)) });
+    uiStore.set({ viewport: viewportOf(active) });
+    frames.activate(active);
     clear();
   };
 };
 
 const useFrameRemoval = (frames: CanvasFrames, pz: PanZoom): FrameRemoval => {
-  const { layout } = frames;
   const [removed, setRemoved] = useState<CanvasLayout | null>(null);
   const dismissUndo = useCallback((): void => setRemoved(null), []);
 
   const removeFrameAt = (frame: CanvasFrame): void => {
     pz.freeze();
-    const next = removeFrame(layout, frame.id);
-    setRemoved(layout);
-    frames.update(() => next);
 
-    if (frame.id === layout.activeId) {
-      uiStore.set({ viewport: viewportOf(activeFrame(next)) });
+    const removal: RemovalResult = { before: null, next: null };
+
+    frames.update((current) => {
+      const next = removeFrame(current, frame.id);
+
+      if (next !== current) {
+        removal.before = current;
+      }
+
+      if (next !== current && frame.id === current.activeId) {
+        removal.next = activeFrame(next);
+      }
+
+      return next;
+    });
+
+    if (removal.before) {
+      setRemoved(removal.before);
+    }
+
+    if (removal.next) {
+      uiStore.set({ viewport: viewportOf(removal.next) });
+      frames.activate(removal.next);
     }
   };
 

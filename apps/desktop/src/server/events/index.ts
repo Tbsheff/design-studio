@@ -63,4 +63,6 @@ export type {
   PlannedDirectEdit,
   ResolvedSource,
   SourcePosition,
+  VariationSettle,
+  VariationSettledState,
 } from "./direct-edit-ports.js";

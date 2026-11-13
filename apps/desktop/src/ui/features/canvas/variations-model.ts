@@ -12,6 +12,7 @@ import type {
 } from "@design-studio/contracts";
 
 import { readStored } from "../../platform/storage.js";
+import type { CanvasLayout } from "./canvas-frames-model.js";
 
 interface BriefDraft {
   prompt: string;
@@ -41,6 +42,7 @@ interface Session {
   draft: BriefDraft | null;
   groupId: string | null;
   kept: string | null;
+  keptLayout: CanvasLayout | null;
   notice: string | null;
   projectId: string;
 }
@@ -72,6 +74,7 @@ const emptySession = (projectId: string): Session => ({
   draft: null,
   groupId: null,
   kept: null,
+  keptLayout: null,
   notice: null,
   projectId,
 });

@@ -7,6 +7,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 
 import { formatUsd } from "../../domain/format.js";
 import { writeStored } from "../../platform/storage.js";
+import type { CanvasLayout } from "./canvas-frames-model.js";
 import { useVariationsDraft } from "./use-variations-draft.js";
 import { useVariationsRemote } from "./use-variations-remote.js";
 import type { KeptVariation } from "./use-variations-remote.js";
@@ -38,7 +39,9 @@ interface VariationsState {
   groupId: string | null;
   keepElement: (groupId: string, directionId: string) => Promise<KeptVariation>;
   keepNotice: (message: string | null) => void;
+  keepWithUndo: (message: string, before: CanvasLayout | null) => void;
   kept: string | null;
+  keptLayout: CanvasLayout | null;
   max: number;
   mix: (
     fromDirectionId: string,
@@ -72,11 +75,13 @@ const toSessionSetters = (
   patch: (change: SessionPatch) => void
 ): Pick<
   VariationsState,
-  "askElement" | "clearNotice" | "keepNotice" | "setGroupId"
+  "askElement" | "clearNotice" | "keepNotice" | "keepWithUndo" | "setGroupId"
 > => ({
   askElement: (element) => patch({ ask: element }),
   clearNotice: () => patch({ notice: null }),
-  keepNotice: (message) => patch({ kept: message }),
+  keepNotice: (message) => patch({ kept: message, keptLayout: null }),
+  keepWithUndo: (message, before) =>
+    patch({ kept: message, keptLayout: before }),
   setGroupId: (groupId) => patch({ groupId }),
 });
 
@@ -163,6 +168,7 @@ const useVariations = (input: Options): VariationsState => {
     draft,
     groupId: session.groupId,
     kept: session.kept,
+    keptLayout: session.keptLayout,
     max,
     notice: session.notice,
     setCount,

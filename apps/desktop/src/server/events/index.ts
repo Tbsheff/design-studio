@@ -1,5 +1,7 @@
 export { createEventBus, openEventBus } from "./bus.js";
 
+export { boundEventBus } from "./event-core.js";
+
 export { ChangeFeed } from "./change-feed.js";
 
 export {

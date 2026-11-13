@@ -3,6 +3,7 @@ import type { RunActions } from "@design-studio/actions/run/index";
 
 import type { Entries } from "../_core/handler.js";
 import { handle as getContextRunHandle } from "./get-context.js";
+import { handle as getDraftRunHandle } from "./get-draft.js";
 import { handle as getRunHandle } from "./get.js";
 import { handle as listRunHandle } from "./list.js";
 import { handle as renameRunHandle } from "./rename.js";
@@ -14,6 +15,7 @@ import { handle as stopRunHandle } from "./stop.js";
 
 const RunEntries = {
   getContextRun: { handle: getContextRunHandle },
+  getDraftRun: { handle: getDraftRunHandle },
   getRun: { handle: getRunHandle },
   listRun: { handle: listRunHandle },
   renameRun: { handle: renameRunHandle },

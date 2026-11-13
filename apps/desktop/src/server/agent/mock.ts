@@ -484,8 +484,8 @@ class MockSession {
           }
         }
       } else {
-        throwIfAborted(this.signal);
-        await writeFile(absolute, content);
+        const { runDraftWrite } = await import("./mock-draft.js");
+        await runDraftWrite(this.input, toolUseId, relativePath, content);
       }
 
       this.sink.toolFinished(toolUseId, false, `${toolName} ${relativePath}`);

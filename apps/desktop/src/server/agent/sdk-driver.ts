@@ -37,6 +37,7 @@ import {
   enforceDesignSystemCheck,
   wantsDesignSystemCheck,
 } from "./design-system-run.js";
+import { applyDraftMessage } from "./draft-stream.js";
 import {
   appReviewGaps,
   appReviewNote,
@@ -1093,7 +1094,7 @@ async function consumeStream(
   let context: Promise<unknown> | null = null;
   try {
     for await (const message of stream) {
-      options.onMessage?.(message);
+      applyDraftMessage(input, message, options.onMessage ?? null);
       if (
         !context &&
         message.type === "assistant" &&

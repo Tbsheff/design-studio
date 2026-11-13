@@ -15,11 +15,14 @@ Branch `feat/state-check`.
 - "Design missing states" with the mock agent: run request has `canvas.frameId f3` ("Signed in /visits"), and the canvas context says "frame state Signed in (session)", "page file: app/visits/page.tsx".
 - `call-action.ts canvas.inspectStateFrames` with `@Loading /visits`: pass, 3 surfaces, 0 diffs. 5 captures: HTTP 3.9 s cold (about 0.8 s per capture), MCP 0.63 s and agent 0.62 s warm.
 - HTML project board: all 4 states "Same as default" (similarity 1), as expected.
-- Unknown frame and a page with no board give `NotFound`.
+- Unknown frame and a page with no board give `NotFound`. A failed read hides the line: a hand-made `/x states` section around a frame with no board got a 404 and showed no line.
+- Re-check: the mock design run saved the first version (head went from null to `1709a7e`), and the UI sent one more `GET .../canvas/state-frames` after `POST .../runs`.
 - `pnpm run typecheck`, `typecheck:tsrs`, `lint:gate` (pass, 59653 diagnostics, baseline 89733), `build:ui`, `gen-routes --check`: pass.
 
 ## Left out and notes
 
+- The spec expected "Empty shows Same as default" on the fake app. It does not: the empty mock removes the list, so the pixels change (0.751). The rule flags only states whose mock changes nothing on the page; here that is Signed in, because the fake app has no auth. So "Design missing states" asks for the Signed in state. This is how the threshold rule works, not a bug.
+- An attached app in url mode with no head version (cycle-18 note) gets no version re-check until its first version is saved.
 - The per-frame "Same as default" note: the `note` prop of passive frame labels comes from `frame-label-state.ts` and `canvas-wiring-inputs.ts` (pick 1 files). The section line names the matching states instead.
 - `consoleErrors` per item: the screenshot path does not collect console errors, and a second page load per state doubles the time. Not added.
 - `focusPaths`: the selection-prompt run sends none. For app routes the frame-focus model maps no files anyway (HTML pages only); the run's canvas frame and its state carry the target.

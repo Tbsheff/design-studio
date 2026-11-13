@@ -90,7 +90,10 @@ const useStateCheck = (input: StateCheckInput): StateCheck => {
     return { frame: frameId, projectId, threshold };
   }, [frameId, projectId]);
 
-  const { data, refetch } = useAction(routes.inspectStateFramesCanvas, query);
+  const { data, error, refetch } = useAction(
+    routes.inspectStateFramesCanvas,
+    query
+  );
 
   useVersionRecheck(headVersionId, refetch);
 
@@ -126,7 +129,7 @@ const useStateCheck = (input: StateCheckInput): StateCheck => {
     ...view,
     handleDesign,
     isRunning,
-    isShown: query !== null,
+    isShown: query !== null && error === null,
   };
 };
 

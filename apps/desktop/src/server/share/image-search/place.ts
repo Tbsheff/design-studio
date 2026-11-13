@@ -8,6 +8,7 @@ import {
   planChanged,
   planSetImage,
   publishVersion,
+  runFileLockGuard,
   saveDeferred,
   savesSettled,
   writeAtomic,
@@ -226,6 +227,7 @@ const toCommitPlace = async (
     prompt: `${title} at ${files.join(", ")}`,
   };
 
+  await runFileLockGuard(project.id, direction.id, files);
   await savesSettled(project.id);
   await toWritePlacePlan(plan);
 

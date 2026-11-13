@@ -3,6 +3,7 @@ import { Schema } from "effect";
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
+import { Forbidden } from "../_core/errors/forbidden.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { DirectionIdSchema, ProjectIdSchema } from "../_core/ids.js";
 import { DirectEditConflict } from "./errors/direct-edit-conflict.js";
@@ -24,6 +25,7 @@ const applyReviewFixDirectEdit = defineAction({
   description:
     "Apply the direct fix of one or more review_frame findings, with the same code path as the Fix button in the Review panel. Several ids make one version and one undo step. Fixes of findings with shared set edit a shared component file and are skipped unless allowShared is true. Findings with fix null need judgment and are skipped. Runs review_frame again first when the design changed since the last review.",
   errors: [
+    Forbidden,
     BadRequest,
     Conflict,
     NotFound,

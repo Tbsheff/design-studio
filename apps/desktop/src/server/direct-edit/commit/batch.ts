@@ -17,6 +17,7 @@ import type {
   PlannedDirectEdit as PlannedEdit,
   ResolvedSource,
 } from "../../events/index.js";
+import { runFileLockGuard } from "../../platform/path-lock/index.js";
 import { DirectEditError } from "../engine/errors.js";
 import { knownTokenVars } from "../engine/tokens.js";
 import { parseDirectEditBatch } from "../engine/validate.js";
@@ -315,6 +316,11 @@ export async function writeAndCommitAll(
   meta: VersionMeta
 ): Promise<Version> {
   const written: WrittenFile[] = [];
+  await runFileLockGuard(
+    project.id,
+    direction.id,
+    changed.map((group) => group.target.relative)
+  );
   await savesSettled(project.id);
   try {
     for (const group of changed) {

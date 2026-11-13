@@ -14,6 +14,7 @@ import type { DirectEditDeps } from "../../events/index.js";
 import {
   isOutsideRequest,
   isOwnAgentRun,
+  stampOrigin,
 } from "../../platform/call-origin/index.js";
 import { DirectEditError } from "../engine/errors.js";
 import { isPendingVersion, saveLater } from "./save-queue.js";
@@ -96,7 +97,7 @@ export function saveDeferred(
     direction,
     relatives,
     title,
-    meta
+    stampOrigin(meta)
   );
 }
 

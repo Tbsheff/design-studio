@@ -3,6 +3,7 @@ import { Schema } from "effect";
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
+import { Forbidden } from "../_core/errors/forbidden.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { DirectionIdSchema, ProjectIdSchema } from "../_core/ids.js";
 import { DirectEditConflict } from "../direct-edit/errors/direct-edit-conflict.js";
@@ -23,6 +24,7 @@ const setToken = defineAction({
   description:
     "Change one design token value, found by CSS variable or path, with the same code path as the studio Tokens panel. In a studio design system it edits tokens.json. In an imported app folder it rewrites only that declaration in the app CSS file (for example the Tailwind @theme, :root or .dark block). A version is saved.",
   errors: [
+    Forbidden,
     BadRequest,
     Conflict,
     NotFound,

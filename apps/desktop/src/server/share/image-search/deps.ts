@@ -66,3 +66,5 @@ export type {
 } from "@design-studio/contracts";
 
 export { toDecoder } from "../../platform/decode/index.js";
+
+export { runFileLockGuard } from "../../platform/path-lock/index.js";

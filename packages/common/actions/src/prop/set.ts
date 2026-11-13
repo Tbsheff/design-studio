@@ -3,6 +3,7 @@ import { Schema } from "effect";
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
+import { Forbidden } from "../_core/errors/forbidden.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { DirectionIdSchema, ProjectIdSchema } from "../_core/ids.js";
 import { DirectEditConflict } from "../direct-edit/errors/direct-edit-conflict.js";
@@ -18,6 +19,7 @@ const setProp = defineAction({
   description:
     'Change the props of one component instance, the same as the Component section of the studio inspector: it adds, replaces or removes JSX attributes at the use site (for example <Button variant="outline"> to variant="destructive") and keeps the rest of the file as it was. One version and one undo step. Props set by an expression are refused.',
   errors: [
+    Forbidden,
     BadRequest,
     Conflict,
     NotFound,

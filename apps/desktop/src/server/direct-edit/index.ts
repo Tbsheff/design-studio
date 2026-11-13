@@ -6,6 +6,7 @@ export { writeAndCommitAll, applyDirectEditBatch } from "./commit/batch.js";
 
 export {
   attemptDirectEdit,
+  runDirectWrite,
   bindDirectEditRuntime,
   directEditRuntimeOf,
 } from "./direct-edit-core.js";
@@ -13,6 +14,7 @@ export {
 export type {
   DirectEditFailure,
   DirectEditRuntime,
+  DirectWriteFailure,
 } from "./direct-edit-core.js";
 
 export { toBody, toFields, toRef } from "./direct-edit-ref.js";

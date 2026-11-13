@@ -1,3 +1,4 @@
+import { Forbidden } from "@design-studio/actions/_core/errors/forbidden";
 import { DirectEditConflict } from "@design-studio/actions/direct-edit/errors/direct-edit-conflict";
 import { DirectEditFailed } from "@design-studio/actions/direct-edit/errors/direct-edit-failed";
 import { DirectEditNotFound } from "@design-studio/actions/direct-edit/errors/direct-edit-not-found";
@@ -19,6 +20,7 @@ import type { DirectEditDeps } from "../events/index.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import type { KnownFailure } from "../platform/attempt/index.js";
 import { loadConfig } from "../platform/config/index.js";
+import { ForbiddenError } from "../platform/errors/index.js";
 import {
   makeRuntimeSlot,
   requireBound,
@@ -59,6 +61,8 @@ type DirectEditFailure =
   | KnownFailure
   | DirectEditFailed;
 
+type DirectWriteFailure = DirectEditFailure | Forbidden;
+
 const runtimes = makeRuntimeSlot<DirectEditRuntime>("DirectEdit");
 
 const bindDirectEditRuntime = (
@@ -88,6 +92,21 @@ const toDirectEditFailure = (
   return new DirectEditFailed(fields);
 };
 
+const toDirectWriteFailure = (
+  cause: unknown
+):
+  | DirectEditConflict
+  | DirectEditNotFound
+  | DirectEditFailed
+  | Forbidden
+  | null => {
+  if (cause instanceof ForbiddenError) {
+    return new Forbidden({ message: cause.message, perm: "studio.write" });
+  }
+
+  return toDirectEditFailure(cause);
+};
+
 const directEditRuntimeOf = (): DirectEditRuntime | null =>
   runtimes.peekAt(loadConfig().dataDir);
 
@@ -103,11 +122,25 @@ const attemptDirectEdit = <Value>(
     return yield* attemptKnown(() => task(runtime), toDirectEditFailure);
   });
 
+const runDirectWrite = <Value>(
+  task: (runtime: DirectEditRuntime) => Promise<Value>
+): Effect.Effect<Value, DirectWriteFailure> =>
+  Effect.gen(function* withRuntime() {
+    const runtime = yield* requireBound(
+      "DirectEdit",
+      runtimes.peekAt(loadConfig().dataDir)
+    );
+
+    return yield* attemptKnown(() => task(runtime), toDirectWriteFailure);
+  });
+
 export {
   attemptDirectEdit,
+  runDirectWrite,
   bindDirectEditRuntime,
   directEditRuntimeOf,
   toDirectEditFailure,
+  toDirectWriteFailure,
 };
 
-export type { DirectEditFailure, DirectEditRuntime };
+export type { DirectEditFailure, DirectEditRuntime, DirectWriteFailure };

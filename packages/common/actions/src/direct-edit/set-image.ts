@@ -3,6 +3,7 @@ import { Schema } from "effect";
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
+import { Forbidden } from "../_core/errors/forbidden.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { DirectionIdSchema, ProjectIdSchema } from "../_core/ids.js";
 import { DirectEditConflict } from "./errors/direct-edit-conflict.js";
@@ -17,6 +18,7 @@ const setImageDirectEdit = defineAction({
   description:
     "Set or replace the image of an img element or a CSS background. Takes a URL or uploaded data. Saves one version.",
   errors: [
+    Forbidden,
     BadRequest,
     Conflict,
     NotFound,

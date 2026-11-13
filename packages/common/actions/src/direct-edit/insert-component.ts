@@ -3,6 +3,7 @@ import { Schema } from "effect";
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
+import { Forbidden } from "../_core/errors/forbidden.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { DirectionIdSchema, ProjectIdSchema } from "../_core/ids.js";
 import { DirectEditConflict } from "./errors/direct-edit-conflict.js";
@@ -18,6 +19,7 @@ const insertComponentDirectEdit = defineAction({
   description:
     "Insert an instance of a React component from the project library, like dragging it from the studio Components panel: it writes the JSX inside or after the target element, fills required props from the props type, and adds or extends the import line. One version and one undo step. Targets made by .map(), shown by a condition, or the top element of a component are refused with a reason.",
   errors: [
+    Forbidden,
     BadRequest,
     Conflict,
     NotFound,

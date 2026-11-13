@@ -113,7 +113,7 @@ const writeTarget = async (
 
   const relative = checkWritePath(project, direction.workTree, input.path);
 
-  await runLockedPathGuard(deps, project, direction, relative);
+  await runLockedPathGuard(project, direction, relative);
 
   const file = path.join(direction.workTree, ...relative.split("/"));
 

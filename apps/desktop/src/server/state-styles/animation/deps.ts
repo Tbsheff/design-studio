@@ -16,6 +16,8 @@ export {
 
 export { toDecoder } from "../../platform/decode/index.js";
 
+export { runFileLockGuard } from "../../platform/path-lock/index.js";
+
 export { attemptKnown } from "../../platform/attempt/index.js";
 
 export { loadConfig } from "../../platform/config/index.js";

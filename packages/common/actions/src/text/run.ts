@@ -3,6 +3,7 @@ import { Schema } from "effect";
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
+import { Forbidden } from "../_core/errors/forbidden.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { Unavailable } from "../_core/errors/unavailable.js";
 import { DirectionIdSchema, ProjectIdSchema } from "../_core/ids.js";
@@ -30,6 +31,7 @@ const runText = defineAction({
   description:
     "Rewrite or translate the text of one layer. The mode is shorten, lengthen, clarify, voice (match docs/voice.md), fix (spelling and grammar) or translate (needs a BCP 47 language). Returns 3 options based on the layer text and the project DESIGN.md. With shouldApply true, option 1 is written to the source through the inline text edit, as one version with one undo step. Text that comes from a translation file is refused.",
   errors: [
+    Forbidden,
     BadRequest,
     Conflict,
     NotFound,

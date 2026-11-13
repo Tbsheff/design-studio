@@ -5,9 +5,16 @@ interface ToolContent {
   mimeType?: string;
 }
 
+interface ErrorTag {
+  readonly _tag: string;
+  readonly code: string | null;
+  readonly message: string;
+}
+
 interface ToolResult {
   content: ToolContent[];
   isError?: boolean;
+  structuredContent?: ErrorTag;
 }
 
 interface ToolDef {
@@ -23,4 +30,4 @@ interface ToolDef {
   };
 }
 
-export type { ToolContent, ToolDef, ToolResult };
+export type { ErrorTag, ToolContent, ToolDef, ToolResult };

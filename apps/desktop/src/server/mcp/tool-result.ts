@@ -5,8 +5,10 @@ import { Exit, Schema } from "effect";
 
 import { failureOf, toWireError } from "../handlers/_core/wire-error.js";
 import { toDecoder } from "../platform/decode/index.js";
-import { RUN_BUSY } from "./edit-guards.js";
+import { ForbiddenError } from "../platform/errors/index.js";
+import { EditError, RUN_BUSY } from "./edit-guards.js";
 import { mcpErrorText } from "./error-copy.js";
+import type { ErrorTag } from "./tool-types.js";
 
 const RUN_IN_PROGRESS = "run_in_progress";
 
@@ -23,6 +25,12 @@ type TextResult = Readonly<{
   isError: boolean;
 }>;
 
+type TaggedResult = TextResult & Readonly<{ structuredContent: ErrorTag }>;
+
+const FORBIDDEN_TAG = "Forbidden";
+
+const FORBIDDEN_CODES = new Set(["forbidden", FORBIDDEN_TAG]);
+
 type ImageOutput = typeof ImageOutputSchema.Type;
 
 type ActionExit = Exit.Exit<object, StudioError>;
@@ -31,6 +39,40 @@ const textResult = (text: string, isError: boolean): TextResult => ({
   content: [{ text, type: "text" }],
   isError,
 });
+
+const toTaggedResult = (text: string, tag: ErrorTag): TaggedResult => ({
+  ...textResult(text, true),
+  structuredContent: tag,
+});
+
+const isForbiddenError = (error: Error): boolean => {
+  if (error instanceof ForbiddenError) {
+    return true;
+  }
+
+  return error instanceof EditError && FORBIDDEN_CODES.has(error.code ?? "");
+};
+
+const toForbiddenTag = (error: Error): ErrorTag | null => {
+  if (!isForbiddenError(error)) {
+    return null;
+  }
+
+  return { _tag: FORBIDDEN_TAG, code: null, message: error.message };
+};
+
+const toErrorResult = (
+  error: Error,
+  text: string
+): TaggedResult | TextResult => {
+  const tag = toForbiddenTag(error);
+
+  if (tag === null) {
+    return textResult(text, true);
+  }
+
+  return toTaggedResult(text, tag);
+};
 
 const imageResult = (value: ImageOutput): TextResult => ({
   content: [
@@ -131,9 +173,19 @@ const toToolResult = (action: AnyAction, exit: ActionExit): TextResult => {
     return textResult(RUN_BUSY, true);
   }
 
-  return textResult(mcpErrorText(wire.body.message), true);
+  const text = mcpErrorText(wire.body.message);
+
+  if (wire.body._tag === "Defect") {
+    return textResult(text, true);
+  }
+
+  return toTaggedResult(text, {
+    _tag: wire.body._tag,
+    code: wire.body.code,
+    message: wire.body.message,
+  });
 };
 
-export { textResult, toToolResult };
+export { textResult, toErrorResult, toToolResult };
 
-export type { ActionExit, TextResult };
+export type { ActionExit, TaggedResult, TextResult };

@@ -308,7 +308,7 @@ export interface VersionMeta {
   restoredFrom?: string;
   directionId?: string;
   level?: RunLevel;
-  origin?: "mcp";
+  origin?: "mcp" | "agent";
   client?: string;
 }
 
@@ -1283,6 +1283,7 @@ export type BridgeToParent =
       selector: string;
       text: string;
       at: number;
+      isHeld: boolean;
     }
   | {
       ns: "studio";

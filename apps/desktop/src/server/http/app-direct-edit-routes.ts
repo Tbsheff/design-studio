@@ -9,6 +9,7 @@ import {
 import { bindContentRuntime } from "../content/index.js";
 import { bindDirectEditRuntime } from "../direct-edit/index.js";
 import { bindImageGenerateRuntime } from "../image-generate/index.js";
+import { toGuardedDirection } from "../platform/path-lock/index.js";
 import { bindTokenSweepRuntime } from "../token-sweep/index.js";
 import type { AppContext } from "./app-context.js";
 import { listWorkTree } from "./mentions.js";
@@ -24,8 +25,8 @@ const registerDirectEditRoutes = (_app: Hono, ctx: AppContext): void => {
     projects,
     rulesFor,
     watchTokenSources,
-    withDirection,
   } = ctx;
+  const withDirection = toGuardedDirection(ctx.withDirection);
 
   bindContentRuntime({ editDeps, withDirection });
   bindImageGenerateRuntime({ editDeps, preview, withDirection });

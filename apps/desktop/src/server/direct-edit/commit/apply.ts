@@ -8,6 +8,7 @@ import type {
 
 import { domPatchOf } from "../../events/index.js";
 import type { DirectEditDeps, ResolvedSource } from "../../events/index.js";
+import { runFileLockGuard } from "../../platform/path-lock/index.js";
 import type { PatchResult } from "../engine/errors.js";
 import { knownTokenVars } from "../engine/tokens.js";
 import { parseDirectEditRequest } from "../engine/validate.js";
@@ -47,6 +48,7 @@ async function writeAndCommit(
   patch: PatchResult,
   request: DirectEditRequest
 ): Promise<Version> {
+  await runFileLockGuard(project.id, direction.id, [target.relative]);
   await announceWhile(
     project,
     direction,

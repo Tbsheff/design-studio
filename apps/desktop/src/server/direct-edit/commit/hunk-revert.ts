@@ -20,6 +20,7 @@ import {
   NotFoundError,
   isNodeError,
 } from "../../platform/errors/index.js";
+import { runFileLockGuard } from "../../platform/path-lock/index.js";
 import { resolveSource, writeAtomic } from "./edit-source.js";
 import { assertCanEdit, publishVersion, saveDeferred } from "./publish.js";
 import { savesSettled } from "./save-queue.js";
@@ -255,6 +256,7 @@ export async function revertHunk(
   const hunk = pickHunk(pickFile(changes.files, request.file), request.hunk);
   await savesSettled(project.id);
   const target = await resolveSource(direction.workTree, request.file);
+  await runFileLockGuard(project.id, direction.id, [target.relative]);
   const original = await readText(target.file);
   const next = reverseHunk(original, hunk);
   await writeAtomic(target.file, next);

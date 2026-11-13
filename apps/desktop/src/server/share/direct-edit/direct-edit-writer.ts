@@ -1,7 +1,7 @@
 import { Context, Effect, Layer } from "effect";
 
-import { attemptDirectEdit } from "../../direct-edit/index.js";
-import type { DirectEditFailure } from "../../direct-edit/index.js";
+import { runDirectWrite } from "../../direct-edit/index.js";
+import type { DirectWriteFailure } from "../../direct-edit/index.js";
 import {
   applySwapIn,
   createComponentIn,
@@ -37,127 +37,136 @@ interface DirectEditWriterApi {
     body: EditBody
   ) => Effect.Effect<
     Awaited<ReturnType<typeof applyEditBody>>,
-    DirectEditFailure
+    DirectWriteFailure
   >;
   readonly check: (
     ref: DirectionRef
   ) => Effect.Effect<
     Awaited<ReturnType<typeof getRenderCheckOf>>,
-    DirectEditFailure
+    DirectWriteFailure
   >;
   readonly commitTweaks: (
     ref: DirectionRef,
     body: EditBody
   ) => Effect.Effect<
     Awaited<ReturnType<typeof applyTweaksIn>>,
-    DirectEditFailure
+    DirectWriteFailure
   >;
   readonly createToken: (
     ref: DirectionRef,
     body: EditBody
   ) => Effect.Effect<
     Awaited<ReturnType<typeof createTokenIn>>,
-    DirectEditFailure
+    DirectWriteFailure
   >;
   readonly updateFile: (
     ref: DirectionRef,
     body: FileUpdate
-  ) => Effect.Effect<FileSaved, DirectEditFailure>;
+  ) => Effect.Effect<FileSaved, DirectWriteFailure>;
   readonly updateTokens: (
     ref: DirectionRef,
     body: EditBody
   ) => Effect.Effect<
     Awaited<ReturnType<typeof updateTokensIn>>,
-    DirectEditFailure
+    DirectWriteFailure
   >;
   readonly insertComponent: (
     ref: DirectionRef,
     body: EditBody
   ) => Effect.Effect<
     Awaited<ReturnType<typeof insertComponentIn>>,
-    DirectEditFailure
+    DirectWriteFailure
   >;
   readonly insertJsx: (
     ref: DirectionRef,
     body: EditBody
   ) => Effect.Effect<
     Awaited<ReturnType<typeof insertJsxIn>>,
-    DirectEditFailure
+    DirectWriteFailure
   >;
   readonly deleteText: (
     ref: DirectionRef,
     body: EditBody
   ) => Effect.Effect<
     Awaited<ReturnType<typeof deleteTextIn>>,
-    DirectEditFailure
+    DirectWriteFailure
   >;
   readonly setImage: (
     ref: DirectionRef,
     body: EditBody
-  ) => Effect.Effect<Awaited<ReturnType<typeof setImageIn>>, DirectEditFailure>;
+  ) => Effect.Effect<
+    Awaited<ReturnType<typeof setImageIn>>,
+    DirectWriteFailure
+  >;
   readonly setVector: (
     ref: DirectionRef,
     body: EditBody
   ) => Effect.Effect<
     Awaited<ReturnType<typeof setVectorIn>>,
-    DirectEditFailure
+    DirectWriteFailure
   >;
   readonly createComponent: (
     ref: DirectionRef,
     body: EditBody
   ) => Effect.Effect<
     Awaited<ReturnType<typeof createComponentIn>>,
-    DirectEditFailure
+    DirectWriteFailure
   >;
   readonly applySwap: (
     ref: DirectionRef,
     body: EditBody
   ) => Effect.Effect<
     Awaited<ReturnType<typeof applySwapIn>>,
-    DirectEditFailure
+    DirectWriteFailure
   >;
   readonly setProps: (
     ref: DirectionRef,
     body: Parameters<typeof setPropsIn>[2]
-  ) => Effect.Effect<Awaited<ReturnType<typeof setPropsIn>>, DirectEditFailure>;
+  ) => Effect.Effect<
+    Awaited<ReturnType<typeof setPropsIn>>,
+    DirectWriteFailure
+  >;
   readonly setVariantClasses: (
     ref: DirectionRef,
     body: Parameters<typeof setVariantClassesIn>[2]
   ) => Effect.Effect<
     Awaited<ReturnType<typeof setVariantClassesIn>>,
-    DirectEditFailure
+    DirectWriteFailure
   >;
   readonly setRules: (
     ref: DirectionRef,
     body: Parameters<typeof setRulesIn>[2]
-  ) => Effect.Effect<Awaited<ReturnType<typeof setRulesIn>>, DirectEditFailure>;
+  ) => Effect.Effect<
+    Awaited<ReturnType<typeof setRulesIn>>,
+    DirectWriteFailure
+  >;
   readonly runRulesTest: (
     ref: DirectionRef,
     body: Parameters<typeof runRulesTestIn>[2]
   ) => Effect.Effect<
     Awaited<ReturnType<typeof runRulesTestIn>>,
-    DirectEditFailure
+    DirectWriteFailure
   >;
   readonly runReview: (
     ref: DirectionRef,
     body: Parameters<typeof runReviewIn>[2]
   ) => Effect.Effect<
     Awaited<ReturnType<typeof runReviewIn>>,
-    DirectEditFailure
+    DirectWriteFailure
   >;
   readonly applyReviewFix: (
     ref: DirectionRef,
     body: Parameters<typeof applyReviewFixIn>[2]
   ) => Effect.Effect<
     Awaited<ReturnType<typeof applyReviewFixIn>>,
-    DirectEditFailure
+    DirectWriteFailure
   >;
   readonly importFigma: (
     ref: DirectionRef,
     body: Parameters<typeof importFigmaIn>[2]
   ) => Effect.Effect<
     Awaited<ReturnType<typeof importFigmaIn>>,
-    DirectEditFailure
+    DirectWriteFailure
   >;
 }
 
@@ -174,7 +183,7 @@ class DirectEditWriter extends Context.Service<
         ref: DirectionRef,
         body: EditBody
       ) {
-        return yield* attemptDirectEdit((runtime) =>
+        return yield* runDirectWrite((runtime) =>
           applyEditBody(runtime, ref, body)
         );
       }),
@@ -183,7 +192,7 @@ class DirectEditWriter extends Context.Service<
           ref: DirectionRef,
           body: Parameters<typeof applyReviewFixIn>[2]
         ) {
-          return yield* attemptDirectEdit((runtime) =>
+          return yield* runDirectWrite((runtime) =>
             applyReviewFixIn(runtime, ref, body)
           );
         }
@@ -192,14 +201,14 @@ class DirectEditWriter extends Context.Service<
         ref: DirectionRef,
         body: EditBody
       ) {
-        return yield* attemptDirectEdit((runtime) =>
+        return yield* runDirectWrite((runtime) =>
           applySwapIn(runtime, ref, body)
         );
       }),
       check: Effect.fn("DirectEditWriter.check")(function* run(
         ref: DirectionRef
       ) {
-        return yield* attemptDirectEdit((runtime) =>
+        return yield* runDirectWrite((runtime) =>
           getRenderCheckOf(runtime, ref)
         );
       }),
@@ -207,13 +216,13 @@ class DirectEditWriter extends Context.Service<
         ref: DirectionRef,
         body: EditBody
       ) {
-        return yield* attemptDirectEdit((runtime) =>
+        return yield* runDirectWrite((runtime) =>
           applyTweaksIn(runtime, ref, body)
         );
       }),
       createComponent: Effect.fn("DirectEditWriter.createComponent")(
         function* run(ref: DirectionRef, body: EditBody) {
-          return yield* attemptDirectEdit((runtime) =>
+          return yield* runDirectWrite((runtime) =>
             createComponentIn(runtime, ref, body)
           );
         }
@@ -222,7 +231,7 @@ class DirectEditWriter extends Context.Service<
         ref: DirectionRef,
         body: EditBody
       ) {
-        return yield* attemptDirectEdit((runtime) =>
+        return yield* runDirectWrite((runtime) =>
           createTokenIn(runtime, ref, body)
         );
       }),
@@ -230,7 +239,7 @@ class DirectEditWriter extends Context.Service<
         ref: DirectionRef,
         body: EditBody
       ) {
-        return yield* attemptDirectEdit((runtime) =>
+        return yield* runDirectWrite((runtime) =>
           deleteTextIn(runtime, ref, body)
         );
       }),
@@ -238,13 +247,13 @@ class DirectEditWriter extends Context.Service<
         ref: DirectionRef,
         body: Parameters<typeof importFigmaIn>[2]
       ) {
-        return yield* attemptDirectEdit((runtime) =>
+        return yield* runDirectWrite((runtime) =>
           importFigmaIn(runtime, ref, body)
         );
       }),
       insertComponent: Effect.fn("DirectEditWriter.insertComponent")(
         function* run(ref: DirectionRef, body: EditBody) {
-          return yield* attemptDirectEdit((runtime) =>
+          return yield* runDirectWrite((runtime) =>
             insertComponentIn(runtime, ref, body)
           );
         }
@@ -253,7 +262,7 @@ class DirectEditWriter extends Context.Service<
         ref: DirectionRef,
         body: EditBody
       ) {
-        return yield* attemptDirectEdit((runtime) =>
+        return yield* runDirectWrite((runtime) =>
           insertJsxIn(runtime, ref, body)
         );
       }),
@@ -261,7 +270,7 @@ class DirectEditWriter extends Context.Service<
         ref: DirectionRef,
         body: Parameters<typeof runReviewIn>[2]
       ) {
-        return yield* attemptDirectEdit((runtime) =>
+        return yield* runDirectWrite((runtime) =>
           runReviewIn(runtime, ref, body)
         );
       }),
@@ -269,7 +278,7 @@ class DirectEditWriter extends Context.Service<
         ref: DirectionRef,
         body: Parameters<typeof runRulesTestIn>[2]
       ) {
-        return yield* attemptDirectEdit((runtime) =>
+        return yield* runDirectWrite((runtime) =>
           runRulesTestIn(runtime, ref, body)
         );
       }),
@@ -277,7 +286,7 @@ class DirectEditWriter extends Context.Service<
         ref: DirectionRef,
         body: EditBody
       ) {
-        return yield* attemptDirectEdit((runtime) =>
+        return yield* runDirectWrite((runtime) =>
           setImageIn(runtime, ref, body)
         );
       }),
@@ -285,7 +294,7 @@ class DirectEditWriter extends Context.Service<
         ref: DirectionRef,
         body: Parameters<typeof setPropsIn>[2]
       ) {
-        return yield* attemptDirectEdit((runtime) =>
+        return yield* runDirectWrite((runtime) =>
           setPropsIn(runtime, ref, body)
         );
       }),
@@ -293,7 +302,7 @@ class DirectEditWriter extends Context.Service<
         ref: DirectionRef,
         body: Parameters<typeof setRulesIn>[2]
       ) {
-        return yield* attemptDirectEdit((runtime) =>
+        return yield* runDirectWrite((runtime) =>
           setRulesIn(runtime, ref, body)
         );
       }),
@@ -302,7 +311,7 @@ class DirectEditWriter extends Context.Service<
           ref: DirectionRef,
           body: Parameters<typeof setVariantClassesIn>[2]
         ) {
-          return yield* attemptDirectEdit((runtime) =>
+          return yield* runDirectWrite((runtime) =>
             setVariantClassesIn(runtime, ref, body)
           );
         }
@@ -311,7 +320,7 @@ class DirectEditWriter extends Context.Service<
         ref: DirectionRef,
         body: EditBody
       ) {
-        return yield* attemptDirectEdit((runtime) =>
+        return yield* runDirectWrite((runtime) =>
           setVectorIn(runtime, ref, body)
         );
       }),
@@ -319,7 +328,7 @@ class DirectEditWriter extends Context.Service<
         ref: DirectionRef,
         body: FileUpdate
       ) {
-        return yield* attemptDirectEdit((runtime) =>
+        return yield* runDirectWrite((runtime) =>
           updateFileIn(runtime, ref, body)
         );
       }),
@@ -327,7 +336,7 @@ class DirectEditWriter extends Context.Service<
         ref: DirectionRef,
         body: EditBody
       ) {
-        return yield* attemptDirectEdit((runtime) =>
+        return yield* runDirectWrite((runtime) =>
           updateTokensIn(runtime, ref, body)
         );
       }),

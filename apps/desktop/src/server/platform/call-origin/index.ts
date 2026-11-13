@@ -37,27 +37,41 @@ const isOwnAgentRun = (projectId: string, directionId: string): boolean => {
 
 const isOutsideRequest = (): boolean => Boolean(store.getStore());
 
+const isAgentRequest = (): boolean => Boolean(runStore.getStore());
+
+const isPersonRequest = (): boolean => !isOutsideRequest() && !isAgentRequest();
+
 const toCallClient = (): string | null => store.getStore()?.client ?? null;
 
 const stampOrigin = <Meta extends VersionMeta>(meta: Meta): Meta => {
-  const origin = store.getStore();
+  const origin = store.getStore() ?? null;
 
-  if (!origin || meta.origin) {
+  if (meta.origin) {
     return meta;
   }
 
-  return { ...meta, client: origin.client, origin: "mcp" };
+  if (origin !== null) {
+    return { ...meta, client: origin.client, origin: "mcp" };
+  }
+
+  if (isAgentRequest() && meta.kind !== "run") {
+    return { ...meta, origin: "agent" };
+  }
+
+  return meta;
 };
 
 const isOwnEdit = (meta: VersionMeta): boolean =>
   meta.kind === "manual" && !meta.origin;
 
 const isOutsideEdit = (meta: VersionMeta): boolean =>
-  meta.origin === "mcp" || meta.kind === "run";
+  Boolean(meta.origin) || meta.kind === "run";
 
 export {
+  isAgentRequest,
   isOutsideEdit,
   isOutsideRequest,
+  isPersonRequest,
   isOwnAgentRun,
   isOwnEdit,
   stampOrigin,

@@ -281,7 +281,7 @@ async function batchFiles(
   if (new Set(planned.map((file) => file.relative)).size !== planned.length)
     throw new EditError("Each path can be in files only once.");
   for (const file of planned)
-    await runLockedPathGuard(deps, project, direction, file.relative);
+    await runLockedPathGuard(project, direction, file.relative);
   const befores = await Promise.all(
     planned.map((file) => readFile(file.absolute, "utf-8").catch(() => null))
   );

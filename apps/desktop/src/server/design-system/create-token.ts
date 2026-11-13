@@ -35,6 +35,7 @@ import type {
   EditFileChange,
   PlannedDirectEdit as PlannedEdit,
 } from "../events/index.js";
+import { runFileLockGuard } from "../platform/path-lock/index.js";
 import { compileTokens, cssVarFor, parseTokenFile } from "./compile.js";
 import { DESIGN_MD_FILE, writeFileAtomic } from "./packs.js";
 import { toIssueLines, toParser } from "./parse-schema.js";
@@ -381,6 +382,14 @@ async function writeAndCommit(
   input: CommitInput
 ): Promise<Version> {
   const { workTree } = direction;
+
+  const touched = [TOKENS_FILE];
+
+  if (input.plan !== null) {
+    touched.push(input.plan.target.relative);
+  }
+
+  await runFileLockGuard(project.id, direction.id, touched);
 
   const snapshots = await Promise.all(
     DESIGN_FILES.map((relative) => readSnapshot(workTree, relative))

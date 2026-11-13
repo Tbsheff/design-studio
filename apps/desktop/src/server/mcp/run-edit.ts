@@ -17,6 +17,7 @@ import { EditError } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
 import { callEditTool, EDIT_TOOLS, RENDER_WAIT_TOOLS } from "./edit-tools.js";
 import { withLayerSelectors } from "./layer-tools.js";
+import { toErrorResult } from "./tool-result.js";
 
 function argsOf(raw: unknown): Record<string, unknown> {
   return typeof raw === "object" && raw !== null && !Array.isArray(raw)
@@ -69,6 +70,7 @@ async function withRender(
 }
 
 const FIRST_VERSION_WAIT_MS = 20_000;
+const MAIN_DIRECTION = "main";
 
 function withSaveFailures(result: unknown, projectId: unknown): unknown {
   const notes =
@@ -140,7 +142,8 @@ async function runEdit(
     return withSaveFailures(done, args.projectId);
   } catch (error) {
     const known = error instanceof EditError || isKnownError(error);
-    if (!known) console.error("[mcp] edit tool failed", name, error);
+    if (known) return toErrorResult(error as Error, (error as Error).message);
+    console.error("[mcp] edit tool failed", name, error);
     return {
       content: [
         {
@@ -209,6 +212,14 @@ const toArgsFrameId = (args: Record<string, unknown>): string | null => {
   return null;
 };
 
+const toArgsDirectionId = (args: Record<string, unknown>): string => {
+  if (typeof args.directionId === "string" && args.directionId !== "") {
+    return args.directionId;
+  }
+
+  return MAIN_DIRECTION;
+};
+
 const toActionActivity = (
   name: string,
   args: Record<string, unknown>,
@@ -220,7 +231,7 @@ const toActionActivity = (
 
   return {
     versionId: toResultVersionId(result),
-    directionId: typeof args.directionId === "string" ? args.directionId : null,
+    directionId: toArgsDirectionId(args),
     frameId: toArgsFrameId(args),
     projectId: args.projectId,
     summary: `Ran ${name.replaceAll("_", " ")}.`,
@@ -292,7 +303,7 @@ async function runActionEdit(input: ActionEditInput): Promise<unknown> {
     return withSaveFailures(done, args.projectId);
   } catch (error) {
     if (error instanceof EditError || isKnownError(error)) {
-      return toFailure((error as Error).message);
+      return toErrorResult(error as Error, (error as Error).message);
     }
 
     throw error;

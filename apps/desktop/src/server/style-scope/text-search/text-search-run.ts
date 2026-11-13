@@ -1,3 +1,4 @@
+import type { Forbidden } from "@design-studio/actions/_core/errors/forbidden";
 import type { Effect } from "effect";
 
 import {
@@ -16,7 +17,10 @@ import type {
 } from "./deps.js";
 import type { SearchTarget } from "./scope.js";
 import { searchText } from "./search-text.js";
-import { toTextSearchFailure } from "./text-search-failure.js";
+import {
+  toTextSearchFailure,
+  toTextWriteFailure,
+} from "./text-search-failure.js";
 import { applyTextUpdate } from "./update-text.js";
 
 interface InspectTextCommand extends DirectionIds {
@@ -60,7 +64,7 @@ const runTextInspect = (
 
 const runTextUpdate = (
   command: UpdateTextCommand
-): Effect.Effect<TextUpdateResult, KnownFailure> =>
+): Effect.Effect<TextUpdateResult, Forbidden | KnownFailure> =>
   runDirectionWrite(
     command,
     async (run): Promise<TextUpdateResult> => {
@@ -76,7 +80,7 @@ const runTextUpdate = (
 
       return done.result;
     },
-    toTextSearchFailure
+    toTextWriteFailure
   );
 
 const runTextRange = (

@@ -3,6 +3,7 @@ import { Schema } from "effect";
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
+import { Forbidden } from "../_core/errors/forbidden.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import {
   DirectionIdSchema,
@@ -23,7 +24,7 @@ const restoreVersion = defineAction({
   confirm: "none",
   description:
     "Make an older version the current design of a direction. Saved as a new version that undo takes back. The current prototype links and canvas frames stay; only the page files change.",
-  errors: [BadRequest, Conflict, NotFound],
+  errors: [Forbidden, BadRequest, Conflict, NotFound],
   http: {
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/restore",

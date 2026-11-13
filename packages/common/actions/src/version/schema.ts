@@ -15,7 +15,7 @@ const VersionMetaSchema = Schema.Struct({
   level: Schema.optionalKey(
     Schema.Literals(["wireframe", "prototype", "polish"])
   ),
-  origin: Schema.optionalKey(Schema.Literal("mcp")),
+  origin: Schema.optionalKey(Schema.Literals(["mcp", "agent"])),
   prompt: Schema.optionalKey(Schema.String),
   restoredFrom: Schema.optionalKey(Schema.String),
   runId: Schema.optionalKey(Schema.String),

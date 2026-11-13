@@ -3,6 +3,7 @@ import { Schema } from "effect";
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
+import { Forbidden } from "../_core/errors/forbidden.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { DirectionIdSchema, ProjectIdSchema } from "../_core/ids.js";
 import { DirectEditConflict } from "./errors/direct-edit-conflict.js";
@@ -18,6 +19,7 @@ const createComponentDirectEdit = defineAction({
   description:
     "Turn repeated markup into a React component, like Figma Create component: pass one element, or several look-alike elements. The studio writes the component file in folder, with a prop for each part that differs between the elements and a cva() variant prop when their classes differ. Then it replaces each element with the new component and adds the import. One version and one undo step; undo also removes the new file. Elements that a .map() draws, that a condition shows, that spread props, or whose structure differs are refused with a reason.",
   errors: [
+    Forbidden,
     BadRequest,
     Conflict,
     NotFound,

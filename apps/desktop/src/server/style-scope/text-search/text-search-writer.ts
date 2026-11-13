@@ -1,3 +1,4 @@
+import type { Forbidden } from "@design-studio/actions/_core/errors/forbidden";
 import { Context, Effect, Layer } from "effect";
 
 import type { KnownFailure } from "../../platform/attempt/index.js";
@@ -15,7 +16,7 @@ interface TextSearchWriterApi {
   ) => Effect.Effect<TextRangeResult, KnownFailure>;
   readonly update: (
     command: UpdateTextCommand
-  ) => Effect.Effect<TextUpdateResult, KnownFailure>;
+  ) => Effect.Effect<TextUpdateResult, Forbidden | KnownFailure>;
 }
 
 class TextSearchWriter extends Context.Service<

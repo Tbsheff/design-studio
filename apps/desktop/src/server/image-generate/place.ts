@@ -9,6 +9,7 @@ import {
   planChanged,
   planSetImage,
   publishVersion,
+  runFileLockGuard,
   saveDeferred,
   savesSettled,
   writeImagePlan,
@@ -123,6 +124,7 @@ const commitPlan = async (
     return { asset, src, versionId: null };
   }
 
+  await runFileLockGuard(project.id, direction.id, [plan.target.relative]);
   await savesSettled(project.id);
   await writeImagePlan(plan);
 

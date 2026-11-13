@@ -3,6 +3,7 @@ import { Schema } from "effect";
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
+import { Forbidden } from "../_core/errors/forbidden.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { DirectionIdSchema, ProjectIdSchema } from "../_core/ids.js";
 import { DirectEditConflict } from "./errors/direct-edit-conflict.js";
@@ -24,6 +25,7 @@ const runRulesTestDirectEdit = defineAction({
   description:
     "Check design rules on one canvas frame without saving them. Returns hits for each rule. Writes nothing.",
   errors: [
+    Forbidden,
     BadRequest,
     Conflict,
     NotFound,

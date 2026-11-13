@@ -2,7 +2,7 @@ import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
 import { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import { Context, Effect, Layer } from "effect";
 
-import type { DirectEditFailure } from "../../direct-edit/index.js";
+import type { DirectWriteFailure } from "../../direct-edit/index.js";
 import { DirectEditWriter } from "../../share/index.js";
 import { ProjectStore } from "../../store/index.js";
 import type { LocalOrgScope } from "../../store/index.js";
@@ -16,7 +16,7 @@ import { getVoiceGuide, isTranslationText } from "./text-rewrite-source.js";
 interface TextRewriteRunnerApi {
   readonly run: (
     command: RunCommand
-  ) => Effect.Effect<RewriteResult, DirectEditFailure, LocalOrgScope>;
+  ) => Effect.Effect<RewriteResult, DirectWriteFailure, LocalOrgScope>;
 }
 
 const TRANSLATION_MESSAGE = "This text comes from a translation file.";

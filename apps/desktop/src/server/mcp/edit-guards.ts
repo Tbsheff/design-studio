@@ -12,13 +12,8 @@ import type { EditRecorder } from "../direct-edit/index.js";
 import type { EventBus } from "../events/index.js";
 import type { ExportDeps } from "../export/source.js";
 import { EditError } from "../page-probe/index.js";
-import { isPathLocked } from "../platform/path-lock/index.js";
-import {
-  LOCAL_ORG_ID,
-  isOrgInScope,
-  getFileLocks,
-  toOrgScope,
-} from "../store/index.js";
+import { runFileLockGuard } from "../platform/path-lock/index.js";
+import { LOCAL_ORG_ID, isOrgInScope, toOrgScope } from "../store/index.js";
 import type { LayerLockStore } from "../store/layer-locks.js";
 import type { KeepVariant } from "../variations/routes.js";
 import type { ActivityLog } from "./activity.js";
@@ -100,23 +95,12 @@ export function refuseWhileRunning(
   }
 }
 
-export const LOCKED_MESSAGE =
-  "This file is locked. Unlock it in Code to let Claude change it.";
-
 export async function runLockedPathGuard(
-  deps: Pick<EditDeps, "projects">,
   project: Project,
   direction: Direction,
   relative: string
 ): Promise<void> {
-  const globs = await getFileLocks(
-    deps.projects.projectDir(project.id),
-    direction.id
-  );
-
-  if (isPathLocked(globs, relative)) {
-    throw new EditError(LOCKED_MESSAGE, "forbidden");
-  }
+  await runFileLockGuard(project.id, direction.id, [relative]);
 }
 
 export async function approve(deps: EditDeps, ask: ApprovalAsk): Promise<void> {

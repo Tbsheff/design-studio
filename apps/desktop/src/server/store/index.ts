@@ -1,6 +1,6 @@
 export { SkillStore } from "./skill-store.js";
 
-export { getFileLocks } from "./file-lock-file.js";
+export { getFileLocks } from "../platform/path-lock/index.js";
 
 export { FileLockStore } from "./file-lock-store.js";
 

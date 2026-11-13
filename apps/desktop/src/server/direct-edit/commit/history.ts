@@ -25,6 +25,7 @@ import type {
   VariationSettle,
 } from "../../events/index.js";
 import { isNodeError } from "../../platform/errors/index.js";
+import { runFileLockGuard } from "../../platform/path-lock/index.js";
 import { DirectEditError } from "../engine/errors.js";
 import { writeAtomic, writeNewFile } from "./edit-source.js";
 import { assertCanEdit, publishVersion, saveDeferred } from "./publish.js";
@@ -239,6 +240,11 @@ export function createEditHistory(options: HistoryOptions): EditHistory {
       kind === "undo" ? textBefore(change) : change.after;
     const current = (change: EditFileChange) =>
       kind === "undo" ? change.after : textBefore(change);
+    await runFileLockGuard(
+      project.id,
+      direction.id,
+      record.files.map((change) => change.relative)
+    );
     try {
       await writeInReverse(files, record.files.map(wanted));
     } catch (error) {

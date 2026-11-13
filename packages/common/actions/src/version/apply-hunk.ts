@@ -3,6 +3,7 @@ import { Schema } from "effect";
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
+import { Forbidden } from "../_core/errors/forbidden.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import {
   DirectionIdSchema,
@@ -49,7 +50,7 @@ const applyHunkVersion = defineAction({
   confirm: "none",
   description:
     "Undo one change (one @@ hunk) of a saved version, the same as Undo this change in Compare > Code in the studio. It reverses only that hunk in the current file of the direction head and saves the result as one new version, which undo (Cmd+Z) can take back. Other changes in the file stay. When the hunk text is no longer in the file (it was undone or edited later), it changes nothing and says why. Use diff_versions first to see the hunks.",
-  errors: [BadRequest, Conflict, NotFound],
+  errors: [Forbidden, BadRequest, Conflict, NotFound],
   http: {
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/hunks/revert",

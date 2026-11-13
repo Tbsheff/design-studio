@@ -26,6 +26,7 @@ import { SESSION_LEGACY_TOOLS } from "./legacy/session.js";
 import { STUDIO_LEGACY_TOOLS } from "./legacy/studio.js";
 import { VERSIONS_LEGACY_TOOLS } from "./legacy/versions.js";
 import { ACTION_EDIT_TOOLS } from "./registry.js";
+import { toErrorResult } from "./tool-result.js";
 import type { ToolDef, ToolResult } from "./tool-types.js";
 
 const LEGACY_TOOLS: ToolSpec[] = [
@@ -226,10 +227,7 @@ export async function callEditTool(
       error instanceof FolderError ||
       isKnownError(error)
     )
-      return {
-        content: [{ type: "text", text: mcpErrorText(error.message) }],
-        isError: true,
-      };
+      return toErrorResult(error, mcpErrorText(error.message));
     throw error;
   }
 }

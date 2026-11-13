@@ -6,6 +6,7 @@ import type { FileChange } from "./animation-scope.js";
 import {
   assertCanEdit,
   publishVersion,
+  runFileLockGuard,
   saveDeferred,
   savesSettled,
   writeAtomic,
@@ -87,6 +88,11 @@ const applyWork = async (
   const { editDeps } = run.runtime;
 
   assertCanEdit(editDeps, project, direction);
+  await runFileLockGuard(
+    project.id,
+    direction.id,
+    work.changes.map((change) => change.relative)
+  );
   await savesSettled(project.id);
   await applyChanges(workTree, work.changes);
 

@@ -37,6 +37,7 @@ import {
   type DirectEditDeps,
   type EditFileChange,
 } from "../direct-edit/index.js";
+import { runFileLockGuard } from "../platform/path-lock/index.js";
 import { applyEdits, type CssEdit } from "./css-vars.js";
 import { toCommitValues } from "./schema.js";
 import {
@@ -295,6 +296,8 @@ export async function commitTweaks(
     ...plan.cssWrites.map((write) => write.relative),
     ...(tokensText === null ? [] : DESIGN_FILES),
   ];
+
+  await runFileLockGuard(project.id, direction.id, touched);
 
   const snapshots = await Promise.all(
     touched.map((relative) => readSnapshot(workTree, relative))

@@ -1,3 +1,5 @@
+import type { VersionMeta } from "@design-studio/contracts";
+
 import type { VersionStore } from "../../shared/server-ports.js";
 import { NotFoundError } from "../platform/errors/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
@@ -11,13 +13,37 @@ interface VersionListQuery {
   readonly projectId: string;
 }
 
+interface VersionAuthor {
+  readonly kind: "agent" | "mcp" | "person";
+  readonly name: string;
+}
+
 interface VersionListEntry {
+  readonly author: VersionAuthor;
   readonly changedFiles: readonly string[];
   readonly createdAt: string;
   readonly id: string;
   readonly kind: unknown;
   readonly name: unknown;
 }
+
+const AGENT_AUTHOR: VersionAuthor = { kind: "agent", name: "Studio agent" };
+
+const PERSON_AUTHOR: VersionAuthor = { kind: "person", name: "You" };
+
+const MCP_NAME = "MCP client";
+
+const toVersionAuthor = (meta: VersionMeta): VersionAuthor => {
+  if (meta.kind === "run" || meta.origin === "agent") {
+    return AGENT_AUTHOR;
+  }
+
+  if (meta.origin === "mcp") {
+    return { kind: "mcp", name: meta.client ?? MCP_NAME };
+  }
+
+  return PERSON_AUTHOR;
+};
 
 const readVersionList = async (
   projects: StudioProjectStore,
@@ -39,6 +65,7 @@ const readVersionList = async (
   const all = await versions.list(project, direction);
 
   return all.slice(0, VERSION_LIMIT).map((version) => ({
+    author: toVersionAuthor(version.meta),
     changedFiles: version.changedFiles.slice(0, FILE_LIMIT),
     createdAt: new Date(version.createdAt).toISOString(),
     id: version.id,
@@ -49,4 +76,4 @@ const readVersionList = async (
 
 export { readVersionList };
 
-export type { VersionListEntry, VersionListQuery };
+export type { VersionAuthor, VersionListEntry, VersionListQuery };

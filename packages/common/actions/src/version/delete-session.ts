@@ -3,6 +3,7 @@ import { Schema } from "effect";
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
+import { Forbidden } from "../_core/errors/forbidden.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import {
   DirectionIdSchema,
@@ -23,7 +24,7 @@ const deleteSessionVersion = defineAction({
   confirm: "user",
   description:
     "Discard the open edit session of a direction and put the files back to baseVersionId, from the studio edit bar. The user must click Allow in Design Studio first.",
-  errors: [BadRequest, Conflict, NotFound],
+  errors: [Forbidden, BadRequest, Conflict, NotFound],
   http: {
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/edit-session/discard",

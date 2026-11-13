@@ -16,6 +16,8 @@ export { BadRequestError, ConflictError } from "../platform/errors/index.js";
 
 export { attemptKnown } from "../platform/attempt/index.js";
 
+export { runFileLockGuard } from "../platform/path-lock/index.js";
+
 export {
   makeRuntimeSlot,
   requireBound,

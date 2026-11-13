@@ -1,5 +1,6 @@
 import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
 import { Conflict } from "@design-studio/actions/_core/errors/conflict";
+import { Forbidden } from "@design-studio/actions/_core/errors/forbidden";
 import { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import type { Direction, Project, Version } from "@design-studio/contracts";
 import { Effect } from "effect";
@@ -8,6 +9,7 @@ import type { VersionStore } from "../../shared/server-ports.js";
 import type { EditHistory, DirectEditDeps } from "../events/index.js";
 import { DirectEditError } from "../events/index.js";
 import { attemptKnown } from "../platform/attempt/index.js";
+import { ForbiddenError } from "../platform/errors/index.js";
 import {
   makeRuntimeSlot,
   requireBound,
@@ -52,7 +54,7 @@ interface VersionWriteRuntime {
   ) => Promise<Value>;
 }
 
-type VersionWriteError = BadRequest | Conflict | NotFound;
+type VersionWriteError = BadRequest | Conflict | Forbidden | NotFound;
 
 const STATUS_NOT_FOUND = 404;
 
@@ -106,6 +108,10 @@ const fromDirectEdit = (error: DirectEditError): VersionWriteError => {
 };
 
 const toWriteFailure = (cause: unknown): VersionWriteError | null => {
+  if (cause instanceof ForbiddenError) {
+    return new Forbidden({ message: cause.message, perm: "studio.write" });
+  }
+
   if (cause instanceof DirectEditError) {
     return fromDirectEdit(cause);
   }

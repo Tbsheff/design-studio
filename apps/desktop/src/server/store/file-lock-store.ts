@@ -2,7 +2,7 @@ import { Context, Effect, Layer } from "effect";
 
 import { attemptKnown } from "../platform/attempt/index.js";
 import type { KnownFailure } from "../platform/attempt/index.js";
-import { getFileLocks } from "./file-lock-file.js";
+import { getFileLocks } from "../platform/path-lock/index.js";
 import { toFileLockTarget } from "./file-lock-target.js";
 import type { LocalOrgScope } from "./local-org-scope.js";
 import { ProjectStore } from "./project-store.js";

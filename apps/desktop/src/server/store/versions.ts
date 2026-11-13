@@ -73,6 +73,7 @@ import {
   listStageable,
   updateIndexPaths,
 } from "./version-index-paths.js";
+import { toOriginMeta } from "./version-origin.js";
 import { seedFromUserRepo } from "./version-seed.js";
 import {
   deleteStaleFiles,
@@ -248,18 +249,6 @@ function parseCommitMessage(message: string): {
   }
 }
 
-function originMeta(
-  meta: StoredVersionMeta | null
-): Pick<VersionMeta, "origin" | "client"> {
-  if (meta?.origin !== "mcp") {
-    return {};
-  }
-
-  return typeof meta.client === "string"
-    ? { origin: "mcp", client: meta.client }
-    : { origin: "mcp" };
-}
-
 function toVersion(
   sha: string,
   parents: string,
@@ -272,7 +261,7 @@ function toVersion(
 
   const publicMeta: VersionMeta = {
     kind: meta?.kind ?? "manual",
-    ...originMeta(meta),
+    ...toOriginMeta(meta),
   };
 
   if (meta?.runId !== undefined) {

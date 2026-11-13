@@ -6,6 +6,7 @@ import type { DirectEditRequest } from "@design-studio/contracts";
 import type { EditScope, ResolvedSource } from "../../events/index.js";
 import { writeAtomic as platformWriteAtomic } from "../../platform/atomic-write/index.js";
 import { isNodeError } from "../../platform/errors/index.js";
+import { runWriteTargetGuard } from "../../platform/path-lock/index.js";
 import { DirectEditError } from "../engine/errors.js";
 import type { PatchResult } from "../engine/errors.js";
 import { patchHtml } from "../engine/html.js";
@@ -151,6 +152,7 @@ export async function writeAtomic(
   file: string,
   content: string
 ): Promise<void> {
+  await runWriteTargetGuard(file);
   await platformWriteAtomic(file, content, {
     cleanup: "rename",
     hiddenTemp: true,
@@ -162,6 +164,7 @@ export async function writeNewFile(
   file: string,
   content: string
 ): Promise<void> {
+  await runWriteTargetGuard(file);
   await mkdir(path.dirname(file), { recursive: true });
   await writeFile(file, content, { flag: "wx" });
 }

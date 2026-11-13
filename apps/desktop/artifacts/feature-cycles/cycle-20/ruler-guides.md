@@ -14,6 +14,7 @@ Branch `feat/ruler-guides`, cut from `a08e64d00`.
 ## Checked
 
 - `call-action canvas.setGuides` with 2 guides: pass on http, mcp and agent, 0 diffs. Again with a second list: pass. `call-action canvas.inspect`: `guides` on 3 surfaces.
+- Resize in the app: a `y` guide at 960 under the 900 px Desktop frame; a drag of the bottom edge to about 940 saved height 960.
 - In the app: guide made from the top ruler was saved to `.studio/canvas.json`; Tablet dragged near it landed at `y = -393` (the guide); guide dragged to the ruler was removed; Cmd+Z restored it; frame writes keep the guides.
 - Screenshots: `cycle-20/ruler-guides/guides-snapped-dark.jpg`, `guides-snapped-light.jpg` (y = 0 and x = 1560 guides, 3 frames snapped to y = 0).
 - `pnpm run typecheck`: pass. `pnpm run lint:gate`: pass. `pnpm run build:ui`: pass. `check:scripts` fails on `check-actions --ops` with the same 10 warnings as main.
@@ -35,4 +36,5 @@ Branch `feat/ruler-guides`, cut from `a08e64d00`.
 
 - Layers inside the preview do not snap to guides (frames only).
 - A guide drag does not snap to frame edges.
+- The mock agent `canvas_list` text path (`canvasList` in `tools.ts`, used by `agent/mock-canvas.ts`) has no `guides`; `tools.ts` is at its line cap. The action path (`canvas.inspect` on HTTP, MCP and agent) has them.
 - A guide on a frame label covers the label hit area along its 7 px strip, so drag the frame by another part of the label.

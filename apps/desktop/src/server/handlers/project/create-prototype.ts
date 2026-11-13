@@ -5,12 +5,15 @@ import type { createPrototypeProject } from "@design-studio/actions/project/crea
 import { PAGE_IMPORT_WIDTH_DEFAULT } from "@design-studio/contracts/page-import";
 import { Effect } from "effect";
 
-import { DevServerRunner, DevServerStore } from "../../app/index.js";
+import { DevServerStore } from "../../app/index.js";
 import { CanvasWriter } from "../../canvas/index.js";
 import {
   isRouteMatch,
   ProjectOpsWriter,
+  RouteSourceWriter,
   setPrototypeTokensLink,
+  toAppRouteUrl,
+  toReadyAppUpstream,
 } from "../../project-ops/index.js";
 import { RunLogWriter } from "../../run-log/index.js";
 import { PageWriter } from "../../share/index.js";
@@ -39,8 +42,6 @@ interface RouteCopy {
   readonly width: number;
 }
 
-const READY_TRIES = 120;
-const READY_PAUSE = "1 second";
 const ENTRY_NAME = "index";
 const ENTRY_FRAME = "f1";
 const MAIN_DIRECTION = "main";
@@ -78,9 +79,6 @@ const toMainDirectionId = (
   directions[0]?.id ??
   MAIN_DIRECTION;
 
-const toRouteUrl = (upstream: string, routePath: string): string =>
-  new URL(routePath, new URL(upstream).origin).href;
-
 const isKnownRoute = Effect.fn("project.createPrototype.isKnownRoute")(
   function* run(projectId: string, routePath: string) {
     const projects = yield* ProjectStore;
@@ -96,39 +94,6 @@ const isKnownRoute = Effect.fn("project.createPrototype.isKnownRoute")(
     const { routes } = yield* servers.routes(projectId);
 
     return routes.some((route) => isRouteMatch(route.route, routePath));
-  }
-);
-
-const toReadyUpstream = Effect.fn("project.createPrototype.toReadyUpstream")(
-  function* run(projectId: string) {
-    const servers = yield* DevServerStore;
-    const runner = yield* DevServerRunner;
-    const first = yield* servers.status(projectId);
-
-    if (first?.state !== "ready") {
-      yield* runner.control(projectId, "start");
-    }
-
-    for (let tries = 0; tries < READY_TRIES; tries += 1) {
-      const status = yield* servers.status(projectId);
-
-      if (status?.state === "ready" && status.upstream !== null) {
-        return status.upstream;
-      }
-
-      if (status?.state === "failed") {
-        return yield* new BadRequest({
-          message: `The app dev server did not start: ${status.message ?? "no message"}. Fix it in the app panel, then try again.`,
-        });
-      }
-
-      yield* Effect.sleep(READY_PAUSE);
-    }
-
-    return yield* new BadRequest({
-      message:
-        "The app dev server did not get ready in 2 minutes. Start it in the app panel, then try again.",
-    });
   }
 );
 
@@ -216,6 +181,30 @@ const toRouteRunBody = (
   return { ...body, level: input.level };
 };
 
+const recordRouteSource = Effect.fn(
+  "project.createPrototype.recordRouteSource"
+)(function* run(
+  target: { readonly directionId: string; readonly projectId: string },
+  input: CreatePrototypeProjectInput,
+  routePath: string,
+  copy: RouteCopy
+) {
+  const sources = yield* RouteSourceWriter;
+  const { viewport } = input;
+
+  yield* sources
+    .record({
+      appProjectId: input.projectId,
+      directionId: target.directionId,
+      frameId: copy.frameId,
+      page: copy.page,
+      projectId: target.projectId,
+      routePath,
+      viewport,
+    })
+    .pipe(Effect.orElseSucceed(() => null));
+});
+
 const createRoutePrototype = Effect.fn("project.createPrototype.route")(
   function* run(input: CreatePrototypeProjectInput, rawRoute: string) {
     const routePath = toRoutePath(rawRoute);
@@ -227,7 +216,7 @@ const createRoutePrototype = Effect.fn("project.createPrototype.route")(
       });
     }
 
-    const upstream = yield* toReadyUpstream(input.projectId);
+    const upstream = yield* toReadyAppUpstream(input.projectId);
     const writer = yield* ProjectOpsWriter;
 
     const created = yield* writer.createPrototype({
@@ -241,9 +230,10 @@ const createRoutePrototype = Effect.fn("project.createPrototype.route")(
       projectId: created.project.id,
     };
 
-    const url = toRouteUrl(upstream, routePath);
+    const url = toAppRouteUrl(upstream, routePath);
     const copy = yield* importRouteCopy(target, url, input.viewport);
     yield* applyRouteTokens(target, created.folder, copy.page);
+    yield* recordRouteSource(target, input, routePath, copy);
 
     if (!input.shouldStartRun) {
       return created;

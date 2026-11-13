@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 
+import { hasErrorCard } from "./chat-parts-model.js";
 import { ReplyCopy } from "./reply-copy.js";
 import type { RunFeedback, Thumb } from "./run-feedback-model.js";
 import { RunFootActions } from "./run-foot-actions.js";
@@ -28,21 +29,25 @@ const RunFootRow = ({
   onDetails,
 }: RunFootRowProps): ReactElement => {
   const done = run.status === "completed";
+  const hasCard = hasErrorCard(run);
+  const isFailed = hasCard && run.status === "failed";
   const { summary } = run;
 
   return (
     <div className="run-foot" data-status={run.status}>
+      {!done && !isFailed && <RunStatusBadge status={run.status} />}
+      {summary && <RunFootMeta summary={summary} />}
+      {!hasCard && (
+        <RunFootActions
+          hasChanges={hasChanges}
+          onReview={onReview}
+          onDetails={onDetails}
+        />
+      )}
       {done && <RunThumbs thumb={thumb} onChange={onThumb} />}
-      {!done && <RunStatusBadge status={run.status} />}
-      {run.status !== "running" && readReply() && (
+      {run.status !== "running" && !isFailed && readReply() && (
         <ReplyCopy getText={readReply} />
       )}
-      {summary && <RunFootMeta summary={summary} />}
-      <RunFootActions
-        hasChanges={hasChanges}
-        onReview={onReview}
-        onDetails={onDetails}
-      />
     </div>
   );
 };

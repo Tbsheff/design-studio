@@ -22,11 +22,11 @@ const UserMessageRow = ({
 
   return (
     <div className="msg-user-stack">
-      <div className="msg-user-row">
+      <UserMessageCard run={run} skills={skills} text={text} />
+      <div className="msg-user-actions">
         {tools}
         <MessageCopy text={run.request?.prompt ?? ""} />
         <RememberRuleButton rule={rule} />
-        <UserMessageCard run={run} skills={skills} text={text} />
       </div>
       <RememberRuleNote rule={rule} />
     </div>

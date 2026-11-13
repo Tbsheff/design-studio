@@ -42,7 +42,7 @@
 .chat-scroll-btn {
   position: absolute;
   z-index: 10;
-  bottom: var(--s-3);
+  bottom: 0;
   gap: var(--s-1);
   padding-inline: var(--s-2) var(--s-3);
   left: 50%;
@@ -57,6 +57,14 @@
 .chat-earlier {
   align-self: center;
   color: var(--text-3);
+}
+
+.chat-conversation:has(.chat-scroll-btn:not([data-at-bottom="true"])) .chat {
+  mask-image: linear-gradient(
+    to bottom,
+    #000 calc(100% - 72px),
+    transparent calc(100% - 28px)
+  );
 }
 
 .chat-scroll-btn[data-at-bottom="true"] {
@@ -176,28 +184,41 @@
   scale: 1;
 }
 
-.msg-user-row {
+.msg-user-actions {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: flex-end;
-  gap: var(--s-1);
-  width: 100%;
-}
-
-.msg-copy-slot {
-  display: contents;
-}
-
-.msg-copy-slot .copy-btn {
+  gap: 0;
+  height: 24px;
+  margin-right: calc(var(--s-1) * -1);
   opacity: 0;
-  transition-property: opacity, color, background-color;
+  transition-property: opacity;
   transition-duration: var(--dur-fast);
 }
 
-.msg.user:hover .msg-copy-slot .copy-btn,
-.msg-copy-slot .copy-btn:focus-visible,
-.msg-copy-slot .copy-btn[data-state="copied"] {
+.msg.user:hover .msg-user-actions,
+.msg.user:focus-within .msg-user-actions,
+.msg-user-actions:has([data-state="copied"]) {
   opacity: 1;
+}
+
+.msg-copy-slot,
+.msg-actions,
+.msg-remember-slot {
+  display: contents;
+}
+
+.msg-user-actions .copy-btn,
+.msg-user-actions .msg-action {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--r-control-sm);
+  color: var(--text-3);
+}
+
+.msg-user-actions .copy-btn:hover,
+.msg-user-actions .msg-action:not([aria-disabled="true"]):hover {
+  color: var(--text);
 }
 
 .reply-copy-slot {
@@ -217,7 +238,7 @@
 }
 
 @media (hover: none) {
-  .msg-copy-slot .copy-btn,
+  .msg-user-actions,
   .reply-copy-slot .copy-btn {
     opacity: 1;
   }
@@ -594,20 +615,6 @@
   padding-top: calc(36px + var(--s-4));
 }
 
-.msg-actions {
-  display: inline-flex;
-  align-items: center;
-  opacity: 0;
-  transition-property: opacity;
-  transition-duration: var(--dur-fast);
-}
-
-.msg.user:hover .msg-actions,
-.msg.user:focus-within .msg-actions,
-.msg.user:focus-within .msg-copy-slot .copy-btn {
-  opacity: 1;
-}
-
 .msg-action {
   color: var(--text-3);
 }
@@ -736,7 +743,6 @@
 }
 
 @media (hover: none) {
-  .msg-actions,
   .chat-search-toggle {
     opacity: 1;
   }
@@ -764,7 +770,7 @@
 .msg-card {
   display: grid;
   justify-items: start;
-  gap: 6px;
+  gap: var(--s-1);
   min-width: 0;
   max-width: 85%;
   padding: var(--s-2) var(--s-3);
@@ -778,13 +784,6 @@
   font-family: var(--font);
   font-size: var(--t-sm);
   line-height: var(--lh-body);
-}
-
-.msg-user-row .msg-copy-slot .copy-btn,
-.msg-user-row .msg-action {
-  width: 28px;
-  height: 28px;
-  margin: -2px 0;
 }
 
 .msg-chips {
@@ -801,6 +800,14 @@
   height: 20px;
   padding: 0 6px;
   font-size: var(--t-2xs);
+}
+
+.msg-chips .ui-chip.level-tag {
+  height: 16px;
+  padding: 0;
+  background: transparent;
+  color: var(--text-3);
+  font-weight: var(--w-regular);
 }
 
 .msg-chips .ui-chip.skill-chip {
@@ -1036,9 +1043,11 @@
 }
 
 .run-change .ui-file-chip {
-  height: 28px;
+  min-width: 0;
+  height: 24px;
+  padding: 0 var(--s-2);
   border-radius: var(--r-control-sm);
-  font-size: var(--t-xs);
+  font-size: var(--t-2xs);
   font-weight: var(--w-medium);
 }
 
@@ -1062,60 +1071,63 @@
 
 .run-foot {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 2px;
+  gap: 0;
   min-height: 24px;
-  margin-left: -4px;
   color: var(--text-3);
   font-size: var(--t-2xs);
 }
 
 .run-foot .icon-btn.small {
-  width: 28px;
-  height: 28px;
-  margin: -2px 0;
+  width: 24px;
+  height: 24px;
   border-radius: var(--r-control-sm);
 }
 
-.chat .run-error {
-  border-radius: var(--r-md);
+.run-foot-actions {
+  display: flex;
+  align-items: center;
 }
 
-.chat .run-error-head {
-  height: auto;
-  min-height: 0;
-  align-items: flex-start;
-  gap: var(--s-2);
+.chat .run-error {
+  display: grid;
+  border-radius: var(--r-md);
+  grid-template-columns: 16px minmax(0, 1fr);
+  column-gap: var(--s-2);
+  row-gap: var(--s-1);
   padding: var(--s-2) var(--s-3);
 }
 
-.chat .run-error-head [data-slot="exception-message"] {
+.run-error-icon {
+  display: flex;
+  grid-row: 1;
+  align-self: start;
+  margin-top: 2px;
+  color: var(--danger);
+}
+
+.chat .run-error > :not(.run-error-icon) {
+  grid-column: 2;
+}
+
+.chat .run-error-text {
   line-height: var(--lh-sm);
-}
-
-.chat .run-error-head .run-retry {
-  margin: -4px 0;
-}
-
-.chat .run-error[data-long] .run-error-head {
-  flex-wrap: wrap;
-}
-
-.chat .run-error[data-long] [data-slot="exception-message"] {
-  flex: 1 1 calc(100% - 64px);
-  min-width: 0;
-}
-
-.chat .run-error[data-long] .run-retry {
-  margin: 0 0 0 auto;
 }
 
 .chat .run-error-hint {
   margin: 0;
-  padding: 0 var(--s-3) var(--s-2);
   color: var(--text-2);
-  font-size: var(--t-xs, 12px);
+  font-size: var(--t-xs);
   line-height: var(--lh-sm);
+}
+
+.run-error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-1);
+  margin-top: var(--s-1);
 }
 
 .chat [data-slot="code-block"] {
@@ -1151,7 +1163,7 @@
 
 .run-foot .status {
   flex: none;
-  margin: 0 var(--s-1);
+  margin: 0 var(--s-2) 0 0;
   font-size: var(--t-2xs);
   white-space: nowrap;
 }
@@ -1179,15 +1191,15 @@
 }
 
 .run-foot-meta {
-  margin-left: var(--s-1);
+  margin-right: var(--s-1);
   white-space: nowrap;
 }
 
 .btn.run-foot-details {
-  height: 28px;
+  height: 24px;
   border-radius: var(--r-control-sm);
-  margin: -2px 0 -2px auto;
-  padding: 0 var(--s-2);
+  margin: 0;
+  padding: 0 var(--s-1);
   color: var(--text-3);
   font-size: var(--t-2xs);
 }
@@ -1282,28 +1294,6 @@
   justify-items: end;
   gap: var(--s-1);
   width: 100%;
-}
-
-.msg-remember-slot {
-  display: contents;
-}
-
-.msg-remember-slot .msg-action {
-  opacity: 0;
-  transition-property: opacity, color, background-color;
-  transition-duration: var(--dur-fast);
-}
-
-.msg.user:hover .msg-remember-slot .msg-action,
-.msg.user:focus-within .msg-remember-slot .msg-action,
-.msg-remember-slot .msg-action:focus-visible {
-  opacity: 1;
-}
-
-@media (hover: none) {
-  .msg-remember-slot .msg-action {
-    opacity: 1;
-  }
 }
 
 .remember-rule-note {

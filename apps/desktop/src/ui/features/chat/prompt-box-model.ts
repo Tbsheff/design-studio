@@ -83,8 +83,8 @@ const INPUT_COPY: Record<ComposerMode, { label: string; placeholder: string }> =
       placeholder: "Ask for a critique…",
     },
     edit: {
-      label: "Describe what you want to create",
-      placeholder: "Describe what you want to create…",
+      label: "Describe what to design",
+      placeholder: "Describe what to design…",
     },
     plan: {
       label: "Describe what to plan",

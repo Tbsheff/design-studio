@@ -232,6 +232,7 @@ const copy = {
   turnOffAllow: "Turn off Allow edits. The MCP server keeps running.",
   undo: "Undo",
   undoItsChanges: "Undo its changes",
+  undoItsChangesTip: "Go back to the version before this run",
   undone: "Undone",
   unfinishedChangesIn: "Unfinished changes in ",
   uploading: "Uploading",

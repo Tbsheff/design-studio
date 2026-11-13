@@ -85,18 +85,18 @@ const splitAnswers = (prompt: string): SplitAnswers => {
   return { answers, text: prompt.slice(0, at) };
 };
 
-const DEFAULT_ERROR_HINT =
-  "Retry, or change your message and send it again. Details has the full log.";
-
-const errorHint = (error: string): string => {
+const errorHint = (error: string): string | null => {
   const hit = ERROR_HINTS.find(([pattern]) => pattern.test(error));
 
   if (hit) {
     return hit[1];
   }
 
-  return DEFAULT_ERROR_HINT;
+  return null;
 };
+
+const hasErrorCard = (run: RunView): boolean =>
+  Boolean(run.summary?.error) && run.status !== "budget_exceeded";
 
 const toModeClass = (request: RunRequest): string => {
   if (request.plan) {
@@ -127,6 +127,7 @@ export {
   CONTEXT_WARN,
   ERROR_HINTS,
   errorHint,
+  hasErrorCard,
   runLevel,
   splitAnswers,
   toModeClass,

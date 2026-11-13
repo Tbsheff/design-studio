@@ -69,13 +69,13 @@ const toSummary = (state: DraftSourcesState): string => {
   return "All read";
 };
 
-const toStartedNote = (end: RunStatus | null): string => {
+const toStartedNote = (end: RunStatus | null): string | null => {
   if (end === null || end === "running") {
     return "The AI step started. Follow its steps in the chat below.";
   }
 
   if (end === "completed") {
-    return "AI step done. Its steps are in the chat below.";
+    return null;
   }
 
   if (end === "canceled") {

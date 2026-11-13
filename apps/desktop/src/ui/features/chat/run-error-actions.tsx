@@ -26,10 +26,12 @@ const undoRun = (undo: RunUndoAction, button: HTMLButtonElement): void => {
 const RunErrorActions = ({
   retry,
   undo,
+  onDetails,
 }: {
   retry: (() => void) | null;
   undo: RunUndoAction | null;
-}): ReactElement | null => {
+  onDetails: () => void;
+}): ReactElement => {
   const onUndoClick = useCallback(
     (event: MouseEvent<HTMLButtonElement>): void => {
       if (undo) {
@@ -39,30 +41,29 @@ const RunErrorActions = ({
     [undo]
   );
 
-  if (!retry && !undo) {
-    return null;
-  }
-
   return (
-    <span className="run-retry flex items-center gap-1">
+    <div className="run-error-actions">
+      {retry && (
+        <button type="button" className="btn small" onClick={retry}>
+          {copy.retry2}
+        </button>
+      )}
+      <button type="button" className="btn small ghost" onClick={onDetails}>
+        {copy.details}
+      </button>
       {undo && (
         <button
           type="button"
           className="btn small ghost"
           aria-disabled={undo.tip !== null}
-          data-tip={undo.tip ?? "Go back to the version before this run"}
+          data-tip={undo.tip ?? copy.undoItsChangesTip}
           data-tip-side="top"
           onClick={onUndoClick}
         >
           {copy.undoItsChanges}
         </button>
       )}
-      {retry && (
-        <button type="button" className="btn small" onClick={retry}>
-          {copy.retry2}
-        </button>
-      )}
-    </span>
+    </div>
   );
 };
 

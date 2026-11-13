@@ -1,22 +1,19 @@
+import { Icon } from "@design-studio/ui";
 import { useEffect, useRef } from "react";
 import type { ReactElement } from "react";
 
-import { ExceptionHeader } from "../../ai/components/ai/exception-header.js";
 import { ExceptionMessage } from "../../ai/components/ai/exception-message.js";
-import { ExceptionType } from "../../ai/components/ai/exception-type.js";
 import { Exception } from "../../ai/components/ai/exception.js";
-import { errorHint } from "./chat-parts-model.js";
+import { errorHint, hasErrorCard } from "./chat-parts-model.js";
 import type { RunUndoAction } from "./chat-parts-model.js";
-import { copy } from "./copy.js";
 import { RunErrorActions } from "./run-error-actions.js";
 import type { RunView } from "./run-state-model.js";
 import { toStyled } from "./styled.js";
 
-const LONG_ERROR_CHARS = 60;
+const ERROR_ICON_SIZE = 16;
 
 const ErrorRoot = toStyled(Exception, "run-error");
-const ErrorHead = toStyled(ExceptionHeader, "run-error-head");
-const ErrorText = toStyled(ExceptionMessage, "wrap-anywhere");
+const ErrorText = toStyled(ExceptionMessage, "run-error-text wrap-anywhere");
 
 const toRetry = (
   latest: boolean,
@@ -34,14 +31,16 @@ const RunError = ({
   run,
   latest,
   onRetry,
+  onDetails,
   undo,
 }: {
   run: RunView;
   latest: boolean;
   onRetry: (() => void) | null;
+  onDetails: () => void;
   undo: RunUndoAction | null;
 }): ReactElement | null => {
-  const error = run.summary?.error;
+  const error = run.summary?.error ?? "";
   const ref = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (error && latest) {
@@ -49,24 +48,26 @@ const RunError = ({
     }
   }, [error, latest]);
 
-  if (!error || run.status === "budget_exceeded") {
+  if (!hasErrorCard(run)) {
     return null;
   }
 
+  const hint = errorHint(error);
+
   return (
-    <ErrorRoot
-      ref={ref}
-      role="alert"
-      data-long={error.length > LONG_ERROR_CHARS || undo !== null || null}
-    >
-      <ErrorHead>
-        <ExceptionType>{copy.error}</ExceptionType>
-        <ErrorText>{error}</ErrorText>
-        <RunErrorActions retry={toRetry(latest, run, onRetry)} undo={undo} />
-      </ErrorHead>
-      {run.status !== "canceled" && (
-        <p className="run-error-hint">{errorHint(error)}</p>
+    <ErrorRoot ref={ref} role="alert">
+      <span className="run-error-icon">
+        <Icon name="alert" size={ERROR_ICON_SIZE} />
+      </span>
+      <ErrorText>{error}</ErrorText>
+      {hint !== null && run.status !== "canceled" && (
+        <p className="run-error-hint">{hint}</p>
       )}
+      <RunErrorActions
+        retry={toRetry(latest, run, onRetry)}
+        undo={undo}
+        onDetails={onDetails}
+      />
     </ErrorRoot>
   );
 };

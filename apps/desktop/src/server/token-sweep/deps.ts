@@ -1,6 +1,8 @@
 export {
   assertCanEdit,
   publishVersion,
+  runDirectionRead,
+  runDirectionWrite,
   saveDeferred,
   savesSettled,
   writeAndCommitAll,
@@ -11,13 +13,17 @@ export {
   parseTokenFile,
   DESIGN_MD_FILE,
   getTokenUse,
+  isAppPrototype,
   listTokenSourceFiles,
   loadAppTokens,
+  PROTOTYPE_TOKENS_FILE,
   readDesignSystemFiles,
   toDeletedText,
   toEntryUsageTokens,
   toRenamePlan,
+  toPrototypeTokenCss,
   toRenamedText,
+  toTokenDiff,
   upsertTokenBlock,
 } from "../design-system/index.js";
 
@@ -34,13 +40,18 @@ export {
   requireBound,
 } from "../platform/runtime-slot/index.js";
 
-export type { DirectEditDeps } from "../direct-edit/index.js";
+export type {
+  DirectEditDeps,
+  DirectionRun,
+  WrittenFile,
+} from "../direct-edit/index.js";
 
 export type {
   CompiledTokenEntry,
   Direction,
   Project,
+  Version,
   VersionMeta,
 } from "@design-studio/contracts";
 
-export type { KnownFailure } from "../platform/attempt/index.js";
+export type { KnownFailure, Refine } from "../platform/attempt/index.js";

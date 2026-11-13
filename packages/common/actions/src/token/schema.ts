@@ -229,7 +229,18 @@ const TokenDeletedSchema = Schema.Struct({
   versionId: Schema.String,
 });
 
+const TokenImportedSchema = Schema.Struct({
+  added: Schema.Int,
+  changed: Schema.Int,
+  file: Schema.String,
+  removed: Schema.Int,
+  sourceFile: Schema.String,
+  tokens: Schema.Int,
+  versionId: Schema.NullOr(Schema.String),
+});
+
 export {
+  TokenImportedSchema,
   TokenClassListFields,
   TokenDeleteFields,
   TokenDeletedSchema,

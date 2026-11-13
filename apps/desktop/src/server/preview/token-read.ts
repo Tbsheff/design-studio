@@ -3,6 +3,8 @@ import path from "node:path";
 
 import { findTokenFile } from "../design-system/app-tokens/detect.js";
 import {
+  isAppPrototype,
+  PROTOTYPE_TOKENS_FILE,
   readAppTokensAt,
   usesAppTokens,
 } from "../design-system/app-tokens/source.js";
@@ -61,7 +63,11 @@ const readAppTokenView = async (
     return null;
   }
 
-  const file = await findTokenFile(src.direction.workTree);
+  let file: string | null = PROTOTYPE_TOKENS_FILE;
+
+  if (!isAppPrototype(src.project)) {
+    file = await findTokenFile(src.direction.workTree);
+  }
 
   if (!file) {
     return null;

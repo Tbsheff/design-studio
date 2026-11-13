@@ -43,4 +43,6 @@ export {
 
 export { routes as fileLockRoutes } from "@design-studio/actions/file-lock/routes";
 
+export { routes as layerStyleRoutes } from "@design-studio/actions/layer-style/routes";
+
 export { useAction } from "../../platform/query.js";

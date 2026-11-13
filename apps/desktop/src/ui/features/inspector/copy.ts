@@ -204,6 +204,18 @@ const copy = {
   saveVersionKeepsThemAs:
     ". Save version keeps them as one version. Discard removes them.",
   saving: "Saving…",
+  scale: "Scale",
+  scaleField:
+    "Scale the layer with its type, spacing and radius, in percent (K)",
+  scaleKeepTokens: "Keep tokens",
+  scaleKeepTokensTip: "Keep the values that come from tokens",
+  scaleLayer: " layer",
+  scaleLayers: " layers",
+  scaleNothing: "Nothing to scale.",
+  scaleRange: "Type a percent from 25 to 400.",
+  scaleTokensChanged: " token values now have fixed values.",
+  scaleTokensKept: " values use tokens and stay.",
+  scaled: "Scaled ",
   searchFreeStockPhotosAnd: "Search free stock photos and place one here",
   select: "select",
   selectAllWith: "Select all with ",

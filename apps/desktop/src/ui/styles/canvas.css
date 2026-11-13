@@ -1482,20 +1482,21 @@ dialog.canvas-menu {
   right: 0;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--s-3);
-  height: 28px;
-  padding: 0 var(--s-4);
+  height: 48px;
+  padding: 0 var(--s-6);
   color: var(--float-fg);
   background: var(--float-bg);
   border-bottom: var(--stroke) solid var(--float-line);
-  font-size: var(--t-sm);
+  font-size: var(--t-xl);
   white-space: nowrap;
 }
 
 .draft-frame-bar .spinner {
-  width: 12px;
-  height: 12px;
-  border-width: 1.5px;
+  width: 18px;
+  height: 18px;
+  border-width: 2px;
 }
 
 .draft-frame-text {

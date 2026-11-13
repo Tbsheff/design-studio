@@ -24,6 +24,8 @@ interface ChangeList {
 type ChangeRect = SelectionContext["rect"];
 
 interface ChangeRing {
+  readonly isStale: boolean;
+  readonly isUndone: boolean;
   readonly item: ChangeItem;
   readonly rect: ChangeRect | null;
   readonly selector: string | null;
@@ -76,14 +78,26 @@ const toRings = (
   items: readonly ChangeItem[],
   contexts: readonly (SelectionContext | null)[]
 ): ChangeRing[] =>
-  items.map((item, index) => {
+  items.map((entry, index) => {
     const found = contexts[index] ?? null;
 
     if (!found) {
-      return { item, rect: null, selector: null };
+      return {
+        isStale: false,
+        isUndone: false,
+        item: entry,
+        rect: null,
+        selector: null,
+      };
     }
 
-    return { item, rect: found.rect, selector: found.selector };
+    return {
+      isStale: false,
+      isUndone: false,
+      item: entry,
+      rect: found.rect,
+      selector: found.selector,
+    };
   });
 
 const toFoundCount = (rings: readonly ChangeRing[]): number =>
@@ -192,6 +206,48 @@ const toSpotWithout = (
   return { ...spot, rings: kept, step: null };
 };
 
+const isSameRing = (left: ChangeRing, right: ChangeRing): boolean =>
+  left.item.layerId === right.item.layerId &&
+  left.item.kind === right.item.kind;
+
+const toOpenStep = (
+  rings: readonly ChangeRing[],
+  after: number
+): number | null => {
+  for (let offset = 1; offset <= rings.length; offset += 1) {
+    const at = (after + offset) % rings.length;
+
+    if (rings[at]?.isUndone === false) {
+      return at;
+    }
+  }
+
+  return null;
+};
+
+const toSpotUndone = (spot: ChangeSpot, ring: ChangeRing): ChangeSpot => {
+  const rings = spot.rings.map((entry) => {
+    if (!isSameRing(entry, ring)) {
+      return entry;
+    }
+
+    return { ...entry, isUndone: true };
+  });
+
+  return { ...spot, rings, step: toOpenStep(rings, spot.step ?? -1) };
+};
+
+const toSpotStale = (spot: ChangeSpot, ring: ChangeRing): ChangeSpot => ({
+  ...spot,
+  rings: spot.rings.map((entry) => {
+    if (!isSameRing(entry, ring)) {
+      return entry;
+    }
+
+    return { ...entry, isStale: true };
+  }),
+});
+
 export {
   DESCRIBE_TIMEOUT_MS,
   DESCRIBE_TRIES,
@@ -205,7 +261,9 @@ export {
   toRingAt,
   toRings,
   toSpot,
+  toSpotStale,
   toSpotTarget,
+  toSpotUndone,
   toSpotWithout,
   toStepRing,
 };

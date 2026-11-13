@@ -110,3 +110,10 @@
   color: var(--danger);
   text-overflow: ellipsis;
 }
+
+.change-ring[data-undone="true"] {
+  border-style: solid;
+  border-color: var(--text-faint);
+  background: transparent;
+  animation: none;
+}

@@ -63,15 +63,29 @@ const toTakenRoutes = (routes: readonly PortCardRoute[]): string[] => {
 };
 
 const toCardLine = (route: PortCardRoute): string =>
-  `${route.path} to ${route.route}: writes ${route.routeFile ?? "a new route file"}`;
+  [
+    route.path,
+    " as ",
+    route.route,
+    " in ",
+    route.routeFile ?? "a new route file",
+  ].join("");
+
+const toPageCount = (count: number): string => {
+  if (count === 1) {
+    return "1 prototype page";
+  }
+
+  return `${count} prototype pages`;
+};
 
 const toPortCard = (
   appName: string,
   routes: readonly PortCardRoute[]
 ): ApprovalCard => ({
   action: "Start a port run",
-  detail: `The studio agent starts one run in ${appName} and writes these files:\n${routes.map((route) => toCardLine(route)).join("\n")}\nUndo takes the run back.`,
-  title: `Move ${routes.length} prototype page(s) into ${appName}`,
+  detail: `The studio agent starts one run in ${appName}. It writes ${routes.map((route) => toCardLine(route)).join("; ")}. Undo takes the run back.`,
+  title: `Move ${toPageCount(routes.length)} into ${appName}`,
 });
 
 const handle = Effect.fn("port.start")(function* run(input: StartPortInput) {

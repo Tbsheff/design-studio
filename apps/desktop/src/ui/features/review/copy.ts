@@ -65,6 +65,7 @@ const copy = {
   spellingFailed: "The spelling check failed",
   spellingFixTip: "Replace this word everywhere as one version you can undo",
   spellingSelectTip: "Select the first layer with this word",
+  spellingSummary: "spelling",
   spellingTitle: "Spelling",
   tablet: "Tablet",
   theAgentFollowsEvery:

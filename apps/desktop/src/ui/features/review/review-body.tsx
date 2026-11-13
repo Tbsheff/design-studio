@@ -11,6 +11,7 @@ interface ReviewBodyProps {
   readonly isLive: boolean;
   readonly actions: ReviewActions;
   readonly speed: ReactNode;
+  readonly spellingCount: number;
   readonly children: ReactNode;
 }
 
@@ -20,6 +21,7 @@ const ReviewBody = ({
   isLive,
   review,
   speed,
+  spellingCount,
 }: ReviewBodyProps): ReactElement => {
   const { result } = review;
 
@@ -33,7 +35,7 @@ const ReviewBody = ({
           {copy.checkingTheFrame}
         </div>
       )}
-      {result && result.findings.length === 0 && (
+      {result && result.findings.length === 0 && spellingCount === 0 && (
         <div className="review-wait">{copy.thisFramePassesEvery}</div>
       )}
       {result &&

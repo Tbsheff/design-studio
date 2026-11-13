@@ -22,7 +22,7 @@ const createDesignRule = defineAction({
   },
   confirm: "none",
   description:
-    "Remember a chat correction as one design rule. A short model turns your text into one checkable rule and one plain line, then adds it to the rules the Review rules editor shows. The rules file in the studio data dir holds the rule. DESIGN.md in the repo stays as it is. Fails when the text names nothing to always or never do.",
+    "Remember a chat correction as one design rule. A short model turns your text into one checkable rule and one plain line, then adds it to the rules the Review rules editor shows. In a prototype project the rule goes into the design rules block of DESIGN.md. In an imported app folder it goes into the rules file in the studio data dir, and the repo stays as it is. Fails when the text names nothing to always or never do.",
   errors: [BadRequest, Conflict, NotFound],
   http: {
     method: "POST",

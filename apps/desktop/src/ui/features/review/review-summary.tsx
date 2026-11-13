@@ -6,11 +6,15 @@ import type { ReviewState } from "./use-review.js";
 
 interface ReviewSummaryProps {
   readonly review: ReviewState;
+  readonly spellingCount: number;
 }
 
 const SEVERITIES = ["high", "medium", "low"] as const;
 
-const ReviewSummary = ({ review }: ReviewSummaryProps): ReactElement | null => {
+const ReviewSummary = ({
+  review,
+  spellingCount,
+}: ReviewSummaryProps): ReactElement | null => {
   const { result } = review;
 
   if (!result) {
@@ -24,6 +28,10 @@ const ReviewSummary = ({ review }: ReviewSummaryProps): ReactElement | null => {
 
     return [];
   });
+
+  if (spellingCount > 0) {
+    parts.push(`${spellingCount} ${copy.spellingSummary}`);
+  }
 
   return (
     <div className="review-summary">

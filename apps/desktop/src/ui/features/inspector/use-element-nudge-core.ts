@@ -47,12 +47,14 @@ interface NudgeCore {
 
 const shown = new Set<string>();
 
-const runHintOnce = (core: NudgeCore, text: string): void => {
-  if (shown.has(text)) {
+const runHintOnce = (core: NudgeCore, text: string, key: string): void => {
+  const seen = `${key}\n${text}`;
+
+  if (shown.has(seen)) {
     return;
   }
 
-  shown.add(text);
+  shown.add(seen);
   core.live.current.onError(text);
 };
 
@@ -156,7 +158,7 @@ const toMovers = (core: NudgeCore, wanted: NudgeItem[]): Mover[] | null => {
   const reason = toMoverHint(picked, toMultiBlockReason);
 
   if (reason) {
-    runHintOnce(core, reason);
+    runHintOnce(core, reason, toBurstKey(wanted.map((item) => item.selector)));
 
     return null;
   }
@@ -178,7 +180,7 @@ const toBurst = (
   const items = all.filter((item) => item.base.mode !== "none");
 
   if (items.length < all.length) {
-    runHintOnce(core, toFlowHint(items.length));
+    runHintOnce(core, toFlowHint(items.length), key);
   }
 
   if (items.length === 0) {
@@ -206,7 +208,7 @@ const runNudgePress = (
   }
 
   if (!current.items.some((item) => isMovable(item.base, delta.dx, delta.dy))) {
-    runHintOnce(core, FLOW_HINT);
+    runHintOnce(core, FLOW_HINT, key);
 
     return;
   }

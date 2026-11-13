@@ -1,5 +1,9 @@
 import { useCallback, useMemo, useRef } from "react";
-import type { PointerEvent as ReactPointerEvent, ReactElement } from "react";
+import type {
+  MouseEvent as ReactMouseEvent,
+  PointerEvent as ReactPointerEvent,
+  ReactElement,
+} from "react";
 
 import { pageFileOf } from "../chat/use-first-build.js";
 import { FrameResizeHandles } from "./frame-resize-handles.js";
@@ -41,6 +45,10 @@ const PassiveFrame = (props: PassiveProps): ReactElement => {
       routeHitPointerDown(label, frame, event),
     [frame, label]
   );
+
+  const onHitContextMenu = useCallback((event: ReactMouseEvent): void => {
+    event.preventDefault();
+  }, []);
 
   const onResizeStart = useCallback(
     (event: ReactPointerEvent, edge: ResizeEdge): void =>
@@ -84,6 +92,7 @@ const PassiveFrame = (props: PassiveProps): ReactElement => {
         className="frame-hit"
         aria-hidden="true"
         onPointerDown={onHitPointerDown}
+        onContextMenu={onHitContextMenu}
       />
       <PassiveFrameLabel label={label} />
       <FrameResizeHandles onPointerDown={onResizeStart} />

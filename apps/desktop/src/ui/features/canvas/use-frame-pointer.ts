@@ -44,6 +44,45 @@ const isDoubleTitle = (
   last.id === frame.id &&
   now - last.at <= TITLE_DOUBLE_MS;
 
+const MENU_BUTTON = 2;
+
+const toBodyPoint = (
+  event: ReactPointerEvent,
+  isBody: boolean,
+  zoom: number
+): Point | null => {
+  if (!isBody || !(event.currentTarget instanceof HTMLElement)) {
+    return null;
+  }
+
+  return toPointer(event.currentTarget, event.clientX, event.clientY, zoom);
+};
+
+const hasOpenedMenu = (
+  event: ReactPointerEvent,
+  frame: CanvasFrame,
+  isBody: boolean,
+  input: Pick<FramePointerInput, "clickThrough" | "frames" | "pz">
+): boolean => {
+  if (
+    !isBody ||
+    event.button !== MENU_BUTTON ||
+    !(event.currentTarget instanceof HTMLElement)
+  ) {
+    return false;
+  }
+
+  event.preventDefault();
+  event.stopPropagation();
+  input.frames.activate(frame);
+  input.clickThrough?.(
+    toPointer(event.currentTarget, event.clientX, event.clientY, input.pz.zoom),
+    true
+  );
+
+  return true;
+};
+
 const useFramePointer = ({
   artboardRef,
   clickThrough,
@@ -58,22 +97,18 @@ const useFramePointer = ({
     frame: CanvasFrame,
     isBody: boolean
   ): void => {
-    if (event.button !== 0 || pz.spaceHeld || pz.zoomHeld) {
+    if (
+      hasOpenedMenu(event, frame, isBody, { clickThrough, frames, pz }) ||
+      event.button !== 0 ||
+      pz.spaceHeld ||
+      pz.zoomHeld
+    ) {
       return;
     }
 
     event.preventDefault();
     event.stopPropagation();
-    let point: Point | null = null;
-
-    if (isBody && event.currentTarget instanceof HTMLElement) {
-      point = toPointer(
-        event.currentTarget,
-        event.clientX,
-        event.clientY,
-        pz.zoom
-      );
-    }
+    const point = toBodyPoint(event, isBody, pz.zoom);
 
     startFrameDrag(
       {
@@ -89,7 +124,7 @@ const useFramePointer = ({
           frames.activate(tapped);
 
           if (tapPoint) {
-            clickThrough?.(tapPoint);
+            clickThrough?.(tapPoint, false);
           }
         },
         passive: passiveRefs.current,

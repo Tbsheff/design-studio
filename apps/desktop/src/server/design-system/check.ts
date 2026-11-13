@@ -17,7 +17,11 @@ import {
 import { parse as parseColor } from "culori";
 
 import { isNodeError } from "../platform/errors/index.js";
-import { compileTokens, parseTokenFile } from "./compile.js";
+import {
+  compileTokens,
+  GROUP_DEFAULT_TYPES,
+  parseTokenFile,
+} from "./compile.js";
 import { splitDesignMd } from "./design-md.js";
 import { DESIGN_MD_SECTIONS, TODO_MARK } from "./extract/compose.js";
 import { parseCss } from "./extract/css.js";
@@ -175,6 +179,27 @@ function checkColorFormat(
   }
 }
 
+function toCoreTokenProblems(
+  byPath: ReadonlyMap<string, CompiledTokenEntry>,
+  group: string,
+  name: string
+): string[] {
+  const entry = byPath.get(`${group}.${name}`);
+  if (!entry) return [`missing required token ${group}.${name}`];
+  const expected = GROUP_DEFAULT_TYPES[group];
+  if (entry.type === expected) return [];
+  return [
+    `${group}.${name}: required token must have $type ${expected}, not ${entry.type}`,
+  ];
+}
+
+export function toCoreTokenErrors(entries: CompiledTokenEntry[]): string[] {
+  const byPath = new Map(entries.map((entry) => [entry.path, entry]));
+  return Object.entries(REQUIRED_TOKENS).flatMap(([group, names]) =>
+    names.flatMap((name) => toCoreTokenProblems(byPath, group, name))
+  );
+}
+
 function compileFile(
   text: string | null,
   mode: Mode,
@@ -190,7 +215,10 @@ function compileFile(
     return null;
   }
   const compiled = compileTokens(parsed.file, { mode });
-  for (const error of compiled.errors)
+  for (const error of [
+    ...compiled.errors,
+    ...toCoreTokenErrors(compiled.entries),
+  ])
     problems.add("tokens", `${TOKENS_FILE}: ${error}`);
   return { file: parsed.file, entries: compiled.entries };
 }

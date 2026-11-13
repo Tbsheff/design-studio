@@ -2,15 +2,18 @@ import type { SelectionContext } from "@design-studio/contracts";
 import { useEffect, useEffectEvent, useRef } from "react";
 import type { MutableRefObject } from "react";
 
+import type { PreviewPort } from "../../platform/bridge.js";
 import { heldTool } from "../../platform/canvas-tool.js";
 import type { HeldTool } from "../../platform/canvas-tool.js";
 import { useLive } from "../../platform/live-store.js";
+import { BODY_SELECTOR, toPlaceStep } from "./place-tool-model.js";
 import type { DirectEditControl } from "./use-direct-edit.js";
 import { useInsertTool } from "./use-insert-tool.js";
 
 interface PlaceOptions {
   readonly control: MutableRefObject<DirectEditControl | null>;
   readonly directionId: string | null;
+  readonly port: MutableRefObject<PreviewPort | null>;
   readonly projectId: string;
   readonly selection: SelectionContext[];
 }
@@ -32,8 +35,24 @@ const usePlaceTool = (options: PlaceOptions): void => {
   });
 
   const place = useEffectEvent((kind: "frame" | "text"): void => {
-    handleInsert(kind);
+    const step = toPlaceStep(kind, lastPicked?.tag ?? "");
+    const port = options.port.current;
+
+    if (step === "retarget") {
+      port?.post({ selector: BODY_SELECTOR, type: "select-selector" });
+
+      return;
+    }
+
     heldTool.set(null);
+
+    if (step === "edit" && lastPicked !== null) {
+      port?.post({ selector: lastPicked.selector, type: "text-edit-start" });
+
+      return;
+    }
+
+    handleInsert(kind);
   });
 
   useEffect(() => {

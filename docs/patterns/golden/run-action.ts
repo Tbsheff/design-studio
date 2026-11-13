@@ -36,7 +36,7 @@ type ErasedCard = (
   input: Decoded
 ) => Effect.Effect<ApprovalCard, StudioError, AnyAccess>;
 
-const STRICT = { onExcessProperty: "error" } as const;
+const STRICT = { errors: "all", onExcessProperty: "error" } as const;
 
 const provenByRuntimeCheck = (
   program: Effect.Effect<object, StudioError, RunNeeds>

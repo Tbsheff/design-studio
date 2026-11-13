@@ -7,6 +7,9 @@ export {
 } from "../direct-edit/index.js";
 
 export {
+  compileTokens,
+  parseTokenFile,
+  DESIGN_MD_FILE,
   getTokenUse,
   listTokenSourceFiles,
   loadAppTokens,
@@ -15,6 +18,7 @@ export {
   toEntryUsageTokens,
   toRenamePlan,
   toRenamedText,
+  upsertTokenBlock,
 } from "../design-system/index.js";
 
 export {

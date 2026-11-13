@@ -45,7 +45,7 @@ type ErasedCard = (
   input: Decoded
 ) => Effect.Effect<ApprovalCard | null, StudioError, AnyAccess>;
 
-const STRICT = { onExcessProperty: "error" } as const;
+const STRICT = { errors: "all", onExcessProperty: "error" } as const;
 
 const MAIN_DIRECTION = "main";
 

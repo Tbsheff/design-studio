@@ -18,7 +18,7 @@ const renameToken = defineAction({
   },
   confirm: "none",
   description:
-    "Rename one design token. Changes the CSS custom property definition (the @theme entry or the Tailwind theme key) and every use that list_usage_token finds: var(--name) and the Tailwind classes of the token. All files change in one version. Fails with Conflict when the new name is taken.",
+    "Rename one design token and every use that list_usage_token finds: var(--name) and the Tailwind classes of the token. In a studio design system it moves the token in tokens.json and rebuilds tokens.css and DESIGN.md; a name outside the color group keeps its group prefix (--space-). In an imported app folder it changes the CSS custom property definition (the @theme entry or the Tailwind theme key). All files change in one version. Fails with Conflict when the new name is taken.",
   errors: [BadRequest, Conflict, NotFound],
   http: {
     method: "POST",

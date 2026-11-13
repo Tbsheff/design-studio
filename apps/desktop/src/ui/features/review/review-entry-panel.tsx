@@ -21,6 +21,7 @@ const ReviewEntryPanel = (props: Props): ReactElement => (
       onAsk={props.onAsk}
       onClose={props.onClose}
       speed={props.speed}
+      spellingCount={props.spellingCount}
     >
       {props.children}
     </ReviewPanel>

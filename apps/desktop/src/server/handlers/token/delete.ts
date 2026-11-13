@@ -72,9 +72,15 @@ const preview = Effect.fn("token.delete.preview")(function* card(
     });
   }
 
+  if (use.useCount > 0) {
+    return yield* new Conflict({
+      message: `${input.name} has ${toUseText(use.useCount)}. Change them before you delete the token.`,
+    });
+  }
+
   return {
     action: "Delete a design token",
-    detail: `Removes the definition ${input.name}: ${use.value}. The token has ${toUseText(use.useCount)}. A token with uses is not deleted.`,
+    detail: `Removes the definition ${input.name}: ${use.value} from the token files. Undo brings it back.`,
     title: `Delete the token ${input.name}`,
   };
 }) satisfies Preview<typeof deleteToken>;

@@ -2,24 +2,21 @@ import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { SpellingRow } from "./spelling-row.js";
-import { useSpelling } from "./use-spelling.js";
+import type { Spelling } from "./use-spelling.js";
 
 interface SpellingGroupProps {
   readonly directionId: string | null;
-  readonly frameId: string;
   readonly isLive: boolean;
   readonly onSelect: (selector: string) => void;
-  readonly projectId: string;
+  readonly spelling: Spelling;
 }
 
 const SpellingGroup = ({
   directionId,
-  frameId,
   isLive,
   onSelect,
-  projectId,
+  spelling,
 }: SpellingGroupProps): ReactElement | null => {
-  const spelling = useSpelling({ directionId, frameId, isLive, projectId });
   const { items } = spelling;
 
   if (directionId === null || !isLive) {

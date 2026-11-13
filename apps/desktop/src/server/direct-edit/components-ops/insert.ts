@@ -309,7 +309,7 @@ export async function resolveTarget(
 
     if (!use) {
       throw refuse(
-        "This element has no source location and no component use site the studio can find; pass targetSource"
+        "This element has no source location and no component use site the studio can find. Pass target.source as { file, line, col } from get_layers"
       );
     }
 

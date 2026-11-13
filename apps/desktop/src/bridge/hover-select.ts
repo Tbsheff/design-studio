@@ -43,6 +43,7 @@ type SelectionHandlers = Pick<
   | "element-at"
   | "find-styles"
   | "hover-node"
+  | "menu-at"
   | "select-at"
   | "select-matching"
   | "select-node"
@@ -220,10 +221,26 @@ const createRetryHandlers = (
   };
 };
 
+const createMenuHandlers = (
+  context: BridgeContext
+): Pick<SelectionHandlers, "menu-at"> => ({
+  "menu-at": (message) => {
+    const element = dropElement(message.x, message.y);
+
+    if (context.state.mode !== "select" || !element) {
+      return;
+    }
+
+    context.postSelect(element, false);
+    context.post({ type: "context-menu", x: message.x, y: message.y });
+  },
+});
+
 const createSelectionHandlers = (
   context: BridgeContext
 ): SelectionHandlers => ({
   ...createLookupHandlers(context),
+  ...createMenuHandlers(context),
   ...createRetryHandlers(context),
 });
 

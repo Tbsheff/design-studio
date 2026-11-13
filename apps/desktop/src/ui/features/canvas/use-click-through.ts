@@ -16,9 +16,10 @@ interface Pending {
   x: number;
   y: number;
   at: number;
+  isMenu: boolean;
 }
 
-type ClickThrough = (point: { x: number; y: number }) => void;
+type ClickThrough = (point: { x: number; y: number }, isMenu: boolean) => void;
 
 const useClickThrough = (port: Port, enabled: boolean): ClickThrough => {
   const pending = useRef<Pending | null>(null);
@@ -38,6 +39,16 @@ const useClickThrough = (port: Port, enabled: boolean): ClickThrough => {
 
     if (Date.now() - pointValue.at > GIVE_UP_MS) {
       pending.current = null;
+
+      return;
+    }
+
+    if (pointValue.isMenu) {
+      live.current.port.post({
+        type: "menu-at",
+        x: pointValue.x,
+        y: pointValue.y,
+      });
 
       return;
     }
@@ -84,7 +95,7 @@ const useClickThrough = (port: Port, enabled: boolean): ClickThrough => {
   );
 
   return useCallback(
-    (point) => {
+    (point, isMenu) => {
       if (!live.current.enabled) {
         return;
       }
@@ -94,7 +105,7 @@ const useClickThrough = (port: Port, enabled: boolean): ClickThrough => {
       }
 
       timers.current = [];
-      pending.current = { at: Date.now(), x: point.x, y: point.y };
+      pending.current = { at: Date.now(), isMenu, x: point.x, y: point.y };
       later(NO_RELOAD_MS);
     },
     [later]

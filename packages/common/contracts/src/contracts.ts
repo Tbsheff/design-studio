@@ -1863,6 +1863,7 @@ export type ParentToBridge =
       y: number;
     }
   | { ns: "studio"; token: string; type: "select-at"; x: number; y: number }
+  | { ns: "studio"; token: string; type: "menu-at"; x: number; y: number }
   | {
       ns: "studio";
       token: string;

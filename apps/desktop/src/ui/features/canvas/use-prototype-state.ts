@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 
+import type { LinkedDragEnd } from "./linked-frame-model.js";
 import { linksApi, useImplicitLinks, useLinks } from "./links-api.js";
 import { playStartOf, toLinkSource } from "./prototype-model.js";
 import type { PrototypeOptions } from "./prototype-options-model.js";
@@ -95,7 +96,8 @@ const usePrototypeView = (isOn: boolean): PrototypeView => {
 };
 
 const usePrototypeDrag = (
-  options: PrototypeOptions
+  options: PrototypeOptions,
+  onEmptyDrop: (end: LinkedDragEnd) => void
 ): ReturnType<typeof useLinkDrag> =>
   useLinkDrag((selection, frameId) => {
     void runOrReport(
@@ -106,7 +108,7 @@ const usePrototypeDrag = (
       }),
       (problem) => options.notify(problem.message)
     );
-  });
+  }, onEmptyDrop);
 
 export { usePrototypeDrag, usePrototypeFile, usePrototypeView };
 

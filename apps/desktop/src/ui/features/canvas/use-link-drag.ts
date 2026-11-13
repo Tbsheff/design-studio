@@ -2,10 +2,14 @@ import type { SelectionContext } from "@design-studio/contracts";
 import { useLayoutEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 
+import { isEmptyStageAt, toHostBox } from "./linked-frame-model.js";
+import type { LinkedDragEnd } from "./linked-frame-model.js";
 import { frameUnder } from "./prototype-model.js";
 import type { LinkDrag } from "./prototype-model.js";
 
 type DropHandler = (selection: SelectionContext, frameId: string) => void;
+
+type EmptyDropHandler = (end: LinkedDragEnd) => void;
 
 type BeginDrag = (
   event: ReactPointerEvent<HTMLElement>,
@@ -18,11 +22,16 @@ interface LinkDragControl {
   readonly drag: LinkDrag | null;
 }
 
-const useLinkDrag = (onDrop: DropHandler): LinkDragControl => {
+const useLinkDrag = (
+  onDrop: DropHandler,
+  onEmptyDrop: EmptyDropHandler
+): LinkDragControl => {
   const [drag, setDrag] = useState<LinkDrag | null>(null);
   const dropRef = useRef(onDrop);
+  const emptyDropRef = useRef(onEmptyDrop);
   useLayoutEffect(() => {
     dropRef.current = onDrop;
+    emptyDropRef.current = onEmptyDrop;
   });
 
   const begin: BeginDrag = (event, selection, activeId) => {
@@ -54,6 +63,16 @@ const useLinkDrag = (onDrop: DropHandler): LinkDragControl => {
 
       if (target) {
         dropRef.current(selection, target);
+
+        return;
+      }
+
+      if (isEmptyStageAt(upEvent.clientX, upEvent.clientY)) {
+        emptyDropRef.current({
+          at: { x: upEvent.clientX, y: upEvent.clientY },
+          host: toHostBox(handle),
+          selection,
+        });
       }
     };
 

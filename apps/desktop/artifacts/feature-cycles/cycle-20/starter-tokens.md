@@ -20,7 +20,9 @@ The spec puts the studio name first. Imported packs always have the studio alias
 - Bonaparte `git status --short`: same before and after.
 - No new actions, so `call-action.ts` does not apply.
 - `pnpm run typecheck`, `pnpm run lint:gate` and `pnpm run build:ui` pass.
-- Screenshots: `cycle-20/starter-tokens/{bonaparte,modern-minimal}-{light,dark}.png`. Bonaparte dark mode uses the `.dark` class, so the dark shot adds that class to the frame. The app's frame theme toggle does the same.
+- Screenshots: `cycle-20/starter-tokens/{bonaparte,modern-minimal}-{light,dark}.png`. Bonaparte dark mode uses the `.dark` class, so the dark shot adds that class to the frame. The bridge theme control does the same in Play mode.
+- MCP `get_screenshot` for both starters: `{bonaparte,modern-minimal}-mcp-light.png`. The tool has no dark option.
+- Brief-only import: during the scan it says "Reading sources…". After the scan, DESIGN.md says "Draft made from: brief" and lists the fonts.
 
 ## Left out
 

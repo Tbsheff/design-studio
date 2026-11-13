@@ -1,10 +1,10 @@
 {
   "counts": {
     "clipped": 0,
-    "overlap": 2,
+    "overlap": 0,
     "sideways-scroll": 0,
-    "text-overflow": 4,
-    "unreachable": 2
+    "text-overflow": 0,
+    "unreachable": 0
   },
-  "total": 8
+  "total": 0
 }

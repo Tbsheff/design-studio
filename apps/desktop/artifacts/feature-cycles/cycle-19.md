@@ -225,3 +225,11 @@ All 5 can run at once. Merge 3 (safe-matches, inspector and page only), then 4 (
 10. Export a frame to Figma as editable layers (Claude Design still lacks it); needs a Figma plugin.
 
 Sources: [mcp.directory 2026 comparison](https://mcp.directory/blog/claude-design-vs-stitch-vs-v0-vs-lovable-vs-figma-make-2026), [konigi.com Claude Design](https://konigi.com/articles/claude-design-has-the-incumbents-scrambling/), [monkfrom.earth Claude Design vs Figma, Lovable, v0](https://monkfrom.earth/blogs/claude-design-vs-figma-lovable-v0), [refontelearning.com design-to-code tools](https://www.refontelearning.com/blog/ai-design-to-code-tools-figma-make-v0-lovable), [vibecoding.app Claude Design review](https://vibecoding.app/blog/claude-design-review).
+
+## Results
+
+- Merged in order: safe-matches, scale-handles, state-check, layout-versions, quiet-canvas. Main at 53966638a.
+- Conflict: state-check vs scale-handles in `ui/features/canvas/copy.ts` (two copy blocks and the export line). Kept both, then gen-routes.
+- Checks: gen-routes --check pass, typecheck 0 errors, lint:gate pass (59646, baseline 89733), build:ui pass, desktop:pack pass.
+- Installed app: :4570 returns 200. Server idle CPU 0.00 CPU-s/min over 60 s.
+- Open: at about 11% zoom the × on a hovered frame label covers the next frame's name, and one test click removed a frame by mistake. No layout version on project close. State check has no "Same as default" note on each frame. Scale handles overlap on layers under 40 px. MCP snapshots for inspect_state_frames_canvas, inspect_matches_page, update_matches_page and list_versions not refreshed (user decision).

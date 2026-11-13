@@ -125,6 +125,12 @@ const routes = {
     method: "GET",
     path: "/api/projects/:projectId/links",
   },
+  moveFramesCanvas: {
+    id: "canvas.moveFrames",
+    invalidates: ["canvas.getDoc", "canvas.inspect"],
+    method: "POST",
+    path: "/api/projects/:projectId/canvas/frames/tidy",
+  },
   setDocCanvas: {
     id: "canvas.setDoc",
     invalidates: ["canvas.getDoc"],

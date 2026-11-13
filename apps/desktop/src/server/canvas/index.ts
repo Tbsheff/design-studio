@@ -24,6 +24,8 @@ export { PageMatchStore, PageMatchWriter } from "./page-match/index.js";
 
 export { FrameImportWriter, toImportPrompt } from "./frame-import/index.js";
 
+export { FrameTidyWriter } from "./frame-tidy/index.js";
+
 export { applyFrameState } from "./app-flow/index.js";
 
 export { bindLinkRuntime } from "./links/link-runtime.js";

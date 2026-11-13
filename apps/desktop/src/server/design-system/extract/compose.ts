@@ -77,6 +77,55 @@ export function sourceSummary(coverage: Coverage): string {
   return kinds.length > 0 ? kinds.join(", ") : "no sources";
 }
 
+const READING_SOURCES = "Reading sources…";
+
+const isReadingSources = (coverage: Coverage): boolean =>
+  coverage.sources.length === 0;
+
+export const toDraftDescription = (
+  name: string,
+  coverage: Coverage
+): string => {
+  if (isReadingSources(coverage)) {
+    return `${name}: ${READING_SOURCES}`;
+  }
+
+  return `${name}: draft design system from ${sourceSummary(coverage)}.`;
+};
+
+const toDraftLine = (coverage: Coverage): string => {
+  if (isReadingSources(coverage)) {
+    return `${READING_SOURCES} The fonts, coverage and grade show when the scan ends.`;
+  }
+
+  return `Draft made from: ${sourceSummary(coverage)}. Coverage ${coverage.score}/100 (${coverage.grade}). Lines that start with "${TODO_MARK}" still need work.`;
+};
+
+const toFontLines = (
+  input: Pick<ComposeInput, "coverage" | "fonts">,
+  note: (token: string) => string
+): string[] => {
+  if (isReadingSources(input.coverage)) {
+    return ["- Fonts: they show when the scan ends."];
+  }
+
+  return [
+    `- Display: ${input.fonts.display}${note("font.display")}`,
+    `- Body: ${input.fonts.body}${note("font.body")}`,
+    `- Mono: ${input.fonts.mono}${note("font.mono")}`,
+  ];
+};
+
+const toAgentFontText = (
+  input: Pick<ComposeInput, "coverage" | "fonts">
+): string => {
+  if (isReadingSources(input.coverage)) {
+    return "";
+  }
+
+  return ` Fonts: ${input.fonts.display} for headings, ${input.fonts.body} for text.`;
+};
+
 function toQuoteLines(text: string | null | undefined, max: number): string[] {
   const trimmed = text?.trim();
   if (!trimmed) {
@@ -111,7 +160,7 @@ export function composeDraftDesignMd(input: ComposeInput): string {
   return [
     `# ${name}`,
     "",
-    `Draft made from: ${sourceSummary(coverage)}. Coverage ${coverage.score}/100 (${coverage.grade}). Lines that start with "${TODO_MARK}" still need work.`,
+    toDraftLine(coverage),
     "",
     `## ${SECTION.theme}`,
     "",
@@ -127,9 +176,7 @@ export function composeDraftDesignMd(input: ComposeInput): string {
     "",
     `## ${SECTION.type}`,
     "",
-    `- Display: ${fonts.display}${note("font.display")}`,
-    `- Body: ${fonts.body}${note("font.body")}`,
-    `- Mono: ${fonts.mono}${note("font.mono")}`,
+    ...toFontLines({ coverage, fonts }, note),
     `- Scale: \`${REQUIRED_TOKENS.text.map((step) => `--text-${step}`).join("`, `")}\`.`,
     "",
     todo("give weights, line heights and letter spacing per role."),
@@ -165,7 +212,7 @@ export function composeDraftDesignMd(input: ComposeInput): string {
     "",
     `## ${SECTION.agent}`,
     "",
-    `- Build with \`var(--token)\` from \`design-system/tokens.css\`. Fonts: ${fonts.display} for headings, ${fonts.body} for text.`,
+    `- Build with \`var(--token)\` from \`design-system/tokens.css\`.${toAgentFontText({ coverage, fonts })}`,
     todo("add short example prompts."),
     "",
   ].join("\n");

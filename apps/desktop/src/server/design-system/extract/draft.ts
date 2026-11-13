@@ -11,7 +11,7 @@ import {
   toDocFiles,
   toHarvestedWithDocs,
 } from "./app-docs.js";
-import { composeDraftDesignMd, sourceSummary } from "./compose.js";
+import { composeDraftDesignMd, toDraftDescription } from "./compose.js";
 import { firstHeading, harvestDesignText } from "./design-md.js";
 import { toNameFromBrief, toNameFromUrl, toTitleCase } from "./draft-name.js";
 import {
@@ -570,11 +570,7 @@ export function assembleDraft(
     mode,
     name,
     pack: {
-      description:
-        `${name}: draft design system from ${sourceSummary(mapped.coverage)}.`.slice(
-          0,
-          400
-        ),
+      description: toDraftDescription(name, mapped.coverage).slice(0, 400),
       designMd,
       draft: true,
       fonts: mapped.fonts,

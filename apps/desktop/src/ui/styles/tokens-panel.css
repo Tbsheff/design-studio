@@ -33,6 +33,7 @@
 .tkp-source {
   display: flex;
   flex: none;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--s-1);
   min-width: 0;
@@ -40,6 +41,20 @@
   padding: var(--s-2) var(--tkp-x) 0;
   color: var(--text-3);
   font-size: var(--t-xs);
+}
+
+.tkp-source-line {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: var(--s-1);
+  min-width: 0;
+  margin: 0;
+}
+
+.tkp-source-note {
+  flex: none;
+  color: var(--text-2);
 }
 
 .tkp-search {

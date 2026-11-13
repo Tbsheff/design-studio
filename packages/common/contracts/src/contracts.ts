@@ -299,7 +299,8 @@ export type VersionKind =
   | "restore"
   | "keep"
   | "fork"
-  | "manual";
+  | "manual"
+  | "layout";
 
 export interface VersionMeta {
   kind: VersionKind;

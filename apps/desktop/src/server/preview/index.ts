@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { lstat, stat, symlink } from "node:fs/promises";
+import { lstat, symlink } from "node:fs/promises";
 import path from "node:path";
 
 import { TOKENS_FILE, projectPreviewOrigin } from "@design-studio/contracts";
@@ -21,14 +21,14 @@ import { createAppProxy, type AppTarget } from "../app/proxy.js";
 import { sourcesShifted } from "../app/source-map.js";
 import { designSystemLinkProblem } from "../design-system/html-link.js";
 import { buildErrorMessage, syncDesignSystem } from "../design-system/sync.js";
-import { noteTreeChange, onSourceChange } from "../events/index.js";
+import { noteTreeChange } from "../events/index.js";
 import type { EventBus } from "../events/index.js";
 import { loadBridgeScript } from "./bridge-bundle.js";
 import type { BrowserPool, RenderCheckOptions } from "./browser.js";
 import { startHtmlServer } from "./html-server.js";
 import type { HtmlServer, RootKind } from "./html-server.js";
+import { applyWatchedChange, startSourceWrites } from "./peek-writes.js";
 import { SourceStamps, type SourceStamp } from "./source-stamp.js";
-import { noteLayoutKeepingWrite, writesKeptLayout } from "./tag-layout.js";
 import { warmComponentUsage } from "./usage-scope.js";
 import type { ViteManager, ViteTarget } from "./vite-manager.js";
 import { WatcherManager } from "./watcher.js";
@@ -145,34 +145,6 @@ export function withDesignSystemWarning(
 }
 
 const APP_CACHE_MS = 1500;
-const STYLE_FILE = /\.(css|scss|sass|less)$/i;
-
-function onlyStyles(paths: string[]): boolean {
-  return paths.length > 0 && paths.every((file) => STYLE_FILE.test(file));
-}
-
-const WATCH_LAG_MS = 150;
-const MTIME_TRUST_MS = 2000;
-
-async function writtenAt(files: string[], fallback: number): Promise<number> {
-  const now = Date.now();
-
-  const times = await Promise.all(
-    files.map((file) =>
-      stat(file).then(
-        (info) => info.mtimeMs,
-        () => null
-      )
-    )
-  );
-
-  const trusted = times.every(
-    (time): time is number =>
-      time !== null && time >= now - MTIME_TRUST_MS && time <= now
-  );
-
-  return trusted && times.length > 0 ? Math.max(...times) : fallback;
-}
 
 export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
   const { config, bus, projects, versions } = deps;
@@ -184,21 +156,7 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     );
 
     noteTreeChange(change.root, files);
-    const seenAt = Date.now() - WATCH_LAG_MS;
-    void Promise.all([writtenAt(files, seenAt), writesKeptLayout(change)])
-      .then(([coldAt, kept]) =>
-        browsers
-          .loaded()
-          ?.then((pool) =>
-            pool.sourcesChanged(
-              seenAt,
-              coldAt,
-              !onlyStyles(change.paths),
-              !kept
-            )
-          )
-      )
-      .catch(() => undefined);
+    applyWatchedChange(() => browsers.loaded(), change, files);
     void recompileOnTokensChange(bus, change).catch((error: unknown) =>
       console.error("[preview] tokens recompile failed", error)
     );
@@ -264,25 +222,7 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     });
   });
 
-  onSourceChange((change) => {
-    const kept = noteLayoutKeepingWrite(
-      change.projectId,
-      change.directionId,
-      change.files
-    );
-
-    browsers
-      .loaded()
-      ?.then((pool) =>
-        pool.sourcesChanged(
-          undefined,
-          undefined,
-          !onlyStyles(change.files.map((file) => file.relative)),
-          !kept
-        )
-      )
-      .catch(() => undefined);
-  });
+  startSourceWrites(() => browsers.loaded(), config.previewPort);
 
   const viteUrl = async (target: ViteTarget): Promise<string> =>
     (await vite.get()).url(target);

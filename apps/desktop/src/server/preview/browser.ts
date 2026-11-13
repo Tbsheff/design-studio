@@ -367,7 +367,7 @@ export class BrowserPool {
   private backendPromise: Promise<RenderBackend> | null = null;
   private closed = false;
   private readonly pages = new WarmPages(() => this.backend());
-  private readonly peeks = new PeekPages(
+  readonly peeks = new PeekPages(
     async (url, viewport) => {
       const page = await this.pages.hold(viewport);
 

@@ -41,6 +41,7 @@ const copy = {
   dismiss: "Dismiss",
   done: "Done ",
   draftDot: " · ",
+  draftEditing: "Editing ",
   draftKb: " KB",
   draftPreview: "Partial page as the agent writes it",
   draftWriting: "Writing ",

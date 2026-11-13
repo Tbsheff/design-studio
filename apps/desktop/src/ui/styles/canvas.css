@@ -1475,6 +1475,20 @@ dialog.canvas-menu {
   visibility: visible;
 }
 
+.draft-layer {
+  transition: opacity 200ms ease-out;
+}
+
+.draft-layer[data-solo="true"] {
+  bottom: auto;
+  height: 48px;
+  background: none;
+}
+
+.draft-layer[data-landed="true"] {
+  opacity: 0;
+}
+
 .draft-frame-bar {
   position: absolute;
   top: 0;

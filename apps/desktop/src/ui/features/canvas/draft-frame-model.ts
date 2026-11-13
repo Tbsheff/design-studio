@@ -1,3 +1,8 @@
+import type { WireOutput } from "@design-studio/actions/_core/action";
+import type { getDraftRun } from "@design-studio/actions/run/get-draft";
+
+type RunDraftWire = WireOutput<typeof getDraftRun>;
+
 interface DraftWrite {
   readonly bytes: number;
   readonly html: string | null;
@@ -92,6 +97,58 @@ const toDraftWrite = (buffer: DraftBuffer, pagePath: string): DraftWrite => {
   };
 };
 
+interface LandInput {
+  readonly doneToken: string | null;
+  readonly frontToken: string;
+  readonly isRunDone: boolean;
+}
+
+const HEAD_OPEN = /\u003Chead\b[^>]*>/iu;
+
+const isLandedDraft = (input: LandInput): boolean =>
+  input.isRunDone ||
+  (input.doneToken !== null && input.doneToken !== input.frontToken);
+
+const toBasedHtml = (html: string, href: string | null): string => {
+  if (href === null) {
+    return html;
+  }
+
+  const tag = `${TAG_START}base href="${href.replaceAll('"', "&quot;")}">`;
+  const head = HEAD_OPEN.exec(html);
+
+  if (head === null) {
+    return `${tag}${html}`;
+  }
+
+  const at = head.index + head[0].length;
+
+  return `${html.slice(0, at)}${tag}${html.slice(at)}`;
+};
+
+const toEditLayerHtml = (
+  draft: RunDraftWire | null,
+  pagePath: string,
+  href: string | null
+): string | null => {
+  if (draft === null || draft.html === null || draft.path !== pagePath) {
+    return null;
+  }
+
+  return toBasedHtml(toClosedHtml(draft.html), href);
+};
+
+interface FrameSlot {
+  readonly src: string;
+  readonly token: string;
+}
+
+const toFrontSrc = (
+  slots: readonly FrameSlot[],
+  frontToken: string | null
+): string | null =>
+  slots.find((slot) => slot.token === frontToken)?.src ?? null;
+
 const toFileName = (path: string): string => path.split("/").at(-1) ?? path;
 
 const toKilobytes = (bytes: number): string =>
@@ -99,6 +156,10 @@ const toKilobytes = (bytes: number): string =>
 
 export {
   isHtmlPath,
+  isLandedDraft,
+  toBasedHtml,
+  toEditLayerHtml,
+  toFrontSrc,
   toClosedHtml,
   toDraftWrite,
   toFileName,
@@ -107,4 +168,11 @@ export {
   toPageFile,
 };
 
-export type { DraftBuffer, DraftDelta, DraftWrite };
+export type {
+  DraftBuffer,
+  DraftDelta,
+  DraftWrite,
+  FrameSlot,
+  LandInput,
+  RunDraftWire,
+};

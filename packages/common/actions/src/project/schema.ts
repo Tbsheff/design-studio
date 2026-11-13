@@ -1,3 +1,8 @@
+import {
+  PAGE_IMPORT_WIDTH_DEFAULT,
+  PAGE_IMPORT_WIDTH_MAX,
+  PAGE_IMPORT_WIDTH_MIN,
+} from "@design-studio/contracts/page-import";
 import { Effect, Schema } from "effect";
 
 import { ProjectIdSchema } from "../_core/ids.js";
@@ -165,10 +170,28 @@ const ProjectPrototypeFields = {
     description:
       "What the HTML prototype shows, in the user's words. The first run of the prototype gets this text.",
   }),
+  routePath: Schema.NullOr(Schema.String)
+    .annotate({
+      description:
+        'Route of the attached app to copy as the start page, for example "/caseload" from list_routes. Leave out to start from a blank page.',
+    })
+    .pipe(Schema.withDecodingDefaultKey(Effect.succeed(null))),
   shouldStartRun: Schema.Boolean.annotate({
     description:
       "Start the first agent run in the prototype with the prompt. Leave out to start it.",
   }).pipe(Schema.withDecodingDefaultKey(Effect.succeed(true))),
+  viewport: Schema.NullOr(
+    Schema.Int.check(
+      Schema.isBetween({
+        maximum: PAGE_IMPORT_WIDTH_MAX,
+        minimum: PAGE_IMPORT_WIDTH_MIN,
+      })
+    )
+  )
+    .annotate({
+      description: `Viewport width in px for the route copy (${PAGE_IMPORT_WIDTH_MIN} to ${PAGE_IMPORT_WIDTH_MAX}). Leave out for ${PAGE_IMPORT_WIDTH_DEFAULT}.`,
+    })
+    .pipe(Schema.withDecodingDefaultKey(Effect.succeed(null))),
 } as const;
 
 const ProjectPrototypeCreatedSchema = Schema.Struct({

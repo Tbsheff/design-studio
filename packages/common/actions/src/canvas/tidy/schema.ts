@@ -10,7 +10,19 @@ const TIDY_GAP_MAX = 2000;
 
 const TIDY_GAP_DEFAULT = 80;
 
-const TidyLayoutSchema = Schema.Literals(["tidy", "row", "grid"]);
+const TidyLayoutSchema = Schema.Literals([
+  "tidy",
+  "row",
+  "grid",
+  "left",
+  "center",
+  "right",
+  "top",
+  "middle",
+  "bottom",
+  "spread-x",
+  "spread-y",
+]);
 
 const TidyFields = {
   frames: Schema.NullOr(SectionFrameListSchema)
@@ -24,7 +36,7 @@ const TidyFields = {
     .pipe(Schema.withDecodingDefaultKey(Effect.succeed(TIDY_GAP_DEFAULT))),
   layout: TidyLayoutSchema.annotate({
     description:
-      "tidy keeps the rows it finds, row makes one line, grid makes a near-square grid. Default tidy.",
+      "tidy keeps the rows it finds, row makes one line, grid makes a near-square grid. left, center and right line up the frames on one x edge or center; top, middle and bottom on one y edge or center. spread-x and spread-y make the space between frames equal and keep the outer frames in place. Align needs 2 frames, spread needs 3. gap has no effect on align and spread. Default tidy.",
   }).pipe(Schema.withDecodingDefaultKey(Effect.succeed("tidy" as const))),
   section: Schema.NullOr(SectionIdSchema)
     .annotate({

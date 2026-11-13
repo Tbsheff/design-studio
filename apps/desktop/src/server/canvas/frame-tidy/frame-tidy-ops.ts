@@ -10,6 +10,12 @@ import type { FrameTarget } from "../frame-ops.js";
 import type { LinkRuntime } from "../links/link-runtime.js";
 import { findFrame } from "../tools.js";
 import {
+  isAlignLayout,
+  toAlignedFrames,
+  toAlignMinFrames,
+} from "./engine/to-aligned-frames.js";
+import type { AlignLayout } from "./engine/to-aligned-frames.js";
+import {
   isInsideArea,
   toFittedArea,
   toGroupOrigin,
@@ -25,12 +31,12 @@ import type {
 interface FrameTidyQuery extends FrameTarget {
   readonly frames: readonly string[] | null;
   readonly gap: number;
-  readonly layout: TidyLayout;
+  readonly layout: TidyLayout | AlignLayout;
   readonly section: string | null;
 }
 
 interface FramesTidied {
-  readonly layout: TidyLayout;
+  readonly layout: TidyLayout | AlignLayout;
   readonly movedFrames: readonly TidyPlace[];
   readonly note: string;
   readonly section: CanvasSection | null;
@@ -135,6 +141,28 @@ const toFittedSection = (
   return { ...section, ...area };
 };
 
+const toPlaces = (
+  picked: readonly CanvasFileFrame[],
+  query: FrameTidyQuery,
+  section: CanvasSection | null
+): TidyPlace[] => {
+  const { layout } = query;
+
+  if (!isAlignLayout(layout)) {
+    return toTidyFrames(picked, layout, query.gap, toOrigin(picked, section));
+  }
+
+  const least = toAlignMinFrames(layout);
+
+  if (picked.length < least) {
+    throw new BadRequestError(
+      `Layout ${layout} needs ${least} frames or more. Give more frames.`
+    );
+  }
+
+  return toAlignedFrames(picked, layout);
+};
+
 const toTidyPlan = (file: CanvasFile, query: FrameTidyQuery): TidyPlan => {
   const section = toSection(file, query);
   const picked = toPickedFrames(file, query, section);
@@ -143,12 +171,7 @@ const toTidyPlan = (file: CanvasFile, query: FrameTidyQuery): TidyPlan => {
     throw new BadRequestError("There are no visible frames to tidy here.");
   }
 
-  const placed = toTidyFrames(
-    picked,
-    query.layout,
-    query.gap,
-    toOrigin(picked, section)
-  );
+  const placed = toPlaces(picked, query, section);
 
   const byId = new Map(placed.map((place) => [place.id, place]));
 

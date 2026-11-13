@@ -147,15 +147,21 @@ export class PeekPages {
 
   private patchPage(warm: WarmPage, expression: string, at: number): void {
     warm.freshAt = Math.max(warm.freshAt, at);
-    warm.ready = warm.ready.then(async () => {
-      if (warm.lock) await warm.lock;
-      const isPatched = await warm.page
-        .evaluate<boolean>(expression)
-        .catch(() => false);
-      if (isPatched) return;
-      warm.freshAt = Math.min(warm.freshAt, at - 1);
-      void this.reload(warm).catch(() => undefined);
-    });
+    warm.ready = warm.ready.then(() => this.runPatch(warm, expression, at));
+  }
+
+  private async runPatch(
+    warm: WarmPage,
+    expression: string,
+    at: number
+  ): Promise<void> {
+    if (warm.lock) await warm.lock;
+    const isPatched = await warm.page
+      .evaluate<boolean>(expression)
+      .catch(() => false);
+    if (isPatched) return;
+    warm.freshAt = Math.min(warm.freshAt, at - 1);
+    void this.reload(warm).catch(() => undefined);
   }
 
   liveUrls(): string[] {

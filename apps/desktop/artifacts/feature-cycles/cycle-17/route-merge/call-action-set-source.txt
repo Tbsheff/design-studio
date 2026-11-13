@@ -16,7 +16,7 @@ call-action page.setSource on http://127.0.0.1:4382. The agent path runs in the 
   "routePath": "/settings"
 }
 
-[agent] ok, 5 ms, git spawns: not counted (server side)
+[agent] ok, 7 ms, git spawns: not counted (server side)
 {
   "fileCount": 2,
   "hasSnapshot": true,

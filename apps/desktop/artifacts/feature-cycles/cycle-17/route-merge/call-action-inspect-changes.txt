@@ -1,13 +1,13 @@
 call-action page.inspectSourceChanges on http://127.0.0.1:4382. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
 
-[http] ok, 12 ms, git spawns: not counted (server side)
+[http] ok, 8 ms, git spawns: not counted (server side)
 {
   "appProjectId": "l73BOkOo8o",
-  "copiedAt": 1794587968865,
+  "copiedAt": 1794588458779,
   "files": [
     {
       "change": "changed",
-      "diff": "@@ -1 +1 @@\n export default function SettingsPage() {\n-  return <main><h1>Settings</h1><p>Manage your account.</p><button>Save changes</button></main>;\n+  return <main><h1>Settings</h1><p>Manage your account.</p><button>Save settings</button></main>;\n }",
+      "diff": "@@ -1 +1 @@\n export default function SettingsPage() {\n-  return <main><h1>Settings</h1><p>Manage your account.</p><button>Save details</button></main>;\n+  return <main><h1>Settings</h1><p>Manage your account.</p><button>Save now</button></main>;\n }",
       "file": "app/settings/page.tsx",
       "isCut": false
     }
@@ -17,14 +17,14 @@ call-action page.inspectSourceChanges on http://127.0.0.1:4382. The agent path r
   "routePath": "/settings"
 }
 
-[mcp] ok, 16 ms, git spawns: not counted (server side)
+[mcp] ok, 12 ms, git spawns: not counted (server side)
 {
   "appProjectId": "l73BOkOo8o",
-  "copiedAt": 1794587968865,
+  "copiedAt": 1794588458779,
   "files": [
     {
       "change": "changed",
-      "diff": "@@ -1 +1 @@\n export default function SettingsPage() {\n-  return <main><h1>Settings</h1><p>Manage your account.</p><button>Save changes</button></main>;\n+  return <main><h1>Settings</h1><p>Manage your account.</p><button>Save settings</button></main>;\n }",
+      "diff": "@@ -1 +1 @@\n export default function SettingsPage() {\n-  return <main><h1>Settings</h1><p>Manage your account.</p><button>Save details</button></main>;\n+  return <main><h1>Settings</h1><p>Manage your account.</p><button>Save now</button></main>;\n }",
       "file": "app/settings/page.tsx",
       "isCut": false
     }
@@ -34,14 +34,14 @@ call-action page.inspectSourceChanges on http://127.0.0.1:4382. The agent path r
   "routePath": "/settings"
 }
 
-[agent] ok, 7 ms, git spawns: not counted (server side)
+[agent] ok, 5 ms, git spawns: not counted (server side)
 {
   "appProjectId": "l73BOkOo8o",
-  "copiedAt": 1794587968865,
+  "copiedAt": 1794588458779,
   "files": [
     {
       "change": "changed",
-      "diff": "@@ -1 +1 @@\n export default function SettingsPage() {\n-  return <main><h1>Settings</h1><p>Manage your account.</p><button>Save changes</button></main>;\n+  return <main><h1>Settings</h1><p>Manage your account.</p><button>Save settings</button></main>;\n }",
+      "diff": "@@ -1 +1 @@\n export default function SettingsPage() {\n-  return <main><h1>Settings</h1><p>Manage your account.</p><button>Save details</button></main>;\n+  return <main><h1>Settings</h1><p>Manage your account.</p><button>Save now</button></main>;\n }",
       "file": "app/settings/page.tsx",
       "isCut": false
     }

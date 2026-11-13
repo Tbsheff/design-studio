@@ -252,11 +252,13 @@ function toFramesLabel(before: CanvasFile, after: CanvasFile): string | null {
     after.frames
   );
 
-  const kinds = [
-    diff.added.length,
-    diff.removed.length,
-    diff.changed.length,
-  ].filter((count) => count > 0).length;
+  const edited = diff.changed.filter(
+    ({ from, to }) => !same({ ...from, order: 0 }, { ...to, order: 0 })
+  );
+
+  const kinds = [diff.added.length, diff.removed.length, edited.length].filter(
+    (count) => count > 0
+  ).length;
 
   if (kinds > 1) {
     return "Change canvas frames";

@@ -9,6 +9,7 @@ import type { PointerEvent as ReactPointerEvent, RefObject } from "react";
 
 import { api, errorText } from "../../api.js";
 import { createLiveStore, useLive } from "../../platform/live-store.js";
+import { scaleMode } from "../../platform/scale-mode.js";
 import {
   applyCommit,
   createCurrentEditRequest,
@@ -33,6 +34,7 @@ import type {
   ResizeReadout,
 } from "./resize-handles-model.js";
 import { beginResize, cancelDrag } from "./resize-handles-session.js";
+import { useScaleDrag } from "./use-scale-drag.js";
 
 const commitDrag = async (
   live: RefObject<Options>,
@@ -78,10 +80,15 @@ const useResizeLive = ({
   target,
   sizes,
   onHandleDown,
+  ghost: ghostStore,
+  onScaleDown,
 }: ResizeHandles): ResizeControl => {
   const size = useLive(sizes);
+  const ghost = useLive(ghostStore);
+  const isScaling = useLive(scaleMode) && target !== null;
+  const live = toResizeLive(size, target);
 
-  return { live: toResizeLive(size, target), onHandleDown, target };
+  return { ghost, isScaling, live, onHandleDown, onScaleDown, target };
 };
 
 const useResizeHandles = (options: Options): ResizeHandles => {
@@ -113,7 +120,9 @@ const useResizeHandles = (options: Options): ResizeHandles => {
 
   useEffect(() => (): void => cancelDrag(context), [context]);
 
-  return { onHandleDown, sizes, target };
+  const { ghost, onScaleDown } = useScaleDrag(live, target);
+
+  return { ghost, onHandleDown, onScaleDown, sizes, target };
 };
 
 export {

@@ -277,4 +277,10 @@ const startCopy = {
   rename: "Rename start point",
 } as const;
 
-export { copy, startCopy };
+const scaleCopy = {
+  failed: "Could not scale the layer",
+  handle: "Drag to scale the layer",
+  percent: "%",
+} as const;
+
+export { copy, scaleCopy, startCopy };

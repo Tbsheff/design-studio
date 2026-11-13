@@ -12,7 +12,7 @@ const inspectSourcePage = defineAction({
   agent: {
     lean: true,
     name: "inspect_source_page",
-    set: "app",
+    set: "tweak",
     short:
       "Check if a route copy page is still the same as the app. Use it when the user asks if the prototype is current.",
   },

@@ -12,7 +12,7 @@ const importSourcePage = defineAction({
   agent: {
     lean: false,
     name: "import_source_page",
-    set: "app",
+    set: "tweak",
     short:
       "Copy the app route of a route copy page again as a new page and frame. The old page and its edits do not change.",
   },

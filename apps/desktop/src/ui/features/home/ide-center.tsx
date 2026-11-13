@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 
+import { EditAppConfirmDialog } from "./edit-app-confirm.js";
 import { HomeHero } from "./home-hero.js";
 import type { HomeIde } from "./use-home-ide.js";
 import type { HomeScreen } from "./use-home-screen.js";
@@ -13,7 +14,10 @@ interface IdeCenterProps {
 }
 
 const IdeCenter = ({ ide, onOpen, screen }: IdeCenterProps): ReactElement => {
-  const { defaultLine, isEditApp, nav, onStarter, packName } = ide;
+  const { defaultLine, editConfirm, isEditApp, nav, onStarter, packName } = ide;
+
+  const { onCancel: handleEditCancel, onConfirm: handleEditConfirm } =
+    editConfirm;
 
   return (
     <main className="ide-center">
@@ -30,6 +34,13 @@ const IdeCenter = ({ ide, onOpen, screen }: IdeCenterProps): ReactElement => {
         onStarter={onStarter}
         workspace={nav.selected}
       />
+      {editConfirm.path !== null && (
+        <EditAppConfirmDialog
+          onCancel={handleEditCancel}
+          onConfirm={handleEditConfirm}
+          path={editConfirm.path}
+        />
+      )}
     </main>
   );
 };

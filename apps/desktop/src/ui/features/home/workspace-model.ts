@@ -314,7 +314,14 @@ const toDefaultLine = (
 const toIndexFor = (workspaces: readonly Workspace[], id: string): number => {
   const found = workspaces.findIndex((workspace) => workspace.id === id);
 
-  return Math.max(0, found);
+  if (found !== -1) {
+    return found;
+  }
+
+  return Math.max(
+    0,
+    workspaces.findIndex((workspace) => workspace.id === PROTOTYPES_ID)
+  );
 };
 
 export {

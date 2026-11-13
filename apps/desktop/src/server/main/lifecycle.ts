@@ -4,6 +4,7 @@ import path from "node:path";
 import type { serve } from "@hono/node-server";
 
 import type { FlushableEventBus } from "../events/index.js";
+import { deleteStaleChrome } from "../platform/chrome-owner/index.js";
 import type { ServerConfig } from "../platform/config/index.js";
 import { acquireDataLock } from "../platform/data-lock/index.js";
 import { logError, logInfo } from "../platform/logger/index.js";
@@ -23,11 +24,20 @@ interface SignalHandle {
   shutdown: (signal: string) => void;
 }
 
+const stopStaleChrome = async (dataDir: string): Promise<void> => {
+  const isStopped = await deleteStaleChrome(dataDir);
+
+  if (isStopped) {
+    logInfo("[studio] stopped a headless Chrome left by an earlier run");
+  }
+};
+
 const prepareDataDir = async (config: ServerConfig): Promise<ServerConfig> => {
   await mkdir(path.join(config.dataDir, "projects"), { recursive: true });
   const releaseLock = acquireDataLock(config.dataDir, config.studioPort);
 
   process.on("exit", releaseLock);
+  await stopStaleChrome(config.dataDir);
 
   return toUiConfig(config);
 };

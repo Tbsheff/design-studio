@@ -24,6 +24,14 @@ const pathForProject = (projectId: string | null): string => {
   return "/";
 };
 
+const toFirstProject = (pathname: string): string | null => {
+  if (pathname === "/") {
+    return uiStore.get().activeProjectId;
+  }
+
+  return projectFromPath(pathname);
+};
+
 let installed = false;
 let leaveCheck: (() => boolean) | null = null;
 
@@ -37,7 +45,7 @@ const installRouting = (): void => {
   }
 
   installed = true;
-  let current = projectFromPath(globalThis.location.pathname);
+  let current = toFirstProject(globalThis.location.pathname);
   const canonical = pathForProject(current);
 
   if (globalThis.location.pathname !== canonical) {

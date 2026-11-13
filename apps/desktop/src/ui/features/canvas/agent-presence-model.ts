@@ -18,7 +18,7 @@ interface PresenceScope {
   readonly frames: readonly CanvasFrame[];
 }
 
-const PRESENCE_MS = 4500;
+const PRESENCE_MS = 30_000;
 
 const isShown = (frame: CanvasFrame): boolean => frame.hidden !== true;
 

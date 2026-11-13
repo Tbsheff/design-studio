@@ -50,8 +50,8 @@ interface PageClock {
 }
 
 const MAX_PAGES = 6;
-const IDLE_MS = 3 * 60_000;
-const SWEEP_MS = 30_000;
+const IDLE_MS = 30_000;
+const SWEEP_MS = 10_000;
 const POLL_MS = 25;
 const QUIET_MS = 120;
 const REBUILD_WAIT_MS = 900;

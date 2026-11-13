@@ -174,6 +174,14 @@ export function clientName(
   return clean || DEFAULT_CLIENT;
 }
 
+const toSessionClient = (named: string, keyClient: string | null): string => {
+  if (named !== DEFAULT_CLIENT || keyClient === null) {
+    return named;
+  }
+
+  return keyClient;
+};
+
 async function dispatch(
   ctx: Dispatch,
   message: RpcMessage
@@ -308,12 +316,12 @@ function createMcpApp(
       edits: settings().edits ? editDeps : null,
       folderRoots,
       client:
-        key?.client ??
         clients.get(c.req.header("mcp-session-id") ?? "") ??
+        key?.client ??
         DEFAULT_CLIENT,
       key,
       startSession: (named) => {
-        const client = key?.client ?? named;
+        const client = toSessionClient(named, key?.client ?? null);
         session = randomBytes(16).toString("hex");
         clients.set(session, client);
         if (clients.size > MAX_SESSIONS)

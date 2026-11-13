@@ -60,11 +60,21 @@ const toTokenNote = (result: ScaleResult, isKept: boolean): string => {
     return "";
   }
 
-  if (isKept) {
-    return ` ${result.tokenCount}${copy.scaleTokensKept}`;
+  const count = result.tokenCount;
+
+  if (count === 1 && isKept) {
+    return ` ${count}${copy.scaleTokenKept}`;
   }
 
-  return ` ${result.tokenCount}${copy.scaleTokensChanged}`;
+  if (count === 1) {
+    return ` ${count}${copy.scaleTokenChanged}`;
+  }
+
+  if (isKept) {
+    return ` ${count}${copy.scaleTokensKept}`;
+  }
+
+  return ` ${count}${copy.scaleTokensChanged}`;
 };
 
 const toScaleNote = (result: ScaleResult, isKept: boolean): string => {

@@ -109,6 +109,18 @@ const toSnapped = (value: number, candidates: readonly number[]): number => {
   return best;
 };
 
+const toKeptBorder = (
+  property: string,
+  before: number,
+  after: number
+): number => {
+  if (property === "border-width" && before >= 1) {
+    return Math.max(1, after);
+  }
+
+  return after;
+};
+
 const toPxText = (value: number): string => `${toRounded(value)}px`;
 
 const toScaledPart = (part: string, factor: number): string => {
@@ -145,7 +157,8 @@ const toScaledValue = (
     return toScaledList(text, factor);
   }
 
-  const scaled = Number(single.groups?.number ?? "") * factor;
+  const before = Number(single.groups?.number ?? "");
+  const scaled = toKeptBorder(property, before, before * factor);
 
   if (theme === null) {
     return toPxText(scaled);

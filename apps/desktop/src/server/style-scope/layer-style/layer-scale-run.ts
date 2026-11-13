@@ -94,7 +94,8 @@ const toRepeatReason = (layer: ScaleProbeLayer): string =>
 const toPlannedScale = async (
   run: DirectionRun,
   layer: ScaleProbeLayer,
-  command: ScaleLayerStyleCommand
+  command: ScaleLayerStyleCommand,
+  rootLoc: string
 ): Promise<PlannedScale> => {
   const loc = toSourceLoc(layer.loc);
 
@@ -116,7 +117,12 @@ const toPlannedScale = async (
   }
 
   const scaled = toScaledStyles(
-    { authored: layer.authored, computed: layer.computed, site },
+    {
+      authored: layer.authored,
+      computed: layer.computed,
+      isRoot: layer.loc === rootLoc,
+      site,
+    },
     { factor: command.factor, shouldKeepTokens: command.shouldKeepTokens }
   );
 
@@ -207,8 +213,10 @@ const updateLayerTree = async (
 ): Promise<LayerScaleChange> => {
   const tree = await toProbedTree(run, command);
 
+  const rootLoc = tree[0]?.loc ?? "";
+
   const planned = await Promise.all(
-    tree.map((layer) => toPlannedScale(run, layer, command))
+    tree.map((layer) => toPlannedScale(run, layer, command, rootLoc))
   );
 
   const edits = planned.flatMap((entry) => entry.edit ?? []);

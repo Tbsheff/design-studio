@@ -6,10 +6,16 @@ import { toScaledValue } from "./scale-values.js";
 
 const RADIUS = "border-radius";
 
+const FONT_SIZE = "font-size";
+
+const ROW_GAP = "row-gap";
+
+const COLUMN_GAP = "column-gap";
+
 const SCALE_PROPERTIES = [
   "width",
   "height",
-  "font-size",
+  FONT_SIZE,
   "line-height",
   "letter-spacing",
   "padding-top",
@@ -20,8 +26,8 @@ const SCALE_PROPERTIES = [
   "margin-right",
   "margin-bottom",
   "margin-left",
-  "row-gap",
-  "column-gap",
+  ROW_GAP,
+  COLUMN_GAP,
   RADIUS,
   "border-width",
   "box-shadow",
@@ -40,6 +46,7 @@ interface ScaleSite {
 interface ScaleLayer {
   readonly authored: Readonly<Record<string, string>>;
   readonly computed: Readonly<Record<string, string>>;
+  readonly isRoot: boolean;
   readonly site: ScaleSite;
 }
 
@@ -61,7 +68,7 @@ const SHORTHANDS: ReadonlyMap<string, readonly ScaleProperty[]> = new Map([
     ["padding-top", "padding-right", "padding-bottom", "padding-left"],
   ],
   ["margin", ["margin-top", "margin-right", "margin-bottom", "margin-left"]],
-  ["gap", ["row-gap", "column-gap"]],
+  ["gap", [ROW_GAP, COLUMN_GAP]],
   ["border-top-left-radius", [RADIUS]],
   ["border-top-right-radius", [RADIUS]],
   ["border-bottom-right-radius", [RADIUS]],
@@ -230,12 +237,38 @@ const toCssKinds = (
   return kinds;
 };
 
-const toKinds = (layer: ScaleLayer): Map<ScaleProperty, SourceKind> => {
+const toSiteKinds = (layer: ScaleLayer): Map<ScaleProperty, SourceKind> => {
   if (layer.site.isTailwind) {
     return toClassKinds(layer.site);
   }
 
   return toCssKinds(layer.authored);
+};
+
+const toKinds = (layer: ScaleLayer): Map<ScaleProperty, SourceKind> => {
+  const kinds = toSiteKinds(layer);
+
+  if (layer.isRoot && !kinds.has(FONT_SIZE)) {
+    kinds.set(FONT_SIZE, "length");
+  }
+
+  return kinds;
+};
+
+const GAP_SIDES: readonly string[] = [ROW_GAP, COLUMN_GAP];
+
+const toJoinedGap = (style: Record<string, string>): void => {
+  const row = style[ROW_GAP] ?? "";
+
+  if (row === "" || row !== style[COLUMN_GAP]) {
+    return;
+  }
+
+  for (const side of GAP_SIDES) {
+    Reflect.deleteProperty(style, side);
+  }
+
+  style.gap = row;
 };
 
 const toSnapTheme = (site: ScaleSite): TailwindTheme | null => {
@@ -269,6 +302,8 @@ const toScaledStyles = (
       style[property] = next;
     }
   }
+
+  toJoinedGap(style);
 
   return { style, tokens };
 };

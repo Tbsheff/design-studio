@@ -213,6 +213,8 @@ const copy = {
   scaleLayers: " layers",
   scaleNothing: "Nothing to scale.",
   scaleRange: "Type a percent from 25 to 400.",
+  scaleTokenChanged: " token value now has a fixed value.",
+  scaleTokenKept: " value uses a token and stays.",
   scaleTokensChanged: " token values now have fixed values.",
   scaleTokensKept: " values use tokens and stay.",
   scaled: "Scaled ",

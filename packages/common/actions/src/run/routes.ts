@@ -24,6 +24,12 @@ const routes = {
     method: "GET",
     path: "/api/projects/:projectId/runs/:runId",
   },
+  getStatesRun: {
+    id: "run.getStates",
+    invalidates: [],
+    method: "GET",
+    path: "/api/projects/:projectId/runs/states/:sequenceId",
+  },
   listDecisionsRun: {
     id: "run.listDecisions",
     invalidates: [],
@@ -71,6 +77,12 @@ const routes = {
     invalidates: ["run.list"],
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/runs",
+  },
+  startStatesRun: {
+    id: "run.startStates",
+    invalidates: ["run.list", "run.getStates"],
+    method: "POST",
+    path: "/api/projects/:projectId/runs/states",
   },
   stopRun: {
     id: "run.stop",

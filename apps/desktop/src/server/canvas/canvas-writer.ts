@@ -45,6 +45,11 @@ import type {
   SectionSet,
   SectionSetQuery,
 } from "./section-ops.js";
+import { createStateBoard } from "./state-frames/index.js";
+import type {
+  StateFramesCreated,
+  StateFramesQuery,
+} from "./state-frames/index.js";
 import type { PlaceOutcome } from "./tools.js";
 
 interface CanvasWriterApi {
@@ -57,6 +62,9 @@ interface CanvasWriterApi {
   readonly createRouteFrame: (
     query: FrameRouteQuery
   ) => Effect.Effect<PlaceOutcome, CanvasFailure>;
+  readonly createStateFrames: (
+    query: StateFramesQuery
+  ) => Effect.Effect<StateFramesCreated, CanvasFailure>;
   readonly deleteFrame: (
     query: FrameDeleteQuery
   ) => Effect.Effect<FrameRemoved, CanvasFailure>;
@@ -113,6 +121,13 @@ class CanvasWriter extends Context.Service<CanvasWriter, CanvasWriterApi>()(
         function* run(query: FrameRouteQuery) {
           return yield* attemptCanvas((runtime) =>
             createCanvasRouteFrame(runtime, query)
+          );
+        }
+      ),
+      createStateFrames: Effect.fn("CanvasWriter.createStateFrames")(
+        function* run(query: StateFramesQuery) {
+          return yield* attemptCanvas((runtime) =>
+            createStateBoard(runtime, query)
           );
         }
       ),

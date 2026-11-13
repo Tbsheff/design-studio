@@ -8,6 +8,7 @@ import { handle as createFrameCanvasHandle } from "./create-frame.js";
 import { handle as createLinkCanvasHandle } from "./create-link.js";
 import { handle as createLinkedFrameCanvasHandle } from "./create-linked-frame.js";
 import { handle as createRouteFrameCanvasHandle } from "./create-route-frame.js";
+import { handle as createStateFramesCanvasHandle } from "./create-state-frames.js";
 import {
   handle as deleteFrameCanvasHandle,
   preview as deleteFrameCanvasPreview,
@@ -51,6 +52,7 @@ const CanvasEntries = {
   createLinkCanvas: { handle: createLinkCanvasHandle },
   createLinkedFrameCanvas: { handle: createLinkedFrameCanvasHandle },
   createRouteFrameCanvas: { handle: createRouteFrameCanvasHandle },
+  createStateFramesCanvas: { handle: createStateFramesCanvasHandle },
   deleteFrameCanvas: {
     handle: deleteFrameCanvasHandle,
     preview: deleteFrameCanvasPreview,

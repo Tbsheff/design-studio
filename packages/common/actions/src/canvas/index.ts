@@ -5,6 +5,7 @@ import { createFrameCanvas } from "./create-frame.js";
 import { createLinkCanvas } from "./create-link.js";
 import { createLinkedFrameCanvas } from "./create-linked-frame.js";
 import { createRouteFrameCanvas } from "./create-route-frame.js";
+import { createStateFramesCanvas } from "./create-state-frames.js";
 import { deleteFrameCanvas } from "./delete-frame.js";
 import { deleteFramesCanvas } from "./delete-frames.js";
 import { deleteLinkCanvas } from "./delete-link.js";
@@ -39,6 +40,7 @@ const CanvasActions = {
   createLinkCanvas,
   createLinkedFrameCanvas,
   createRouteFrameCanvas,
+  createStateFramesCanvas,
   deleteFrameCanvas,
   deleteFramesCanvas,
   deleteLinkCanvas,

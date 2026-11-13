@@ -12,6 +12,7 @@ import {
 } from "./delete-session.js";
 import { handle as exportVersionHandle } from "./export.js";
 import { handle as getVersionHandle } from "./get.js";
+import { handle as inspectChangesVersionHandle } from "./inspect-changes.js";
 import { handle as inspectDiffVersionHandle } from "./inspect-diff.js";
 import { handle as inspectPreviewVersionHandle } from "./inspect-preview.js";
 import { handle as listHistoryVersionHandle } from "./list-history.js";
@@ -34,6 +35,7 @@ const VersionEntries = {
   },
   exportVersion: { handle: exportVersionHandle },
   getVersion: { handle: getVersionHandle },
+  inspectChangesVersion: { handle: inspectChangesVersionHandle },
   inspectDiffVersion: { handle: inspectDiffVersionHandle },
   inspectPreviewVersion: { handle: inspectPreviewVersionHandle },
   listHistoryVersion: { handle: listHistoryVersionHandle },

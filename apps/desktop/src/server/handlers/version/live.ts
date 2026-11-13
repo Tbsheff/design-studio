@@ -1,7 +1,11 @@
 import { Layer } from "effect";
 
-import { VersionStore, VersionWriter } from "../../store/index.js";
+import { ChangeStore, VersionStore, VersionWriter } from "../../store/index.js";
 
-const VersionLive = Layer.mergeAll(VersionStore.layer, VersionWriter.layer);
+const VersionLive = Layer.mergeAll(
+  ChangeStore.layer,
+  VersionStore.layer,
+  VersionWriter.layer
+);
 
 export { VersionLive };

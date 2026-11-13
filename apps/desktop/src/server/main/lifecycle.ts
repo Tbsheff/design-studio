@@ -1,5 +1,6 @@
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
+import { setTimeout as sleep } from "node:timers/promises";
 
 import type { serve } from "@hono/node-server";
 
@@ -16,6 +17,7 @@ import type { StudioRuntime } from "./runtime.js";
 import { toUiConfig } from "./ui-secret.js";
 
 const FORCE_EXIT_MS = 5000;
+const LAYOUT_FLUSH_MS = 3000;
 
 type Preview = ReturnType<typeof createPreviewService>;
 
@@ -56,11 +58,25 @@ const stopStaleRuns = async (config: ServerConfig): Promise<void> => {
 
 interface ShutdownParts {
   baseBus: FlushableEventBus;
+  flushLayoutVersions: () => Promise<void>;
   preview: Preview;
   runtime: StudioRuntime;
 }
 
+const runLayoutFlush = async (parts: ShutdownParts): Promise<void> => {
+  try {
+    await Promise.race([
+      parts.flushLayoutVersions(),
+      sleep(LAYOUT_FLUSH_MS, null, { ref: false }),
+    ]);
+  } catch (error) {
+    logError("[studio] cannot save the pending layout versions", error);
+  }
+};
+
 const stopAll = async (parts: ShutdownParts): Promise<void> => {
+  await runLayoutFlush(parts);
+
   const results = await Promise.allSettled([
     parts.baseBus.flush(),
     parts.preview.stop(),

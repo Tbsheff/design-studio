@@ -46,6 +46,8 @@ const StageArtboard = ({
         covered={covered}
         wait={firstBuild.wait}
         path={active.path}
+        projectId={props.projectId}
+        directionId={props.directionId || null}
       />
       <Suspense fallback={null}>
         <TabOrder

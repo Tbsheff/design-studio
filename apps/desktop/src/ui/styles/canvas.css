@@ -1451,3 +1451,55 @@ dialog.canvas-menu {
   color: var(--text-3);
   font-size: var(--t-2xs);
 }
+
+.draft-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  background: var(--frame-bg);
+  pointer-events: none;
+}
+
+.draft-frame-doc {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: var(--frame-bg);
+  visibility: hidden;
+}
+
+.draft-frame-doc[data-front="true"] {
+  visibility: visible;
+}
+
+.draft-frame-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  height: 28px;
+  padding: 0 var(--s-4);
+  color: var(--float-fg);
+  background: var(--float-bg);
+  border-bottom: var(--stroke) solid var(--float-line);
+  font-size: var(--t-sm);
+  white-space: nowrap;
+}
+
+.draft-frame-bar .spinner {
+  width: 12px;
+  height: 12px;
+  border-width: 1.5px;
+}
+
+.draft-frame-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}

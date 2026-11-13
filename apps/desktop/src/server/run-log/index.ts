@@ -7,11 +7,17 @@ export {
 
 export type { RunListQuery, RunPage } from "./run-list.js";
 
+export { bindRunLogRuntime } from "./run-log-runtime.js";
+
+export { RunDecisionStore } from "./run-decision-store.js";
+
+export { RunDecisionWriter } from "./run-decision-writer.js";
+
 export { RunLogStore } from "./run-log-store.js";
 
-export { updateStaleRuns } from "./run-stale.js";
+export { RunLogWriter } from "./run-log-writer.js";
 
-export { bindRunLogRuntime } from "./run-log-runtime.js";
+export { updateStaleRuns } from "./run-stale.js";
 
 export type {
   PortRunCall,
@@ -19,5 +25,3 @@ export type {
   StartRunCall,
   VariationStartCall,
 } from "./run-log-runtime.js";
-
-export { RunLogWriter } from "./run-log-writer.js";

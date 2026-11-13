@@ -2,7 +2,7 @@ import type { Input } from "@design-studio/actions/_core/action";
 import type { getRun } from "@design-studio/actions/run/get";
 import { Effect } from "effect";
 
-import { RunLogStore } from "../../run-log/index.js";
+import { RunDecisionStore, RunLogStore } from "../../run-log/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type GetRunInput = Input<typeof getRun>;
@@ -19,10 +19,12 @@ const toRunStatus = (
 
 const handle = Effect.fn("run.get")(function* run(input: GetRunInput) {
   const service = yield* RunLogStore;
+  const decisionStore = yield* RunDecisionStore;
 
   const detail = yield* service.get(input.projectId, input.runId);
+  const decisions = yield* decisionStore.list(input.projectId, input.runId);
 
-  return { ...detail, status: toRunStatus(detail.summary) };
+  return { ...detail, decisions, status: toRunStatus(detail.summary) };
 }) satisfies Handle<typeof getRun>;
 
 export { handle };

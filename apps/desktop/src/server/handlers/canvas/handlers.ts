@@ -12,6 +12,10 @@ import {
   handle as deleteFrameCanvasHandle,
   preview as deleteFrameCanvasPreview,
 } from "./delete-frame.js";
+import {
+  handle as deleteFramesCanvasHandle,
+  preview as deleteFramesCanvasPreview,
+} from "./delete-frames.js";
 import { handle as deleteLinkCanvasHandle } from "./delete-link.js";
 import {
   handle as deleteSectionCanvasHandle,
@@ -50,6 +54,10 @@ const CanvasEntries = {
   deleteFrameCanvas: {
     handle: deleteFrameCanvasHandle,
     preview: deleteFrameCanvasPreview,
+  },
+  deleteFramesCanvas: {
+    handle: deleteFramesCanvasHandle,
+    preview: deleteFramesCanvasPreview,
   },
   deleteLinkCanvas: { handle: deleteLinkCanvasHandle },
   deleteSectionCanvas: {

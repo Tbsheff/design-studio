@@ -69,6 +69,7 @@
     "./canvas/create-linked-frame": "./src/canvas/create-linked-frame.ts",
     "./canvas/create-route-frame": "./src/canvas/create-route-frame.ts",
     "./canvas/delete-frame": "./src/canvas/delete-frame.ts",
+    "./canvas/delete-frames": "./src/canvas/delete-frames.ts",
     "./canvas/delete-link": "./src/canvas/delete-link.ts",
     "./canvas/delete-section": "./src/canvas/delete-section.ts",
     "./canvas/export-flow": "./src/canvas/export-flow.ts",

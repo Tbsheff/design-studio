@@ -12,6 +12,8 @@ import {
 import type { CanvasDocRead } from "./canvas-ops.js";
 import { attemptCanvas } from "./canvas-runtime.js";
 import type { CanvasFailure } from "./canvas-runtime.js";
+import { getCanvasFramesDeleteCard } from "./frame-delete/index.js";
+import type { FramesDeleteQuery } from "./frame-delete/index.js";
 import { getCanvasDeleteCard, inspectCanvasFrames } from "./frame-ops.js";
 import type { FrameDeleteQuery, FrameTarget } from "./frame-ops.js";
 import { getSectionDeleteCard } from "./section-ops.js";
@@ -21,6 +23,9 @@ import type { CanvasListing } from "./tools.js";
 interface CanvasStoreApi {
   readonly deleteCard: (
     query: FrameDeleteQuery
+  ) => Effect.Effect<ApprovalCard, CanvasFailure>;
+  readonly deleteFramesCard: (
+    query: FramesDeleteQuery
   ) => Effect.Effect<ApprovalCard, CanvasFailure>;
   readonly deleteSectionCard: (
     query: SectionDeleteQuery
@@ -56,6 +61,13 @@ class CanvasStore extends Context.Service<CanvasStore, CanvasStoreApi>()(
       ) {
         return yield* attemptCanvas((runtime) =>
           getCanvasDeleteCard(runtime, query)
+        );
+      }),
+      deleteFramesCard: Effect.fn("CanvasStore.deleteFramesCard")(function* run(
+        query: FramesDeleteQuery
+      ) {
+        return yield* attemptCanvas((runtime) =>
+          getCanvasFramesDeleteCard(runtime, query)
         );
       }),
       deleteSectionCard: Effect.fn("CanvasStore.deleteSectionCard")(

@@ -237,9 +237,27 @@ const FrameRemovedSchema = Schema.Struct({
   removed: Schema.String,
 });
 
+const FRAME_DELETE_MAX = 50;
+
+const FrameDeleteListSchema = Schema.Array(FrameNameSchema).check(
+  Schema.isMinLength(1),
+  Schema.isMaxLength(FRAME_DELETE_MAX)
+);
+
+const RemovedFrameSchema = Schema.Struct({
+  id: Schema.String,
+  label: Schema.NullOr(Schema.String),
+});
+
+const FramesRemovedSchema = Schema.Struct({
+  note: Schema.String,
+  removedFrames: Schema.Array(RemovedFrameSchema),
+});
+
 export {
   CanvasListedSchema,
   FrameAddFields,
+  FrameDeleteListSchema,
   FrameDirectionField,
   FramePointFields,
   FramePointedSchema,
@@ -248,5 +266,6 @@ export {
   FrameViewSchema,
   FrameNameSchema,
   FramesPlacedSchema,
+  FramesRemovedSchema,
   PlaceFrameListSchema,
 };

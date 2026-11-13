@@ -20,6 +20,8 @@ import type {
 } from "./canvas-ops.js";
 import { attemptCanvas } from "./canvas-runtime.js";
 import type { CanvasFailure } from "./canvas-runtime.js";
+import { deleteCanvasFrames } from "./frame-delete/index.js";
+import type { FramesDeleteQuery, FramesRemoved } from "./frame-delete/index.js";
 import {
   createCanvasFrame,
   createCanvasRouteFrame,
@@ -58,6 +60,9 @@ interface CanvasWriterApi {
   readonly deleteFrame: (
     query: FrameDeleteQuery
   ) => Effect.Effect<FrameRemoved, CanvasFailure>;
+  readonly deleteFrames: (
+    query: FramesDeleteQuery
+  ) => Effect.Effect<FramesRemoved, CanvasFailure>;
   readonly deleteSection: (
     query: SectionDeleteQuery
   ) => Effect.Effect<SectionRemoved, CanvasFailure>;
@@ -116,6 +121,13 @@ class CanvasWriter extends Context.Service<CanvasWriter, CanvasWriterApi>()(
       ) {
         return yield* attemptCanvas((runtime) =>
           deleteCanvasFrame(runtime, query)
+        );
+      }),
+      deleteFrames: Effect.fn("CanvasWriter.deleteFrames")(function* run(
+        query: FramesDeleteQuery
+      ) {
+        return yield* attemptCanvas((runtime) =>
+          deleteCanvasFrames(runtime, query)
         );
       }),
       deleteSection: Effect.fn("CanvasWriter.deleteSection")(function* run(

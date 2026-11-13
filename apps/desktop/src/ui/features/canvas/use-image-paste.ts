@@ -204,6 +204,7 @@ const useImageListeners = (
 const useImagePaste = (options: ImagePasteOptions): ImageDropControl => {
   const [drop, setDrop] = useState<ImageDrop | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [, startShow] = useTransition();
   const live = useRef(options);
 
   useEffect(() => {
@@ -237,7 +238,7 @@ const useImagePaste = (options: ImagePasteOptions): ImageDropControl => {
       setDrop(toImageDrop(start, URL.createObjectURL(file)));
     };
 
-    startTransition(show);
+    startShow(show);
   }, []);
 
   useImageListeners(begin, live);

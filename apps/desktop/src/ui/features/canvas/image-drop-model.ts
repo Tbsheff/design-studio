@@ -178,8 +178,8 @@ const isOverlap = (box: Box, frame: CanvasFrame): boolean =>
 const isInView = (box: Box): boolean =>
   box.x >= 0 &&
   box.y >= 0 &&
-  box.x <= globalThis.innerWidth - EDGE &&
-  box.y <= globalThis.innerHeight - EDGE;
+  box.x + box.width <= globalThis.innerWidth - EDGE &&
+  box.y <= globalThis.innerHeight - PROMPT_HEIGHT;
 
 const isOpenSpot = (
   start: ImageDropStart,

@@ -1084,6 +1084,33 @@ fieldset.compare-modes {
   inset: -1px -6px -6px -1px;
 }
 
+.resize-frame.compact .resize-handle.scale.nw {
+  margin: -8px 0 0 -8px;
+  transform-origin: 100% 100%;
+}
+
+.resize-frame.compact .resize-handle.scale.ne {
+  margin: -8px 0 0;
+  transform-origin: 0 100%;
+}
+
+.resize-frame.compact .resize-handle.scale.sw {
+  margin: 0 0 0 -8px;
+  transform-origin: 100% 0;
+}
+
+.resize-frame.compact .resize-handle.scale.nw::before {
+  inset: -6px -1px -1px -6px;
+}
+
+.resize-frame.compact .resize-handle.scale.ne::before {
+  inset: -6px -6px -1px -1px;
+}
+
+.resize-frame.compact .resize-handle.scale.sw::before {
+  inset: -1px -1px -6px -6px;
+}
+
 .resize-label {
   position: absolute;
   top: 100%;

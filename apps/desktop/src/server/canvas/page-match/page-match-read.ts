@@ -13,6 +13,7 @@ import type { DirectionRun } from "../../direct-edit/index.js";
 import { BadRequestError, NotFoundError } from "../../platform/errors/index.js";
 import { toPageHit, toPageSource } from "./engine/to-page-matches.js";
 import type { PageSource } from "./engine/to-page-matches.js";
+import { toMarkupHash } from "./page-match-hash.js";
 
 interface PageMatchQuery {
   readonly file: string;
@@ -139,6 +140,7 @@ const toPageMatch = async (
     file: target.relative,
     frameId: frames.get(target.relative) ?? null,
     isSame: hit.isSame,
+    markupHash: toMarkupHash(hit.normal),
     selector: hit.selector,
   };
 };

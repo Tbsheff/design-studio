@@ -11,7 +11,25 @@ interface SharedLayerMatch {
   readonly file: string;
   readonly frameId: string | null;
   readonly isSame: boolean;
+  readonly markupHash: string;
   readonly selector: string;
+}
+
+interface SharedLayerTarget {
+  readonly file: string;
+  readonly markupHash: string;
+  readonly selector: string;
+}
+
+interface SharedLayerResult {
+  readonly files: readonly string[];
+  readonly skipped: readonly { readonly file: string }[];
+}
+
+interface SharedLayerNotice {
+  readonly applied: number;
+  readonly key: string;
+  readonly skipped: readonly string[];
 }
 
 interface SharedLayerCounts {
@@ -49,6 +67,30 @@ const toSameMatches = (
   items: readonly SharedLayerMatch[]
 ): readonly SharedLayerMatch[] => items.filter((item) => item.isSame);
 
+const toSharedLayerTargets = (
+  items: readonly SharedLayerMatch[]
+): readonly SharedLayerTarget[] =>
+  toSameMatches(items).map((item) => ({
+    file: item.file,
+    markupHash: item.markupHash,
+    selector: item.selector,
+  }));
+
+const toSharedLayerNotice = (
+  sourceKey: string,
+  result: SharedLayerResult
+): SharedLayerNotice | null => {
+  if (result.skipped.length === 0) {
+    return null;
+  }
+
+  return {
+    applied: result.files.length + 1,
+    key: sourceKey,
+    skipped: result.skipped.map((skip) => skip.file),
+  };
+};
+
 const toSharedLayerCounts = (
   items: readonly SharedLayerMatch[]
 ): SharedLayerCounts => ({
@@ -73,7 +115,16 @@ export {
   toSameMatches,
   toSharedLayerCounts,
   toSharedLayerFiles,
+  toSharedLayerNotice,
   toSharedLayerSource,
+  toSharedLayerTargets,
 };
 
-export type { SharedLayerCounts, SharedLayerMatch, SharedLayerSource };
+export type {
+  SharedLayerCounts,
+  SharedLayerMatch,
+  SharedLayerNotice,
+  SharedLayerResult,
+  SharedLayerSource,
+  SharedLayerTarget,
+};

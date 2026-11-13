@@ -22,7 +22,7 @@ const inspectMatchesPage = defineAction({
   },
   confirm: "none",
   description:
-    "Find the other HTML pages of this direction that hold the same element as one layer, such as a nav or footer. A page matches when it has an element with the same tag and the same markup, with whitespace, aria-current and active classes ignored. A page whose copy changed on its own is listed with isSame false.",
+    "Find the other HTML pages of this direction that hold the same element as one layer, such as a nav or footer. A page matches when it has an element with the same tag and the same markup, with whitespace, aria-current and active classes ignored. A page whose copy changed on its own is listed with isSame false. Each item has the markupHash of its element for update_matches_page.",
   errors: [BadRequest, Conflict, NotFound],
   http: {
     method: "GET",

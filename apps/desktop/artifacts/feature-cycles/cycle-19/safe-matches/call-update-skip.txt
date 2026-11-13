@@ -1,0 +1,84 @@
+call-action page.updateMatches on http://127.0.0.1:4310. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 10 ms, git spawns: not counted (server side)
+{
+  "files": [
+    "about.html",
+    "contact.html"
+  ],
+  "skipped": [
+    {
+      "file": "pricing.html",
+      "reason": "changed"
+    }
+  ],
+  "versionId": "pending-51d7da09052ef105"
+}
+
+[mcp] error, 50 ms, git spawns: not counted (server side)
+"Every target page changed since inspect_matches_page. Call inspect_matches_page again, then try again."
+
+[agent] error, 3 ms, git spawns: not counted (server side)
+"Every target page changed since inspect_matches_page. Call inspect_matches_page again, then try again."
+
+diff http -> mcp:
+- {
++ "Every target page changed since inspect_matches_page. Call inspect_matches_page again, then try again."
+-   "files": [
++ 
+-     "about.html",
++ 
+-     "contact.html"
++ 
+-   ],
++ 
+-   "skipped": [
++ 
+-     {
++ 
+-       "file": "pricing.html",
++ 
+-       "reason": "changed"
++ 
+-     }
++ 
+-   ],
++ 
+-   "versionId": "pending-51d7da09052ef105"
++ 
+- }
++ 
+
+diff http -> agent:
+- {
++ "Every target page changed since inspect_matches_page. Call inspect_matches_page again, then try again."
+-   "files": [
++ 
+-     "about.html",
++ 
+-     "contact.html"
++ 
+-   ],
++ 
+-   "skipped": [
++ 
+-     {
++ 
+-       "file": "pricing.html",
++ 
+-       "reason": "changed"
++ 
+-     }
++ 
+-   ],
++ 
+-   "versionId": "pending-51d7da09052ef105"
++ 
+- }
++ 
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 2 error results
+
+fix: compare the outputs above, then run call-action again with the id page.updateMatches and the same input

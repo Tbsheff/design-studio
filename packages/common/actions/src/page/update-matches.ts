@@ -22,7 +22,7 @@ const updateMatchesPage = defineAction({
   },
   confirm: "none",
   description:
-    "Copy the current markup of one layer to the same element on other HTML pages of this direction, such as a nav or footer, as one version and one undo step. Each page keeps its own aria-current and active classes. Call inspect_matches_page first to get the targets.",
+    "Copy the current markup of one layer to the same element on other HTML pages of this direction, such as a nav or footer, as one version and one undo step. Each page keeps its own aria-current and active classes. Call inspect_matches_page first to get the targets. Pass markupHash from inspect_matches_page so a page that changed since is left out.",
   errors: [BadRequest, Conflict, NotFound],
   http: {
     method: "POST",

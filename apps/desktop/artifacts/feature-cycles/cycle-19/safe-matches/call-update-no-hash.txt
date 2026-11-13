@@ -1,0 +1,54 @@
+call-action page.updateMatches on http://127.0.0.1:4310. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 6 ms, git spawns: not counted (server side)
+{
+  "files": [
+    "pricing.html"
+  ],
+  "skipped": [],
+  "versionId": "pending-adb43f669b4382d5"
+}
+
+[mcp] error, 52 ms, git spawns: not counted (server side)
+"Every target page already has this markup."
+
+[agent] error, 2 ms, git spawns: not counted (server side)
+"Every target page already has this markup."
+
+diff http -> mcp:
+- {
++ "Every target page already has this markup."
+-   "files": [
++ 
+-     "pricing.html"
++ 
+-   ],
++ 
+-   "skipped": [],
++ 
+-   "versionId": "pending-adb43f669b4382d5"
++ 
+- }
++ 
+
+diff http -> agent:
+- {
++ "Every target page already has this markup."
+-   "files": [
++ 
+-     "pricing.html"
++ 
+-   ],
++ 
+-   "skipped": [],
++ 
+-   "versionId": "pending-adb43f669b4382d5"
++ 
+- }
++ 
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 2 error results
+
+fix: compare the outputs above, then run call-action again with the id page.updateMatches and the same input

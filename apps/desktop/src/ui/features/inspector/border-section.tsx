@@ -4,6 +4,7 @@ import type { ReactElement } from "react";
 
 import { AddButton } from "./add-button.js";
 import { BorderGrid } from "./border-grid.js";
+import { NO_BORDER } from "./border-side-model.js";
 import { copy } from "./copy.js";
 import type { DirectEdit } from "./deps.js";
 import { InspectorSection } from "./inspector-fields.js";
@@ -18,10 +19,7 @@ const BorderSection = ({ edit }: BorderSectionProps): ReactElement => {
 
   const addBorder = useCallback(() => applyEdit(edit, NEW_BORDER), [edit]);
 
-  const removeBorder = useCallback(
-    () => applyEdit(edit, { "border-style": "none", "border-width": "0px" }),
-    [edit]
-  );
+  const removeBorder = useCallback(() => applyEdit(edit, NO_BORDER), [edit]);
 
   const removeButton = useMemo(
     () => (

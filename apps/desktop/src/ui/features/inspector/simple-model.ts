@@ -7,6 +7,7 @@ import type { SharedSource } from "@design-studio/contracts/app";
 import type { MutableRefObject, ReactNode } from "react";
 
 import type { PreviewPort } from "../../platform/bridge.js";
+import { toMaxWidth, toSideWidths } from "./border-side-model.js";
 import type { DeclaredMargins } from "./box-model-model.js";
 import { copy } from "./copy.js";
 import { SIDES } from "./css-value-model.js";
@@ -122,11 +123,6 @@ const OPACITY: NumberFieldConfig = {
   },
 };
 
-const BORDER_WIDTH: NumberFieldConfig = {
-  short: "Width",
-  spec: { label: "Border width", min: 0, prop: "border-width" },
-};
-
 const WIDTH: NumberFieldConfig = {
   short: "W",
   spec: { label: "Width", min: 0, prop: "width" },
@@ -221,9 +217,7 @@ const toExtrasInUse = (edit: DirectEdit): Set<Extra> => {
 const hasBorder = (edit: DirectEdit): boolean => {
   const style = edit.values["border-style"];
 
-  const width = Number(
-    /^-?\d*\.?\d+/u.exec(edit.values["border-width"])?.[0] ?? "0"
-  );
+  const width = toMaxWidth(toSideWidths(edit.values, edit.dirty));
 
   return (
     (style !== "" && style !== "none" && width > 0) ||
@@ -249,7 +243,6 @@ const applyEdit = (
 
 export {
   BORDER_STYLES,
-  BORDER_WIDTH,
   BOX_PROPS,
   CASES,
   EXTRAS,

@@ -343,4 +343,25 @@ const copy = {
   youHave: "You have ",
 };
 
-export { copy };
+const borderSideCopy = {
+  all: "All",
+  bottom: "Bottom",
+  bottomShort: "B",
+  bottomWidth: "Border bottom width",
+  custom: "Custom",
+  left: "Left",
+  leftShort: "L",
+  leftWidth: "Border left width",
+  right: "Right",
+  rightShort: "R",
+  rightWidth: "Border right width",
+  sides: "Sides",
+  sidesLabel: "Border sides",
+  top: "Top",
+  topShort: "T",
+  topWidth: "Border top width",
+  width: "Width",
+  widthLabel: "Border width",
+};
+
+export { borderSideCopy, copy };

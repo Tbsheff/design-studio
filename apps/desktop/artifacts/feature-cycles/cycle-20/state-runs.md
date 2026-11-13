@@ -29,3 +29,6 @@ Files: `canvas/{state-run-model.ts (new), use-state-runs.ts (new), use-state-che
 - The chat agent has no path to this: `start_run` is `agent: { off: "run-control" }`.
 - `artifacts/mcp-snapshots/*.json` is not changed. The `inspect_state_frames_canvas` description diff waits for approval at merge.
 - In the screenshots the active frame's label bar sits under the section line at 15% zoom. That is old layout, not from this pick.
+- Pick 1 (`feat/safe-frame-remove`) imports only `isStateBoardSection` and `toBoardFrameId` from `state-check-model.ts`. Both stay. `StateCheckView` lost `prompt` and `targetId` (now `plan`); pick 1 reads neither.
+- Each step reads the state check about 3 times (the next-step read, the line refetch, the head-version recheck). Each read captures 5 frames, so there is a gap of some seconds between runs.
+- The sequence lives in the `StateCheckLine` hook. The sections layer does not cull off-screen sections, so a pan does not stop it.

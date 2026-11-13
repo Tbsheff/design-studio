@@ -177,6 +177,11 @@ body:has(.ds-toast) .proto-bar,
   bottom: calc(var(--s-4) + 44px);
 }
 
+.proto-bar > .topbar-anchor,
+.proto-bar > .btn {
+  flex: none;
+}
+
 .studio-stage .proto-bar {
   bottom: calc(var(--dock-gap) * 2 + var(--tools-w));
 }

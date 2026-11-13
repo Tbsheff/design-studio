@@ -70,7 +70,6 @@ const PromptTextInput = ({
         INPUT_COPY[mode].placeholder
       )}
       maxRows={9}
-      submitOnEnter={false}
       aria-describedby={toDescribedBy(sending.status.spoken, base.reasonId)}
       aria-activedescendant={inputProps["aria-activedescendant"]}
       aria-autocomplete={inputProps["aria-autocomplete"]}

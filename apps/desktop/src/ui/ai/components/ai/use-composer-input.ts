@@ -71,7 +71,11 @@ const useComposerInput = (options: ComposerInputOptions): ComposerInputState => 
 
   const handleSubmitKey = useCallback(
     (event: KeyboardEvent<HTMLTextAreaElement>) => {
-      if (event.nativeEvent.isComposing || isComposingRef.current) {
+      if (
+        event.defaultPrevented ||
+        event.nativeEvent.isComposing ||
+        isComposingRef.current
+      ) {
         return;
       }
 

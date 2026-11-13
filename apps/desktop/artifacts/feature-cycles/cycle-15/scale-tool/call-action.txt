@@ -1,0 +1,57 @@
+call-action layer-style.update on http://127.0.0.1:4182. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 13 ms, git spawns: not counted (server side)
+{
+  "changed": [
+    "index.html:21:5",
+    "index.html:22:7",
+    "index.html:23:7",
+    "index.html:24:7",
+    "index.html:29:7"
+  ],
+  "skipped": [],
+  "tokenCount": 0,
+  "versionId": "pending-b837cc07008a989a"
+}
+
+[mcp] ok, 365 ms, git spawns: not counted (server side)
+{
+  "changed": [
+    "index.html:21:5",
+    "index.html:22:7",
+    "index.html:23:7",
+    "index.html:24:7",
+    "index.html:29:7"
+  ],
+  "skipped": [],
+  "tokenCount": 0,
+  "versionId": "pending-fd1ea43b514bcc60"
+}
+
+[agent] ok, 39 ms, git spawns: not counted (server side)
+{
+  "changed": [
+    "index.html:21:5",
+    "index.html:22:7",
+    "index.html:23:7",
+    "index.html:24:7",
+    "index.html:29:7"
+  ],
+  "skipped": [],
+  "tokenCount": 0,
+  "versionId": "pending-ff4eeda73857f352"
+}
+
+diff http -> mcp:
+-   "versionId": "pending-b837cc07008a989a"
++   "versionId": "pending-fd1ea43b514bcc60"
+
+diff http -> agent:
+-   "versionId": "pending-b837cc07008a989a"
++   "versionId": "pending-ff4eeda73857f352"
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 0 error results
+
+fix: compare the outputs above, then run call-action again with the id layer-style.update and the same input

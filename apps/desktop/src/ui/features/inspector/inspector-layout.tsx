@@ -7,6 +7,7 @@ import type { ElementClasses } from "./element-classes-model.js";
 import { MinMaxRows } from "./min-max-rows.js";
 import { isPositioned } from "./position-model.js";
 import { PositionRows } from "./position-rows.js";
+import { ScaleField } from "./scale-field.js";
 import { SizeRow } from "./size-row.js";
 import { toParentLayout } from "./sizing-model.js";
 import { useAspectLock } from "./use-aspect-lock.js";
@@ -41,6 +42,7 @@ const SizeRows = ({
         />
         {classes && <AspectLockRow lock={lock} />}
       </div>
+      <ScaleField edit={edit} selection={selection} />
       <MinMaxRows edit={edit} />
       {(parent.isFlex || parent.isGrid) &&
         !isPositioned(edit.values.position) && (

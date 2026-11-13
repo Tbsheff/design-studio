@@ -1,8 +1,13 @@
 import { Layer } from "effect";
 
-import { LayerStyleStore, LayerStyleWriter } from "../../style-scope/index.js";
+import {
+  LayerScaleWriter,
+  LayerStyleStore,
+  LayerStyleWriter,
+} from "../../style-scope/index.js";
 
 const LayerStyleLive = Layer.mergeAll(
+  LayerScaleWriter.layer,
   LayerStyleStore.layer,
   LayerStyleWriter.layer
 );

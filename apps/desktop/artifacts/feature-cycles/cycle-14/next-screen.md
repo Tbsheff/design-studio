@@ -16,6 +16,8 @@ Branch `feat/next-screen`. Drag the link handle of a selected button or link to 
 
 - `call-action.ts canvas.createLinkedFrame` with `shouldStartRun: false`: http, mcp and agent all pass and give the same shape. Only the frame id and path differ, as the spec expects (each call makes a unique path). The new frames land at x 3200, 4800 and 6400.
 - The same call on a react project gives `BadRequest` on all 3 surfaces, and writes no file.
+- `version.list` shows one new `manual` version for each call, titled `Add screen <page>`, with exactly `.studio/canvas.json`, `.studio/links.json` and the page.
+- `gen-routes.ts --check`: pass.
 - UI run with the mock agent at 1440 px, in dark and light themes, and at 1000 px in light (screenshots are in `cycle-14/next-screen/`).
 - `pnpm run typecheck`: pass. `pnpm run lint:gate`: pass. `pnpm run build:ui`: pass.
 - `pnpm run check:scripts` fails because of E1 and S11 hits in files this branch does not change (`http/app-*-routes.ts`, `events/event-file.ts`). It reports nothing in the new files.
@@ -26,4 +28,5 @@ Branch `feat/next-screen`. Drag the link handle of a selected button or link to 
 - **No `RunInProgress` error.** That error class is in the `comment` domain. A busy direction returns `Conflict`, as `run.start` does.
 - **Selector check.** The server always checks that the selector exists by rendering the source frame. This adds about 0.5 s to each call.
 - **Ghost position.** The ghost can sit under a floating panel, such as the inspector, when the next free spot is off screen.
-- **Not tested.** Pointer drags were sent as synthetic pointer events, because the browser pane cannot drag across the scaled stage. No real-model run was done.
+- **Inspector session.** A drop made from the UI saves a `manual` version while the inspector is open, as page import and `screen.create` do. The inspector then shows `Edit 1 · Discard · Save version`. Save keeps the screen. If the follow-up run has edited the new page, Discard returns `Conflict` and changes nothing. That message comes from the existing replay check.
+- **Not tested.** The browser pane's drag action does not start the link-handle drag. It does not start the old frame-to-frame drag either. So the handle drags were sent as pointer events from the page. Those tests found the `.stage` `role="toolbar"` bug, which is now fixed. No real-model run was done.

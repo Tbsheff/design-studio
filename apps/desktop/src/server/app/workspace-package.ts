@@ -138,7 +138,14 @@ export function findWorkspacePackage(
   };
 }
 
-export function buildCommand(manager: PackageManager, name: string): string {
+export function buildCommand(
+  manager: PackageManager | null,
+  name: string
+): string | null {
+  if (manager === null) {
+    return null;
+  }
+
   if (manager === "pnpm") {
     return `pnpm --filter ${name} build`;
   }

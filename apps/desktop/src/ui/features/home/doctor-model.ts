@@ -27,6 +27,9 @@ interface DoctorGate {
 const INSTALL_DETAIL =
   "Dependencies are not installed. Run the command below, then check again.";
 
+const INSTALL_DETAIL_NEUTRAL =
+  "Dependencies are not installed. Install them in this folder with the package manager of the app, then check again.";
+
 const HOME_COMMAND = /^cd (?<quoted>"(?:[^"\\]|\\.)*") && (?<rest>.+)$/u;
 
 const SHELL_SAFE = /^[\w./-]+$/u;
@@ -82,19 +85,39 @@ const toKindTone = (label: string): string => {
   return "next";
 };
 
+const toInstallCommand = (install: {
+  readonly command: string | null;
+  readonly dir: string;
+  readonly homeDir: string | null;
+}): string | null => {
+  if (install.command === null) {
+    return null;
+  }
+
+  return `cd ${getShellPath(install.dir, install.homeDir)} && ${install.command}`;
+};
+
+const toInstallDetail = (command: string | null): string => {
+  if (command === null) {
+    return INSTALL_DETAIL_NEUTRAL;
+  }
+
+  return INSTALL_DETAIL;
+};
+
 const getInstallProblem = (
   projectName: string,
   placeLabel: string,
   kindLabel: string,
   install: {
-    readonly command: string;
+    readonly command: string | null;
     readonly dir: string;
     readonly homeDir: string | null;
   }
 ): DoctorProblem => ({
   badge: { label: kindLabel, tone: toKindTone(kindLabel) },
-  command: `cd ${getShellPath(install.dir, install.homeDir)} && ${install.command}`,
-  detail: INSTALL_DETAIL,
+  command: toInstallCommand(install),
+  detail: toInstallDetail(install.command),
   name: projectName,
   place: placeLabel,
   steps: [

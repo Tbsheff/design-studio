@@ -4,9 +4,9 @@ import path from "node:path";
 export type PackageManager = "pnpm" | "yarn" | "bun" | "npm";
 
 export interface InstallHint {
-  manager: PackageManager;
+  manager: PackageManager | null;
   dir: string;
-  command: string;
+  command: string | null;
 }
 
 const LOCKFILES: [string, PackageManager][] = [
@@ -63,7 +63,22 @@ export function installHint(root: string, appDir: string): InstallHint {
     dir = path.dirname(dir);
   }
 
-  const manager = declaredManager(top) ?? "npm";
+  const manager = declaredManager(top);
+
+  if (manager === null) {
+    return { command: null, dir: top, manager: null };
+  }
 
   return { command: `${manager} install`, dir: top, manager };
+}
+
+export function toInstallStep(hint: {
+  command: string | null;
+  dir: string;
+}): string {
+  if (hint.command === null) {
+    return `Install the dependencies in ${hint.dir} with the package manager of the app`;
+  }
+
+  return `Run ${hint.command} in ${hint.dir}`;
 }

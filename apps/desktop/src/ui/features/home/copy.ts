@@ -128,6 +128,7 @@ const copy = {
   home: "Home",
   httpLocalhost3000: "http://localhost:3000",
   importFromGithub: "Import from GitHub…",
+  installDependencies: "install the dependencies",
   irreversibleMany:
     "and their versions, runs and comments leave the app. You cannot undo this.",
   irreversibleOne:

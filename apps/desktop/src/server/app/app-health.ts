@@ -7,13 +7,17 @@ import type { AppHealth } from "../../shared/found-apps.js";
 import type { AppControl } from "../../shared/server-ports.js";
 import { frameworkOf, readPackage } from "./detect.js";
 import { nextBinary } from "./dev-server.js";
-import { installHint } from "./install-hint.js";
+import { installHint, toInstallStep } from "./install-hint.js";
 
 export function installCommand(
   root: string,
   appDir: string
-): { command: string; dir: string; full: string } {
+): { command: string | null; dir: string; full: string | null } {
   const hint = installHint(root, appDir);
+
+  if (hint.command === null) {
+    return { command: null, dir: hint.dir, full: null };
+  }
 
   return {
     command: hint.command,
@@ -24,9 +28,9 @@ export function installCommand(
 
 export function installDetail(
   name: string,
-  hint: { command: string; dir: string }
+  hint: { command: string | null; dir: string }
 ): string {
-  return `${name} cannot start yet. The app's dependencies are not installed, so the dev server cannot start. Run ${hint.command} in ${hint.dir}, then check again.`;
+  return `${name} cannot start yet. The app's dependencies are not installed, so the dev server cannot start. ${toInstallStep(hint)}, then check again.`;
 }
 
 function needsInstall(

@@ -9,7 +9,7 @@ export interface FolderInspection {
   appDir: string | null;
   candidates: AppCandidate[];
   depsInstalled: boolean | null;
-  install: { command: string; dir: string } | null;
+  install: { command: string | null; dir: string } | null;
   projectId: string | null;
   problem: string | null;
   workspace?: { root: string; name: string; opened: string } | null;

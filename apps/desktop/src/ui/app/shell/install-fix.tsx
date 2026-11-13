@@ -15,6 +15,17 @@ const InstallFix = ({ hint }: InstallFixProps): ReactElement | null => {
     return null;
   }
 
+  if (install.command === null) {
+    return (
+      <div className="app-fail-fix">
+        <span className="app-fail-label">{copy.installWithPackageManager}</span>
+        <div className="app-fail-cmd">
+          <code className="truncate">{install.dir}</code>
+        </div>
+      </div>
+    );
+  }
+
   const full = `cd ${JSON.stringify(install.dir)} && ${install.command}`;
 
   return (

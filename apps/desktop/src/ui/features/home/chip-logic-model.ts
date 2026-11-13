@@ -21,7 +21,7 @@ const getChipProblem = (chip: AppChip | null): string | null => {
 
 const getChipBlocker = (
   chip: AppChip | null
-): { readonly command: string; readonly dir: string } | null => {
+): { readonly command: string | null; readonly dir: string } | null => {
   const found = chip?.inspection;
 
   if (

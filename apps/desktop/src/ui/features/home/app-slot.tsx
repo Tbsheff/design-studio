@@ -21,6 +21,12 @@ const AppSlot = ({ chip, onDoctor }: AppSlotProps): ReactElement | null => {
   const blocker = chipBlocker(chip);
 
   if (blocker) {
+    let fix: string = copy.installDependencies;
+
+    if (blocker.command !== null) {
+      fix = blocker.command;
+    }
+
     return (
       <button
         type="button"
@@ -28,7 +34,7 @@ const AppSlot = ({ chip, onDoctor }: AppSlotProps): ReactElement | null => {
         onClick={onDoctor}
       >
         {copy.fixTheAppFirst}
-        {blocker.command}
+        {fix}
       </button>
     );
   }

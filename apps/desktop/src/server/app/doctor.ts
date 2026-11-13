@@ -7,7 +7,7 @@ import type {
   DoctorFix,
 } from "@design-studio/contracts/app-doctor";
 
-import { installHint } from "./install-hint.js";
+import { installHint, toInstallStep } from "./install-hint.js";
 import { buildCommand, findWorkspacePackage } from "./workspace-package.js";
 
 export interface DoctorProbe {
@@ -320,6 +320,7 @@ function unbuilt(ctx: Ctx, specifier: string): DoctorCause | null {
   const found = findWorkspacePackage(ctx.workTree, ctx.appRoot, specifier);
   if (!found || found.built || !found.hasBuild) return null;
   const hint = installHint(ctx.workTree, ctx.appDir);
+  const build = buildCommand(hint.manager, found.name);
   const where = path
     .relative(ctx.workTree, found.dir)
     .split(path.sep)
@@ -328,16 +329,16 @@ function unbuilt(ctx: Ctx, specifier: string): DoctorCause | null {
     kind: "install",
     severity: "error",
     title: `Workspace package ${found.name} is not built`,
-    detail: `${specifier} points to build output in ${where} that does not exist yet. Build it in a terminal with ${buildCommand(hint.manager, found.name)} in ${hint.dir}, then start again.`,
+    detail: `${specifier} points to build output in ${where} that does not exist yet. Build ${found.name} in a terminal${build ? ` with ${build}` : ""} in ${hint.dir}, then start again.`,
     evidence: evidence(ctx.all, MODULE_MISSING),
     fix: null,
-    command: `cd ${JSON.stringify(hint.dir)} && ${buildCommand(hint.manager, found.name)}`,
+    command: build ? `cd ${JSON.stringify(hint.dir)} && ${build}` : null,
   };
 }
 
 function installDetail(
   ctx: Ctx,
-  hint: { command: string; dir: string }
+  hint: { command: string | null; dir: string }
 ): string {
   const appRoot = path.join(ctx.workTree, ctx.appDir);
   const skipped =
@@ -348,7 +349,7 @@ function installDetail(
   const note = skipped
     ? ` ${ctx.appDir} has no node_modules folder, so the last install skipped this app (a filtered install or a copy without links).`
     : "";
-  return `Install the dependencies in a terminal with ${hint.command} in ${hint.dir}, then start again.${note}`;
+  return `${toInstallStep(hint)} in a terminal, then start again.${note}`;
 }
 
 function install(ctx: Ctx): DoctorCause | null {
@@ -367,7 +368,9 @@ function install(ctx: Ctx): DoctorCause | null {
     detail: installDetail(ctx, hint),
     evidence: noNext ? [] : evidence(ctx.all, MODULE_MISSING),
     fix: null,
-    command: `cd ${JSON.stringify(hint.dir)} && ${hint.command}`,
+    command: hint.command
+      ? `cd ${JSON.stringify(hint.dir)} && ${hint.command}`
+      : null,
   };
 }
 

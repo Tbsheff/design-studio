@@ -23,7 +23,7 @@ import {
 } from "./dev-server-port.js";
 import { diagnose, probeRoot, sameDoctor } from "./doctor.js";
 import type { DoctorProbe } from "./doctor.js";
-import { installHint } from "./install-hint.js";
+import { installHint, toInstallStep } from "./install-hint.js";
 
 const MAX_LOG_LINES = 400;
 const READY_TIMEOUT_MS = 180_000;
@@ -72,7 +72,7 @@ export function missingNextMessage(workTree: string, appDir: string): string {
   const appRoot = path.join(workTree, appDir);
   const hint = installHint(workTree, appDir);
 
-  return `next is not installed in ${appRoot}. Run ${hint.command} in ${hint.dir}, then start the app again. Or start the dev server yourself and use its URL.`;
+  return `next is not installed in ${appRoot}. ${toInstallStep(hint)}, then start the app again. Or start the dev server yourself and use its URL.`;
 }
 
 function exitMessage(logs: AppLogLine[], base: string): string {

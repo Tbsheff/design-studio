@@ -20,6 +20,8 @@ const copy = {
   inspectorLabel: "Inspector",
   installTheDependenciesInA:
     "Install the dependencies in a terminal, then choose Restart dev server.",
+  installWithPackageManager:
+    "Install the dependencies in this folder with the package manager of the app, then choose Restart dev server.",
   loadingProject: "Loading project…",
   maxTurnsPerRun: "Max turns per run",
   model: "Model",

@@ -21,6 +21,11 @@ const SHORTHAND: DirectStyleProperty = "border-width";
 
 const LEADING_NUMBER = /^-?\d*\.?\d+/u;
 
+const SIDE_LOOKS: readonly DirectStyleProperty[] = [
+  "border-style",
+  "border-color",
+];
+
 const SIDE_PROPS: Readonly<Record<Side, BorderSideWidth>> = {
   bottom: "border-bottom-width",
   left: "border-left-width",
@@ -207,22 +212,70 @@ const toAllPatch = (
   };
 };
 
+const isOpenPart = (part: string): boolean =>
+  part.split("(").length > part.split(")").length;
+
+const toTopLevelParts = (raw: string): readonly string[] => {
+  const parts: string[] = [];
+
+  for (const piece of raw.trim().split(/\s+/u).filter(Boolean)) {
+    const last = parts.at(-1) ?? "";
+
+    if (isOpenPart(last)) {
+      parts[parts.length - 1] = `${last} ${piece}`;
+    } else {
+      parts.push(piece);
+    }
+  }
+
+  return parts;
+};
+
+const toLookParts = (raw: string): Readonly<Record<Side, string>> => {
+  const parts = toTopLevelParts(raw);
+  const [top = "", right = top, bottom = top, left = right] = parts;
+
+  return { bottom, left, right, top };
+};
+
+const toDrawnSide = (widths: SideWidths): Side =>
+  SIDES.find((side) => widths[side] === toMaxWidth(widths)) ?? "top";
+
+const toLookPatch = (
+  values: StyleValues,
+  widths: SideWidths
+): Partial<StyleValues> => {
+  const drawn = toDrawnSide(widths);
+
+  const uneven = SIDE_LOOKS.filter(
+    (prop) => toTopLevelParts(values[prop]).length > 1
+  );
+
+  return Object.fromEntries(
+    uneven.map((prop) => [prop, toLookParts(values[prop])[drawn]])
+  );
+};
+
 const toSidePatch = (
   next: BorderSide,
   widths: SideWidths,
-  dirty: readonly DirectStyleProperty[]
+  edit: {
+    readonly values: StyleValues;
+    readonly dirty: readonly DirectStyleProperty[];
+  }
 ): Partial<StyleValues> | null => {
   const width = toWidthText(Math.max(toMaxWidth(widths), 1));
+  const look = toLookPatch(edit.values, widths);
 
   if (next === "custom") {
     return null;
   }
 
   if (next === "all") {
-    return toAllPatch(width, dirty);
+    return { ...look, ...toAllPatch(width, edit.dirty) };
   }
 
-  return toOneSidePatch(next, width, dirty);
+  return { ...look, ...toOneSidePatch(next, width, edit.dirty) };
 };
 
 const toWidthFields = (side: BorderSide): readonly NumberFieldConfig[] => {

@@ -9,7 +9,6 @@ import {
 } from "./border-side-model.js";
 import type { BorderSide } from "./border-side-model.js";
 import type { DirectEdit } from "./deps.js";
-import { applyEdit } from "./simple-model.js";
 
 interface BorderSides {
   readonly side: BorderSide;
@@ -33,10 +32,11 @@ const useBorderSides = (edit: DirectEdit): BorderSides => {
       }
 
       setPicked(next);
-      const patch = toSidePatch(next, widths, edit.dirty);
+      const patch = toSidePatch(next, widths, edit);
 
       if (patch) {
-        applyEdit(edit, patch);
+        edit.previewForced(patch);
+        edit.commit();
       }
     },
     [edit, widths]

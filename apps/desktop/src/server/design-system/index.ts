@@ -49,3 +49,5 @@ export {
 } from "./usage/index.js";
 
 export type { RenamePlan, TokenUse, UsageToken } from "./usage/index.js";
+
+export { injectForPreview } from "./html-link.js";

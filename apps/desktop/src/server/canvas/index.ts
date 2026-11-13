@@ -22,6 +22,10 @@ export { applyFrameState } from "./app-flow/index.js";
 
 export { bindLinkRuntime } from "./links/link-runtime.js";
 
+export { toPlayLinks } from "./links/play-links.js";
+
+export type { PlayLinks } from "./links/play-links.js";
+
 export {
   applyPlacement,
   CANVAS_VIEWPORTS,

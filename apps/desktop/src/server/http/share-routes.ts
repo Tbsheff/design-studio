@@ -6,6 +6,7 @@ import { toSharePort } from "../platform/config/index.js";
 import { assertSafeId } from "../platform/errors/index.js";
 import { createShareListener, type ShareListener } from "../share/listener.js";
 import { createLiveRefresher, type LiveHub } from "../share/live.js";
+import { toShareApp } from "../share/play-app.js";
 import { bindShareRuntime, toShareCore } from "../share/share-core.js";
 import { isLive, type ShareStore } from "../share/store.js";
 import { createViewerApp } from "../share/viewer-app.js";
@@ -16,6 +17,7 @@ export interface ShareRouteDeps extends ExportDeps {
   studioPort: number;
   comments: CommentStore;
   readBody: (c: Context) => Promise<Record<string, unknown>>;
+  uiDir: string;
 }
 
 const PRESENCE_PING_MS = 15_000;
@@ -26,7 +28,15 @@ export function registerShareRoutes(
 ): ShareListener {
   const { files: store, hub } = toShareCore(deps.dataDir);
   const listener = createShareListener(
-    createViewerApp({ shares: store, comments: deps.comments, hub }),
+    toShareApp(
+      createViewerApp({ shares: store, comments: deps.comments, hub }),
+      {
+        projects: deps.projects,
+        shares: store,
+        uiDir: deps.uiDir,
+        versions: deps.versions,
+      }
+    ),
     store,
     toSharePort(deps.studioPort)
   );

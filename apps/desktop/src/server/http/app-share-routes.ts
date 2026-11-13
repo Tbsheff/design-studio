@@ -5,7 +5,7 @@ import { readBody } from "./app-request.js";
 import { registerShareRoutes } from "./share-routes.js";
 
 const registerAppShareRoutes = (app: Hono, ctx: AppContext): void => {
-  const { comments, config, preview, projects, versions } = ctx;
+  const { comments, config, preview, projects, uiDir, versions } = ctx;
   registerShareRoutes(app, {
     projects,
     versions,
@@ -14,6 +14,7 @@ const registerAppShareRoutes = (app: Hono, ctx: AppContext): void => {
     dataDir: config.dataDir,
     studioPort: config.studioPort,
     readBody,
+    uiDir,
   });
 };
 

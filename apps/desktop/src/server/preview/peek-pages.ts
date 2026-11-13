@@ -282,7 +282,6 @@ export class PeekPages {
     if (!land) return Promise.reject(new Error("no reload"));
     warm.queued = true;
     warm.ready = warm.ready.then(async () => {
-      warm.queued = false;
       const at = Date.now();
       warm.stamp =
         (await this.stampOf(warm.url).catch(() => null))?.key ?? null;
@@ -291,6 +290,7 @@ export class PeekPages {
       await warm.page.evaluate(HOOK);
       warm.freshAt = Math.max(warm.freshAt, at);
       warm.loadedAt = Math.max(warm.loadedAt, at);
+      warm.queued = false;
     });
     return warm.ready;
   }

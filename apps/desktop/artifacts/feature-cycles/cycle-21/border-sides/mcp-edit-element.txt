@@ -1,0 +1,4 @@
+$ edit_element {"selector":"header","style":{"border-bottom-width":"2px"}} on <header class="border-b ...">
+{"jsonrpc":"2.0","id":2,"result":{"content":[{"type":"text","text":"{\n  \"at\": \"index.html:8:1\",\n  \"editedAt\": \"element\",\n  \"file\": \"index.html\",\n  \"applied\": {\n    \"style\": [\n      \"border-bottom-width\"\n    ],\n    \"text\": false\n  },\n  \"title\": \"Edit header: border-bottom-width\",\n  \"versionId\": \"pending-764be1ea6e87a302\",\n  \"classes\": [\n    \"border-b-2\",\n    \"border-gray-300\",\n    \"px-4\",\n    \"py-3\",\n    \"flex\",\n    \"items-center\",\n    \"justify-between\"\n  ],\n  \"wrote\": \"classes\"\n}"}]}}
+
+<header class="border-b-2 border-gray-300 px-4 py-3 flex items-center justify-between">

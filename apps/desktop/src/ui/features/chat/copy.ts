@@ -29,6 +29,13 @@ const copy = {
   coverageExplain:
     "Coverage is the share of expected tokens (color, type, spacing, radius, shadow) that the studio found in your sources and checked.",
   ctrlROrFor: "Ctrl+R or ↓ for the next match, Enter to use, Esc to close",
+  decisionChange: "Change this choice",
+  decisionChose: "Chose:",
+  decisionOther: "Other…",
+  decisionOtherLabel: "Other option",
+  decisionOtherPlaceholder: "Type another option",
+  decisionRowLabel: "Choices the agent made",
+  decisionUse: "Use",
   deny: "Deny",
   deny2: "Deny…",
   describeAChangeBelow:

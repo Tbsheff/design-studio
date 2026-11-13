@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 import { MessageContent } from "../../ai/components/ai/message-content.js";
 import type { RunUndoAction } from "./chat-parts-model.js";
 import { RunParts } from "./chat-run-parts.js";
+import { DecisionRow } from "./decision-row.js";
 import { LiveStatus } from "./live-status.js";
 import { RunBodyTail } from "./run-body-tail.js";
 import type { RunBodyTailProps } from "./run-entry-model.js";
@@ -53,6 +54,7 @@ const RunBodyContent = ({
         onDetails={onDetails}
       />
       <RunNotice run={run} latest={latest} onRetry={onRetry} />
+      <DecisionRow run={run} />
       <RunBodyTail
         run={run}
         latest={latest}

@@ -12,6 +12,7 @@ import type { FrameMenuItem } from "./frame-more-menu.js";
 import { FramePinMark } from "./frame-pin-mark.js";
 import { RouteSourceChip } from "./route-source-chip.js";
 import { useFramePin } from "./use-frame-pin.js";
+import { useStateBoard } from "./use-state-board.js";
 import { VariationControls } from "./variation-controls.js";
 import type { FrameVariation } from "./variation-controls.js";
 
@@ -42,10 +43,11 @@ const FrameLabelExtras = ({
 }: FrameLabelExtrasProps): ReactElement => {
   const frameId = frame.id;
   const pin = useFramePin(projectId, frameId);
+  const board = useStateBoard(projectId, frameId);
 
   const menuItems = useMemo(
-    (): FrameMenuItem[] => [...items, pin.item],
-    [items, pin.item]
+    (): FrameMenuItem[] => [...items, board, pin.item],
+    [items, board, pin.item]
   );
 
   const liveVariation = useMemo(() => {

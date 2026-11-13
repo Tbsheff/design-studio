@@ -211,6 +211,7 @@ const copy = {
   set: "Set ",
   share: "Share",
   showAll: "Show all",
+  showAllStates: "Show all states",
   showChatPane: "Show chat pane",
   showInThisFrame: "Show in this frame",
   showPane: "Show pane",

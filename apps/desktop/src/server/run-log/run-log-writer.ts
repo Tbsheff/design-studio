@@ -5,12 +5,14 @@ import type {
   RunSummary,
   VariationStartResult,
 } from "@design-studio/contracts";
+import type { PortStartResult } from "@design-studio/contracts/port";
 import { Context, Effect, Layer, Semaphore } from "effect";
 
 import {
   answerActiveRun,
   setActiveQueue,
   setRunTitle,
+  startPortWith,
   startRunWith,
   startVariationsWith,
   steerActiveRun,
@@ -21,7 +23,11 @@ import type {
   QueueItems,
   RunAck,
 } from "./run-log-controls.js";
-import type { StartRunCall, VariationStartCall } from "./run-log-runtime.js";
+import type {
+  PortRunCall,
+  StartRunCall,
+  VariationStartCall,
+} from "./run-log-runtime.js";
 
 type WriteFailure = BadRequest | Conflict | NotFound;
 
@@ -42,6 +48,9 @@ interface RunLogWriterApi {
     runId: string,
     items: QueueItems
   ) => Effect.Effect<RunAck, Conflict | NotFound>;
+  readonly startPort: (
+    call: PortRunCall
+  ) => Effect.Effect<PortStartResult, WriteFailure>;
   readonly start: (
     input: StartRunCall
   ) => Effect.Effect<{ readonly runId: string }, WriteFailure>;
@@ -98,6 +107,11 @@ class RunLogWriter extends Context.Service<RunLogWriter, RunLogWriterApi>()(
           input: StartRunCall
         ) {
           return yield* startRunWith(input);
+        }),
+        startPort: Effect.fn("RunLogWriter.startPort")(function* run(
+          call: PortRunCall
+        ) {
+          return yield* startPortWith(call);
         }),
         startVariations: Effect.fn("RunLogWriter.startVariations")(
           function* run(input: VariationStartCall) {

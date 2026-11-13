@@ -41,6 +41,7 @@ import { OrgScopeLive } from "./org-scope/live.js";
 import { PackLive } from "./pack/live.js";
 import { PageLive } from "./page/live.js";
 import { PatternLive } from "./pattern/live.js";
+import { PortLive } from "./port/live.js";
 import { ProjectLive } from "./project/live.js";
 import { PropLive } from "./prop/live.js";
 import { PublishLive } from "./publish/live.js";
@@ -111,6 +112,7 @@ const ALL_LIVE = {
   pack: PackLive,
   page: PageLive,
   pattern: PatternLive,
+  port: PortLive,
   project: ProjectLive,
   prop: PropLive,
   publish: PublishLive,

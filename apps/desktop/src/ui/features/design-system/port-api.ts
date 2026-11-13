@@ -1,3 +1,4 @@
+import { routes as portRoutes } from "@design-studio/actions/port/routes";
 import { routes } from "@design-studio/actions/workspace/routes";
 import type {
   PortFlowPlan,
@@ -7,9 +8,8 @@ import type {
 } from "@design-studio/contracts/port";
 import { PORT_OPEN_EVENT } from "@design-studio/contracts/port";
 
-import { json } from "../../api.js";
 import { call } from "../../platform/http.js";
-import type { RouteOutput } from "../../platform/http.js";
+import type { RouteInput, RouteOutput } from "../../platform/http.js";
 
 interface PortOpenDetail {
   frameId: string | null;
@@ -91,11 +91,28 @@ const readFlowPlan = async (input: PlanRequest): Promise<PortFlowPlan> => {
   return plan;
 };
 
+type StartFields = RouteInput<typeof portRoutes.startPort>;
+
+const toStartInput = (input: PortStartRequest): StartFields => {
+  const fields: StartFields = {
+    directionId: input.sourceDirectionId,
+    path: input.path,
+    paths: input.paths,
+    projectId: input.sourceProjectId,
+    route: input.route,
+    targetProjectId: input.targetProjectId,
+  };
+
+  return fields;
+};
+
+const startPortRun = (input: PortStartRequest): Promise<PortStartResult> =>
+  call(portRoutes.startPort, toStartInput(input));
+
 const portApi = {
   flowPlan: readFlowPlan,
   plan: readPagePlan,
-  start: (input: PortStartRequest): Promise<PortStartResult> =>
-    json<PortStartResult>("POST", "/api/port/start", input),
+  start: startPortRun,
 };
 
 export { setPortAvailable, portAvailable, openPortDialog, portApi };

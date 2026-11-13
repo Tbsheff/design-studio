@@ -34,6 +34,7 @@ import type { MotionError } from "../../motion/errors/index.js";
 import type { PackError } from "../../pack/errors/index.js";
 import type { PageError } from "../../page/errors/index.js";
 import type { PatternError } from "../../pattern/errors/index.js";
+import type { PortError } from "../../port/errors/index.js";
 import type { PropError } from "../../prop/errors/index.js";
 import type { PublishError } from "../../publish/errors/index.js";
 import type { ReferenceDomainError } from "../../reference/errors/index.js";
@@ -91,6 +92,7 @@ type StudioError =
   | PackError
   | PageError
   | PatternError
+  | PortError
   | PropError
   | PublishError
   | ReferenceDomainError

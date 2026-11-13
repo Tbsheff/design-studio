@@ -34,13 +34,8 @@ const registerDevserverRoutes = (app: Hono, ctx: AppContext): void => {
 };
 
 const registerDevserverPortRoutes = (app: Hono, ctx: AppContext): void => {
-  const { preview, projects, runner, startRun } = ctx;
-  registerPortRoutes(app, {
-    projects,
-    readBody,
-    isRunning: (pid, did) => runner.isRunning(pid, did),
-    startRun,
-  });
+  const { preview, projects } = ctx;
+  registerPortRoutes({ projects });
   registerUsageRoutes(app, { projects, preview });
 };
 

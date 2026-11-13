@@ -14,6 +14,7 @@ export { updateStaleRuns } from "./run-stale.js";
 export { bindRunLogRuntime } from "./run-log-runtime.js";
 
 export type {
+  PortRunCall,
   RunLogRuntime,
   StartRunCall,
   VariationStartCall,

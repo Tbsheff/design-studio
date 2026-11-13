@@ -6,6 +6,7 @@ import type {
   RunLevel,
   VariationStartResult,
 } from "@design-studio/contracts";
+import type { PortStartResult } from "@design-studio/contracts/port";
 import type { Effect } from "effect";
 
 import type { RepoContextState } from "../../shared/repo-context.js";
@@ -25,6 +26,16 @@ interface StartRunCall {
   readonly body: object;
   readonly directionId: string;
   readonly projectId: string;
+}
+
+interface PortRunCall {
+  readonly directionId: string | null;
+  readonly flow: boolean;
+  readonly path: string | null;
+  readonly paths: readonly string[] | null;
+  readonly projectId: string;
+  readonly route: string;
+  readonly targetProjectId: string;
 }
 
 interface VariationBriefCall {
@@ -58,6 +69,7 @@ interface RunLogRuntime {
     readonly isRunning: (projectId: string, directionId: string) => boolean;
   };
   readonly runsDir: (projectId: string) => string;
+  readonly startPort: (call: PortRunCall) => Promise<PortStartResult>;
   readonly startRun: (input: StartRunCall) => Promise<string>;
   readonly startVariations: (
     input: VariationStartCall
@@ -74,4 +86,10 @@ const readRunLogRuntime: Effect.Effect<RunLogRuntime> = slot.read;
 
 export { bindRunLogRuntime, readRunLogRuntime };
 
-export type { ActiveRun, RunLogRuntime, StartRunCall, VariationStartCall };
+export type {
+  ActiveRun,
+  PortRunCall,
+  RunLogRuntime,
+  StartRunCall,
+  VariationStartCall,
+};

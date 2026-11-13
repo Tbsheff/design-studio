@@ -1,6 +1,6 @@
 import type { Hono } from "hono";
 
-import { loadRepoContext } from "../agent/index.js";
+import { loadRepoContext, startPortRun } from "../agent/index.js";
 import { bindRunLogRuntime } from "../run-log/index.js";
 import { registerVariationRoutes } from "../variations/routes.js";
 import type { StartVariations } from "../variations/routes.js";
@@ -16,6 +16,16 @@ const bindRuns = (ctx: AppContext, startVariations: StartVariations): void => {
     projects: ctx.projects,
     runner: ctx.runner,
     runsDir: ctx.runsDir,
+    startPort: (call) =>
+      startPortRun(
+        {
+          isRunning: (projectId, directionId) =>
+            ctx.runner.isRunning(projectId, directionId),
+          projects: ctx.projects,
+          startRun: ctx.startRun,
+        },
+        call
+      ),
     startRun: (input) => startRunFromCall(ctx, input),
     startVariations: (input) => startVariations({ ...input, element: null }),
   });

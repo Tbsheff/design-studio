@@ -41,6 +41,7 @@ import { OrgScopeEntries } from "../org-scope/handlers.js";
 import { PackEntries } from "../pack/handlers.js";
 import { PageEntries } from "../page/handlers.js";
 import { PatternEntries } from "../pattern/handlers.js";
+import { PortEntries } from "../port/handlers.js";
 import { ProjectEntries } from "../project/handlers.js";
 import { PropEntries } from "../prop/handlers.js";
 import { PublishEntries } from "../publish/handlers.js";
@@ -111,6 +112,7 @@ const ALL_ENTRIES = {
   pack: PackEntries,
   page: PageEntries,
   pattern: PatternEntries,
+  port: PortEntries,
   project: ProjectEntries,
   prop: PropEntries,
   publish: PublishEntries,

@@ -18,6 +18,7 @@ import { findRunFile } from "./run-log-reads.js";
 import { readRunLogRuntime } from "./run-log-runtime.js";
 import type {
   ActiveRun,
+  PortRunCall,
   StartRunCall,
   VariationStartCall,
 } from "./run-log-runtime.js";
@@ -214,6 +215,14 @@ const startRunWith = Effect.fn("RunLog.startRunWith")(function* run(
   return { runId };
 });
 
+const startPortWith = Effect.fn("RunLog.startPortWith")(function* run(
+  call: PortRunCall
+) {
+  const runtime = yield* readRunLogRuntime;
+
+  return yield* attemptKnown(() => runtime.startPort(call));
+});
+
 const startVariationsWith = Effect.fn("RunLog.startVariationsWith")(
   function* run(input: VariationStartCall) {
     const runtime = yield* readRunLogRuntime;
@@ -226,6 +235,7 @@ export {
   answerActiveRun,
   setActiveQueue,
   setRunTitle,
+  startPortWith,
   startRunWith,
   startVariationsWith,
   steerActiveRun,

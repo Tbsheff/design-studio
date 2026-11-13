@@ -156,6 +156,8 @@ export {
   sourcePagePath,
 } from "./port-plan.js";
 
+export { startPortRun, toPortPlanInput } from "./port-start.js";
+
 export {
   compareToReference,
   mimeOfPath,
@@ -173,5 +175,7 @@ export { discoverSkills, prepareSkills } from "./skills.js";
 export { buildUserText } from "./user-message.js";
 
 export type { PortPlanInput } from "./port-plan.js";
+
+export type { PortPlanSource, PortStartDeps } from "./port-start.js";
 
 export type { PreparedSkills } from "./skills.js";

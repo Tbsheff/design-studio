@@ -41,6 +41,7 @@ import { OrgScopeActions } from "./org-scope/index.js";
 import { PackActions } from "./pack/index.js";
 import { PageActions } from "./page/index.js";
 import { PatternActions } from "./pattern/index.js";
+import { PortActions } from "./port/index.js";
 import { ProjectActions } from "./project/index.js";
 import { PropActions } from "./prop/index.js";
 import { PublishActions } from "./publish/index.js";
@@ -111,6 +112,7 @@ const ALL_ACTIONS = {
   pack: PackActions,
   page: PageActions,
   pattern: PatternActions,
+  port: PortActions,
   project: ProjectActions,
   prop: PropActions,
   publish: PublishActions,

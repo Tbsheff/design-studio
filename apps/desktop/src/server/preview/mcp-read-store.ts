@@ -1,8 +1,6 @@
-import type {
-  DoctorViewText,
-  PortPlanView,
-} from "@design-studio/actions/workspace/schema";
+import type { DoctorViewText } from "@design-studio/actions/workspace/schema";
 import type { ElementVariantInfo } from "@design-studio/contracts/element-variants";
+import type { PortFlowPlan, PortPlan } from "@design-studio/contracts/port";
 import type { ComponentUsage } from "@design-studio/contracts/usage-scope";
 import { Context, Effect, Layer } from "effect";
 
@@ -76,7 +74,7 @@ interface McpReadStoreApi {
   ) => Effect.Effect<FrameHtml, McpReadError>;
   readonly portPlan: (
     query: PortPlanQuery
-  ) => Effect.Effect<PortPlanView, McpReadError>;
+  ) => Effect.Effect<PortFlowPlan | PortPlan, McpReadError>;
   readonly projectList: () => Effect.Effect<
     readonly ProjectSummary[],
     McpReadError,

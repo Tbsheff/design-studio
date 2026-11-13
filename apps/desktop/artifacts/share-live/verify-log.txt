@@ -1,0 +1,20 @@
+desktop-light: canvas frames=3, live script clock 5 -> 8
+desktop-light: after pan and ctrl-wheel, zoom label=137%
+desktop: frame body contentEditable=false
+desktop: comment posted, pins shown=1
+desktop-light: popover open=1
+desktop-light: after Get started, play bar text=2 Swipe · aboutClick a linked elementHotspot hintsNoneRestart RExit Esc
+desktop-light: token in page=false, token in requests=false, /api requests=0, hosts=127.0.0.1:4955, requests=126
+phone-light: tap Get started -> swipe frame shown=true
+phone-light: touch swipe left on card -> back on Home=true
+phone-light: View canvas shows frames=3
+phone-light: token in page=false, token in requests=false, /api requests=0, hosts=127.0.0.1:4955, requests=125
+desktop-dark: canvas frames=3, live script clock 5 -> 8
+desktop-dark: after pan and ctrl-wheel, zoom label=137%
+desktop-dark: popover open=1
+desktop-dark: after Get started, play bar text=2 Swipe · aboutClick a linked elementHotspot hintsNoneRestart RExit Esc
+desktop-dark: token in page=false, token in requests=false, /api requests=0, hosts=127.0.0.1:4955, requests=125
+phone-dark: tap Get started -> swipe frame shown=true
+phone-dark: touch swipe left on card -> back on Home=true
+phone-dark: View canvas shows frames=3
+phone-dark: token in page=false, token in requests=false, /api requests=0, hosts=127.0.0.1:4955, requests=125

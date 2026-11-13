@@ -159,6 +159,8 @@ dialog.present-layer {
 
 .share-zoom {
   position: absolute;
+  width: auto;
+  min-width: 0;
   right: var(--s-3);
   bottom: var(--s-3);
   display: flex;
@@ -302,6 +304,32 @@ dialog.present-layer {
 }
 
 @media (max-width: 760px) {
+  .play-bar {
+    gap: var(--s-1);
+    padding: env(safe-area-inset-top) var(--s-2) 0;
+  }
+
+  .play-bar > :not(.icon-btn, .play-title, :nth-last-child(-n + 2)) {
+    display: none;
+  }
+
+  .play-bar .play-title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .play-bar > .btn.small {
+    font-size: 0;
+    gap: 0;
+  }
+
+  .play-bar > .btn.small kbd {
+    display: none;
+  }
+
   .share-main {
     flex-direction: column;
   }

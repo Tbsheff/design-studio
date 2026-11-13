@@ -28,7 +28,7 @@ const ManifestSchema = Schema.Record(Schema.String, ChunkSchema);
 
 type Manifest = typeof ManifestSchema.Type;
 
-const decodeManifest = toDecoder(ManifestSchema, "error");
+const decodeManifest = toDecoder(ManifestSchema, "ignore");
 
 const toChunkFiles = (
   manifest: Manifest,

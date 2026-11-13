@@ -12,6 +12,8 @@ const WHEEL_EVENT = String("wheel");
 
 const WHEEL_ZOOM = 0.01;
 
+const WHEEL_STEP_MAX = 50;
+
 const toWheelView = (
   view: CanvasView,
   event: WheelEvent,
@@ -19,7 +21,13 @@ const toWheelView = (
 ): CanvasView => {
   if (event.ctrlKey || event.metaKey) {
     const point = toLocalPoint(element, event.clientX, event.clientY);
-    const factor = Math.exp(-event.deltaY * WHEEL_ZOOM);
+
+    const delta = Math.max(
+      -WHEEL_STEP_MAX,
+      Math.min(WHEEL_STEP_MAX, event.deltaY)
+    );
+
+    const factor = Math.exp(-delta * WHEEL_ZOOM);
 
     return toZoomedView(view, factor, point.x, point.y);
   }

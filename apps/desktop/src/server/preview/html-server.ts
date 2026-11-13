@@ -1,4 +1,4 @@
-import { readFile, realpath, stat } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import http from "node:http";
 import path from "node:path";
 
@@ -21,6 +21,7 @@ import {
   runCompleteForward,
   toProjectIdFromHost,
 } from "./complete-script.js";
+import { toContentType, toRelativePath, toServedPath } from "./static-files.js";
 
 export type RootKind = "direction" | "snapshot";
 
@@ -42,35 +43,6 @@ export interface HtmlServer {
 }
 
 const SAFE_ID = /^[A-Za-z0-9_.-]+$/;
-
-const CONTENT_TYPES: Record<string, string> = {
-  ".avif": "image/avif",
-  ".css": "text/css; charset=utf-8",
-  ".gif": "image/gif",
-  ".htm": "text/html; charset=utf-8",
-  ".html": "text/html; charset=utf-8",
-  ".ico": "image/x-icon",
-  ".jpeg": "image/jpeg",
-  ".jpg": "image/jpeg",
-  ".js": "text/javascript; charset=utf-8",
-  ".json": "application/json; charset=utf-8",
-  ".map": "application/json; charset=utf-8",
-  ".md": "text/plain; charset=utf-8",
-  ".mjs": "text/javascript; charset=utf-8",
-  ".mp3": "audio/mpeg",
-  ".mp4": "video/mp4",
-  ".otf": "font/otf",
-  ".pdf": "application/pdf",
-  ".png": "image/png",
-  ".svg": "image/svg+xml",
-  ".ttf": "font/ttf",
-  ".txt": "text/plain; charset=utf-8",
-  ".wav": "audio/wav",
-  ".webm": "video/webm",
-  ".webp": "image/webp",
-  ".woff": "font/woff",
-  ".woff2": "font/woff2",
-};
 
 function frameAncestors(studioOrigin: string): string {
   const origins = new Set([
@@ -94,99 +66,6 @@ function hostMatchesProject(
   return (
     hostHeader.toLowerCase() === `${projectPreviewHost(projectId)}:${port}`
   );
-}
-
-function isInside(root: string, target: string): boolean {
-  const relative = path.relative(root, target);
-
-  return (
-    relative === "" ||
-    (!relative.startsWith("..") && !path.isAbsolute(relative))
-  );
-}
-
-function decodeRelative(rawPath: string): string | null {
-  const segments: string[] = [];
-
-  for (const segment of rawPath.split("/")) {
-    if (segment === "") {
-      continue;
-    }
-
-    let decoded: string;
-
-    try {
-      decoded = decodeURIComponent(segment);
-    } catch {
-      return null;
-    }
-
-    if (
-      decoded === "." ||
-      decoded === ".." ||
-      decoded.includes("/") ||
-      decoded.includes("\\") ||
-      decoded.includes("\0")
-    ) {
-      return null;
-    }
-
-    segments.push(decoded);
-  }
-
-  return segments.join("/");
-}
-
-async function resolveFile(
-  root: string,
-  relative: string
-): Promise<{ file: string; relative: string } | null> {
-  let rootReal: string;
-
-  try {
-    rootReal = await realpath(root);
-  } catch {
-    return null;
-  }
-
-  let candidate = path.resolve(rootReal, relative);
-  let candidateRelative = relative;
-
-  if (!isInside(rootReal, candidate)) {
-    return null;
-  }
-
-  try {
-    let real = await realpath(candidate);
-
-    if (!isInside(rootReal, real)) {
-      return null;
-    }
-
-    let info = await stat(real);
-
-    if (info.isDirectory()) {
-      candidate = path.join(candidate, "index.html");
-      candidateRelative = candidateRelative
-        ? `${candidateRelative}/index.html`
-        : "index.html";
-      real = await realpath(candidate);
-
-      if (!isInside(rootReal, real)) {
-        return null;
-      }
-
-      info = await stat(real);
-    }
-
-    if (!info.isFile()) {
-      return null;
-    }
-
-    return { file: real, relative: candidateRelative };
-  } catch {
-    return null;
-  }
 }
 
 function listenOn(
@@ -343,20 +222,20 @@ export async function startHtmlServer(
       return c.text("Not found", 404, securityHeaders);
     }
 
-    const relative = decodeRelative(c.req.path.slice(prefix.length));
+    const relative = toRelativePath(c.req.path.slice(prefix.length));
 
     if (relative === null) {
       return c.text("Bad path", 400, securityHeaders);
     }
 
-    const resolved = await resolveFile(root, relative || "index.html");
+    const resolved = await toServedPath(root, relative || "index.html");
 
     if (!resolved) {
       return c.text("Not found", 404, securityHeaders);
     }
 
     const extension = path.extname(resolved.file).toLowerCase();
-    const contentType = CONTENT_TYPES[extension] ?? "application/octet-stream";
+    const contentType = toContentType(extension) ?? "application/octet-stream";
 
     const headers = {
       ...securityHeaders,

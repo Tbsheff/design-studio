@@ -1,6 +1,7 @@
 import type { MouseEvent, ReactElement } from "react";
 import { useCallback } from "react";
 
+import { toHunkCount } from "./change-rings-model.js";
 import { copy } from "./copy.js";
 import type { ChangeRings } from "./use-change-rings.js";
 
@@ -14,6 +15,14 @@ const toCountText = (count: number): string => {
   }
 
   return `${count}${copy.changeSpotCount}`;
+};
+
+const toUndoText = (count: number): string => {
+  if (count > 1) {
+    return `${copy.changeSpotUndoMany}${count}${copy.changeSpotUndoManyEnd}`;
+  }
+
+  return copy.changeSpotUndo;
 };
 
 const toStepText = (step: number | null, count: number): string | null => {
@@ -66,7 +75,7 @@ const ChangePill = ({ control }: ChangePillProps): ReactElement | null => {
           disabled={isPending}
           onClick={undo}
         >
-          {copy.changeSpotUndo}
+          {toUndoText(toHunkCount(spot))}
         </button>
       )}
       <button

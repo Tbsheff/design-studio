@@ -20,6 +20,8 @@ const copy = {
   changeSpotOne: "1 change",
   changeSpotTip: "Step through the changes. Shift+click or Esc clears.",
   changeSpotUndo: "Undo this change",
+  changeSpotUndoMany: "Undo ",
+  changeSpotUndoManyEnd: " changes",
   changeSpotUndoTip: "Undo only this change. Cmd+Z takes it back.",
   changeTheName: "Change the name and email of the mock user",
   clear: "Clear",

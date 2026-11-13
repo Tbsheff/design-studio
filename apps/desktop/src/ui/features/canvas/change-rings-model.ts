@@ -163,6 +163,19 @@ const toStepRing = (spot: ChangeSpot | null): ChangeRing | null => {
   return spot.rings[spot.step] ?? null;
 };
 
+const toHunkCount = (spot: ChangeSpot): number => {
+  const ring = toStepRing(spot);
+
+  if (!ring) {
+    return 0;
+  }
+
+  return spot.rings.filter(
+    (entry) =>
+      entry.item.hunk === ring.item.hunk && entry.item.file === ring.item.file
+  ).length;
+};
+
 const toSpotWithout = (
   spot: ChangeSpot,
   ring: ChangeRing
@@ -187,6 +200,7 @@ export {
   isMostFound,
   toAnchorQueries,
   toFoundCount,
+  toHunkCount,
   toNextStep,
   toRingAt,
   toRings,

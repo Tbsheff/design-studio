@@ -40,18 +40,59 @@ const PageSourceImportedSchema = Schema.Struct({
   versionId: Schema.NullOr(Schema.String),
 });
 
+const PageSourceFileDiffSchema = Schema.Struct({
+  change: Schema.Literals(["changed", "deleted", "added"]),
+  diff: Schema.String.annotate({
+    description:
+      'Line diff from the copy to the app now. "@@ -a +b @@" starts a hunk, "+" is a new line, "-" is an old line. Empty when the page has no copy snapshot.',
+  }),
+  file: Schema.String,
+  isCut: Schema.Boolean,
+});
+
+const PageSourceChangesSchema = Schema.Struct({
+  appProjectId: Schema.NullOr(Schema.String),
+  copiedAt: Schema.NullOr(Schema.Number),
+  files: Schema.Array(PageSourceFileDiffSchema).check(
+    Schema.isMaxLength(PAGE_SOURCE_CHANGES_MAX)
+  ),
+  hasSnapshot: Schema.Boolean,
+  isRouteCopy: Schema.Boolean,
+  routePath: Schema.NullOr(Schema.String),
+});
+
+const PageSourceSetSchema = Schema.Struct({
+  fileCount: Schema.Int,
+  hasSnapshot: Schema.Boolean,
+  page: Schema.String,
+  routePath: Schema.String,
+});
+
 type PageSource = typeof PageSourceSchema.Type;
 
 type PageSourceChange = typeof PageSourceChangeSchema.Type;
 
 type PageSourceImported = typeof PageSourceImportedSchema.Type;
 
+type PageSourceChanges = typeof PageSourceChangesSchema.Type;
+
+type PageSourceFileDiff = typeof PageSourceFileDiffSchema.Type;
+
 export {
   PAGE_SOURCE_CHANGES_MAX,
   PageSourceChangeSchema,
+  PageSourceChangesSchema,
   PageSourceFields,
+  PageSourceFileDiffSchema,
   PageSourceImportedSchema,
   PageSourceSchema,
+  PageSourceSetSchema,
 };
 
-export type { PageSource, PageSourceChange, PageSourceImported };
+export type {
+  PageSource,
+  PageSourceChange,
+  PageSourceChanges,
+  PageSourceFileDiff,
+  PageSourceImported,
+};

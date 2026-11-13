@@ -1,11 +1,15 @@
 import { NotFound } from "@design-studio/actions/_core/errors/not-found";
-import type { PageSource } from "@design-studio/actions/page/source/schema";
+import type {
+  PageSource,
+  PageSourceChanges,
+} from "@design-studio/actions/page/source/schema";
 import { Context, Effect, Layer } from "effect";
 
 import type { KnownFailure } from "../../platform/attempt/index.js";
 import { ProjectStore } from "../../store/index.js";
 import type { LocalOrgScope } from "../../store/index.js";
 import { toChangedFiles } from "./engine/to-changed-files.js";
+import { toPageSourceChanges } from "./route-source-change.js";
 import {
   getRecord,
   hasPage,
@@ -13,7 +17,7 @@ import {
   toShaMap,
 } from "./route-source-file.js";
 import type { RouteSourceEntry } from "./route-source-file.js";
-import { toAppWorkTree, toWorkTree } from "./route-source-target.js";
+import { toAppWorkTree, toCopyOf, toWorkTree } from "./route-source-target.js";
 import type { SourcePageCommand } from "./route-source-target.js";
 
 interface RouteSourceStoreApi {
@@ -23,6 +27,9 @@ interface RouteSourceStoreApi {
   readonly inspect: (
     command: SourcePageCommand
   ) => Effect.Effect<PageSource, KnownFailure, LocalOrgScope>;
+  readonly inspectChanges: (
+    command: SourcePageCommand
+  ) => Effect.Effect<PageSourceChanges, KnownFailure, LocalOrgScope>;
 }
 
 const NOT_A_COPY: PageSource = {
@@ -45,21 +52,6 @@ class RouteSourceStore extends Context.Service<
     Effect.gen(function* build() {
       const projects = yield* ProjectStore;
 
-      const toEntry = Effect.fn("RouteSourceStore.toEntry")(function* run(
-        command: SourcePageCommand
-      ) {
-        const workTree = yield* toWorkTree(
-          command.projectId,
-          command.directionId
-        ).pipe(Effect.provideService(ProjectStore, projects));
-
-        if (!(yield* hasPage(workTree, command.file))) {
-          return null;
-        }
-
-        return toEntryOf(yield* getRecord(workTree), command.file);
-      });
-
       return RouteSourceStore.of({
         get: Effect.fn("RouteSourceStore.get")(function* run(
           command: SourcePageCommand
@@ -80,11 +72,15 @@ class RouteSourceStore extends Context.Service<
         inspect: Effect.fn("RouteSourceStore.inspect")(function* run(
           command: SourcePageCommand
         ) {
-          const entry = yield* toEntry(command);
+          const copy = yield* toCopyOf(command).pipe(
+            Effect.provideService(ProjectStore, projects)
+          );
 
-          if (entry === null) {
+          if (copy === null) {
             return NOT_A_COPY;
           }
+
+          const { entry } = copy;
 
           const app = yield* toAppWorkTree(entry.appProjectId).pipe(
             Effect.provideService(ProjectStore, projects)
@@ -106,6 +102,13 @@ class RouteSourceStore extends Context.Service<
             routePath: entry.routePath,
           };
         }),
+        inspectChanges: Effect.fn("RouteSourceStore.inspectChanges")(
+          function* run(command: SourcePageCommand) {
+            return yield* toPageSourceChanges(command).pipe(
+              Effect.provideService(ProjectStore, projects)
+            );
+          }
+        ),
       });
     })
   );

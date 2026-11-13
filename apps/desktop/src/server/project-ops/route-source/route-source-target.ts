@@ -2,7 +2,13 @@ import { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import { Effect } from "effect";
 
 import { ProjectStore } from "../../store/index.js";
-import { toDirection, toMainDirection } from "./route-source-file.js";
+import {
+  getRecord,
+  hasPage,
+  toDirection,
+  toEntryOf,
+  toMainDirection,
+} from "./route-source-file.js";
 
 interface SourcePageCommand {
   readonly directionId: string;
@@ -43,6 +49,24 @@ const toAppWorkTree = Effect.fn("RouteSource.toAppWorkTree")(function* run(
   return { appDir: app.app?.appDir ?? ".", workTree: direction.workTree };
 });
 
-export { toAppWorkTree, toWorkTree };
+const toCopyOf = Effect.fn("RouteSource.toCopyOf")(function* run(
+  command: SourcePageCommand
+) {
+  const workTree = yield* toWorkTree(command.projectId, command.directionId);
+
+  if (!(yield* hasPage(workTree, command.file))) {
+    return null;
+  }
+
+  const entry = toEntryOf(yield* getRecord(workTree), command.file);
+
+  if (entry === null) {
+    return null;
+  }
+
+  return { entry, workTree };
+});
+
+export { toAppWorkTree, toCopyOf, toWorkTree };
 
 export type { SourcePageCommand };

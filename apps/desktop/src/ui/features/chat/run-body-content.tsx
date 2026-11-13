@@ -45,7 +45,13 @@ const RunBodyContent = ({
           onStop={onStop}
         />
       )}
-      <RunError run={run} latest={latest} undo={undo} onRetry={onRetry} />
+      <RunError
+        run={run}
+        latest={latest}
+        undo={undo}
+        onRetry={onRetry}
+        onDetails={onDetails}
+      />
       <RunNotice run={run} latest={latest} onRetry={onRetry} />
       <RunBodyTail
         run={run}

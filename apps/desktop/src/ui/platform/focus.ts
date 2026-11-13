@@ -49,6 +49,12 @@ const focusComposerAtEnd = (): void => {
   }
 };
 
+const isComposerShown = (): boolean => {
+  const input = findElement(document.body, COMPOSER_INPUT);
+
+  return input !== null && input.getClientRects().length > 0;
+};
+
 const focusNewProject = (): void => {
   globalThis.requestAnimationFrame(() =>
     findElement(document.body, NEW_PROJECT_INPUT)?.focus()
@@ -64,6 +70,7 @@ export {
   focusComposerAtEnd,
   focusNewProject,
   focusStageQuietly,
+  isComposerShown,
   markComposerIntent,
   takeComposerIntent,
   toMountRoot,

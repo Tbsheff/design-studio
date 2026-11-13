@@ -274,3 +274,11 @@ Shared files:
 8. Export a frame to Figma as editable layers (Claude Design still lacks it); needs a Figma plugin.
 9. Agent engine choice (Codex, Gemini CLI, OpenRouter), as in doop and Open Design; high effort.
 10. Show diff for port-check: serve the diff PNG from the data dir and open it in an image view (port-check left it out).
+
+## Results
+
+- Merged: app-tokens (branch feat/app-tokens-2), shared-layers, screen-drop, selection-picture, scale-tool. Main at 9b182317a.
+- Conflict: screen-drop vs shared-layers in `server/canvas/index.ts` (two export lines). Kept both, then gen-routes.
+- Checks: gen-routes --check pass, typecheck 0 errors, lint:gate pass (59683, baseline 89733), build:ui pass, desktop:pack pass.
+- Installed app: :4570 returns 200. Server idle CPU 0.00 CPU-s/min over 60 s. Two headless Chromes showed in one count and were gone seconds later.
+- Open: no real-model runs. Shared layers overwrites a page changed after the inspect. Screen drop frame does not take the image's shape, and chat runs cannot pass an attachment id. Selection picture chip shows an icon, not a thumbnail. Scale tool K does not work with focus in the preview frame. Imported folders cannot save versions after a canvas change (found by shared-layers, not fixed). MCP snapshots not refreshed (user decision).

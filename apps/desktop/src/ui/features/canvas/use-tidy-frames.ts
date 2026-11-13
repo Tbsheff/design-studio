@@ -6,13 +6,19 @@ import { useCallback, useEffect, useTransition } from "react";
 import { matchesKey } from "../../../shared/keymap.js";
 import { IS_MAC } from "../../canvas-hook-slots.js";
 import { TIDY_FRAMES_EVENT } from "../../domain/tidy-frames-events.js";
-import type { TidyFramesDetail } from "../../domain/tidy-frames-events.js";
+import type {
+  TidyFramesDetail,
+  TidyFramesLayout,
+} from "../../domain/tidy-frames-events.js";
 import { call } from "../../platform/http.js";
 import { isTypingTarget } from "../../platform/typing-target.js";
 import { useLatest } from "../../platform/use-latest.js";
 import { canvasStore } from "./canvas-frames-model.js";
+import { isFrameAlignLayout, isFrameAlignReady } from "./frame-align-model.js";
+import type { FrameAlignLayout } from "./frame-align-model.js";
 import { toSelectedIds } from "./frame-selection-store.js";
 import { toInsideIds } from "./section-model.js";
+import { useFrameAlignKeys } from "./use-frame-align.js";
 
 interface TidyFramesInput {
   readonly projectId: string;
@@ -50,17 +56,41 @@ const toSectionId = (
   return section?.id ?? null;
 };
 
+const toAlignWire = (
+  forProject: string,
+  alignLayout: FrameAlignLayout
+): TidyFramesWire | null => {
+  const selected = toSelectedIds(forProject);
+
+  if (!isFrameAlignReady(alignLayout, selected.length)) {
+    return null;
+  }
+
+  return {
+    frames: [...selected],
+    gap: TIDY_GAP,
+    layout: alignLayout,
+    projectId: forProject,
+    section: null,
+  };
+};
+
 const toTidyWire = (
   forProject: string,
-  frameId: string | null
-): TidyFramesWire => {
+  frameId: string | null,
+  tidyLayout: TidyFramesLayout
+): TidyFramesWire | null => {
+  if (isFrameAlignLayout(tidyLayout)) {
+    return toAlignWire(forProject, tidyLayout);
+  }
+
   const selected = toSelectedIds(forProject);
 
   if (selected.length >= 2) {
     return {
       frames: [...selected],
       gap: TIDY_GAP,
-      layout: "tidy",
+      layout: tidyLayout,
       projectId: forProject,
       section: null,
     };
@@ -69,7 +99,7 @@ const toTidyWire = (
   return {
     frames: null,
     gap: TIDY_GAP,
-    layout: "tidy",
+    layout: tidyLayout,
     projectId: forProject,
     section: toSectionId(forProject, frameId),
   };
@@ -88,13 +118,16 @@ const useTidyFrames = (input: TidyFramesInput): void => {
   const latest = useLatest(input);
 
   const tidyFrames = useCallback(
-    (frameId: string | null): void => {
+    (frameId: string | null, layout: TidyFramesLayout): void => {
+      const wire = toTidyWire(latest.current.projectId, frameId, layout);
+
+      if (wire === null) {
+        return;
+      }
+
       startTransition(async () => {
         try {
-          await call(
-            routes.moveFramesCanvas,
-            toTidyWire(latest.current.projectId, frameId)
-          );
+          await call(routes.moveFramesCanvas, wire);
         } catch (error) {
           globalThis.reportError(error);
         }
@@ -103,6 +136,17 @@ const useTidyFrames = (input: TidyFramesInput): void => {
     [latest]
   );
 
+  const alignFrames = useCallback(
+    (layout: FrameAlignLayout): void => tidyFrames(null, layout),
+    [tidyFrames]
+  );
+
+  useFrameAlignKeys({
+    onAlign: alignFrames,
+    projectId: input.projectId,
+    selectionCount: input.selectionCount,
+  });
+
   useEffect(() => {
     const handleKey = (event: KeyboardEvent): void => {
       if (!isTidyKey(event, latest.current.selectionCount)) {
@@ -110,11 +154,14 @@ const useTidyFrames = (input: TidyFramesInput): void => {
       }
 
       event.preventDefault();
-      tidyFrames(null);
+      tidyFrames(null, "tidy");
     };
 
-    const handleEvent = (event: Event): void =>
-      tidyFrames(toDetail(event)?.frameId ?? null);
+    const handleEvent = (event: Event): void => {
+      const detail = toDetail(event);
+
+      tidyFrames(detail?.frameId ?? null, detail?.layout ?? "tidy");
+    };
 
     globalThis.addEventListener("keydown", handleKey);
     globalThis.addEventListener(TIDY_FRAMES_EVENT, handleEvent);

@@ -505,3 +505,49 @@ body[class*="frame-resize-"] .frame {
 .frame-dragging .frame-select-layer {
   visibility: hidden;
 }
+
+.frame-align-bar {
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: 4px;
+  padding: 2px;
+  border-radius: var(--r-md);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-pop);
+  transform: scale(var(--inv-zoom, 1)) translateY(-28px);
+  transform-origin: 0 100%;
+  pointer-events: auto;
+}
+
+.frame-align-tool {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: var(--r-control-sm);
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+}
+
+.frame-align-tool:hover:not(:disabled) {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.frame-align-tool:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.frame-align-sep {
+  width: 1px;
+  height: 16px;
+  margin: 0 2px;
+  background: var(--line);
+}

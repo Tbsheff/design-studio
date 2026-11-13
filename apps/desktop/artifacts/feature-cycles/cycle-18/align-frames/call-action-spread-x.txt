@@ -1,0 +1,92 @@
+call-action canvas.moveFrames on http://127.0.0.1:4870. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 4 ms, git spawns: not counted (server side)
+{
+  "layout": "spread-x",
+  "movedFrames": [
+    {
+      "id": "f2",
+      "x": 1500,
+      "y": 0
+    },
+    {
+      "id": "f3",
+      "x": 1985,
+      "y": 0
+    },
+    {
+      "id": "f4",
+      "x": 2470,
+      "y": -90
+    },
+    {
+      "id": "f5",
+      "x": 2900,
+      "y": 260
+    }
+  ],
+  "note": "Links keep their frames. Undo restores the earlier layout.",
+  "section": null
+}
+
+[mcp] ok, 8 ms, git spawns: not counted (server side)
+{
+  "layout": "spread-x",
+  "movedFrames": [
+    {
+      "id": "f2",
+      "x": 1500,
+      "y": 0
+    },
+    {
+      "id": "f3",
+      "x": 1985,
+      "y": 0
+    },
+    {
+      "id": "f4",
+      "x": 2470,
+      "y": -90
+    },
+    {
+      "id": "f5",
+      "x": 2900,
+      "y": 260
+    }
+  ],
+  "note": "Links keep their frames. Undo restores the earlier layout.",
+  "section": null
+}
+
+[agent] ok, 2 ms, git spawns: not counted (server side)
+{
+  "layout": "spread-x",
+  "movedFrames": [
+    {
+      "id": "f2",
+      "x": 1500,
+      "y": 0
+    },
+    {
+      "id": "f3",
+      "x": 1985,
+      "y": 0
+    },
+    {
+      "id": "f4",
+      "x": 2470,
+      "y": -90
+    },
+    {
+      "id": "f5",
+      "x": 2900,
+      "y": 260
+    }
+  ],
+  "note": "Links keep their frames. Undo restores the earlier layout.",
+  "section": null
+}
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

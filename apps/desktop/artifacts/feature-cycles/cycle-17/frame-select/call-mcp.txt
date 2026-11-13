@@ -1,0 +1,15 @@
+[mcp] ok, 20 ms, git spawns: not counted (server side)
+{
+  "note": "The page files stay in the project. One undo brings all the frames back.",
+  "removedFrames": [
+    {
+      "id": "f2",
+      "label": "A"
+    },
+    {
+      "id": "f3",
+      "label": "B"
+    }
+  ]
+}
+answered approval cards: mwmxTPgl20x9

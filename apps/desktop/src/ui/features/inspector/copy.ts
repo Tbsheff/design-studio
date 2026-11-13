@@ -174,6 +174,13 @@ const copy = {
     "Pick an image file. You can also drop one on the canvas.",
   polishPrompt:
     "Polish this design: run every check, fix what you find, keep the content and structure.",
+  proposalAccept: "Make rule",
+  proposalClassLine: (value: string, count: number): string =>
+    `You added ${value} ${count} times. Make it a rule?`,
+  proposalDismiss: "Dismiss",
+  proposalLabel: "Proposed design rule",
+  proposalStyleLine: (property: string, value: string, count: number): string =>
+    `You set ${property} to ${value} ${count} times. Make it a rule?`,
   prototypeHint:
     "Press L, then click an element and pick a frame to link it. Links play in Present.",
   prototypeUseTool: "Use the Prototype link tool",

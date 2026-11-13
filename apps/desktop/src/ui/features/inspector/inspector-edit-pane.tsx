@@ -6,6 +6,7 @@ import { copy } from "./copy.js";
 import type { InspectorProps, InspectorTab } from "./inspector-model.js";
 import { InspectorTabBody } from "./inspector-tab-body.js";
 import { LeavePrompt } from "./leave-prompt.js";
+import { RuleProposalCard } from "./rule-proposal-card.js";
 import { SessionError } from "./session-error.js";
 import { SessionHeader } from "./session-header.js";
 import { TabBar } from "./tab-bar.js";
@@ -46,6 +47,10 @@ const InspectorEditPane = ({
       <LeavePrompt session={session} />
       <ArrangeSlot props={props} shouldShowBar={tab === "simple"} />
       <InspectorTabBody props={props} session={session} tab={tab} />
+      <RuleProposalCard
+        directionId={props.directionId}
+        projectId={props.projectId}
+      />
     </section>
   );
 };

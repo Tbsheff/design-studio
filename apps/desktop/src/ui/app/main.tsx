@@ -27,6 +27,7 @@ import "../styles/composer.css";
 import "../styles/ai.css";
 import "../styles/inspector.css";
 import "../styles/inspector-extras.css";
+import "../styles/rule-proposal.css";
 import "../styles/packs.css";
 import "../styles/new-ds.css";
 import "../styles/library.css";

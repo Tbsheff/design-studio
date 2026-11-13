@@ -147,15 +147,33 @@ export interface PortStartResult {
 
 export const PORT_FLOW_MAX_PAGES = 8;
 
+const SLUG_MAX = 40;
+
+const toCutSlug = (slug: string): string => {
+  if (slug.length <= SLUG_MAX) {
+    return slug;
+  }
+
+  const head = slug.slice(0, SLUG_MAX + 1);
+  const cut = head.lastIndexOf("-");
+
+  if (cut > 0) {
+    return head.slice(0, cut);
+  }
+
+  return slug.slice(0, SLUG_MAX);
+};
+
 export function portPageSlug(pagePath: string): string {
   const stem = pagePath.replace(/^.*\//, "").replace(/\.html?$/i, "");
 
   return (
-    stem
-      .toLowerCase()
-      .replaceAll(/[^a-z0-9]+/g, "-")
-      .replaceAll(/^-+|-+$/g, "")
-      .slice(0, 40) || "page"
+    toCutSlug(
+      stem
+        .toLowerCase()
+        .replaceAll(/[^a-z0-9]+/g, "-")
+        .replaceAll(/^-+|-+$/g, "")
+    ) || "page"
   );
 }
 
@@ -191,11 +209,12 @@ export function suggestPortRoute(
       ? stem
       : (title?.split(/\s[·|–—-]\s/)[0] ?? "prototype");
 
-  const slug = base
-    .toLowerCase()
-    .replaceAll(/[^a-z0-9]+/g, "-")
-    .replaceAll(/^-+|-+$/g, "")
-    .slice(0, 40);
+  const slug = toCutSlug(
+    base
+      .toLowerCase()
+      .replaceAll(/[^a-z0-9]+/g, "-")
+      .replaceAll(/^-+|-+$/g, "")
+  );
 
   return `/${slug || "prototype"}`;
 }

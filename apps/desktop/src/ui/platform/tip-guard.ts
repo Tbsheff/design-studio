@@ -311,14 +311,30 @@ const listenPointer = (tips: TipLayer): void => {
 };
 
 const listenFocus = (tips: TipLayer): void => {
+  let isEscaped = false;
+
   document.addEventListener(
     "focusin",
     (event) => {
       const host = toTipHost(event.target);
 
-      if (host?.matches(":focus-visible")) {
+      if (!isEscaped && host?.matches(":focus-visible")) {
         tips.show(host);
       }
+    },
+    true
+  );
+  document.addEventListener(
+    "keydown",
+    (event) => {
+      isEscaped = event.key === "Escape";
+    },
+    true
+  );
+  document.addEventListener(
+    "pointermove",
+    () => {
+      isEscaped = false;
     },
     true
   );

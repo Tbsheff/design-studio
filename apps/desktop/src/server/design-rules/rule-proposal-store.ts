@@ -12,7 +12,11 @@ import type {
   RuleProposalDraft,
   StyleEdit,
 } from "./engine/to-rule-proposals.js";
-import { getProposalStatus, toClosedIds } from "./rule-proposal-file.js";
+import {
+  EMPTY_STATUS,
+  getProposalStatus,
+  toClosedIds,
+} from "./rule-proposal-file.js";
 import type { ProposalStatusFile } from "./rule-proposal-file.js";
 
 interface RuleProposalQuery {
@@ -22,6 +26,7 @@ interface RuleProposalQuery {
 
 interface OpenRuleProposals {
   readonly directionId: string | null;
+  readonly status: ProposalStatusFile;
   readonly items: readonly RuleProposalDraft[];
 }
 
@@ -170,7 +175,7 @@ class RuleProposalStore extends Context.Service<
             query.directionId ?? known[0]?.directionId ?? null;
 
           if (directionId === null) {
-            return { directionId, items: [] };
+            return { directionId, items: [], status: EMPTY_STATUS };
           }
 
           const manual = known
@@ -185,15 +190,16 @@ class RuleProposalStore extends Context.Service<
             { concurrency: READ_CONCURRENCY }
           );
 
-          const status = yield* getStatus(directionId, query.projectId);
+          const closed = yield* getStatus(directionId, query.projectId);
 
           return {
             directionId,
             items: toRuleProposals({
-              closedIds: toClosedIds(status),
+              closedIds: toClosedIds(closed),
               edits: edits.flat(),
               layerMax: PROPOSAL_LAYER_MAX,
             }),
+            status: closed,
           };
         }),
       });

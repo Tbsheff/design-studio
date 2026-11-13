@@ -51,6 +51,14 @@ class RuleProposalWriter extends Context.Service<
           const proposal =
             open.items.find((item) => item.id === command.proposalId) ?? null;
 
+          if (open.status[command.status].includes(command.proposalId)) {
+            return {
+              id: command.proposalId,
+              ruleId: null,
+              status: command.status,
+            };
+          }
+
           if (proposal === null || open.directionId === null) {
             return yield* new NotFound({ message: CLOSED_MESSAGE });
           }

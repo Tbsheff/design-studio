@@ -1,0 +1,39 @@
+.rule-proposal {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  margin: var(--s-2) var(--s-2) var(--s-2);
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-lg);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-pop);
+  color: var(--text);
+  animation: pop-in var(--dur) var(--ease);
+}
+
+.rule-proposal > svg {
+  flex: none;
+  color: var(--accent);
+}
+
+.rule-proposal-line {
+  flex: 1 1 0;
+  min-width: 0;
+  color: var(--text);
+}
+
+.rule-proposal-error {
+  flex-basis: 100%;
+  color: var(--danger);
+}
+
+.rule-proposal-actions {
+  display: flex;
+  flex-basis: 100%;
+  justify-content: flex-end;
+  gap: var(--s-1);
+}

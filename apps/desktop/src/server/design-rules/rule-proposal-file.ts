@@ -76,6 +76,6 @@ const setProposalStatus = async (
   return next;
 };
 
-export { getProposalStatus, toClosedIds, setProposalStatus };
+export { EMPTY_STATUS, getProposalStatus, setProposalStatus, toClosedIds };
 
 export type { ProposalStatusFile };

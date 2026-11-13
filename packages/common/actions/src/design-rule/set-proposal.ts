@@ -23,7 +23,7 @@ const setProposalDesignRule = defineAction({
   },
   confirm: "none",
   description:
-    "Accept or dismiss one proposed design rule from inspect_proposals_design_rule. Accept saves the rule text as a project rule, as create_design_rule does, and the Review rules editor shows it. Dismiss hides the proposal for good.",
+    "Accept or dismiss one proposed design rule from inspect_proposals_design_rule. Accept saves the rule text as a project rule, as create_design_rule does, and the Review rules editor shows it. Dismiss hides the proposal for good. Setting the same status again changes nothing.",
   errors: [BadRequest, Conflict, NotFound],
   http: {
     method: "POST",

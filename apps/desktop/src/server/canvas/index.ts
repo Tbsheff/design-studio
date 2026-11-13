@@ -20,6 +20,8 @@ export { LinkStore, LinkWriter } from "./links/index.js";
 
 export { LinkedFrameWriter, toLinkedPrompt } from "./linked-frame/index.js";
 
+export { PageMatchStore, PageMatchWriter } from "./page-match/index.js";
+
 export { applyFrameState } from "./app-flow/index.js";
 
 export { bindLinkRuntime } from "./links/link-runtime.js";

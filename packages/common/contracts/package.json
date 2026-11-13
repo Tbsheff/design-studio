@@ -10,6 +10,7 @@
     "./accessibility": "./src/accessibility.ts",
     "./app": "./src/app.ts",
     "./app-doctor": "./src/app-doctor.ts",
+    "./border-side-properties": "./src/border-side-properties.ts",
     "./canvas-file": "./src/canvas-file.ts",
     "./clarify": "./src/clarify.ts",
     "./component-variant": "./src/component-variant.ts",

@@ -321,6 +321,12 @@ function toModuleSubpath(dir: string): string {
 
 function copyServerModules(serverDir: string, metafiles: Metafile[]): number {
   const modulesRoot = path.join(WORKSPACE_ROOT, "node_modules");
+  const loopLink = path.join(modulesRoot, "node_modules");
+  if (existsSync(loopLink)) {
+    throw new Error(
+      `${loopLink} exists and makes the app miss packages. fix: rm ${loopLink}`
+    );
+  }
   const dirs = dependencyClosure(importedPackages(metafiles));
   const placed = new Set<string>();
   for (const dir of dirs) {

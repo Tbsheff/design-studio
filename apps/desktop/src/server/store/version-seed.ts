@@ -7,7 +7,6 @@ import {
   readdir,
   realpath,
   rm,
-  stat,
   writeFile,
 } from "node:fs/promises";
 import path from "node:path";
@@ -26,6 +25,7 @@ interface IndexEntry {
 
 interface UserRepo {
   gitDir: string;
+  isTop: boolean;
   objectsDir: string;
 }
 
@@ -40,12 +40,6 @@ function lines(text: string): string[] {
 
 function splitNul(text: string): string[] {
   return text.split("\0").filter((entry) => entry !== "");
-}
-
-async function sameDevice(a: string, b: string): Promise<boolean> {
-  const [left, right] = await Promise.all([stat(a), stat(b)]);
-
-  return left.dev === right.dev;
 }
 
 async function userRepoOf(workTree: string): Promise<UserRepo | null> {
@@ -69,54 +63,33 @@ async function userRepoOf(workTree: string): Promise<UserRepo | null> {
     probe.stdout
   );
 
-  if (
-    format !== "sha1" ||
-    top === "" ||
-    (await realpath(top)) !== (await realpath(workTree))
-  ) {
+  const objectsDir = path.join(path.resolve(workTree, commonDir), "objects");
+
+  if (format !== "sha1" || top === "" || !existsSync(objectsDir)) {
     return null;
+  }
+
+  return {
+    gitDir,
+    isTop: (await realpath(top)) === (await realpath(workTree)),
+    objectsDir: await realpath(objectsDir),
+  };
+}
+
+const canReuseIndex = async (
+  workTree: string,
+  user: UserRepo
+): Promise<boolean> => {
+  if (!user.isTop || !existsSync(path.join(user.gitDir, "index"))) {
+    return false;
   }
 
   const crlf = await userGit(workTree, ["config", "--get", "core.autocrlf"], {
     allowFail: true,
   });
 
-  if (["true", "input"].includes(crlf.stdout.trim().toLowerCase())) {
-    return null;
-  }
-
-  const objectsDir = path.join(path.resolve(workTree, commonDir), "objects");
-
-  if (
-    !existsSync(path.join(gitDir, "index")) ||
-    existsSync(path.join(objectsDir, "info", "alternates"))
-  ) {
-    return null;
-  }
-
-  return { gitDir, objectsDir };
-}
-
-async function clonePacks(from: string, to: string): Promise<void> {
-  const packDir = path.join(from, "pack");
-
-  const files = existsSync(packDir)
-    ? (await readdir(packDir)).filter(
-        (name) => !name.startsWith("tmp_") && !name.endsWith(".keep")
-      )
-    : [];
-
-  await mkdir(path.join(to, "pack"), { recursive: true });
-  await Promise.all(
-    files.map((name) =>
-      copyFile(
-        path.join(packDir, name),
-        path.join(to, "pack", name),
-        constants.COPYFILE_FICLONE
-      )
-    )
-  );
-}
+  return !["true", "input"].includes(crlf.stdout.trim().toLowerCase());
+};
 
 async function looseObjectsOf(from: string): Promise<Set<string>> {
   const fanout = (await readdir(from)).filter((name) =>
@@ -162,29 +135,19 @@ async function setAlternate(from: string, to: string): Promise<void> {
 async function createSeedObjects(
   from: string,
   to: string,
-  entries: IndexEntry[],
-  isSameDevice: boolean
+  entries: IndexEntry[]
 ): Promise<void> {
-  if (!isSameDevice) {
-    await setAlternate(from, to);
+  await cloneLooseObjects(
+    from,
+    to,
+    entries.flatMap((entry) => {
+      if (entry.mode === "160000") {
+        return [];
+      }
 
-    return;
-  }
-
-  await Promise.all([
-    clonePacks(from, to),
-    cloneLooseObjects(
-      from,
-      to,
-      entries.flatMap((entry) => {
-        if (entry.mode === "160000") {
-          return [];
-        }
-
-        return [entry.sha];
-      })
-    ),
-  ]);
+      return [entry.sha];
+    })
+  );
 }
 
 function parseEntries(text: string): IndexEntry[] | null {
@@ -332,22 +295,26 @@ export async function seedFromUserRepo(
   options: SeedOptions
 ): Promise<boolean> {
   const indexFile = scope.indexFile;
+  const user = await userRepoOf(workTree).catch(() => null);
 
-  if (!indexFile || existsSync(indexFile)) {
+  if (user === null) {
+    return false;
+  }
+
+  const objectsDir = path.join(scope.gitDir, "objects");
+  await setAlternate(user.objectsDir, objectsDir);
+
+  if (
+    !indexFile ||
+    existsSync(indexFile) ||
+    !(await canReuseIndex(workTree, user))
+  ) {
     return false;
   }
 
   const startedAt = performance.now();
 
   try {
-    const user = await userRepoOf(workTree);
-
-    if (!user) {
-      return false;
-    }
-
-    const objectsDir = path.join(scope.gitDir, "objects");
-    const isSameDevice = await sameDevice(user.objectsDir, scope.gitDir);
     await copyFile(
       path.join(user.gitDir, "index"),
       indexFile,
@@ -365,8 +332,7 @@ export async function seedFromUserRepo(
     const objectsReady = createSeedObjects(
       user.objectsDir,
       objectsDir,
-      entries,
-      isSameDevice
+      entries
     );
 
     const rehash = await entriesToRehash(

@@ -332,9 +332,14 @@ const layoutGridCopy = {
   title: "Layout grid",
 } as const;
 
+const rulerGuideCopy = {
+  guide: "Drag to move the guide. Drag it onto the ruler to remove it.",
+} as const;
+
 export {
   copy,
   layoutGridCopy,
+  rulerGuideCopy,
   scaleCopy,
   startCopy,
   stateCheckCopy,

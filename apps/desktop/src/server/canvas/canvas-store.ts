@@ -14,11 +14,12 @@ import { attemptCanvas } from "./canvas-runtime.js";
 import type { CanvasFailure } from "./canvas-runtime.js";
 import { getCanvasFramesDeleteCard } from "./frame-delete/index.js";
 import type { FramesDeleteQuery } from "./frame-delete/index.js";
-import { getCanvasDeleteCard, inspectCanvasFrames } from "./frame-ops.js";
+import { getCanvasDeleteCard } from "./frame-ops.js";
 import type { FrameDeleteQuery, FrameTarget } from "./frame-ops.js";
+import { inspectGuidedListing } from "./guide-listing.js";
+import type { GuidedListing } from "./guide-listing.js";
 import { getSectionDeleteCard } from "./section-ops.js";
 import type { SectionDeleteQuery } from "./section-ops.js";
-import type { CanvasListing } from "./tools.js";
 
 interface CanvasStoreApi {
   readonly deleteCard: (
@@ -45,7 +46,7 @@ interface CanvasStoreApi {
   ) => Effect.Effect<CanvasDocRead, CanvasFailure>;
   readonly inspectFrames: (
     target: FrameTarget
-  ) => Effect.Effect<CanvasListing, CanvasFailure>;
+  ) => Effect.Effect<GuidedListing, CanvasFailure>;
 }
 
 class CanvasStore extends Context.Service<CanvasStore, CanvasStoreApi>()(
@@ -106,7 +107,7 @@ class CanvasStore extends Context.Service<CanvasStore, CanvasStoreApi>()(
         target: FrameTarget
       ) {
         return yield* attemptCanvas((runtime) =>
-          inspectCanvasFrames(runtime, target)
+          inspectGuidedListing(runtime, target)
         );
       }),
     })

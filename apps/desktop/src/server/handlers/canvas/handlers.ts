@@ -37,6 +37,7 @@ import { handle as listLinksCanvasHandle } from "./list-links.js";
 import { handle as moveFramesCanvasHandle } from "./move-frames.js";
 import { handle as setDocCanvasHandle } from "./set-doc.js";
 import { handle as setFrameStateCanvasHandle } from "./set-frame-state.js";
+import { handle as setGuidesCanvasHandle } from "./set-guides.js";
 import { handle as setLayoutGridCanvasHandle } from "./set-layout-grid.js";
 import { handle as setLinkInteractionCanvasHandle } from "./set-link-interaction.js";
 import { handle as setPointCanvasHandle } from "./set-point.js";
@@ -84,6 +85,7 @@ const CanvasEntries = {
   moveFramesCanvas: { handle: moveFramesCanvasHandle },
   setDocCanvas: { handle: setDocCanvasHandle },
   setFrameStateCanvas: { handle: setFrameStateCanvasHandle },
+  setGuidesCanvas: { handle: setGuidesCanvasHandle },
   setLayoutGridCanvas: { handle: setLayoutGridCanvasHandle },
   setLinkInteractionCanvas: { handle: setLinkInteractionCanvasHandle },
   setPointCanvas: { handle: setPointCanvasHandle },

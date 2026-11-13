@@ -25,6 +25,7 @@ import { listLinksCanvas } from "./list-links.js";
 import { moveFramesCanvas } from "./move-frames.js";
 import { setDocCanvas } from "./set-doc.js";
 import { setFrameStateCanvas } from "./set-frame-state.js";
+import { setGuidesCanvas } from "./set-guides.js";
 import { setLayoutGridCanvas } from "./set-layout-grid.js";
 import { setLinkInteractionCanvas } from "./set-link-interaction.js";
 import { setPointCanvas } from "./set-point.js";
@@ -63,6 +64,7 @@ const CanvasActions = {
   moveFramesCanvas,
   setDocCanvas,
   setFrameStateCanvas,
+  setGuidesCanvas,
   setLayoutGridCanvas,
   setLinkInteractionCanvas,
   setPointCanvas,

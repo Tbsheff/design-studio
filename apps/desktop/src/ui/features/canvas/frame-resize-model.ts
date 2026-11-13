@@ -1,7 +1,10 @@
+import type { CanvasGuide } from "@design-studio/contracts/canvas-file";
+
 import { RESIZE_MIN, shownFrames } from "./canvas-frame-ops.js";
 import type { Box, CanvasLayout } from "./canvas-frames-model.js";
 import type { FrameSnapView } from "./frame-snap-store.js";
 import type { ResizeEdge } from "./resize-edge-model.js";
+import { snapToGuides, toGuideMarks } from "./ruler-guide-model.js";
 import { snapRect } from "./snap-model.js";
 
 const MAX_SIDE = 4000;
@@ -24,6 +27,7 @@ interface SnapResult {
 
 interface SnapContext {
   readonly candidates: Box[];
+  readonly lines: readonly CanvasGuide[];
   readonly zoom: number;
   readonly isOff: boolean;
 }
@@ -100,20 +104,34 @@ const snapSize = (
   size: Size,
   context: SnapContext
 ): SnapResult => {
-  if (context.isOff || context.candidates.length === 0) {
+  const isEmpty = context.candidates.length === 0 && context.lines.length === 0;
+
+  if (context.isOff || isEmpty) {
     return { size, view: null };
   }
 
-  const res = snapRect({
-    candidates: context.candidates,
-    rect: { x: frame.x, y: frame.y, ...size },
+  const kinds = {
     x: toSnapAxis(edge === "bottom"),
     y: toSnapAxis(edge === "right"),
+  };
+
+  const lined = snapToGuides({
+    lines: context.lines,
+    rect: { x: frame.x, y: frame.y, ...size },
+    zoom: context.zoom,
+    ...kinds,
+  });
+
+  const res = snapRect({
+    candidates: context.candidates,
+    rect: lined.rect,
+    x: lined.x,
+    y: lined.y,
     zoom: context.zoom,
   });
 
   const view: FrameSnapView = {
-    guides: res.guides,
+    guides: [...res.guides, ...toGuideMarks(res.rect, context.lines, kinds)],
     shift: { x: 0, y: 0 },
     spacing: [],
   };

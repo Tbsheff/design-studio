@@ -7,7 +7,8 @@ import {
   toGroupRect,
   toOutsideFrames,
 } from "./frame-selection-model.js";
-import { frameSnapStore } from "./frame-snap-store.js";
+import { frameSnapStore, snapLineStore } from "./frame-snap-store.js";
+import { snapToGuides, toGuideMarks } from "./ruler-guide-model.js";
 import { snapOff, snapRect } from "./snap-model.js";
 
 const DRAG_THRESHOLD = 3;
@@ -76,7 +77,9 @@ const snapMove = (
   delta: Point,
   isOff: boolean
 ): Point => {
-  if (isOff || candidates.length === 0) {
+  const lines = snapLineStore.get();
+
+  if (isOff || (candidates.length === 0 && lines.length === 0)) {
     frameSnapStore.set(null);
 
     return delta;
@@ -84,8 +87,8 @@ const snapMove = (
 
   const { frame } = state;
 
-  const snapped = snapRect({
-    candidates,
+  const lined = snapToGuides({
+    lines,
     rect: {
       height: frame.height,
       width: frame.width,
@@ -97,11 +100,21 @@ const snapMove = (
     zoom: state.zoom,
   });
 
+  const snapped = snapRect({
+    candidates,
+    rect: lined.rect,
+    x: lined.x,
+    y: lined.y,
+    zoom: state.zoom,
+  });
+
   const shiftX = snapped.rect.x - frame.x;
   const shiftY = snapped.rect.y - frame.y;
 
+  const marks = toGuideMarks(snapped.rect, lines, { x: "move", y: "move" });
+
   frameSnapStore.set({
-    guides: snapped.guides,
+    guides: [...snapped.guides, ...marks],
     shift: toSnapShift(state.isActive, shiftX, shiftY),
     spacing: snapped.spacing,
   });

@@ -1263,6 +1263,109 @@ fieldset.compare-modes {
   background: var(--surface);
 }
 
+.ruler-guides {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ruler-guide {
+  position: absolute;
+  pointer-events: auto;
+}
+
+.ruler-guide::after {
+  content: "";
+  position: absolute;
+  background: var(--measure);
+}
+
+.ruler-guide.x {
+  top: 0;
+  bottom: 0;
+  width: 7px;
+  margin-left: -3px;
+  cursor: col-resize;
+}
+
+.ruler-guide.y {
+  left: 0;
+  right: 0;
+  height: 7px;
+  margin-top: -3px;
+  cursor: row-resize;
+}
+
+.ruler-guide.x::after {
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 1px;
+}
+
+.ruler-guide.y::after {
+  left: 0;
+  right: 0;
+  top: 3px;
+  height: 1px;
+}
+
+.ruler-guide.is-hidden {
+  visibility: hidden;
+}
+
+.ruler-guide.is-dragging {
+  pointer-events: none;
+}
+
+.ruler-guide.is-removing::after {
+  opacity: 0.35;
+}
+
+.ruler-guide-label {
+  position: absolute;
+  padding: 0 var(--s-1);
+  border-radius: var(--r-sm);
+  background: var(--measure);
+  color: var(--on-measure);
+  font: 500 var(--t-xs) / 18px var(--font);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ruler-guide.x .ruler-guide-label {
+  top: 26px;
+  left: 8px;
+}
+
+.ruler-guide.y .ruler-guide-label {
+  left: 26px;
+  top: 8px;
+}
+
+.ruler-guide-strip {
+  position: absolute;
+  pointer-events: auto;
+}
+
+.ruler-guide-strip.top {
+  left: 20px;
+  right: 0;
+  top: 0;
+  height: 20px;
+  cursor: row-resize;
+}
+
+.ruler-guide-strip.left {
+  left: 0;
+  top: 20px;
+  bottom: 0;
+  width: 20px;
+  cursor: col-resize;
+}
+
 .frame-skeleton {
   position: absolute;
   inset: 0;

@@ -1,3 +1,5 @@
+import type { CanvasGuide } from "@design-studio/contracts/canvas-file";
+
 import type { SnapGuide, SpacingBadge } from "./snap-model.js";
 
 interface FrameSnapView {
@@ -41,6 +43,26 @@ const createSnapStore = (): FrameSnapStore => {
 
 const frameSnapStore = createSnapStore();
 
-export { frameSnapStore };
+interface SnapLineStore {
+  readonly get: () => readonly CanvasGuide[];
+  readonly set: (next: readonly CanvasGuide[]) => void;
+}
+
+const NO_LINES: readonly CanvasGuide[] = [];
+
+const createLineStore = (): SnapLineStore => {
+  let lines = NO_LINES;
+
+  return {
+    get: () => lines,
+    set: (next: readonly CanvasGuide[]) => {
+      lines = next;
+    },
+  };
+};
+
+const snapLineStore = createLineStore();
+
+export { NO_LINES, frameSnapStore, snapLineStore };
 
 export type { FrameSnapView };

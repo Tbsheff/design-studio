@@ -19,8 +19,9 @@ Branch `feat/app-tokens-2`. A prototype made beside an app now uses the app toke
 - Picked `--color-brand-teal-500` for the h1 text color in the inspector picker: `index.html` got `color: var(--color-brand-teal-500)`.
 - Hand-edited `--primary` in the prototype `tokens.css`, then Refresh: "1 changed, 0 added, 0 removed" and the app value came back. Cmd+Z showed "Undid refresh app tokens" and brought the hand value back.
 - Linked `apps/dashboard` alone as a folder and made a prototype: `tokensFile` is `packages/ui/src/styles/globals.css`, 335 tokens.
+- `token.set` on a new prototype (after Keep): `--primary` light rewrote line 278 (`:root`) and dark rewrote line 423 (`.dark, [data-theme="dark"]`) of the prototype `tokens.css`. The Bonaparte clone stayed clean.
 - `token.import` on the workspace project: 400 "This project is not a prototype of an app."
-- The Bonaparte clone has no change. The real Bonaparte repo was only read.
+- The Bonaparte clone has no change. The real Bonaparte repo was only read. Its `git status` shows changes that were there before this pick (`apps/dashboard/AGENTS.md` and two `tmp-*.ts` scripts); they are not from this pick.
 - `pnpm run typecheck`, `pnpm run lint:gate` (pass, 59685 against 89733) and `pnpm run build:ui` pass. `gen-routes --check` passes.
 - Screenshots: `cycle-15/app-tokens/app-tokens-refresh-dark.png`, `app-tokens-refresh-light.png`.
 

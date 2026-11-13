@@ -11,7 +11,7 @@ import { nameOf } from "./project-model";
 import { neverRan, runStepOf } from "./run-model";
 import { renderSpeedSlot } from "./speed-slot";
 import type { StudioCtx } from "./studio-context";
-import { hasDarkMode, tokenEntries } from "./token-model";
+import { tokenEntries } from "./token-model";
 
 type CanvasProps = ComponentProps<typeof CenterView>["canvas"];
 
@@ -111,7 +111,7 @@ const canvasProps = (ctx: StudioCtx): CanvasProps => {
       tokens: tokenEntries(core.tokens),
     },
     comments: core.comments,
-    darkPreview: hasDarkMode(core.tokens),
+    darkPreview: true,
     directionId: did,
     directions: canvasVariations({
       project: ctx.project,

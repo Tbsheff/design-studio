@@ -209,3 +209,12 @@ All 5 can run at once. Merge 3 (align-frames, smallest server change), then 2 (f
 10. Export a frame to Figma as editable layers (Claude Design still lacks it); needs a Figma plugin.
 
 Sources: [blog.mean.ceo Figma November 2026](https://blog.mean.ceo/figma-news-november-2026/), [createwith.com Figma Make GPT-5.6](https://www.createwith.com/tool/figma/updates/figma-integrates-gpt-56-into-make-improving-design-generation-and-token-efficien), [venturebeat.com Figma Make two-way GitHub](https://venturebeat.com/technology/are-designers-the-new-swes-figma-makes-new-two-way-github-integration-turns-designs-into-live-production-code-with-built-in-governance), [support.bolt.new release notes](https://support.bolt.new/release-notes), [bolt.new product blog](https://bolt.new/blog/category/product), [mcp.directory 2026 comparison](https://mcp.directory/blog/claude-design-vs-stitch-vs-v0-vs-lovable-vs-figma-make-2026).
+
+## Results
+
+- Merged in order: align-frames, frame-focus, state-board, start-points, cycle-polish, then fix/start-points-undo. Main at 9863224a4.
+- Conflict: start-points vs state-board in `packages/common/actions/package.json` (export map lines). Kept both, then gen-routes.
+- Start points shipped with a Cmd+Z bug (no undo step for name-only changes; undo of the first point lost a point). Fixed in `server/canvas/layout-history.ts` and checked in the app and over MCP.
+- Checks: gen-routes --check pass, typecheck 0 errors, lint:gate pass (59653, baseline 89733), build:ui pass, desktop:pack pass.
+- Installed app: :4570 returns 200. Server idle CPU 0.01 CPU-s/min over 60 s.
+- Open: no Bonaparte run for state board (dashboard needs a database). No "App now" frame label. MCP snapshots for start_run, move_frames_canvas, create_state_frames_canvas and set_start_points_canvas not refreshed (user decision).

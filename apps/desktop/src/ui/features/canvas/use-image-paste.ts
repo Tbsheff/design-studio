@@ -1,4 +1,5 @@
 import { routes } from "@design-studio/actions/canvas/routes";
+import type { ImageSize } from "@design-studio/contracts/image-frame";
 import {
   useCallback,
   useEffect,
@@ -28,6 +29,7 @@ import {
 } from "./linked-frame-model.js";
 import type { Point } from "./prototype-model.js";
 import type { PrototypeOptions } from "./prototype-options-model.js";
+import { activateFrameId } from "./use-canvas-frames.js";
 
 interface ImageDropControl {
   readonly drop: ImageDrop | null;
@@ -75,6 +77,18 @@ const toCamera = (options: ImagePasteOptions): ImageDropCamera | null => {
   };
 };
 
+const toFileImageSize = async (file: File): Promise<ImageSize | null> => {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const size = { height: bitmap.height, width: bitmap.width };
+    bitmap.close();
+
+    return size;
+  } catch {
+    return null;
+  }
+};
+
 const toReferenceFile = (file: File): File =>
   new File([file], asReferenceName(file.name || DEFAULT_FILE), {
     type: file.type,
@@ -102,6 +116,30 @@ const toError = (cause: unknown): Error | null => {
   }
 
   return null;
+};
+
+const createDropFrame = async (
+  options: ImagePasteOptions,
+  drop: ImageDrop,
+  prompt: string
+): Promise<string> => {
+  const attachment = await api.uploadAttachment(
+    options.projectId,
+    toReferenceFile(drop.file)
+  );
+
+  const imported = await call(routes.importFrameCanvas, {
+    attachmentId: attachment.id,
+    directionId: options.directionId,
+    name: null,
+    projectId: options.projectId,
+    prompt: toPromptOrNull(prompt),
+    shouldStartRun: true,
+    x: drop.spot?.x ?? null,
+    y: drop.spot?.y ?? null,
+  });
+
+  return imported.frameId;
 };
 
 const useImageListeners = (
@@ -166,6 +204,7 @@ const useImageListeners = (
 const useImagePaste = (options: ImagePasteOptions): ImageDropControl => {
   const [drop, setDrop] = useState<ImageDrop | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [, startShow] = useTransition();
   const live = useRef(options);
 
   useEffect(() => {
@@ -190,11 +229,16 @@ const useImagePaste = (options: ImagePasteOptions): ImageDropControl => {
       return;
     }
 
-    const camera = toCamera(current);
-    const { frames } = current;
-    const start = { at, camera, file, frames };
+    const show = async (): Promise<void> => {
+      const image = await toFileImageSize(file);
+      const camera = toCamera(current);
+      const { frames } = current;
+      const start = { at, camera, file, frames, image };
 
-    setDrop(toImageDrop(start, URL.createObjectURL(file)));
+      setDrop(toImageDrop(start, URL.createObjectURL(file)));
+    };
+
+    startShow(show);
   }, []);
 
   useImageListeners(begin, live);
@@ -211,22 +255,10 @@ const useImagePaste = (options: ImagePasteOptions): ImageDropControl => {
 
       const create = async (): Promise<void> => {
         try {
-          const attachment = await api.uploadAttachment(
-            current.projectId,
-            toReferenceFile(drop.file)
-          );
+          const frameId = await createDropFrame(current, drop, prompt);
 
-          await call(routes.importFrameCanvas, {
-            attachmentId: attachment.id,
-            directionId: current.directionId,
-            name: null,
-            projectId: current.projectId,
-            prompt: toPromptOrNull(prompt),
-            shouldStartRun: true,
-            x: drop.spot?.x ?? null,
-            y: drop.spot?.y ?? null,
-          });
           setDrop(null);
+          activateFrameId(current.projectId, frameId);
         } catch (error) {
           current.notify(toErrorText(toError(error)));
         }

@@ -25,6 +25,7 @@
     "./html-entities": "./src/html-entities.ts",
     "./icons": "./src/icons.ts",
     "./image": "./src/image.ts",
+    "./image-frame": "./src/image-frame.ts",
     "./image-search": "./src/image-search.ts",
     "./insert": "./src/insert.ts",
     "./layer-effect": "./src/layer-effect.ts",

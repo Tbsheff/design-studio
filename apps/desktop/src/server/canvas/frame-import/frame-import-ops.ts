@@ -7,6 +7,7 @@ import type {
   CanvasFile,
   CanvasFileFrame,
 } from "@design-studio/contracts/canvas-file";
+import { toImageFrameSize } from "@design-studio/contracts/image-frame";
 
 import { publishVersion, writeNewFile } from "../../direct-edit/index.js";
 import type { DirectEditRuntime } from "../../direct-edit/index.js";
@@ -21,9 +22,12 @@ import { framesOf } from "../links/link-tools.js";
 import { canvasOwner } from "../service.js";
 import { applyPlacement, CANVAS_VIEWPORTS } from "../tools.js";
 import type { CanvasToolContext } from "../tools.js";
+import { toImageSize } from "./engine/to-image-size.js";
+import type { ImageSize } from "./engine/to-image-size.js";
 import { toImportName, toNearestFrame } from "./engine/to-import-spot.js";
 
 interface FrameImportQuery {
+  readonly imagePath: string | null;
   readonly name: string | null;
   readonly x: number | null;
   readonly y: number | null;
@@ -177,13 +181,25 @@ const toWithEntryFrame = (
     .file;
 };
 
+const toFrameSize = (
+  source: ImportSource,
+  image: ImageSize | null
+): ImageSize => {
+  if (image !== null) {
+    return toImageFrameSize(image);
+  }
+
+  return source.frame ?? CANVAS_VIEWPORTS.desktop;
+};
+
 const toPlaceSpec = (
   source: ImportSource,
   query: FrameImportQuery,
-  label: string,
-  pagePath: string
+  written: { readonly label: string; readonly pagePath: string },
+  image: ImageSize | null
 ): Parameters<typeof applyPlacement>[1][number] => {
-  const size = source.frame ?? CANVAS_VIEWPORTS.desktop;
+  const size = toFrameSize(source, image);
+  const { label, pagePath } = written;
   const named = { label, path: pagePath };
 
   const base = { ...named, height: size.height, width: size.width };
@@ -195,6 +211,26 @@ const toPlaceSpec = (
   return { ...base, x: query.x, y: query.y };
 };
 
+const toFileImageSize = async (
+  imagePath: string | null
+): Promise<ImageSize | null> => {
+  if (imagePath === null) {
+    return null;
+  }
+
+  try {
+    const found = toImageSize(new Uint8Array(await readFile(imagePath)));
+
+    if (found.ok) {
+      return found.value;
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+};
+
 const toPlacedFrame = async (
   target: FrameImportTarget,
   source: ImportSource,
@@ -202,7 +238,8 @@ const toPlacedFrame = async (
   written: { readonly label: string; readonly pagePath: string }
 ): Promise<CanvasFileFrame> => {
   let placed: CanvasFileFrame | null = null;
-  const spec = toPlaceSpec(source, query, written.label, written.pagePath);
+  const image = await toFileImageSize(query.imagePath);
+  const spec = toPlaceSpec(source, query, written, image);
 
   await target.runtime.canvas.update(
     target.project,

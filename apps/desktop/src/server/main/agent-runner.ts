@@ -13,6 +13,7 @@ import type {
   SdkDriverOptions,
 } from "../agent/index.js";
 import type { ServerConfig } from "../platform/config/index.js";
+import { toMockImportDriver } from "./mock-import-driver.js";
 import { toMockPrototypeDriver } from "./mock-prototype-driver.js";
 import type { StudioRuntime } from "./runtime.js";
 
@@ -98,7 +99,11 @@ const bootAgentRunner = (
   return createAgentRunner(
     { ...deps, runtime },
     {
-      driver: toMockPrototypeDriver(driver, runtime, deps.config.agentMode),
+      driver: toMockImportDriver(
+        toMockPrototypeDriver(driver, runtime, deps.config.agentMode),
+        runtime,
+        deps.config.agentMode
+      ),
       fibers: toRunFibers(runtime),
     }
   );

@@ -1,4 +1,6 @@
 import { CANVAS_GAP } from "@design-studio/contracts/canvas-file";
+import { toImageFrameSize } from "@design-studio/contracts/image-frame";
+import type { ImageSize } from "@design-studio/contracts/image-frame";
 
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import type { Box, Point } from "./prototype-model.js";
@@ -21,6 +23,7 @@ interface ImageDropStart {
   readonly camera: ImageDropCamera | null;
   readonly file: File;
   readonly frames: readonly CanvasFrame[];
+  readonly image: ImageSize | null;
 }
 
 const IMAGE_TYPES: ReadonlySet<string> = new Set([
@@ -115,7 +118,7 @@ const toNearestFrame = (
   return best;
 };
 
-const toPasteSpot = (frames: readonly CanvasFrame[]): Point => {
+const toLastSpot = (frames: readonly CanvasFrame[]): Point => {
   const shown = toShown(frames);
 
   if (shown.length === 0) {
@@ -151,6 +154,78 @@ const toScreenBox = (camera: ImageDropCamera, box: Box): Box => {
   };
 };
 
+const toFrameSize = (start: ImageDropStart, spot: Point | null): ImageSize => {
+  if (start.image !== null) {
+    return toImageFrameSize(start.image);
+  }
+
+  return toNearestFrame(start.frames, spot) ?? DEFAULT_SIZE;
+};
+
+const toSpotBox = (size: ImageSize, spot: Point): Box => ({
+  height: size.height,
+  width: size.width,
+  x: spot.x,
+  y: spot.y,
+});
+
+const isOverlap = (box: Box, frame: CanvasFrame): boolean =>
+  box.x < frame.x + frame.width &&
+  frame.x < box.x + box.width &&
+  box.y < frame.y + frame.height &&
+  frame.y < box.y + box.height;
+
+const isInView = (box: Box): boolean =>
+  box.x >= 0 &&
+  box.y >= 0 &&
+  box.x + box.width <= globalThis.innerWidth - EDGE &&
+  box.y <= globalThis.innerHeight - PROMPT_HEIGHT;
+
+const isOpenSpot = (
+  start: ImageDropStart,
+  camera: ImageDropCamera,
+  spot: Point
+): boolean => {
+  const box = toSpotBox(toFrameSize(start, spot), spot);
+
+  return (
+    isInView(toScreenBox(camera, box)) &&
+    !toShown(start.frames).some((frame) => isOverlap(box, frame))
+  );
+};
+
+const toViewCenterSpot = (
+  start: ImageDropStart,
+  camera: ImageDropCamera
+): Point => {
+  const size = toFrameSize(start, null);
+  const scale = toScale(camera);
+
+  const at = {
+    x: Math.max(EDGE, (globalThis.innerWidth - size.width * scale) / 2),
+    y: Math.max(EDGE, (globalThis.innerHeight - size.height * scale) / 2),
+  };
+
+  return toCanvasPoint(camera, at);
+};
+
+const toPasteSpot = (start: ImageDropStart, camera: ImageDropCamera): Point => {
+  const { frame } = camera;
+  const beside = { x: frame.x + frame.width + CANVAS_GAP, y: frame.y };
+
+  if (isOpenSpot(start, camera, beside)) {
+    return beside;
+  }
+
+  const last = toLastSpot(start.frames);
+
+  if (isOpenSpot(start, camera, last)) {
+    return last;
+  }
+
+  return toViewCenterSpot(start, camera);
+};
+
 const toClampedPoint = (point: Point): Point => {
   const right = globalThis.innerWidth - PROMPT_WIDTH - EDGE;
   const bottom = globalThis.innerHeight - PROMPT_HEIGHT - EDGE;
@@ -167,7 +242,7 @@ const toSpot = (start: ImageDropStart): Point | null => {
   }
 
   if (start.at === null) {
-    return toPasteSpot(start.frames);
+    return toPasteSpot(start, start.camera);
   }
 
   return toCanvasPoint(start.camera, start.at);
@@ -178,14 +253,7 @@ const toGhost = (start: ImageDropStart, spot: Point | null): Box | null => {
     return null;
   }
 
-  const size = toNearestFrame(start.frames, spot) ?? DEFAULT_SIZE;
-
-  return toScreenBox(start.camera, {
-    height: size.height,
-    width: size.width,
-    x: spot.x,
-    y: spot.y,
-  });
+  return toScreenBox(start.camera, toSpotBox(toFrameSize(start, spot), spot));
 };
 
 const toCenter = (): Point => ({
@@ -215,26 +283,15 @@ const toPromptPoint = (start: ImageDropStart, ghost: Box | null): Point => {
   return toClampedPoint(toCenter());
 };
 
-const toSentSpot = (
-  start: ImageDropStart,
-  spot: Point | null
-): Point | null => {
-  if (start.at === null) {
-    return null;
-  }
-
-  return spot;
-};
-
 const toImageDrop = (start: ImageDropStart, pictureUrl: string): ImageDrop => {
-  const spot = toSpot(start);
-  const ghostBox = toGhost(start, spot);
+  const spotPoint = toSpot(start);
+  const ghostBox = toGhost(start, spotPoint);
 
   return {
     at: toPromptPoint(start, ghostBox),
     file: start.file,
     ghost: ghostBox,
-    spot: toSentSpot(start, spot),
+    spot: spotPoint,
     url: pictureUrl,
   };
 };

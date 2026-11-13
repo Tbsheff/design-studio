@@ -174,7 +174,7 @@ export { createSdkDriver } from "./sdk-driver.js";
 
 export { discoverSkills, prepareSkills } from "./skills.js";
 
-export { buildUserText } from "./user-message.js";
+export { buildUserMessageParts, buildUserText } from "./user-message.js";
 
 export type { PortPlanInput } from "./port-plan.js";
 

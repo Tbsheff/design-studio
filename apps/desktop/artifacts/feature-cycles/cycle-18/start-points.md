@@ -16,18 +16,18 @@ Branch `feat/start-points`.
 - `call-action canvas.setStartPoints` (3 points, one by `@Schedule visit`): pass, 3 surfaces, 0 diffs. Output in `cycle-18/start-points/call-set-start-points.txt`.
 - `call-action canvas.setStartLink`: pass, 3 surfaces; the first point moves, the names stay. `call-set-start-link.txt`.
 - Duplicate names fail on all 3 surfaces with "Two start points are named a." `call-duplicate-name.txt`.
-- Old file with only `"start": "f2"`: `list_links` returns `starts: [{ f2, "Start" }]`.
+- Old file with only `"start": "f2"`: `list_links` returns `starts: [{ f2, "Start" }]`, and the Play menu shows one point, "Start" (`play-start-menu-light.jpg`).
 - In the app (7 linked frames): added "Checkout" from the prototype bar, renamed "Start" to "Sign in", removed a point. Play menu lists all; picking Checkout starts Play there; after one click to Home, R returns to Checkout.
 - `pnpm run typecheck`, `pnpm run lint:gate` (pass), `pnpm run build:ui` pass.
-- `pnpm run check:scripts`: `gen-routes --check` passes; `check-actions --ops` fails on the same pre-existing items (O12, S11, E1, E16, W7 in other actions), none in this pick.
-- Screenshots: `cycle-18/start-points/{prototype-start-points,play-start-menu}-{dark,light}.jpg`. The Play bar is dark in both themes.
+- `pnpm run check:scripts`: `gen-routes --check` passes; `check-actions --ops` fails on items in other actions (O12, S11, E1, E16, W7), none in this pick. Not compared with main.
+- Screenshots: `cycle-18/start-points/{prototype-start-points,play-start-menu}-{dark,light}.jpg`.
 
 ## Left out
 
 - **Cmd+Z for start points.** `src/server/canvas/layout-history.ts` (pick 5 owns it) does not see `starts`: `linksLabel` gives no label when only `starts` changes, so no history step is recorded, and `revertLinks` reverts only `start`. Fix at merge, in that file:
   - `linksLabel`: treat `!same(before.starts, after.starts)` like `startChanged`, label "Change start points".
   - `revertLinks`: revert `start` and `starts` together (compare and restore both, as it does for `start`).
-  A change to the first point frame (`set_start_frame`) is still recorded and undone as before.
+- **Undo damages the list when the first point changes. Fix `layout-history.ts` before this ships.** A change to the first frame changes `start`, so it records a "Set start frame" step. Undo puts back only `start` and keeps the current `starts`, and the read rule then moves the current first point onto the old frame. Seen live: list `[Sign in f2, Schedule visit f4]`, remove "Sign in", undo: the file is `start: f2, starts: [Schedule visit f2]`. "Sign in" is lost and "Schedule visit" starts on the wrong frame. Undo of `set_start_frame` alone is correct. Pick 4 merges before pick 5, so the patch above must go in with the merge. A rule in `toStartFields` cannot fix it, because both undo cases give it the same input.
 - `artifacts/mcp-snapshots/canvas.json`: not edited. The new tool `set_start_points_canvas` waits for approval at merge. The `set_start_frame` input is unchanged.
 
 ## Files outside the pick list

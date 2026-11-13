@@ -3,7 +3,8 @@ import { Icon } from "@design-studio/ui";
 import type { ReactNode } from "react";
 
 import { formatRelative, formatTime } from "../../domain/format.js";
-import { kindInfo } from "./version-labels.js";
+import { COPY } from "./copy.js";
+import { authorOf, kindInfo } from "./version-labels.js";
 import { VersionLevelBadge } from "./version-level-badge.js";
 import { toFileCount, toFileLabel, toFilesTip } from "./version-row-model.js";
 
@@ -16,6 +17,7 @@ interface VersionMetaProps {
 
 const VersionMeta = ({ levelText, version }: VersionMetaProps): ReactNode => {
   const kind = kindInfo(version);
+  const author = authorOf(version);
   const files = toFileCount(version);
   const { level } = version.meta;
 
@@ -33,6 +35,14 @@ const VersionMeta = ({ levelText, version }: VersionMetaProps): ReactNode => {
       {level && levelText && (
         <VersionLevelBadge level={level} text={levelText} />
       )}
+      <span className="dot" />
+      <span
+        className="version-author"
+        data-author={author}
+        data-tip={`${COPY.authorTip}${author}`}
+      >
+        {author}
+      </span>
       <span className="dot" />
       <time
         dateTime={new Date(version.createdAt).toISOString()}

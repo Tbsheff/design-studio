@@ -7,6 +7,7 @@ import {
   restoreTitle,
   runTitle,
 } from "../../../shared/version-title.js";
+import { COPY } from "./copy.js";
 
 type VersionIndex = ReadonlyMap<string, Version>;
 
@@ -110,6 +111,20 @@ const toRestoredParent = (
   }
 
   return index.get(restoredFrom) ?? null;
+};
+
+const authorOf = (version: Version): string => {
+  const { client, kind, origin } = version.meta;
+
+  if (kind === "run" || origin === "agent") {
+    return COPY.authorAgent;
+  }
+
+  if (origin === "mcp") {
+    return client ?? COPY.authorMcp;
+  }
+
+  return COPY.authorPerson;
 };
 
 const originOf = (version: Version, index: VersionIndex): Version | null => {
@@ -235,6 +250,7 @@ const fullText = (version: Version): string | null => {
 };
 
 export {
+  authorOf,
   autoTitle,
   displayTitle,
   fullText,

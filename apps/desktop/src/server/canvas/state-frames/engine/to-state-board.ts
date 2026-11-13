@@ -46,9 +46,9 @@ interface BoardBox {
 
 const SECTION_PAD_SIDE = 48;
 
-const SECTION_PAD_TOP = 64;
+const SECTION_PAD_TOP = 120;
 
-const ROW_GAP_FACTOR = 2;
+const ROW_GAP_FACTOR = 3;
 
 const toPageOf = (frame: CanvasFileFrame): string => frame.path ?? "";
 
@@ -217,6 +217,18 @@ const toFittedBox = (boxes: readonly BoardBox[]): BoardBox | null => {
   };
 };
 
+const toJoinedBox = (first: BoardBox, second: BoardBox): BoardBox => {
+  const left = Math.min(first.x, second.x);
+
+  const top = Math.min(first.y, second.y);
+
+  const right = Math.max(first.x + first.width, second.x + second.width);
+
+  const bottom = Math.max(first.y + first.height, second.y + second.height);
+
+  return { height: bottom - top, width: right - left, x: left, y: top };
+};
+
 const toBoardSections = (
   sections: readonly CanvasSection[],
   page: string,
@@ -231,9 +243,11 @@ const toBoardSections = (
   }
 
   if (previous) {
+    const joined = toJoinedBox(previous, box);
+
     return sections.map((item) => {
       if (item.id === previous.id) {
-        return { ...item, ...box };
+        return { ...item, ...joined };
       }
 
       return item;

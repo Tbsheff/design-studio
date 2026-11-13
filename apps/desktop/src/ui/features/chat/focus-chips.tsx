@@ -4,13 +4,18 @@ import type { ReactElement } from "react";
 import { GROUP_ROLE } from "./aria-role-model.js";
 import { copy } from "./copy.js";
 import { FocusChip } from "./focus-chip.js";
+import { FocusFramesButton } from "./focus-frames-button.js";
+import { canFocusFrames } from "./run-focus-model.js";
 import type { RunFocus } from "./use-run-focus.js";
 
 const FocusChips = ({ focus }: { focus: RunFocus }): ReactElement | null => {
-  const { addSelection, paths, remove, selectionPath } = focus;
-  const canAdd = selectionPath !== null && !paths.includes(selectionPath);
+  const { addFrames, addSelection, frames, paths, remove, selectionPath } =
+    focus;
 
-  if (paths.length === 0 && !canAdd) {
+  const canAdd = selectionPath !== null && !paths.includes(selectionPath);
+  const canAddFrames = canFocusFrames(frames, paths);
+
+  if (paths.length === 0 && !canAdd && !canAddFrames) {
     return null;
   }
 
@@ -31,6 +36,9 @@ const FocusChips = ({ focus }: { focus: RunFocus }): ReactElement | null => {
           <Icon name="pointer" size={12} />
           {copy.focusOnFile}
         </button>
+      )}
+      {canAddFrames && frames !== null && (
+        <FocusFramesButton frames={frames} onAdd={addFrames} />
       )}
     </div>
   );

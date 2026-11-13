@@ -66,6 +66,7 @@
     "./canvas/create-flow": "./src/canvas/create-flow.ts",
     "./canvas/create-frame": "./src/canvas/create-frame.ts",
     "./canvas/create-link": "./src/canvas/create-link.ts",
+    "./canvas/create-linked-frame": "./src/canvas/create-linked-frame.ts",
     "./canvas/create-route-frame": "./src/canvas/create-route-frame.ts",
     "./canvas/delete-frame": "./src/canvas/delete-frame.ts",
     "./canvas/delete-link": "./src/canvas/delete-link.ts",

@@ -1,0 +1,25 @@
+call-action run.start on http://127.0.0.1:4690. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 160 ms, git spawns: not counted (server side)
+{
+  "runId": "u8ZytYloIrJM11Q9gBr1k"
+}
+
+[mcp] error, 8 ms, git spawns: not counted (server side)
+"run_in_progress"
+
+[agent] skipped: agent binding is off (run-control)
+
+diff http -> mcp:
+- {
++ "run_in_progress"
+-   "runId": "u8ZytYloIrJM11Q9gBr1k"
++ 
+- }
++ 
+
+answered approval cards: none
+
+call-action: fail, 2 surfaces ran, 1 diffs, 0 failed surfaces, 1 error results
+
+fix: compare the outputs above, then run call-action again with the id run.start and the same input

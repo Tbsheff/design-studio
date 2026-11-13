@@ -15,6 +15,7 @@ import { readRunLogRuntime } from "./run-log-runtime.js";
 import { getStateRun, setStateRun } from "./state-run-map.js";
 
 interface StateRunPort {
+  readonly directionId: string;
   readonly isStillSame: (frameId: string) => Effect.Effect<boolean>;
   readonly notify: Effect.Effect<void>;
   readonly startRun: (
@@ -91,16 +92,16 @@ const getNextIndex = (
   });
 
 const getRunStatus = Effect.fn("StateRun.getRunStatus")(function* run(
-  projectId: string,
+  call: StateRunCall,
   runId: string
 ) {
   const runtime = yield* readRunLogRuntime;
 
-  if (runtime.runner.get(runId)) {
+  if (runtime.runner.isRunning(call.projectId, call.port.directionId)) {
     return RUNNING;
   }
 
-  const detail = yield* getRunDetail(projectId, runId).pipe(
+  const detail = yield* getRunDetail(call.projectId, runId).pipe(
     Effect.orElseSucceed(() => null)
   );
 
@@ -108,7 +109,7 @@ const getRunStatus = Effect.fn("StateRun.getRunStatus")(function* run(
 });
 
 const getRunEndStatus = Effect.fn("StateRun.getRunEndStatus")(function* run(
-  projectId: string,
+  call: StateRunCall,
   runId: string
 ) {
   let missing = 0;
@@ -116,7 +117,7 @@ const getRunEndStatus = Effect.fn("StateRun.getRunEndStatus")(function* run(
   for (let poll = 0; poll < MAX_POLLS; poll += 1) {
     yield* Effect.sleep(RUN_POLL);
 
-    const status = yield* getRunStatus(projectId, runId);
+    const status = yield* getRunStatus(call, runId);
 
     if (status === null) {
       missing += 1;
@@ -210,7 +211,7 @@ const runStep = Effect.fn("StateRun.runStep")(function* run(
   yield* updateItem(call, index, { runId, status: "running" });
   yield* call.port.notify;
 
-  const end = toRunEndStatus(yield* getRunEndStatus(call.projectId, runId));
+  const end = toRunEndStatus(yield* getRunEndStatus(call, runId));
 
   if (end !== "done") {
     return yield* setStepEnd(call, index, end);

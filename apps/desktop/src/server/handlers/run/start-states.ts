@@ -162,6 +162,7 @@ const toPort = Effect.fn("run.startStates.toPort")(function* run(
   const reads = yield* McpReadStore;
 
   const port: StateRunPort = {
+    directionId: plan.directionId,
     isStillSame: (frameId) =>
       getSimilarity(projectId, plan.baseFrameId, frameId).pipe(
         Effect.provideService(StateCheckStore, checks),

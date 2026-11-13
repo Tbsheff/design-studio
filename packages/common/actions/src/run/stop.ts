@@ -18,7 +18,7 @@ const stopRun = defineAction({
     runId: RunIdSchema,
   }),
   invalidates: ["run.get", "run.list"],
-  mcp: { off: "run-control" },
+  mcp: { name: "stop_run" },
   needs: "project.update",
   output: AckSchema,
   scope: "project",

@@ -3,7 +3,7 @@ import {
   VARIATION_BRIEF_MAX,
   VARIATION_DEFAULT,
   VARIATION_MAX,
-  VARIATION_MIN,
+  VARIATION_RUN_MIN,
 } from "@design-studio/contracts";
 import { Effect, Schema } from "effect";
 
@@ -43,10 +43,10 @@ const VariationStartFields = {
     })
     .pipe(Schema.withDecodingDefaultKey(Effect.succeed(null))),
   count: Schema.Int.check(
-    Schema.isBetween({ maximum: VARIATION_MAX, minimum: VARIATION_MIN })
+    Schema.isBetween({ maximum: VARIATION_MAX, minimum: VARIATION_RUN_MIN })
   )
     .annotate({
-      description: `How many variations to start, ${VARIATION_MIN} to ${VARIATION_MAX} (React projects: at most 3). Ignored when briefs is set.`,
+      description: `How many variations to start, ${VARIATION_RUN_MIN} to ${VARIATION_MAX} (React projects: at most 3). Ignored when briefs is set.`,
     })
     .pipe(Schema.withDecodingDefaultKey(Effect.succeed(VARIATION_DEFAULT))),
   fromDirectionId: Schema.NullOr(DirectionIdSchema)

@@ -1,0 +1,350 @@
+call-action canvas.setStartLink on http://127.0.0.1:4410. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 4 ms, git spawns: not counted (server side)
+{
+  "links": {
+    "links": [
+      {
+        "from": {
+          "frame": "f2",
+          "path": "",
+          "selector": "#go-home",
+          "text": "Go to home"
+        },
+        "id": "l1",
+        "to": {
+          "frame": "f3"
+        },
+        "transition": "instant"
+      },
+      {
+        "from": {
+          "frame": "f3",
+          "path": "home.html",
+          "selector": "#go-schedule",
+          "text": "Go to schedule"
+        },
+        "id": "l2",
+        "to": {
+          "frame": "f4"
+        },
+        "transition": "instant"
+      },
+      {
+        "from": {
+          "frame": "f3",
+          "path": "home.html",
+          "selector": "#go-chart",
+          "text": "Go to chart"
+        },
+        "id": "l3",
+        "to": {
+          "frame": "f6"
+        },
+        "transition": "instant"
+      },
+      {
+        "from": {
+          "frame": "f4",
+          "path": "schedule.html",
+          "selector": "#go-visit",
+          "text": "Go to visit"
+        },
+        "id": "l4",
+        "to": {
+          "frame": "f5"
+        },
+        "transition": "instant"
+      },
+      {
+        "from": {
+          "frame": "f5",
+          "path": "visit.html",
+          "selector": "#go-chart",
+          "text": "Go to chart"
+        },
+        "id": "l5",
+        "to": {
+          "frame": "f6"
+        },
+        "transition": "instant"
+      },
+      {
+        "from": {
+          "frame": "f6",
+          "path": "chart.html",
+          "selector": "#go-checkout",
+          "text": "Go to checkout"
+        },
+        "id": "l6",
+        "to": {
+          "frame": "f7"
+        },
+        "transition": "instant"
+      },
+      {
+        "from": {
+          "frame": "f7",
+          "path": "checkout.html",
+          "selector": "#go-home",
+          "text": "Go to home"
+        },
+        "id": "l7",
+        "to": {
+          "frame": "f3"
+        },
+        "transition": "instant"
+      }
+    ],
+    "start": "f3",
+    "starts": [
+      {
+        "frame": "f3",
+        "name": "Start"
+      },
+      {
+        "frame": "f4",
+        "name": "Sign in"
+      },
+      {
+        "frame": "f6",
+        "name": "Chart review"
+      }
+    ],
+    "version": 1
+  }
+}
+
+[mcp] ok, 7 ms, git spawns: not counted (server side)
+{
+  "links": {
+    "links": [
+      {
+        "from": {
+          "frame": "f2",
+          "path": "",
+          "selector": "#go-home",
+          "text": "Go to home"
+        },
+        "id": "l1",
+        "to": {
+          "frame": "f3"
+        },
+        "transition": "instant"
+      },
+      {
+        "from": {
+          "frame": "f3",
+          "path": "home.html",
+          "selector": "#go-schedule",
+          "text": "Go to schedule"
+        },
+        "id": "l2",
+        "to": {
+          "frame": "f4"
+        },
+        "transition": "instant"
+      },
+      {
+        "from": {
+          "frame": "f3",
+          "path": "home.html",
+          "selector": "#go-chart",
+          "text": "Go to chart"
+        },
+        "id": "l3",
+        "to": {
+          "frame": "f6"
+        },
+        "transition": "instant"
+      },
+      {
+        "from": {
+          "frame": "f4",
+          "path": "schedule.html",
+          "selector": "#go-visit",
+          "text": "Go to visit"
+        },
+        "id": "l4",
+        "to": {
+          "frame": "f5"
+        },
+        "transition": "instant"
+      },
+      {
+        "from": {
+          "frame": "f5",
+          "path": "visit.html",
+          "selector": "#go-chart",
+          "text": "Go to chart"
+        },
+        "id": "l5",
+        "to": {
+          "frame": "f6"
+        },
+        "transition": "instant"
+      },
+      {
+        "from": {
+          "frame": "f6",
+          "path": "chart.html",
+          "selector": "#go-checkout",
+          "text": "Go to checkout"
+        },
+        "id": "l6",
+        "to": {
+          "frame": "f7"
+        },
+        "transition": "instant"
+      },
+      {
+        "from": {
+          "frame": "f7",
+          "path": "checkout.html",
+          "selector": "#go-home",
+          "text": "Go to home"
+        },
+        "id": "l7",
+        "to": {
+          "frame": "f3"
+        },
+        "transition": "instant"
+      }
+    ],
+    "start": "f3",
+    "starts": [
+      {
+        "frame": "f3",
+        "name": "Start"
+      },
+      {
+        "frame": "f4",
+        "name": "Sign in"
+      },
+      {
+        "frame": "f6",
+        "name": "Chart review"
+      }
+    ],
+    "version": 1
+  }
+}
+
+[agent] ok, 2 ms, git spawns: not counted (server side)
+{
+  "links": {
+    "links": [
+      {
+        "from": {
+          "frame": "f2",
+          "path": "",
+          "selector": "#go-home",
+          "text": "Go to home"
+        },
+        "id": "l1",
+        "to": {
+          "frame": "f3"
+        },
+        "transition": "instant"
+      },
+      {
+        "from": {
+          "frame": "f3",
+          "path": "home.html",
+          "selector": "#go-schedule",
+          "text": "Go to schedule"
+        },
+        "id": "l2",
+        "to": {
+          "frame": "f4"
+        },
+        "transition": "instant"
+      },
+      {
+        "from": {
+          "frame": "f3",
+          "path": "home.html",
+          "selector": "#go-chart",
+          "text": "Go to chart"
+        },
+        "id": "l3",
+        "to": {
+          "frame": "f6"
+        },
+        "transition": "instant"
+      },
+      {
+        "from": {
+          "frame": "f4",
+          "path": "schedule.html",
+          "selector": "#go-visit",
+          "text": "Go to visit"
+        },
+        "id": "l4",
+        "to": {
+          "frame": "f5"
+        },
+        "transition": "instant"
+      },
+      {
+        "from": {
+          "frame": "f5",
+          "path": "visit.html",
+          "selector": "#go-chart",
+          "text": "Go to chart"
+        },
+        "id": "l5",
+        "to": {
+          "frame": "f6"
+        },
+        "transition": "instant"
+      },
+      {
+        "from": {
+          "frame": "f6",
+          "path": "chart.html",
+          "selector": "#go-checkout",
+          "text": "Go to checkout"
+        },
+        "id": "l6",
+        "to": {
+          "frame": "f7"
+        },
+        "transition": "instant"
+      },
+      {
+        "from": {
+          "frame": "f7",
+          "path": "checkout.html",
+          "selector": "#go-home",
+          "text": "Go to home"
+        },
+        "id": "l7",
+        "to": {
+          "frame": "f3"
+        },
+        "transition": "instant"
+      }
+    ],
+    "start": "f3",
+    "starts": [
+      {
+        "frame": "f3",
+        "name": "Start"
+      },
+      {
+        "frame": "f4",
+        "name": "Sign in"
+      },
+      {
+        "frame": "f6",
+        "name": "Chart review"
+      }
+    ],
+    "version": 1
+  }
+}
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

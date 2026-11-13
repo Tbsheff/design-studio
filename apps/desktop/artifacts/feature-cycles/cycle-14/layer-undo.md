@@ -11,7 +11,7 @@ Branch `feat/layer-undo`. The change pill's "Undo this change" now undoes only t
   - `added` removes the element and its blank line.
   - `removed` puts the old lines back between their old neighbour lines.
 - **Fails** with `Conflict` (409, "The layer changed again after this version. Use revert_hunk ...") when the head no longer holds the layer as that version left it.
-- **Pill:** the undone ring turns grey and stays visible, and the pill steps to the next open change. Cmd+Z takes the undo back, because the restore records the edit history. On `Conflict` the ring is marked stale, and the button falls back to the hunk undo with its "Undo N changes" label.
+- **Pill:** the undone ring turns grey and stays visible, and the pill steps to the next open change. Cmd+Z takes the undo back, because the restore records the edit history. When the restore refuses (`Conflict`, `BadRequest` or `NotFound`), the ring is marked stale, and the button falls back to the hunk undo with its "Undo N changes" label.
 
 ## Files
 
@@ -45,6 +45,8 @@ Branch `feat/layer-undo`. The change pill's "Undo this change" now undoes only t
 
 - **No dedicated directions per surface.** call-action runs HTTP, MCP and agent on one input, so the second and third surfaces always see `Conflict`. MCP and agent success was proven on separate fresh versions instead.
 - **Removed-layer limits.** A removed layer that shared its lines with other edits (a block with added lines) returns `BadRequest` ("Use revert_hunk").
+- **Fallback hunk undo usually fails.** Tested over HTTP: `batch_edit` changed 3 layers, then one was edited by hand on disk. `restoreChange` returned 409 `Conflict`, and the fallback `POST .../hunks/revert` (hunk 1) returned 409 "This change is no longer in the file". `reverseHunk` matches the whole after-side of the hunk, and the hand-edited layer is inside it. This matches the spec ("today's hunk undo"), but the spec may want a different fallback. Decide this at merge.
+- **Undone ring after Cmd+Z.** After Cmd+Z takes back a layer undo, the ring still shows "Undone" and its button stays off. Today's hunk undo drops the ring, so this is not a regression.
 - **No stale check before the click.** The stale fallback shows after the first `Conflict`, not before.
 - **New boundaries warning.** `store/change-restore.ts` imports `direct-edit/commit`, as `store/version-write.ts` already does. This adds one `boundaries(dependencies)` warning, and the gate still passes.
 - **MCP snapshot not updated.** `artifacts/mcp-snapshots/*.json` does not have the new `restore_change_version` tool yet. Approve the tool at merge.

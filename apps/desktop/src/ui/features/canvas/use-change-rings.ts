@@ -71,6 +71,12 @@ interface SpotStore {
 
 const ID_RADIX = 36;
 
+const REFUSED_TAGS: ReadonlySet<string> = new Set([
+  "BadRequest",
+  "Conflict",
+  "NotFound",
+]);
+
 const toRequestId = (): string => {
   const stamp = Date.now().toString(ID_RADIX);
   const salt = Math.random().toString(ID_RADIX).slice(2);
@@ -340,7 +346,7 @@ const useChangeRings = (input: ChangeRingsInput): ChangeRings => {
         setMessage(null);
         focusRing(toStepRing(next), post, zoomKey);
       } catch (error) {
-        if (error instanceof ApiError && error.tag === "Conflict") {
+        if (error instanceof ApiError && REFUSED_TAGS.has(error.tag)) {
           setStore(toSpotStore(store, toSpotStale(spot, ring)));
         }
 

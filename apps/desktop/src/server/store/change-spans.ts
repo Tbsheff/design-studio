@@ -46,6 +46,7 @@ const toHtmlSpan = (element: HtmlElement, file: string): ElementSpan | null => {
     end: { col: location.endCol, line: location.endLine },
     loc: `${file}:${startTag.startLine}:${startTag.startCol}`,
     start: { col: startTag.startCol, line: startTag.startLine },
+    tag: element.tagName,
     tagEnd: { col: startTag.endCol, line: startTag.endLine },
   };
 };
@@ -150,6 +151,7 @@ const toJsxSpan = (node: JsxNode, file: string): ElementSpan | null => {
     end: { col: whole.end.column + 1, line: whole.end.line },
     loc: `${file}:${tag.start.line}:${tag.start.column + 1}`,
     start: { col: tag.start.column + 1, line: tag.start.line },
+    tag: name.name ?? "",
     tagEnd: { col: tag.end.column + 1, line: tag.end.line },
   };
 };

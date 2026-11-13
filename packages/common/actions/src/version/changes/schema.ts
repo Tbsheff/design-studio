@@ -10,6 +10,7 @@ const ChangedLayerSchema = Schema.Struct({
   kind: ChangeKindSchema,
   layerId: Schema.String,
   line: Schema.Int,
+  tag: Schema.String,
 });
 
 const ChangedLayersSchema = Schema.Struct({

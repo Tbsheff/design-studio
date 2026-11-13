@@ -36,7 +36,7 @@ const inspectChangesVersion = defineAction({
   },
   confirm: "none",
   description:
-    "List the layers (elements) that changed between two saved versions of a direction, the same as the change rings on the studio canvas. Each item has the layer id (its data-studio-loc file:line:col), the file, the line, the kind (added, text, style or removed) and the hunk number that revert_hunk takes. Leave out from for the parent of to, and to for the head. Read only.",
+    "List the layers (elements) that changed between two saved versions of a direction, the same as the change rings on the studio canvas. Each item has the layer id (its data-studio-loc file:line:col), the tag, the file, the line, the kind (added, text, style or removed) and the hunk number that revert_hunk takes. Leave out from for the parent of to, and to for the head. Read only.",
   errors: [BadRequest, Conflict, NotFound],
   http: {
     method: "GET",

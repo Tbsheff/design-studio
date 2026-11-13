@@ -14,6 +14,7 @@ interface ElementSpan {
   readonly end: SpanPoint;
   readonly loc: string;
   readonly start: SpanPoint;
+  readonly tag: string;
   readonly tagEnd: SpanPoint;
 }
 
@@ -29,12 +30,16 @@ interface ChangedLayersResult {
   readonly items: readonly ChangedLayer[];
 }
 
+interface LineChange {
+  readonly col: number;
+  readonly isSameText: boolean;
+}
+
 interface ChangeBlock {
-  readonly added: ReadonlyMap<number, number>;
-  readonly addedText: string;
+  readonly added: ReadonlyMap<number, LineChange>;
   readonly at: number;
+  readonly isSameText: boolean;
   readonly removed: readonly number[];
-  readonly removedText: string;
 }
 
 interface BlockDraft {
@@ -80,20 +85,24 @@ const toChangeCol = (before: string | null, after: string): number => {
   return at + 1;
 };
 
+const toLineChange = (before: string | null, after: string): LineChange => ({
+  col: toChangeCol(before, after),
+  isSameText: before !== null && toBareText([before]) === toBareText([after]),
+});
+
 const toBlock = (draft: BlockDraft): ChangeBlock => {
-  const added = new Map<number, number>();
+  const added = new Map<number, LineChange>();
 
   for (const [index, line] of draft.addedLines.entries()) {
     const text = draft.addedText[index] ?? "";
-    added.set(line, toChangeCol(draft.removedText[index] ?? null, text));
+    added.set(line, toLineChange(draft.removedText[index] ?? null, text));
   }
 
   return {
     added,
-    addedText: toBareText(draft.addedText),
     at: draft.at,
+    isSameText: toBareText(draft.addedText) === toBareText(draft.removedText),
     removed: draft.removed,
-    removedText: toBareText(draft.removedText),
   };
 };
 
@@ -158,7 +167,7 @@ const toEnclosing = (
 
 const isWithin = (
   span: ElementSpan,
-  lines: ReadonlyMap<number, number>
+  lines: ReadonlyMap<number, LineChange>
 ): boolean => {
   const { line: first } = span.start;
   const { line: last } = span.end;
@@ -174,7 +183,7 @@ const isWithin = (
 
 const toOuterWithin = (
   enclosing: readonly ElementSpan[],
-  lines: ReadonlyMap<number, number>
+  lines: ReadonlyMap<number, LineChange>
 ): ElementSpan | null => {
   let found: ElementSpan | null = null;
 
@@ -208,12 +217,9 @@ const toStartCount = (
 const toEditKind = (
   span: ElementSpan,
   point: SpanPoint,
-  block: ChangeBlock
+  isSameText: boolean
 ): ChangeKind => {
-  if (
-    toKey(point) > toKey(span.tagEnd) ||
-    block.addedText !== block.removedText
-  ) {
+  if (toKey(point) > toKey(span.tagEnd) || !isSameText) {
     return "text";
   }
 
@@ -223,7 +229,8 @@ const toEditKind = (
 const toAddedHit = (
   change: FileChange,
   block: ChangeBlock,
-  point: SpanPoint
+  point: SpanPoint,
+  isSameText: boolean
 ): LayerHit | null => {
   const enclosing = toEnclosing(change.after, point);
   const [inner] = enclosing;
@@ -242,7 +249,7 @@ const toAddedHit = (
     return [whole, "added"];
   }
 
-  return [inner, toEditKind(inner, point, block)];
+  return [inner, toEditKind(inner, point, isSameText)];
 };
 
 const toRemovedHit = (
@@ -261,7 +268,7 @@ const toRemovedHit = (
     return [inner, "removed"];
   }
 
-  return [inner, toEditKind(inner, point, block)];
+  return [inner, toEditKind(inner, point, block.isSameText)];
 };
 
 const toBlockHits = (
@@ -270,8 +277,13 @@ const toBlockHits = (
 ): readonly LayerHit[] => {
   const hits: LayerHit[] = [];
 
-  for (const [line, col] of block.added) {
-    const hit = toAddedHit(change, block, { col, line });
+  for (const [line, lineChange] of block.added) {
+    const hit = toAddedHit(
+      change,
+      block,
+      { col: lineChange.col, line },
+      lineChange.isSameText
+    );
 
     if (hit) {
       hits.push(hit);
@@ -315,6 +327,7 @@ const toLayer = (
   kind: changeKind,
   layerId: span.loc,
   line: span.start.line,
+  tag: span.tag,
 });
 
 const toChangedLayers = (

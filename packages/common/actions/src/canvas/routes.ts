@@ -41,6 +41,12 @@ const routes = {
     method: "POST",
     path: "/api/projects/:projectId/canvas/route-frames",
   },
+  createStateFramesCanvas: {
+    id: "canvas.createStateFrames",
+    invalidates: ["canvas.getDoc", "canvas.inspect", "canvas.listFrameStates"],
+    method: "POST",
+    path: "/api/projects/:projectId/canvas/state-frames",
+  },
   deleteFrameCanvas: {
     id: "canvas.deleteFrame",
     invalidates: ["canvas.inspect"],

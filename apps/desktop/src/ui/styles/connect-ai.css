@@ -304,8 +304,6 @@
   color: var(--text);
   text-overflow: ellipsis;
   white-space: nowrap;
-  direction: rtl;
-  text-align: left;
 }
 
 .connect-trusted-tag {

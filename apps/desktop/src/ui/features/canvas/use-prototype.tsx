@@ -171,6 +171,7 @@ const usePrototype = (options: PrototypeOptions): PrototypeParts => {
             onClose={onClosePlay}
             onRestoreFocus={onRestoreFocus}
             playComment={options.playComment}
+            isFullBleed={false}
           />
         </Suspense>
       )}

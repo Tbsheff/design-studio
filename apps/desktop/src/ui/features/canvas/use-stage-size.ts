@@ -17,11 +17,14 @@ const readHeight = (): number => globalThis.innerHeight;
 
 const readServer = (): number => SERVER_SIZE;
 
-const useStageSize = (): StageSize => {
+const useStageSize = (isFullBleed: boolean): StageSize => {
   const width = useSyncExternalStore(subscribe, readWidth, readServer);
   const height = useSyncExternalStore(subscribe, readHeight, readServer);
 
-  return useMemo(() => ({ height, width }), [height, width]);
+  return useMemo(
+    () => ({ height, isFullBleed, width }),
+    [height, isFullBleed, width]
+  );
 };
 
 export { useStageSize };

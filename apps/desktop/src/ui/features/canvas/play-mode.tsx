@@ -168,7 +168,7 @@ const PlayMode = (props: PlayModeProps): ReactElement => {
     props.projectId
   );
 
-  const stage = useStageSize();
+  const stage = useStageSize(props.isFullBleed);
   const root = useRef<HTMLDialogElement>(null);
 
   useFocusReturn(root, props.onRestoreFocus);

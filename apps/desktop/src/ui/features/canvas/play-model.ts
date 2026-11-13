@@ -61,6 +61,7 @@ interface PlayModeProps {
   onClose: () => void;
   onRestoreFocus: () => void;
   playComment: PlayCommentOptions | null;
+  isFullBleed: boolean;
 }
 
 interface LayerShot {
@@ -72,6 +73,7 @@ interface LayerShot {
 interface StageSize {
   readonly width: number;
   readonly height: number;
+  readonly isFullBleed: boolean;
 }
 
 const NO_BRIDGE_MS = 1500;
@@ -93,6 +95,8 @@ const BASE_WIDTH_CHROME = 48;
 const BASE_HEIGHT_CHROME = 120;
 
 const HALF = 2;
+
+const FULL_BLEED_HEIGHT_CHROME = 44;
 
 const INSTANT: Motion = {
   duration: LINK_DURATION_DEFAULT,
@@ -129,6 +133,13 @@ const scaleFor = (slot: Slot, stage: StageSize): number => {
     );
   }
 
+  if (stage.isFullBleed) {
+    return Math.min(
+      stage.width / frame.width,
+      (stage.height - FULL_BLEED_HEIGHT_CHROME) / frame.height
+    );
+  }
+
   return Math.min(
     1,
     (stage.width - BASE_WIDTH_CHROME) / frame.width,
@@ -150,7 +161,7 @@ const toPopoverPosition = (input: PopoverInput): PopoverSpot => {
 const toPopoverScale = (
   frame: { readonly height: number; readonly width: number },
   base: number,
-  stage: StageSize
+  stage: Pick<StageSize, "height" | "width">
 ): number =>
   Math.min(
     base,

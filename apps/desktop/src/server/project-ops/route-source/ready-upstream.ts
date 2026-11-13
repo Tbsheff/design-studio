@@ -11,8 +11,10 @@ const toReadyAppUpstream = Effect.fn("RouteSource.toReadyAppUpstream")(
     const servers = yield* DevServerStore;
     const runner = yield* DevServerRunner;
     const first = yield* servers.status(projectId);
+    let startAt = 0;
 
     if (first?.state !== "ready") {
+      startAt = Date.now();
       yield* runner.control(projectId, "start");
     }
 
@@ -23,7 +25,7 @@ const toReadyAppUpstream = Effect.fn("RouteSource.toReadyAppUpstream")(
         return status.upstream;
       }
 
-      if (status?.state === "failed") {
+      if (status?.state === "failed" && (status.startedAt ?? 0) >= startAt) {
         return yield* new BadRequest({
           message: `The app dev server did not start: ${status.message ?? "no message"}. Fix it in the app panel, then try again.`,
         });

@@ -193,16 +193,26 @@ const toCenter = (): Point => ({
   y: globalThis.innerHeight / 2,
 });
 
+const toBesideGhost = (ghost: Box): Point => {
+  const right = ghost.x + ghost.width + EDGE;
+
+  if (right + PROMPT_WIDTH <= globalThis.innerWidth - EDGE) {
+    return { x: right, y: ghost.y };
+  }
+
+  return { x: ghost.x - PROMPT_WIDTH - EDGE, y: ghost.y };
+};
+
 const toPromptPoint = (start: ImageDropStart, ghost: Box | null): Point => {
+  if (ghost !== null) {
+    return toClampedPoint(toBesideGhost(ghost));
+  }
+
   if (start.at !== null) {
     return toClampedPoint(start.at);
   }
 
-  if (ghost === null) {
-    return toClampedPoint(toCenter());
-  }
-
-  return toClampedPoint({ x: ghost.x, y: ghost.y });
+  return toClampedPoint(toCenter());
 };
 
 const toSentSpot = (

@@ -9,6 +9,7 @@ import { FrameResizeHandles } from "./frame-resize-handles.js";
 import type { ResizeEdge } from "./frame-resize-handles.js";
 import { FrameSelectionLayer } from "./frame-selection-layer.js";
 import { FrameSnapLayer } from "./frame-snap-layer.js";
+import { LayoutGridOverlay } from "./layout-grid-overlay.js";
 import { OtherFrames } from "./other-frames.js";
 
 const StageFrames = ({
@@ -81,6 +82,7 @@ const StageFrames = ({
         removeFramesAt={wiring.removeFramesAt}
       />
       <FrameSnapLayer origin={active} />
+      <LayoutGridOverlay props={props} stage={stage} />
       {proto.artboard}
     </>
   );

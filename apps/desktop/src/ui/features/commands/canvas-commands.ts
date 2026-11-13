@@ -152,6 +152,17 @@ const sectionCommands = (canvasActions: CanvasActions): Command[] => [
     run: () => globalThis.dispatchEvent(new CustomEvent(TIDY_FRAMES_EVENT)),
     title: "Tidy up frames",
   },
+  {
+    group: "View",
+    icon: "frame",
+    id: "view.layout-grids",
+    keywords: "layout grid columns gutter margin rows hide toggle",
+    run: () =>
+      uiStore.set((previous) => ({
+        isLayoutGridShown: !previous.isLayoutGridShown,
+      })),
+    title: "Show layout grids",
+  },
   ...FRAME_ALIGNS.map((spec) => toFrameAlignCommand(spec)),
 ];
 

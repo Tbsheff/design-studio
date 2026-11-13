@@ -52,6 +52,7 @@ interface UiState {
   paneCollapsed: boolean;
   viewRowOpen: boolean;
   rulers: boolean;
+  isLayoutGridShown: boolean;
 }
 
 type HomeSort = "recent" | "name" | "created";
@@ -66,6 +67,7 @@ const defaults: UiState = {
   directionByProject: {},
   editorColumn: DEFAULT_COLUMN,
   homeSort: "recent",
+  isLayoutGridShown: true,
   lastLocation: null,
   lastPackId: null,
   layersOpen: false,
@@ -130,6 +132,7 @@ const loadUiState = (): UiState => {
         parsed.homeSort ?? "recent",
         "recent"
       ),
+      isLayoutGridShown: parsed.isLayoutGridShown !== false,
       lastLocation: pick(
         isString(parsed.lastLocation) && parsed.lastLocation.startsWith("/"),
         parsed.lastLocation ?? null,

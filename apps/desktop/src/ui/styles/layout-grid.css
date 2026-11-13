@@ -1,0 +1,65 @@
+.layout-grid-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.layout-grid {
+  position: absolute;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.layout-grid.has-rows {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgb(255 0 0 / 18%) 0 calc(1px * var(--inv-zoom, 1)),
+    transparent calc(1px * var(--inv-zoom, 1)) var(--grid-row, 8px)
+  );
+}
+
+.layout-grid-column {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgb(255 0 0 / 10%);
+}
+
+.layout-grid-popover {
+  position: absolute;
+  display: grid;
+  gap: var(--s-2);
+  width: 232px;
+  padding: var(--s-2);
+  transform: scale(var(--inv-zoom, 1));
+  transform-origin: 0 0;
+  pointer-events: auto;
+}
+
+.layout-grid-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.layout-grid-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.layout-grid-field input {
+  width: 100%;
+  min-width: 0;
+  text-align: right;
+}
+
+dialog.layout-grid-popover {
+  inset: auto;
+  margin: 0;
+  border: 0;
+}

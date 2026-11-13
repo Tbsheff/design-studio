@@ -57,7 +57,11 @@ import {
 } from "./permissions.js";
 import type { ToolPolicy } from "./permissions.js";
 import { runReferencePass } from "./reference-check.js";
-import { buildUserMessageParts, buildUserText } from "./user-message.js";
+import {
+  buildUserMessageParts,
+  buildUserText,
+  toMockSelectionReply,
+} from "./user-message.js";
 
 const MOCK_USAGE = {
   cacheReadTokens: 0,
@@ -269,7 +273,7 @@ class MockSession {
   private writes = 0;
 
   constructor(
-    private readonly input: DriverInput,
+    public readonly input: DriverInput,
     private readonly flags: MockFlags
   ) {}
 
@@ -720,7 +724,7 @@ async function runSelectionEdit(
     await editSelectionFile(session, workTree, file, fileSelections, prompt);
   }
 
-  const finalText = "Updated the selected element(s).";
+  const finalText = toMockSelectionReply(session.input.ctx.attachments);
   await session.say(finalText);
 
   return finalText;

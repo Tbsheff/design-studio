@@ -72,6 +72,10 @@ const RunSentSchema = Schema.Struct({
 const RunDetailSchema = Schema.Struct({
   decisions: Schema.Array(DecisionSchema),
   events: Schema.Array(RunEventSchema),
+  selectionPicture: Schema.NullOr(Schema.String).annotate({
+    description:
+      "The attachment id of the picture of the selected elements that the run got. Null when the run got no picture.",
+  }),
   sent: Schema.Array(RunSentSchema),
   status: Schema.NullOr(Schema.String),
   summary: Schema.NullOr(RunSummarySchema),

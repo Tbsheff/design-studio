@@ -24,7 +24,12 @@ const handle = Effect.fn("run.get")(function* run(input: GetRunInput) {
   const detail = yield* service.get(input.projectId, input.runId);
   const decisions = yield* decisionStore.list(input.projectId, input.runId);
 
-  return { ...detail, decisions, status: toRunStatus(detail.summary) };
+  return {
+    ...detail,
+    decisions,
+    selectionPicture: detail.summary?.request.selectionPicture ?? null,
+    status: toRunStatus(detail.summary),
+  };
 }) satisfies Handle<typeof getRun>;
 
 export { handle };

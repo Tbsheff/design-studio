@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
@@ -20,6 +20,11 @@ const EditScopeField = toLoose(
   'Which uses of a shared component the run may change, when the selection comes from a file that 2 or more routes use. "this" changes only this use and never the shared file. "all" changes the shared file for every route. Example: { "choice": "this", "file": "src/components/Hero.tsx", "component": "Hero", "routes": ["/", "/pricing"] }. Leave it out when the selection is used once.'
 );
 
+const SelectionPictureField = Schema.Boolean.annotate({
+  description:
+    "When true and the selection has 1 to 5 elements, the run gets one picture of the selected elements as the user sees them. Set false to leave the picture out of this run. Default true.",
+}).pipe(Schema.withDecodingDefaultKey(Effect.succeed(true)));
+
 const startRun = defineAction({
   access: "edit",
   agent: { off: "run-control" },
@@ -40,6 +45,7 @@ const startRun = defineAction({
     editScope: EditScopeField,
     effort: Loose,
     focusPaths: Loose,
+    isSelectionPictureOn: SelectionPictureField,
     lean: Loose,
     level: Loose,
     mentions: Loose,

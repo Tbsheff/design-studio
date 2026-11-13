@@ -442,6 +442,7 @@ export interface RunRequest {
   scope?: ElementScope;
   reference?: ReferenceElement;
   selection?: SelectionContext[];
+  selectionPicture?: string;
   attachmentIds?: string[];
   comments?: RunComment[];
   commentIds?: string[];

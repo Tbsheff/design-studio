@@ -1,0 +1,211 @@
+.selection-prompt-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.selection-prompt-ask {
+  position: absolute;
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 8px 0 6px;
+  border: 0;
+  border-radius: var(--r-xs);
+  background: var(--float-bg);
+  color: var(--float-fg);
+  box-shadow: var(--float-shadow);
+  font: 500 11px/22px var(--font);
+  white-space: nowrap;
+  transform-origin: 0 0;
+  pointer-events: auto;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.selection-prompt-ask:hover {
+  background: var(--float-bg-hover);
+}
+
+.selection-prompt-ask:focus-visible {
+  outline: 1px solid var(--float-accent-line);
+  outline-offset: 1px;
+}
+
+.selection-prompt {
+  position: absolute;
+  z-index: 6;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: 320px;
+  border-radius: var(--r-lg);
+  background: var(--float-bg);
+  color: var(--float-fg);
+  box-shadow: var(--float-shadow);
+  color-scheme: dark;
+  transform-origin: 0 0;
+  pointer-events: auto;
+  font: 400 13px/18px var(--font);
+  -webkit-font-smoothing: antialiased;
+  transition: opacity var(--dur) var(--ease-out);
+  @starting-style {
+    opacity: 0;
+  }
+}
+
+.selection-prompt:focus-within {
+  box-shadow:
+    inset 0 0 0 1px var(--float-accent-line),
+    var(--float-shadow);
+}
+
+.selection-prompt-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-1);
+  padding: 4px;
+}
+
+.selection-prompt-target {
+  flex-shrink: 0;
+  max-width: 112px;
+  height: 24px;
+  margin-top: 2px;
+  padding: 0 6px;
+  overflow: hidden;
+  border-radius: var(--r-control-sm);
+  background: var(--float-accent-tint);
+  color: var(--float-accent-text);
+  font: 500 11px/24px var(--mono);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.selection-prompt-input,
+.selection-prompt-input:hover,
+.selection-prompt-input:focus {
+  flex: 1;
+  min-width: 0;
+  min-height: 28px;
+  max-height: 120px;
+  padding: 5px var(--s-1);
+  border: 0;
+  border-radius: 0;
+  outline: 0;
+  box-shadow: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  resize: none;
+  field-sizing: content;
+}
+
+.selection-prompt-input::placeholder {
+  color: var(--float-fg-faint);
+}
+
+.selection-prompt-send {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-control-sm);
+  background: var(--float-accent);
+  color: var(--on-accent);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.selection-prompt-send:disabled {
+  background: var(--float-bg-hover);
+  color: var(--float-fg-faint);
+  cursor: default;
+}
+
+.selection-prompt-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 28px;
+  padding: 0 2px;
+  border-top: 1px solid var(--float-line);
+}
+
+.selection-prompt-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: var(--r-control-sm);
+  background: transparent;
+  color: var(--float-fg-muted);
+  font: 500 11px/24px var(--font);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.selection-prompt-link:hover {
+  background: var(--float-bg-hover);
+  color: var(--float-fg);
+}
+
+.selection-prompt-link:focus-visible,
+.selection-prompt-send:focus-visible {
+  outline: 1px solid var(--float-accent-line);
+  outline-offset: -1px;
+}
+
+.selection-prompt-status {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--s-1);
+  width: auto;
+  max-width: 320px;
+  height: 32px;
+  padding: 0 2px 0 10px;
+  white-space: nowrap;
+}
+
+.selection-prompt-status-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}
+
+.selection-prompt-spinner {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid var(--float-fg-faint);
+  border-top-color: var(--float-accent-text);
+  border-radius: 50%;
+  animation: selection-prompt-spin 0.8s linear infinite;
+}
+
+@keyframes selection-prompt-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .selection-prompt {
+    transition: none;
+  }
+
+  .selection-prompt-spinner {
+    animation: none;
+  }
+}

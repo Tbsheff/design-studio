@@ -18,6 +18,7 @@ import "../styles/home-ide.css";
 import "../styles/layout.css";
 import "../styles/versions.css";
 import "../styles/canvas.css";
+import "../styles/selection-prompt.css";
 import "../styles/prototype.css";
 import "../styles/chat.css";
 import "../styles/mcp.css";

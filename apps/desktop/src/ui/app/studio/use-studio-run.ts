@@ -25,6 +25,7 @@ import type {
   StudioStart,
 } from "./studio-run-types";
 import type { StudioPanes, StudioUi } from "./studio-ui-types";
+import { useSelectionPromptRun } from "./use-selection-prompt-run";
 
 interface StudioRunInput {
   projectId: string;
@@ -216,6 +217,8 @@ const useStudioRun = (input: StudioRunInput): StudioRun => {
   const { projectId, project, ui } = input;
   const { runControls, startRun } = useStudioStart(input);
   const quick = useStudioQuick(input, startRun);
+
+  useSelectionPromptRun(input, startRun);
 
   const makeStates = (frame?: CanvasFrame): Promise<void> => {
     const target =

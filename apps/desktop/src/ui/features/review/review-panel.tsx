@@ -29,6 +29,7 @@ interface Props {
   onAsk: (finding: ReviewFinding) => void;
   onClose: () => void;
   speed: ReactNode;
+  spellingCount: number;
 }
 
 const REGION_ROLE = "region";
@@ -117,9 +118,13 @@ const ReviewPanel = (props: Props): ReactElement => {
         onRun={run}
         onClose={props.onClose}
       />
-      <ReviewSummary review={props.review} />
+      <ReviewSummary
+        review={props.review}
+        spellingCount={props.spellingCount}
+      />
       <ReviewBody
         review={props.review}
+        spellingCount={props.spellingCount}
         isLive={props.live}
         actions={actions}
         speed={props.speed}

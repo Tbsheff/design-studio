@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useTransition } from "react";
 
 import { copy } from "./copy.js";
 import { spellingRoutes, textRoutes, useAction } from "./deps.js";
@@ -6,6 +6,7 @@ import { toWordsWith } from "./spelling-model.js";
 import type { SpellingHitView } from "./spelling-model.js";
 
 interface SpellingSetup {
+  readonly changeStamp: number;
   readonly directionId: string | null;
   readonly frameId: string;
   readonly isLive: boolean;
@@ -27,8 +28,19 @@ const NO_ITEMS: readonly SpellingHitView[] = [];
 
 const NO_WORDS: readonly string[] = [];
 
+const useRefetchOnChange = (
+  changeStamp: number,
+  refetch: () => Promise<void>
+): void => {
+  useEffect(() => {
+    if (changeStamp > 0) {
+      void refetch();
+    }
+  }, [changeStamp, refetch]);
+};
+
 const useSpelling = (setup: SpellingSetup): Spelling => {
-  const { directionId, frameId, isLive, projectId } = setup;
+  const { changeStamp, directionId, frameId, isLive, projectId } = setup;
   const [isWorking, startWork] = useTransition();
 
   const input = useMemo(() => {
@@ -49,6 +61,8 @@ const useSpelling = (setup: SpellingSetup): Spelling => {
   const { run: runFix } = fixer;
   const { run: runList } = lister;
   const items = read.data?.items ?? NO_ITEMS;
+
+  useRefetchOnChange(changeStamp, refetch);
   const words = read.data?.wordList.words ?? NO_WORDS;
 
   const handleFix = useCallback(

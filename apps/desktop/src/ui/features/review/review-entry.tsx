@@ -11,8 +11,11 @@ import { KitDriftPanel } from "../kit-drift/index.js";
 import { ReviewEntryButton } from "./review-entry-button.js";
 import { ReviewEntryPanel } from "./review-entry-panel.js";
 import { SpellingGroup } from "./spelling-group.js";
+import { toChangeStamp } from "./spelling-model.js";
 import { useReviewEntry } from "./use-review-entry.js";
 import { useReviewSlot } from "./use-review-slot.js";
+import { useSpelling } from "./use-spelling.js";
+import type { Spelling } from "./use-spelling.js";
 import { WalkthroughSection } from "./walkthrough-section.js";
 
 interface Props {
@@ -50,7 +53,8 @@ const toSpeed = (props: Props): ReactNode =>
 
 const toExtras = (
   props: Props,
-  onSelect: (selector: string) => void
+  onSelect: (selector: string) => void,
+  spelling: Spelling
 ): ReactNode => (
   <Suspense fallback={null}>
     <CritiquePanel
@@ -63,10 +67,9 @@ const toExtras = (
     <KitDriftPanel onSelect={onSelect} scope={props} />
     <SpellingGroup
       directionId={props.directionId}
-      frameId={props.frame.id}
       isLive={props.live}
       onSelect={onSelect}
-      projectId={props.projectId}
+      spelling={spelling}
     />
   </Suspense>
 );
@@ -86,6 +89,14 @@ const ReviewEntry = (props: Props): ReactElement => {
     toggle,
   } = useReviewEntry(props);
 
+  const spelling = useSpelling({
+    changeStamp: toChangeStamp(props.lastChange, directionId),
+    directionId,
+    frameId: frame.id,
+    isLive: live && isOpen,
+    projectId,
+  });
+
   const button = (
     <ReviewEntryButton
       count={count}
@@ -98,7 +109,7 @@ const ReviewEntry = (props: Props): ReactElement => {
     />
   );
 
-  const critique = toExtras(props, selectSelector);
+  const critique = toExtras(props, selectSelector, spelling);
 
   const speed = toSpeed(props);
 
@@ -125,6 +136,7 @@ const ReviewEntry = (props: Props): ReactElement => {
         onAsk={askAgent}
         onClose={close}
         speed={speed}
+        spellingCount={spelling.items.length}
       >
         {critique}
         {walkthrough}

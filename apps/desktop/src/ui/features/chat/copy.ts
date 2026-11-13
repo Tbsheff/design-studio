@@ -180,6 +180,10 @@ const copy = {
   searchRuns: "Search runs",
   searching: "Searching…",
   selected: " selected",
+  selectionPicture: "Picture of selection",
+  selectionPictureRemove: "Leave the picture out of this run",
+  selectionPictureTip:
+    "The agent gets a picture of the selected layers as you see them",
   send: "Send",
   sendNeedsText: "Type a message first.",
   sendsToANew: "Sends to a new direction",

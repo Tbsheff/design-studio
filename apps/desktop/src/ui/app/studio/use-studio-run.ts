@@ -11,6 +11,7 @@ import { useRunControls } from "../../features/chat/use-run-controls";
 import type { TrackSend } from "../../features/chat/use-run-controls";
 import { POLISH_REQUEST } from "../../features/inspector/polish-model";
 import { TWEAKS_REQUEST } from "../../features/inspector/use-tweaks";
+import { resetSelectionPicture } from "../../platform/selection-picture";
 import { randomToken } from "../../platform/session";
 import { uiStore } from "../../platform/storage";
 import {
@@ -65,6 +66,8 @@ const sendRequest = async (job: SendJob): Promise<void> => {
       (): ReturnType<typeof api.startRun> =>
         api.startRun(input.projectId, directionId, request)
     );
+
+    resetSelectionPicture();
 
     if (stopped) {
       data.seedStoppedRun(runId, directionId, request);

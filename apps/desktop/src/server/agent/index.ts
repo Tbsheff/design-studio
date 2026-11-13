@@ -168,6 +168,8 @@ export { loadRepoContext } from "./repo-context.js";
 
 export { resolveRunTarget } from "./run-target.js";
 
+export { applySelectionPicture } from "./selection-picture.js";
+
 export { createSdkDriver } from "./sdk-driver.js";
 
 export { discoverSkills, prepareSkills } from "./skills.js";

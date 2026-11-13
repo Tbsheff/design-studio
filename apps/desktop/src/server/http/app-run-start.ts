@@ -1,3 +1,4 @@
+import { applySelectionPicture } from "../agent/index.js";
 import { withCommentInputs } from "../comments/run-payload.js";
 import {
   captureReferencePage,
@@ -41,10 +42,17 @@ const startRunFromCall = async (
 
       const withTasks = await ctx.withTaskInputs(project, direction, request);
 
+      const withPicture = await applySelectionPicture(
+        ctx,
+        { direction, project },
+        withTasks,
+        body.isSelectionPictureOn !== false
+      );
+
       return ctx.startRun(
         project,
         direction,
-        await withCommentInputs(ctx.comments, project, direction, withTasks)
+        await withCommentInputs(ctx.comments, project, direction, withPicture)
       );
     }
   );

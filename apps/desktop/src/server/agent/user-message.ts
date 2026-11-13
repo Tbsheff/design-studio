@@ -26,6 +26,7 @@ import { referenceBlock, variationBlock } from "../variations/message.js";
 import { toFocusLines } from "./focus-block.js";
 import { layoutLines } from "./layout-region.js";
 import type { RunTarget, TargetFrame } from "./run-target.js";
+import { toSelectedElementsEnd, toStylesText } from "./selected-elements.js";
 
 const IMAGE_MIMES = [
   "image/jpeg",
@@ -53,15 +54,6 @@ function trim(value: string, max: number): string {
   return clean.length > max ? `${clean.slice(0, max)}…` : clean;
 }
 
-function formatStyles(styles: Record<string, string>): string {
-  const entries = Object.entries(styles);
-
-  if (entries.length === 0) {
-    return "(none)";
-  }
-  return entries.map(([key, value]) => `${key}: ${value}`).join("; ");
-}
-
 function formatSelection(selection: SelectionContext, index: number): string {
   const loc = selection.source
     ? `${selection.source.file}:${selection.source.line}:${selection.source.col}`
@@ -73,7 +65,7 @@ function formatSelection(selection: SelectionContext, index: number): string {
     `selector: ${selection.selector}`,
     `tag: ${selection.tag}`,
     `text: ${trim(selection.text, 200)}`,
-    `styles: ${formatStyles(selection.styles)}`,
+    `styles: ${toStylesText(selection.styles)}`,
     `ancestors: ${selection.ancestors.length > 0 ? selection.ancestors.join(" > ") : "(none)"}`,
     "outerHTML:",
     trim(selection.outerHTML, 1500),
@@ -407,7 +399,7 @@ export function buildUserText(
       [
         "<selected-elements>",
         ...selection.map(formatSelection),
-        "</selected-elements>",
+        ...toSelectedElementsEnd(imageAttachments(ctx.attachments)),
       ].join("\n")
     );
   }
@@ -498,3 +490,5 @@ export function toSdkPrompt(
     yield message;
   })();
 }
+
+export { toMockSelectionReply } from "./selected-elements.js";

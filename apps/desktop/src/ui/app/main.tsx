@@ -19,6 +19,7 @@ import "../styles/layout.css";
 import "../styles/versions.css";
 import "../styles/canvas.css";
 import "../styles/selection-prompt.css";
+import "../styles/selection-picture.css";
 import "../styles/prototype.css";
 import "../styles/linked-frame.css";
 import "../styles/image-drop.css";

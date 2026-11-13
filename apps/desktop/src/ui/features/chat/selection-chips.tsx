@@ -1,6 +1,8 @@
 import type { SelectionContext } from "@design-studio/contracts";
 import type { ReactElement } from "react";
 
+import { SelectionPictureChip } from "../../ai/components/ai/selection-picture-chip.js";
+import { copy } from "./copy.js";
 import { SelectionChip } from "./selection-chip.js";
 
 interface SelectionChipsProps {
@@ -25,6 +27,12 @@ const SelectionChips = ({
           onRemove={onRemove}
         />
       ))}
+      <SelectionPictureChip
+        count={selection.length}
+        label={copy.selectionPicture}
+        removeLabel={copy.selectionPictureRemove}
+        tip={copy.selectionPictureTip}
+      />
     </div>
   );
 };

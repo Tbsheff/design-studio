@@ -10,7 +10,7 @@ const getDraftRun = defineAction({
   agent: { off: "run-control" },
   confirm: "none",
   description:
-    "Read the file that a running agent writes now. Returns the file path, its size in bytes, the partial HTML (cut at 256 KB, null for files that are not HTML) and if the write is complete. Call it next to get_run to show the page before the run ends. Read only.",
+    "Read the file that a running agent writes or edits now. Returns the file path, the kind (write or edit), the size in bytes of the new text, the partial HTML (cut at 256 KB, null for files that are not HTML) and if the change is complete. For an edit, the HTML is the full page with the partial edit in place, or null when the old text is not found once. Call it next to get_run to show the page before the run ends. Read only.",
   errors: [NotFound],
   http: { method: "GET", path: "/api/projects/:projectId/runs/:runId/draft" },
   id: "run.getDraft",

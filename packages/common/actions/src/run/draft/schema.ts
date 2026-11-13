@@ -6,6 +6,7 @@ const RunDraftSchema = Schema.Struct({
   bytes: Schema.Int,
   html: Schema.NullOr(Schema.String),
   isComplete: Schema.Boolean,
+  kind: Schema.Literals(["write", "edit"]),
   path: Schema.NullOr(Schema.String),
 });
 

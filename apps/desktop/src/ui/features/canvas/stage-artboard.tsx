@@ -2,6 +2,7 @@ import { Suspense, useMemo } from "react";
 import type { ReactElement } from "react";
 
 import type { StageSlotProps } from "./canvas-stage-types.js";
+import { DraftLayer } from "./draft-layer.js";
 import { PreviewSlots } from "./preview-slots.js";
 import { toArtboardStyle } from "./stage-artboard-model.js";
 import { StageFrames } from "./stage-frames.js";
@@ -21,7 +22,6 @@ const StageArtboard = ({
   const { active, artboardRef, firstBuild, note, viewport } = stage;
 
   const { covered, frames } = preview;
-  const { TabOrder } = slots;
 
   const style = useMemo(
     () => toArtboardStyle(viewport.width, viewport.height, note === "empty"),
@@ -49,8 +49,9 @@ const StageArtboard = ({
         projectId={props.projectId}
         directionId={props.directionId || null}
       />
+      <DraftLayer preview={preview} props={props} stage={stage} />
       <Suspense fallback={null}>
-        <TabOrder
+        <slots.TabOrder
           projectId={props.projectId}
           directionId={props.directionId}
           frameId={active.id}

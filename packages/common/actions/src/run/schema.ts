@@ -1,5 +1,7 @@
 import { Schema } from "effect";
 
+import { DecisionSchema } from "./decision/schema.js";
+
 const QUEUE_MAX = 20;
 
 const TEXT_MAX = 20_000;
@@ -68,6 +70,7 @@ const RunSentSchema = Schema.Struct({
 });
 
 const RunDetailSchema = Schema.Struct({
+  decisions: Schema.Array(DecisionSchema),
   events: Schema.Array(RunEventSchema),
   sent: Schema.Array(RunSentSchema),
   status: Schema.NullOr(Schema.String),

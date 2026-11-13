@@ -1,5 +1,11 @@
 // @generated
 const routes = {
+  createDecisionRun: {
+    id: "run.createDecision",
+    invalidates: ["run.get", "run.listDecisions"],
+    method: "POST",
+    path: "/api/projects/:projectId/runs/:runId/decisions",
+  },
   getContextRun: {
     id: "run.getContext",
     invalidates: [],
@@ -18,6 +24,12 @@ const routes = {
     method: "GET",
     path: "/api/projects/:projectId/runs/:runId",
   },
+  listDecisionsRun: {
+    id: "run.listDecisions",
+    invalidates: [],
+    method: "GET",
+    path: "/api/projects/:projectId/runs/:runId/decisions",
+  },
   listRun: {
     id: "run.list",
     invalidates: [],
@@ -29,6 +41,12 @@ const routes = {
     invalidates: ["run.get", "run.list"],
     method: "PATCH",
     path: "/api/projects/:projectId/runs/:runId",
+  },
+  setDecisionRun: {
+    id: "run.setDecision",
+    invalidates: ["run.get", "run.list", "run.listDecisions"],
+    method: "POST",
+    path: "/api/projects/:projectId/runs/:runId/decisions/:decisionId",
   },
   setPermissionRun: {
     id: "run.setPermission",

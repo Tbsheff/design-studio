@@ -1,6 +1,8 @@
 import { Layer } from "effect";
 
 import {
+  RunDecisionStore,
+  RunDecisionWriter,
   RunDraftStore,
   RunLogStore,
   RunLogWriter,
@@ -9,7 +11,9 @@ import {
 const RunLive = Layer.mergeAll(
   RunLogStore.layer,
   RunLogWriter.layer,
-  RunDraftStore.layer
+  RunDraftStore.layer,
+  RunDecisionStore.layer,
+  RunDecisionWriter.layer
 );
 
 export { RunLive };

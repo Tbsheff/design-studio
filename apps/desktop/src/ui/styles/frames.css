@@ -518,7 +518,7 @@ body[class*="frame-resize-"] .frame {
   border-radius: var(--r-md);
   background: var(--surface-raised);
   box-shadow: var(--shadow-pop);
-  transform: scale(var(--inv-zoom, 1));
+  transform: scale(var(--inv-zoom, 1)) translateY(-28px);
   transform-origin: 0 100%;
   pointer-events: auto;
 }

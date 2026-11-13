@@ -1,4 +1,5 @@
 import { TOOL_KEYS } from "./keymap-tools.js";
+import { VIEW_KEYS } from "./keymap-view.js";
 
 export type KeyGroup =
   | "General"
@@ -135,54 +136,7 @@ export const KEYMAP = [
   },
 
   ...TOOL_KEYS,
-  { id: "pan", label: "Pan", keys: ["Space"], group: "Canvas", hold: true },
-  {
-    id: "zoom-click",
-    label: "Zoom where you click",
-    keys: ["Z"],
-    group: "Canvas",
-    hold: true,
-  },
-  { id: "zoom-in", label: "Zoom in", keys: ["=", "Mod+="], group: "Canvas" },
-  { id: "zoom-out", label: "Zoom out", keys: ["-", "Mod+-"], group: "Canvas" },
-  {
-    id: "zoom-actual",
-    label: "Zoom to 100%",
-    keys: ["Shift+0", "Mod+0"],
-    group: "Canvas",
-  },
-  {
-    id: "zoom-fit",
-    label: "Zoom to fit",
-    keys: ["Shift+1", "Mod+1"],
-    group: "Canvas",
-  },
-  {
-    id: "zoom-selection",
-    label: "Zoom to selection",
-    keys: ["Shift+2", "Mod+2"],
-    group: "Canvas",
-  },
-  {
-    id: "measure",
-    label: "Measure distance",
-    keys: ["Alt"],
-    group: "Canvas",
-    hold: true,
-  },
-  {
-    id: "view-outline",
-    label: "Show or hide layer outlines",
-    keys: ["Shift+O"],
-    group: "Canvas",
-  },
-  {
-    id: "rulers",
-    label: "Show or hide rulers",
-    keys: ["Shift+R"],
-    group: "Canvas",
-  },
-  { id: "insert-icon", label: "Insert icon", keys: ["I"], group: "Canvas" },
+  ...VIEW_KEYS,
 
   {
     id: "select-child",

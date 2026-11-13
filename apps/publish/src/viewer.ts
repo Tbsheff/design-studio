@@ -1,8 +1,6 @@
-import {
-  LIMITS,
-  type RemoteComment,
-} from "@design-studio/actions/publish-remote";
+import { LIMITS, PLAY_VIEWER } from "@design-studio/actions/publish-remote";
 
+import { createComment, listComments } from "./comments";
 import {
   cookieValue,
   COOKIE_TTL_S,
@@ -10,7 +8,6 @@ import {
   parsePasswordHash,
   passValid,
   passwordMatches,
-  randomId,
   type PasswordHash,
 } from "./crypto";
 import {
@@ -32,6 +29,13 @@ import {
 import { clientBucket, takeToken } from "./limits";
 import { commentsPage, gatePage, messagePage } from "./pages";
 import { candidates, decodeRest } from "./paths";
+import {
+  hasPlayViewer,
+  isPlayRoute,
+  isViewerPath,
+  servePlay,
+  toMissing,
+} from "./play";
 
 interface Ctx {
   request: Request;
@@ -259,55 +263,13 @@ async function unlock(ctx: Ctx, stored: PasswordHash): Promise<Response> {
   });
 }
 
-async function commentList(ctx: Ctx): Promise<RemoteComment[]> {
-  const rows = await ctx.env.DB.prepare(
-    "SELECT id, author, body, created_at FROM comments WHERE publication_id = ?1 ORDER BY created_at DESC LIMIT 100"
-  )
-    .bind(ctx.pub.id)
-    .all<{ id: string; author: string; body: string; created_at: number }>();
-  return rows.results.map((r) => ({
-    id: r.id,
-    author: r.author,
-    body: r.body,
-    createdAt: r.created_at,
-  }));
-}
-
-function clean(raw: unknown, max: number): string | null {
-  const value = String(raw ?? "")
-    .replace(/[\u0000-\u0008\u000b-\u001f\u007f]+/g, " ")
-    .trim();
-  return value.length >= 1 && value.length <= max ? value : null;
-}
-
 async function postComment(ctx: Ctx): Promise<string | null> {
   const form = await formOf(ctx.request);
-  const author = clean(form.get("author"), LIMITS.commentAuthorMax);
-  const body = clean(form.get("body"), LIMITS.commentBodyMax);
-  if (!author || !body)
-    return `Type a name (1 to ${LIMITS.commentAuthorMax} characters) and a comment (1 to ${LIMITS.commentBodyMax} characters).`;
-  try {
-    await takeToken(
-      ctx.env.DB,
-      await clientBucket(
-        `comment:${ctx.pub.id}`,
-        clientKey(ctx.request),
-        ctx.env.PUBLISH_KEY_HASH
-      ),
-      LIMITS.commentsPer10Min,
-      600_000,
-      "You sent many comments. Wait 10 minutes."
-    );
-  } catch (error) {
-    if (error instanceof ApiError) return error.message;
-    throw error;
-  }
-  await ctx.env.DB.prepare(
-    "INSERT INTO comments (id, publication_id, author, body, created_at) VALUES (?1, ?2, ?3, ?4, ?5)"
-  )
-    .bind(randomId(9), ctx.pub.id, author, body, Date.now())
-    .run();
-  return null;
+  return createComment(
+    ctx,
+    String(form.get("author") ?? ""),
+    String(form.get("body") ?? "")
+  );
 }
 
 async function comments(ctx: Ctx): Promise<Response> {
@@ -333,7 +295,7 @@ async function comments(ctx: Ctx): Promise<Response> {
         title: ctx.pub.title,
         designHref: ctx.root,
         action,
-        comments: await commentList(ctx),
+        comments: await listComments(ctx.env.DB, ctx.pub.id),
         error,
         sent,
       },
@@ -347,6 +309,16 @@ async function serveInside(ctx: Ctx, rest: string): Promise<Response> {
   const method = ctx.request.method;
   if (rest === "~/comments" && (method === "GET" || method === "POST"))
     return comments(ctx);
+  if (isPlayRoute(rest)) {
+    return servePlay(ctx, rest);
+  }
+  if (
+    rest === "" &&
+    (method === "GET" || method === "HEAD") &&
+    (await hasPlayViewer(ctx.env, ctx.pub))
+  ) {
+    return redirect(302, `${ctx.root}${PLAY_VIEWER.route}/`, ctx.pub);
+  }
   if (rest.startsWith("~"))
     return page(
       messagePage(
@@ -364,7 +336,11 @@ async function serveInside(ctx: Ctx, rest: string): Promise<Response> {
       }),
       ctx.pub
     );
-  return serveFile(ctx, decodeRest(rest));
+  const path = decodeRest(rest);
+  if (isViewerPath(path)) {
+    return toMissing(ctx);
+  }
+  return serveFile(ctx, path);
 }
 
 async function routeLocked(
@@ -450,7 +426,7 @@ export async function robots(env: Env): Promise<Response> {
   const rows = await env.DB.prepare(
     "SELECT slug FROM publications WHERE noindex = 0 AND revoked_at IS NULL LIMIT 500"
   ).all<{ slug: string }>();
-  const allow = rows.results.map((r) => `Allow: /d/${r.slug}/`).join("\n");
+  const allow = rows.results.map((row) => `Allow: /d/${row.slug}/`).join("\n");
   return page(
     new Response(`User-agent: *\n${allow}${allow ? "\n" : ""}Disallow: /\n`, {
       headers: {

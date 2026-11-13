@@ -1,4 +1,5 @@
 import type { SelectionContext } from "@design-studio/contracts";
+import { Suspense, lazy } from "react";
 import type { ReactElement, ReactNode } from "react";
 
 import { createLiveStore, useLive } from "../../platform/live-store.js";
@@ -20,6 +21,12 @@ interface LiveOverlayProps {
   readonly spacing?: ReactNode;
   readonly zoom: number;
 }
+
+const SelectionPrompt = lazy(async () => {
+  const { SelectionPrompt: Prompt } = await import("./selection-prompt.js");
+
+  return { default: Prompt };
+});
 
 const NO_PICK = createLiveStore<SelectionContext[] | null>(null);
 
@@ -50,14 +57,21 @@ const LiveOverlay = ({
   const control = useResizeLive(resize);
 
   return (
-    <ArtboardOverlay
-      comments={comments}
-      spacing={spacing}
-      zoom={zoom}
-      selection={early ?? selection}
-      hover={overlayHover(box, picking)}
-      resize={control}
-    />
+    <>
+      <ArtboardOverlay
+        comments={comments}
+        spacing={spacing}
+        zoom={zoom}
+        selection={early ?? selection}
+        hover={overlayHover(box, picking)}
+        resize={control}
+      />
+      {!commenting && (
+        <Suspense fallback={null}>
+          <SelectionPrompt selection={selection} zoom={zoom} />
+        </Suspense>
+      )}
+    </>
   );
 };
 

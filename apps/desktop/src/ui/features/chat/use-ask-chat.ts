@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 import { matchesKey } from "../../../shared/keymap.js";
 import { IS_MAC, useCommands } from "../../chat-slots.js";
-import { requestAskChat } from "../../platform/ask-chat.js";
+import { requestAskAtSelection } from "../../platform/ask-chat.js";
 import { isTypingTarget } from "../../platform/typing-target.js";
 
 const ASK_CHAT_COMMAND = "selection.ask-inline";
@@ -20,7 +20,7 @@ const useAskChatShortcut = (): void => {
       }
 
       event.preventDefault();
-      requestAskChat();
+      requestAskAtSelection();
     };
 
     globalThis.addEventListener("keydown", onKey);
@@ -39,7 +39,7 @@ const useAskChat = (): void => {
       id: ASK_CHAT_COMMAND,
       keyId: "inline-prompt",
       keywords: "chat prompt quick edit selection element ask agent",
-      run: requestAskChat,
+      run: requestAskAtSelection,
       title: "Ask the chat about the selection",
     },
   ]);

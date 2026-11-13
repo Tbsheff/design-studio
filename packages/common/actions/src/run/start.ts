@@ -9,6 +9,17 @@ import { RunStartedSchema } from "./schema.js";
 
 const Loose = Schema.optionalKey(Schema.Json);
 
+const toLoose = (description: string): typeof Loose =>
+  Schema.optionalKey(Schema.Json.annotate({ description }));
+
+const SelectionField = toLoose(
+  'The elements the run must change, as a list of picked elements. Each item has selector, tag, text, outerHTML, styles, rect ({ x, y, width, height }), source ({ file, line, col } or null) and ancestors. Example: [{ "selector": "main > h1", "tag": "h1", "text": "Hero", "outerHTML": "<h1>Hero</h1>", "styles": {}, "rect": { "x": 0, "y": 0, "width": 600, "height": 64 }, "source": { "file": "index.html", "line": 24, "col": 5 }, "ancestors": ["main"] }]. Copy the items from the selection that the studio shows.'
+);
+
+const EditScopeField = toLoose(
+  'Which uses of a shared component the run may change, when the selection comes from a file that 2 or more routes use. "this" changes only this use and never the shared file. "all" changes the shared file for every route. Example: { "choice": "this", "file": "src/components/Hero.tsx", "component": "Hero", "routes": ["/", "/pricing"] }. Leave it out when the selection is used once.'
+);
+
 const startRun = defineAction({
   access: "edit",
   agent: { off: "run-control" },
@@ -26,7 +37,7 @@ const startRun = defineAction({
     canvas: Loose,
     commentIds: Loose,
     directionId: DirectionIdSchema,
-    editScope: Loose,
+    editScope: EditScopeField,
     effort: Loose,
     focusPaths: Loose,
     lean: Loose,
@@ -38,7 +49,7 @@ const startRun = defineAction({
     prompt: Schema.String,
     referenceUrls: Loose,
     retryOf: Loose,
-    selection: Loose,
+    selection: SelectionField,
     states: Loose,
     task: Loose,
   }),

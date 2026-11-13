@@ -1,0 +1,741 @@
+call-action run.get on http://127.0.0.1:4690. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 3 ms, git spawns: not counted (server side)
+{
+  "events": [
+    {
+      "directionId": "main",
+      "projectId": "gOP07Q8bQx",
+      "request": {
+        "level": "prototype",
+        "mode": "edit",
+        "prompt": "Make this shorter",
+        "selection": [
+          {
+            "ancestors": [
+              "main"
+            ],
+            "outerHTML": "<h1>Make this shorter</h1>",
+            "rect": {
+              "height": 64,
+              "width": 600,
+              "x": 0,
+              "y": 0
+            },
+            "selector": "main > h1",
+            "source": {
+              "col": 5,
+              "file": "index.html",
+              "line": 24
+            },
+            "styles": {},
+            "tag": "h1",
+            "text": "Make this shorter"
+          }
+        ]
+      },
+      "runId": "u8ZytYloIrJM11Q9gBr1k",
+      "seq": 155,
+      "ts": 1794574035054,
+      "type": "run.started"
+    },
+    {
+      "contextTokens": 24000,
+      "directionId": "main",
+      "projectId": "gOP07Q8bQx",
+      "runId": "u8ZytYloIrJM11Q9gBr1k",
+      "seq": 156,
+      "ts": 1794574035062,
+      "type": "run.usage"
+    },
+    {
+      "directionId": "main",
+      "projectId": "gOP07Q8bQx",
+      "runId": "u8ZytYloIrJM11Q9gBr1k",
+      "seq": 157,
+      "text": "Updating ",
+      "ts": 1794574035063,
+      "type": "run.text.delta"
+    },
+    {
+      "directionId": "main",
+      "projectId": "gOP07Q8bQx",
+      "runId": "u8ZytYloIrJM11Q9gBr1k",
+      "seq": 158,
+      "text": "1 selected ",
+      "ts": 1794574035114,
+      "type": "run.text.delta"
+    },
+    {
+      "directionId": "main",
+      "projectId": "gOP07Q8bQx",
+      "runId": "u8ZytYloIrJM11Q9gBr1k",
+      "seq": 159,
+      "text": "element(s).",
+      "ts": 1794574035145,
+      "type": "run.text.delta"
+    },
+    {
+      "directionId": "main",
+      "projectId": "gOP07Q8bQx",
+      "runId": "u8ZytYloIrJM11Q9gBr1k",
+      "seq": 160,
+      "text": "Updating 1 selected element(s).",
+      "ts": 1794574035145,
+      "type": "run.text"
+    },
+    {
+      "directionId": "main",
+      "input": {
+        "file_path": "/Volumes/DevProjects/code/ds-wt/selection-prompt/studio-projects/prompt-test/index.html"
+      },
+      "name": "Edit",
+      "projectId": "gOP07Q8bQx",
+      "runId": "u8ZytYloIrJM11Q9gBr1k",
+      "seq": 161,
+      "toolUseId": "mock_tool_1",
+      "ts": 1794574035146,
+      "type": "run.tool.started"
+    },
+    {
+      "diff": {
+        "added": 0,
+        "created": false,
+        "hunks": [],
+        "path": "index.html",
+        "removed": 0,
+        "truncated": false
+      },
+      "directionId": "main",
+      "durationMs": 1,
+      "isError": false,
+      "projectId": "gOP07Q8bQx",
+      "runId": "u8ZytYloIrJM11Q9gBr1k",
+      "seq": 162,
+      "summary": "Edit index.html",
+      "toolUseId": "mock_tool_1",
+      "ts": 1794574035147,
+      "type": "run.tool.finished"
+    },
+    {
+      "directionId": "main",
+      "projectId": "gOP07Q8bQx",
+      "runId": "u8ZytYloIrJM11Q9gBr1k",
+      "seq": 163,
+      "text": "Updated ",
+      "ts": 1794574035147,
+      "type": "run.text.delta"
+    },
+    {
+      "directionId": "main",
+      "projectId": "gOP07Q8bQx",
+      "runId": "u8ZytYloIrJM11Q9gBr1k",
+      "seq": 165,
+      "text": "the selected ",
+      "ts": 1794574035197,
+      "type": "run.text.delta"
+    },
+    {
+      "directionId": "main",
+      "projectId": "gOP07Q8bQx",
+      "runId": "u8ZytYloIrJM11Q9gBr1k",
+      "seq": 167,
+      "text": "element(s).",
+      "ts": 1794574035230,
+      "type": "run.text.delta"
+    },
+    {
+      "directionId": "main",
+      "projectId": "gOP07Q8bQx",
+      "runId": "u8ZytYloIrJM11Q9gBr1k",
+      "seq": 168,
+      "text": "Updated the selected element(s).",
+      "ts": 1794574035230,
+      "type": "run.text"
+    },
+    {
+      "directionId": "main",
+      "projectId": "gOP07Q8bQx",
+      "seq": 168,
+      "status": {
+        "changed": [],
+        "dirty": false
+      },
+      "ts": 1794574035282,
+      "type": "status.changed"
+    },
+    {
+      "directionId": "main",
+      "projectId": "gOP07Q8bQx",
+      "runId": "u8ZytYloIrJM11Q9gBr1k",
+      "seq": 169,
+      "summary": {
+        "contextTokens": 24000,
+        "costUsd": 0,
+        "directionId": "main",
+        "durationMs": 168,
+        "error": null,
+        "finalText": "Updated the selected element(s).",
+        "finishedAt": 1794574035282,
+        "id": "u8ZytYloIrJM11Q9gBr1k",
+        "level": "prototype",
+        "model": "claude-sonnet-5-5",
+        "modelMs": 0,
+        "parts": [
+          {
+            "kind": "text",
+            "text": "Updating 1 selected element(s)."
+          },
+          {
+            "kind": "tool",
+            "toolUseId": "mock_tool_1"
+          },
+          {
+            "kind": "text",
+            "text": "Updated the selected element(s)."
+          }
+        ],
+        "projectId": "gOP07Q8bQx",
+        "request": {
+          "level": "prototype",
+          "mode": "edit",
+          "prompt": "Make this shorter",
+          "selection": [
+            {
+              "ancestors": [
+                "main"
+              ],
+              "outerHTML": "<h1>Make this shorter</h1>",
+              "rect": {
+                "height": 64,
+                "width": 600,
+                "x": 0,
+                "y": 0
+              },
+              "selector": "main > h1",
+              "source": {
+                "col": 5,
+                "file": "index.html",
+                "line": 24
+              },
+              "styles": {},
+              "tag": "h1",
+              "text": "Make this shorter"
+            }
+          ]
+        },
+        "sessionId": "mock-main-u8ZytYloIrJM11Q9gBr1k",
+        "startedAt": 1794574035053,
+        "status": "completed",
+        "toolCalls": [
+          {
+            "diff": {
+              "added": 0,
+              "created": false,
+              "hunks": [],
+              "path": "index.html",
+              "removed": 0,
+              "truncated": false
+            },
+            "finishedAt": 1794574035147,
+            "input": {
+              "file_path": "/Volumes/DevProjects/code/ds-wt/selection-prompt/studio-projects/prompt-test/index.html"
+            },
+            "isError": false,
+            "name": "Edit",
+            "startedAt": 1794574035146,
+            "summary": "Edit index.html",
+            "toolUseId": "mock_tool_1"
+          }
+        ],
+        "toolMs": 1,
+        "usage": {
+          "cacheReadTokens": 0,
+          "cacheWriteTokens": 0,
+          "inputTokens": 120,
+          "outputTokens": 80
+        },
+        "versionId": null
+      },
+      "ts": 1794574035282,
+      "type": "run.finished"
+    }
+  ],
+  "sent": [
+    {
+      "directionId": "main",
+      "imageCount": 0,
+      "projectId": "gOP07Q8bQx",
+      "promptHash": "mock",
+      "recommendedSkills": [],
+      "resume": null,
+      "runId": "u8ZytYloIrJM11Q9gBr1k",
+      "text": "Make this shorter\n\n<selected-elements>\n<element index=\"1\">\nsource: index.html:24:5\nselector: main > h1\ntag: h1\ntext: Make this shorter\nstyles: (none)\nancestors: main\nouterHTML:\n<h1>Make this shorter</h1>\n</element>\n</selected-elements>\n\n<lean_context>\nThis is a lean run: the studio sent only the code around the selected element, the tokens it uses and the titles of the repo agent files. Follow the repo conventions in that code.\n\n<source path=\"index.html\" lines=\"1-35\">\n    1  <!doctype html>\n    2  <html lang=\"en\">\n    3  <head>\n    4    <meta charset=\"utf-8\">\n    5    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    6    <title>A landing page with a hero heading, a short paragraph and a button</title>\n    7    <style>\n    8      :root { --ink: #1c1f23; --muted: #5a6270; --paper: #fbfaf7; --accent: #0f6b5c; --line: #e4e1da; }\n    9      * { box-sizing: border-box; }\n   10      body { margin: 0; font-family: system-ui, -apple-system, \"Segoe UI\", sans-serif; color: var(--ink); background: var(--paper); line-height: 1.5; }\n   11      main { max-width: 1080px; margin: 0 auto; padding: 64px 24px; }\n   12      h1 { font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.1; margin: 0 0 16px; }\n   13      .lede { font-size: 1.125rem; color: var(--muted); max-width: 40rem; margin: 0 0 32px; }\n   14      .cta { display: inline-block; padding: 12px 24px; border: 0; border-radius: 8px; background: var(--accent); color: #fff; font-size: 1rem; cursor: pointer; }\n   15      .cta:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }\n   16      .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; margin-top: 64px; }\n   17      .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 24px; }\n   18      .card h2 { font-size: 1.125rem; margin: 0 0 8px; }\n   19      .card p { margin: 0; color: var(--muted); }\n   20    </style>\n   21  </head>\n   22  <body>\n   23    <main>\n   24      <h1>Make this shorter</h1>\n   25      <p class=\"lede\">A clear starting point. Replace this copy with the real story of the product.</p>\n   26      <button class=\"cta\" type=\"button\">Get started</button>\n   27      <section class=\"cards\" aria-label=\"Highlights\">\n   28        <article class=\"card\"><h2>First idea</h2><p>Describe the first thing people should know.</p></article>\n   29        <article class=\"card\"><h2>Second idea</h2><p>Explain how it works in one or two lines.</p></article>\n   30        <article class=\"card\"><h2>Third idea</h2><p>Say what happens next and why it matters.</p></article>\n   31      </section>\n   32    </main>\n   33  </body>\n   34  </html>\n   35  \n</source>\n</lean_context>",
+      "ts": 1794574035063,
+      "type": "run.sent",
+      "updatedInstructions": false
+    }
+  ],
+  "status": "completed",
+  "summary": {
+    "contextTokens": 24000,
+    "costUsd": 0,
+    "directionId": "main",
+    "durationMs": 168,
+    "error": null,
+    "finalText": "Updated the selected element(s).",
+    "finishedAt": 1794574035282,
+    "id": "u8ZytYloIrJM11Q9gBr1k",
+    "level": "prototype",
+    "model": "claude-sonnet-5-5",
+    "modelMs": 0,
+    "parts": [
+      {
+        "kind": "text",
+        "text": "Updating 1 selected element(s)."
+      },
+      {
+        "kind": "tool",
+        "toolUseId": "mock_tool_1"
+      },
+      {
+        "kind": "text",
+        "text": "Updated the selected element(s)."
+      }
+    ],
+    "projectId": "gOP07Q8bQx",
+    "request": {
+      "level": "prototype",
+      "mode": "edit",
+      "prompt": "Make this shorter",
+      "selection": [
+        {
+          "ancestors": [
+            "main"
+          ],
+          "outerHTML": "<h1>Make this shorter</h1>",
+          "rect": {
+            "height": 64,
+            "width": 600,
+            "x": 0,
+            "y": 0
+          },
+          "selector": "main > h1",
+          "source": {
+            "col": 5,
+            "file": "index.html",
+            "line": 24
+          },
+          "styles": {},
+          "tag": "h1",
+          "text": "Make this shorter"
+        }
+      ]
+    },
+    "sessionId": "mock-main-u8ZytYloIrJM11Q9gBr1k",
+    "startedAt": 1794574035053,
+    "status": "completed",
+    "toolCalls": [
+      {
+        "diff": {
+          "added": 0,
+          "created": false,
+          "hunks": [],
+          "path": "index.html",
+          "removed": 0,
+          "truncated": false
+        },
+        "finishedAt": 1794574035147,
+        "input": {
+          "file_path": "/Volumes/DevProjects/code/ds-wt/selection-prompt/studio-projects/prompt-test/index.html"
+        },
+        "isError": false,
+        "name": "Edit",
+        "startedAt": 1794574035146,
+        "summary": "Edit index.html",
+        "toolUseId": "mock_tool_1"
+      }
+    ],
+    "toolMs": 1,
+    "usage": {
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "inputTokens": 120,
+      "outputTokens": 80
+    },
+    "versionId": null
+  }
+}
+
+[mcp] ok, 6 ms, git spawns: not counted (server side)
+{
+  "events": [
+    {
+      "directionId": "main",
+      "projectId": "gOP07Q8bQx",
+      "request": {
+        "level": "prototype",
+        "mode": "edit",
+        "prompt": "Make this shorter",
+        "selection": [
+          {
+            "ancestors": [
+              "main"
+            ],
+            "outerHTML": "<h1>Make this shorter</h1>",
+            "rect": {
+              "height": 64,
+              "width": 600,
+              "x": 0,
+              "y": 0
+            },
+            "selector": "main > h1",
+            "source": {
+              "col": 5,
+              "file": "index.html",
+              "line": 24
+            },
+            "styles": {},
+            "tag": "h1",
+            "text": "Make this shorter"
+          }
+        ]
+      },
+      "runId": "u8ZytYloIrJM11Q9gBr1k",
+      "seq": 155,
+      "ts": 1794574035054,
+      "type": "run.started"
+    },
+    {
+      "contextTokens": 24000,
+      "directionId": "main",
+      "projectId": "gOP07Q8bQx",
+      "runId": "u8ZytYloIrJM11Q9gBr1k",
+      "seq": 156,
+      "ts": 1794574035062,
+      "type": "run.usage"
+    },
+    {
+      "directionId": "main",
+      "projectId": "gOP07Q8bQx",
+      "runId": "u8ZytYloIrJM11Q9gBr1k",
+      "seq": 157,
+      "text": "Updating ",
+      "ts": 1794574035063,
+      "type": "run.text.delta"
+    },
+    {
+      "directionId": "main",
+      "projectId": "gOP07Q8bQx",
+      "runId": "u8ZytYloIrJM11Q9gBr1k",
+      "seq": 158,
+      "text": "1 selected ",
+      "ts": 1794574035114,
+      "type": "run.text.delta"
+    },
+    {
+      "directionId": "main",
+      "projectId": "gOP07Q8bQx",
+      "runId": "u8ZytYloIrJM11Q9gBr1k",
+      "seq": 159,
+      "text": "element(s).",
+      "ts": 1794574035145,
+      "type": "run.text.delta"
+    },
+    {
+      "directionId": "main",
+      "projectId": "gOP07Q8bQx",
+      "runId": "u8ZytYloIrJM11Q9gBr1k",
+      "seq": 160,
+      "text": "Updating 1 selected element(s).",
+      "ts": 1794574035145,
+      "type": "run.text"
+    },
+    {
+      "directionId": "main",
+      "input": {
+        "file_path": "/Volumes/DevProjects/code/ds-wt/selection-prompt/studio-projects/prompt-test/index.html"
+      },
+      "name": "Edit",
+      "projectId": "gOP07Q8bQx",
+      "runId": "u8ZytYloIrJM11Q9gBr1k",
+      "seq": 161,
+      "toolUseId": "mock_tool_1",
+      "ts": 1794574035146,
+      "type": "run.tool.started"
+    },
+    {
+      "diff": {
+        "added": 0,
+        "created": false,
+        "hunks": [],
+        "path": "index.html",
+        "removed": 0,
+        "truncated": false
+      },
+      "directionId": "main",
+      "durationMs": 1,
+      "isError": false,
+      "projectId": "gOP07Q8bQx",
+      "runId": "u8ZytYloIrJM11Q9gBr1k",
+      "seq": 162,
+      "summary": "Edit index.html",
+      "toolUseId": "mock_tool_1",
+      "ts": 1794574035147,
+      "type": "run.tool.finished"
+    },
+    {
+      "directionId": "main",
+      "projectId": "gOP07Q8bQx",
+      "runId": "u8ZytYloIrJM11Q9gBr1k",
+      "seq": 163,
+      "text": "Updated ",
+      "ts": 1794574035147,
+      "type": "run.text.delta"
+    },
+    {
+      "directionId": "main",
+      "projectId": "gOP07Q8bQx",
+      "runId": "u8ZytYloIrJM11Q9gBr1k",
+      "seq": 165,
+      "text": "the selected ",
+      "ts": 1794574035197,
+      "type": "run.text.delta"
+    },
+    {
+      "directionId": "main",
+      "projectId": "gOP07Q8bQx",
+      "runId": "u8ZytYloIrJM11Q9gBr1k",
+      "seq": 167,
+      "text": "element(s).",
+      "ts": 1794574035230,
+      "type": "run.text.delta"
+    },
+    {
+      "directionId": "main",
+      "projectId": "gOP07Q8bQx",
+      "runId": "u8ZytYloIrJM11Q9gBr1k",
+      "seq": 168,
+      "text": "Updated the selected element(s).",
+      "ts": 1794574035230,
+      "type": "run.text"
+    },
+    {
+      "directionId": "main",
+      "projectId": "gOP07Q8bQx",
+      "seq": 168,
+      "status": {
+        "changed": [],
+        "dirty": false
+      },
+      "ts": 1794574035282,
+      "type": "status.changed"
+    },
+    {
+      "directionId": "main",
+      "projectId": "gOP07Q8bQx",
+      "runId": "u8ZytYloIrJM11Q9gBr1k",
+      "seq": 169,
+      "summary": {
+        "contextTokens": 24000,
+        "costUsd": 0,
+        "directionId": "main",
+        "durationMs": 168,
+        "error": null,
+        "finalText": "Updated the selected element(s).",
+        "finishedAt": 1794574035282,
+        "id": "u8ZytYloIrJM11Q9gBr1k",
+        "level": "prototype",
+        "model": "claude-sonnet-5-5",
+        "modelMs": 0,
+        "parts": [
+          {
+            "kind": "text",
+            "text": "Updating 1 selected element(s)."
+          },
+          {
+            "kind": "tool",
+            "toolUseId": "mock_tool_1"
+          },
+          {
+            "kind": "text",
+            "text": "Updated the selected element(s)."
+          }
+        ],
+        "projectId": "gOP07Q8bQx",
+        "request": {
+          "level": "prototype",
+          "mode": "edit",
+          "prompt": "Make this shorter",
+          "selection": [
+            {
+              "ancestors": [
+                "main"
+              ],
+              "outerHTML": "<h1>Make this shorter</h1>",
+              "rect": {
+                "height": 64,
+                "width": 600,
+                "x": 0,
+                "y": 0
+              },
+              "selector": "main > h1",
+              "source": {
+                "col": 5,
+                "file": "index.html",
+                "line": 24
+              },
+              "styles": {},
+              "tag": "h1",
+              "text": "Make this shorter"
+            }
+          ]
+        },
+        "sessionId": "mock-main-u8ZytYloIrJM11Q9gBr1k",
+        "startedAt": 1794574035053,
+        "status": "completed",
+        "toolCalls": [
+          {
+            "diff": {
+              "added": 0,
+              "created": false,
+              "hunks": [],
+              "path": "index.html",
+              "removed": 0,
+              "truncated": false
+            },
+            "finishedAt": 1794574035147,
+            "input": {
+              "file_path": "/Volumes/DevProjects/code/ds-wt/selection-prompt/studio-projects/prompt-test/index.html"
+            },
+            "isError": false,
+            "name": "Edit",
+            "startedAt": 1794574035146,
+            "summary": "Edit index.html",
+            "toolUseId": "mock_tool_1"
+          }
+        ],
+        "toolMs": 1,
+        "usage": {
+          "cacheReadTokens": 0,
+          "cacheWriteTokens": 0,
+          "inputTokens": 120,
+          "outputTokens": 80
+        },
+        "versionId": null
+      },
+      "ts": 1794574035282,
+      "type": "run.finished"
+    }
+  ],
+  "sent": [
+    {
+      "directionId": "main",
+      "imageCount": 0,
+      "projectId": "gOP07Q8bQx",
+      "promptHash": "mock",
+      "recommendedSkills": [],
+      "resume": null,
+      "runId": "u8ZytYloIrJM11Q9gBr1k",
+      "text": "Make this shorter\n\n<selected-elements>\n<element index=\"1\">\nsource: index.html:24:5\nselector: main > h1\ntag: h1\ntext: Make this shorter\nstyles: (none)\nancestors: main\nouterHTML:\n<h1>Make this shorter</h1>\n</element>\n</selected-elements>\n\n<lean_context>\nThis is a lean run: the studio sent only the code around the selected element, the tokens it uses and the titles of the repo agent files. Follow the repo conventions in that code.\n\n<source path=\"index.html\" lines=\"1-35\">\n    1  <!doctype html>\n    2  <html lang=\"en\">\n    3  <head>\n    4    <meta charset=\"utf-8\">\n    5    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    6    <title>A landing page with a hero heading, a short paragraph and a button</title>\n    7    <style>\n    8      :root { --ink: #1c1f23; --muted: #5a6270; --paper: #fbfaf7; --accent: #0f6b5c; --line: #e4e1da; }\n    9      * { box-sizing: border-box; }\n   10      body { margin: 0; font-family: system-ui, -apple-system, \"Segoe UI\", sans-serif; color: var(--ink); background: var(--paper); line-height: 1.5; }\n   11      main { max-width: 1080px; margin: 0 auto; padding: 64px 24px; }\n   12      h1 { font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.1; margin: 0 0 16px; }\n   13      .lede { font-size: 1.125rem; color: var(--muted); max-width: 40rem; margin: 0 0 32px; }\n   14      .cta { display: inline-block; padding: 12px 24px; border: 0; border-radius: 8px; background: var(--accent); color: #fff; font-size: 1rem; cursor: pointer; }\n   15      .cta:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }\n   16      .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; margin-top: 64px; }\n   17      .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 24px; }\n   18      .card h2 { font-size: 1.125rem; margin: 0 0 8px; }\n   19      .card p { margin: 0; color: var(--muted); }\n   20    </style>\n   21  </head>\n   22  <body>\n   23    <main>\n   24      <h1>Make this shorter</h1>\n   25      <p class=\"lede\">A clear starting point. Replace this copy with the real story of the product.</p>\n   26      <button class=\"cta\" type=\"button\">Get started</button>\n   27      <section class=\"cards\" aria-label=\"Highlights\">\n   28        <article class=\"card\"><h2>First idea</h2><p>Describe the first thing people should know.</p></article>\n   29        <article class=\"card\"><h2>Second idea</h2><p>Explain how it works in one or two lines.</p></article>\n   30        <article class=\"card\"><h2>Third idea</h2><p>Say what happens next and why it matters.</p></article>\n   31      </section>\n   32    </main>\n   33  </body>\n   34  </html>\n   35  \n</source>\n</lean_context>",
+      "ts": 1794574035063,
+      "type": "run.sent",
+      "updatedInstructions": false
+    }
+  ],
+  "status": "completed",
+  "summary": {
+    "contextTokens": 24000,
+    "costUsd": 0,
+    "directionId": "main",
+    "durationMs": 168,
+    "error": null,
+    "finalText": "Updated the selected element(s).",
+    "finishedAt": 1794574035282,
+    "id": "u8ZytYloIrJM11Q9gBr1k",
+    "level": "prototype",
+    "model": "claude-sonnet-5-5",
+    "modelMs": 0,
+    "parts": [
+      {
+        "kind": "text",
+        "text": "Updating 1 selected element(s)."
+      },
+      {
+        "kind": "tool",
+        "toolUseId": "mock_tool_1"
+      },
+      {
+        "kind": "text",
+        "text": "Updated the selected element(s)."
+      }
+    ],
+    "projectId": "gOP07Q8bQx",
+    "request": {
+      "level": "prototype",
+      "mode": "edit",
+      "prompt": "Make this shorter",
+      "selection": [
+        {
+          "ancestors": [
+            "main"
+          ],
+          "outerHTML": "<h1>Make this shorter</h1>",
+          "rect": {
+            "height": 64,
+            "width": 600,
+            "x": 0,
+            "y": 0
+          },
+          "selector": "main > h1",
+          "source": {
+            "col": 5,
+            "file": "index.html",
+            "line": 24
+          },
+          "styles": {},
+          "tag": "h1",
+          "text": "Make this shorter"
+        }
+      ]
+    },
+    "sessionId": "mock-main-u8ZytYloIrJM11Q9gBr1k",
+    "startedAt": 1794574035053,
+    "status": "completed",
+    "toolCalls": [
+      {
+        "diff": {
+          "added": 0,
+          "created": false,
+          "hunks": [],
+          "path": "index.html",
+          "removed": 0,
+          "truncated": false
+        },
+        "finishedAt": 1794574035147,
+        "input": {
+          "file_path": "/Volumes/DevProjects/code/ds-wt/selection-prompt/studio-projects/prompt-test/index.html"
+        },
+        "isError": false,
+        "name": "Edit",
+        "startedAt": 1794574035146,
+        "summary": "Edit index.html",
+        "toolUseId": "mock_tool_1"
+      }
+    ],
+    "toolMs": 1,
+    "usage": {
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "inputTokens": 120,
+      "outputTokens": 80
+    },
+    "versionId": null
+  }
+}
+
+[agent] skipped: agent binding is off (run-control)
+
+answered approval cards: none
+
+call-action: pass, 2 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

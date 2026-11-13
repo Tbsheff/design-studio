@@ -67,6 +67,7 @@ import "../styles/drawing.css";
 import "../styles/project-nav.css";
 import "../styles/editor-shell.css";
 import "../styles/stage-shell.css";
+import "../styles/shared-layers.css";
 
 const desktop = desktopBridge<{ platform: string }>();
 

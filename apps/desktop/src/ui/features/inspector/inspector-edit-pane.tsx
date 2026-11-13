@@ -9,6 +9,7 @@ import { LeavePrompt } from "./leave-prompt.js";
 import { RuleProposalCard } from "./rule-proposal-card.js";
 import { SessionError } from "./session-error.js";
 import { SessionHeader } from "./session-header.js";
+import { SharedLayersChip } from "./shared-layers-chip.js";
 import { TabBar } from "./tab-bar.js";
 import type { EditSession } from "./use-edit-session.js";
 
@@ -41,6 +42,12 @@ const InspectorEditPane = ({
       {isSessionShown(session) && (
         <SessionHeader session={session} onDone={handleDone} />
       )}
+      <SharedLayersChip
+        directionId={props.directionId}
+        editCount={session.count}
+        projectId={props.projectId}
+        selection={props.selection}
+      />
       {session.error && !session.isAsking && (
         <SessionError message={session.error} onDismiss={handleDismiss} />
       )}

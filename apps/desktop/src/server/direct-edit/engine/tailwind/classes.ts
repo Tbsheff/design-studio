@@ -1,3 +1,9 @@
+import {
+  BORDER_PREFIX,
+  toBorderGroup,
+  toBorderSideMap,
+  toBorderWidthClass,
+} from "./border-sides.js";
 import { KEYWORD_GROUPS } from "./keyword-groups.js";
 import type { TailwindTheme } from "./theme-model.js";
 import { lengthToPx } from "./units.js";
@@ -26,7 +32,8 @@ export type SidedGroup =
   | "gap"
   | "radius"
   | "dims"
-  | "inset";
+  | "inset"
+  | "border";
 
 export type SingleGroup =
   | "color"
@@ -37,7 +44,6 @@ export type SingleGroup =
   | "leading"
   | "tracking"
   | "text-align"
-  | "border-width"
   | "border-style"
   | "border-color"
   | "display"
@@ -98,6 +104,7 @@ export const SIDED_GROUPS: ReadonlySet<string> = new Set<SidedGroup>([
   "radius",
   "dims",
   "inset",
+  "border",
 ]);
 
 const BOX_SIDES: Record<string, Side[]> = {
@@ -160,15 +167,6 @@ const WEIGHTS = new Set([
   "bold",
   "extrabold",
   "black",
-]);
-
-const BORDER_STYLES = new Set([
-  "solid",
-  "dashed",
-  "dotted",
-  "double",
-  "hidden",
-  "none",
 ]);
 
 const JUSTIFY = new Set([
@@ -235,7 +233,6 @@ const ARBITRARY_PROPERTY: Record<string, SingleGroup> = {
   "line-height": "leading",
   "letter-spacing": "tracking",
   "text-align": "text-align",
-  "border-width": "border-width",
   "border-style": "border-style",
   "border-color": "border-color",
   display: "display",
@@ -395,31 +392,6 @@ function classifyFont(
   }
 
   return "font-family";
-}
-
-function classifyBorder(suffix: string): SingleGroup | null {
-  if (BORDER_STYLES.has(suffix)) {
-    return "border-style";
-  }
-
-  if (/^\d+$/.test(suffix)) {
-    return "border-width";
-  }
-
-  if (
-    /^([xytrblse])(-|$)/.test(suffix) ||
-    /^(collapse|separate|spacing)/.test(suffix)
-  ) {
-    return null;
-  }
-
-  const inner = bracketed(suffix);
-
-  if (inner !== null) {
-    return arbitraryIsLength(inner) ? "border-width" : "border-color";
-  }
-
-  return "border-color";
 }
 
 function classifyShadow(
@@ -609,7 +581,7 @@ const PREFIX_RULES: Record<string, PrefixRule> = {
   font: classifyFont,
   leading: always("leading"),
   tracking: always("tracking"),
-  border: classifyBorder,
+  border: toBorderGroup,
   opacity: always("opacity"),
   flex: classifyFlex,
   justify: fromSet(JUSTIFY, "justify"),
@@ -677,6 +649,12 @@ export function classify(
     return single("filter");
   }
 
+  const border = toBorderWidthClass(utility);
+
+  if (border) {
+    return border;
+  }
+
   const side = classifySided(utility, negative);
 
   if (side !== undefined) {
@@ -731,6 +709,7 @@ const PREFIX: Record<SidedGroup, Partial<Record<string, string>>> = {
     b: "bottom",
     l: "left",
   },
+  border: BORDER_PREFIX,
 };
 
 export function emitSided(
@@ -835,6 +814,10 @@ export function compactSides(
 
   if (group === "radius") {
     return compactCorners(map);
+  }
+
+  if (group === "border") {
+    return compactBox(toBorderSideMap(map));
   }
 
   if (group === "gap") {

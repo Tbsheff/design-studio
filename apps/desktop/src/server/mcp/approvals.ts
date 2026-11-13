@@ -10,6 +10,7 @@ export interface ApprovalAsk {
   action: string;
   title: string;
   detail: string;
+  folder?: string;
   projectId: string | null;
   client: string;
 }
@@ -116,6 +117,7 @@ export function createApprovalQueue(options: QueueOptions = {}): ApprovalQueue {
         action: input.action,
         title: clean(input.title, TEXT_MAX.title),
         detail: clean(input.detail, TEXT_MAX.detail),
+        folder: input.folder ?? null,
         projectId: input.projectId,
         client: clean(input.client, 40),
         createdAt,

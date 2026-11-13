@@ -2,6 +2,8 @@ import { Schema } from "effect";
 
 const PAGE_SOURCE_FILE_MAX = 300;
 
+const PAGE_SOURCE_CHANGES_MAX = 50;
+
 const PageSourceFileSchema = Schema.String.check(
   Schema.isMinLength(1),
   Schema.isMaxLength(PAGE_SOURCE_FILE_MAX)
@@ -21,7 +23,9 @@ const PageSourceChangeSchema = Schema.Struct({
 
 const PageSourceSchema = Schema.Struct({
   appProjectId: Schema.NullOr(Schema.String),
-  changedFiles: Schema.Array(PageSourceChangeSchema),
+  changedFiles: Schema.Array(PageSourceChangeSchema).check(
+    Schema.isMaxLength(PAGE_SOURCE_CHANGES_MAX)
+  ),
   copiedAt: Schema.NullOr(Schema.Number),
   isChanged: Schema.Boolean,
   isRouteCopy: Schema.Boolean,
@@ -43,6 +47,7 @@ type PageSourceChange = typeof PageSourceChangeSchema.Type;
 type PageSourceImported = typeof PageSourceImportedSchema.Type;
 
 export {
+  PAGE_SOURCE_CHANGES_MAX,
   PageSourceChangeSchema,
   PageSourceFields,
   PageSourceImportedSchema,

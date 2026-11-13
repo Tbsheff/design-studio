@@ -1,5 +1,7 @@
 import type { PageSourceChange } from "@design-studio/actions/page/source/schema";
 
+const CHANGES_MAX = 50;
+
 interface RouteFileHash {
   readonly file: string;
   readonly sha: string;
@@ -25,7 +27,8 @@ const toChange = (
 const toChangedFiles = (
   saved: readonly RouteFileHash[],
   now: ReadonlyMap<string, string | null>
-): PageSourceChange[] => saved.flatMap((entry) => toChange(entry, now));
+): PageSourceChange[] =>
+  saved.flatMap((entry) => toChange(entry, now)).slice(0, CHANGES_MAX);
 
 export { toChangedFiles };
 

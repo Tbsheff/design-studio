@@ -323,6 +323,13 @@ const useDraftEdit = (input: DraftEditInput): DraftEdit => {
 
     if (event.type === "run.finished" && event.runId === feed.toRunId()) {
       clearLand();
+
+      if (feed.draft === null) {
+        setIsRunOver(true);
+
+        return;
+      }
+
       landTimer.current = globalThis.setTimeout(
         () => setIsRunOver(true),
         LAND_MS

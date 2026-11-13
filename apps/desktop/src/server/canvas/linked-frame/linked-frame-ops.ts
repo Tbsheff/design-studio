@@ -3,7 +3,10 @@ import path from "node:path";
 
 import type { Direction, Project } from "@design-studio/contracts";
 import { CANVAS_FILE } from "@design-studio/contracts/canvas-file";
-import type { CanvasFileFrame } from "@design-studio/contracts/canvas-file";
+import type {
+  CanvasFile,
+  CanvasFileFrame,
+} from "@design-studio/contracts/canvas-file";
 import {
   cleanLinkSelector,
   cleanLinkText,
@@ -23,7 +26,7 @@ import {
 import { framesOf, probeWithPreview } from "../links/link-tools.js";
 import type { LinkProbe, ProbedElement } from "../links/link-tools.js";
 import { canvasOwner } from "../service.js";
-import { applyPlacement, findFrame } from "../tools.js";
+import { applyPlacement, CANVAS_VIEWPORTS, findFrame } from "../tools.js";
 import type { CanvasToolContext } from "../tools.js";
 import {
   isSafePagePath,
@@ -281,6 +284,18 @@ const toCanvasText = (direction: Direction): Promise<string | null> =>
 const toLinksText = (direction: Direction): Promise<string | null> =>
   toReadText(path.join(direction.workTree, ...LINKS_FILE.split("/")));
 
+const toWithEntryFrame = (
+  file: CanvasFile,
+  directionId: string
+): CanvasFile => {
+  if (file.frames.length > 0) {
+    return file;
+  }
+
+  return applyPlacement(file, [{ ...CANVAS_VIEWPORTS.desktop }], directionId)
+    .file;
+};
+
 const toPlacedFrame = async (
   target: LinkedFrameTarget,
   source: LinkedSource,
@@ -292,7 +307,7 @@ const toPlacedFrame = async (
     target.project,
     (file) => {
       const next = applyPlacement(
-        file,
+        toWithEntryFrame(file, target.direction.id),
         [
           {
             gap: FRAME_GAP,

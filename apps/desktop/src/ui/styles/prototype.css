@@ -183,12 +183,25 @@ body:has(.ds-toast) .proto-bar,
 }
 
 .studio-stage .proto-bar {
-  bottom: calc(var(--dock-gap) * 2 + var(--tools-w));
+  right: var(--zoom-right);
+  bottom: calc(var(--dock-gap) * 3 + var(--tools-w) + var(--zoom-h));
+  left: calc(var(--dock-right) + var(--dock-gap));
+  flex-wrap: wrap;
+  justify-content: center;
+  width: fit-content;
+  max-width: none;
+  margin-inline: auto;
+  translate: none;
+}
+
+.studio-stage .proto-bar .proto-editor {
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 body:has(.ds-toast) .studio-stage .proto-bar,
 .studio-stage .canvas:has(.frame-undo) .proto-bar {
-  bottom: calc(var(--dock-gap) * 2 + var(--tools-w) + 44px);
+  bottom: calc(var(--dock-gap) * 3 + var(--tools-w) + var(--zoom-h) + 44px);
 }
 
 .proto-start,

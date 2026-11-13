@@ -277,4 +277,22 @@ const startCopy = {
   rename: "Rename start point",
 } as const;
 
-export { copy, startCopy };
+const stateCheckCopy = {
+  checking: "Checking states…",
+  design: "Design missing states",
+  designTip:
+    "Start one chat run that designs the states that look like the default",
+  lookLike: " look like the default",
+  looksLike: " looks like the default",
+  noneLike: "Every state has its own UI",
+  of: " of ",
+  promptEnd:
+    ". Each frame shows one state. Change only the code for those states.",
+  promptJoin: " and ",
+  promptOf: " states of ",
+  promptOfOne: " state of ",
+  promptStart: "Design the ",
+  states: " states",
+} as const;
+
+export { copy, startCopy, stateCheckCopy };

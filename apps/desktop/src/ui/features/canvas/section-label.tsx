@@ -1,13 +1,19 @@
 import type { CanvasSection } from "@design-studio/contracts/canvas-file";
 import { Icon } from "@design-studio/ui";
 import { useCallback, useMemo, useState } from "react";
-import type { CSSProperties, KeyboardEvent, ReactElement } from "react";
+import type {
+  CSSProperties,
+  KeyboardEvent,
+  ReactElement,
+  ReactNode,
+} from "react";
 
 import { sectionCopy } from "./section-copy.js";
 import { SectionNameInput } from "./section-name-input.js";
 import type { SectionHandlers } from "./use-section-handlers.js";
 
 interface SectionLabelProps {
+  readonly children: ReactNode;
   readonly handlers: SectionHandlers;
   readonly offset: { readonly x: number; readonly y: number };
   readonly section: CanvasSection;
@@ -17,6 +23,7 @@ const stopPointer = (event: { stopPropagation: () => void }): void =>
   event.stopPropagation();
 
 const SectionLabel = ({
+  children,
   handlers,
   offset,
   section,
@@ -89,6 +96,7 @@ const SectionLabel = ({
       >
         <Icon name="close" size={12} />
       </button>
+      {children}
     </div>
   );
 };

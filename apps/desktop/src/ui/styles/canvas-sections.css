@@ -87,6 +87,43 @@
   color: var(--text);
 }
 
+.canvas-state-check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-left: var(--s-1);
+}
+
+.canvas-state-check-line {
+  color: var(--text-3);
+  font: var(--w-regular) var(--t-xs) / 24px var(--font);
+}
+
+.canvas-state-check-design {
+  height: 24px;
+  padding: 0 var(--s-2);
+  border: 0;
+  border-radius: var(--r-control-sm);
+  background: var(--tint-hover);
+  color: var(--accent-text);
+  font: var(--w-medium) var(--t-xs) / 24px var(--font);
+  cursor: pointer;
+}
+
+.canvas-state-check-design:hover {
+  background: var(--tint-press);
+}
+
+.canvas-state-check-design:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.canvas-state-check-design:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
 .canvas-section-handle {
   position: absolute;
   width: calc(10px * var(--inv-zoom, 1));

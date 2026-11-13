@@ -1,17 +1,26 @@
 import type { Input } from "@design-studio/actions/_core/action";
-import { NotImplemented } from "@design-studio/actions/_core/errors/not-implemented";
 import type { inspectPort } from "@design-studio/actions/port/inspect";
 import { Effect } from "effect";
 
+import { McpReadStore } from "../../preview/index.js";
+import { PortMatchStore } from "../../review/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type InspectPortInput = Input<typeof inspectPort>;
 
 const handle = Effect.fn("port.inspect")(function* run(
-  _input: InspectPortInput
+  input: InspectPortInput
 ) {
-  return yield* new NotImplemented({
-    message: "port.inspect is not built yet.",
+  const reads = yield* McpReadStore;
+  const store = yield* PortMatchStore;
+
+  return yield* store.inspect(reads, {
+    directionId: input.directionId,
+    path: input.path,
+    projectId: input.projectId,
+    routePath: input.routePath,
+    targetProjectId: input.targetProjectId,
+    width: input.width,
   });
 }) satisfies Handle<typeof inspectPort>;
 

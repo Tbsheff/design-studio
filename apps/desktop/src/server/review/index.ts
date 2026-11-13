@@ -55,3 +55,7 @@ export type {
   SpellingStoreApi,
   SpellingWordWriterApi,
 } from "./spelling/index.js";
+
+export { PortMatchStore } from "./port-check/index.js";
+
+export type { PortMatchStoreApi } from "./port-check/index.js";

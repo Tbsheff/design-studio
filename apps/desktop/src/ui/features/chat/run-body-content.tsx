@@ -5,6 +5,7 @@ import type { RunUndoAction } from "./chat-parts-model.js";
 import { RunParts } from "./chat-run-parts.js";
 import { DecisionRow } from "./decision-row.js";
 import { LiveStatus } from "./live-status.js";
+import { PortCheckRow } from "./port-check-row.js";
 import { RunBodyTail } from "./run-body-tail.js";
 import type { RunBodyTailProps } from "./run-entry-model.js";
 import { RunError } from "./run-error.js";
@@ -55,6 +56,7 @@ const RunBodyContent = ({
       />
       <RunNotice run={run} latest={latest} onRetry={onRetry} />
       <DecisionRow run={run} />
+      <PortCheckRow run={run} />
       <RunBodyTail
         run={run}
         latest={latest}

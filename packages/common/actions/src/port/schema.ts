@@ -1,5 +1,5 @@
 import { PORT_FLOW_MAX_PAGES } from "@design-studio/contracts/port";
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 
 import { DirectionIdSchema, ProjectIdSchema } from "../_core/ids.js";
 import { PathTextSchema, RouteTextSchema } from "../workspace/schema.js";
@@ -62,8 +62,98 @@ const PortStartedSchema = Schema.Struct({
   runId: Schema.String,
 });
 
+const PORT_WIDTH_MIN = 320;
+
+const PORT_WIDTH_MAX = 2560;
+
+const PORT_WIDTH_DEFAULT = 1280;
+
+const PortCheckDirectionSchema = DirectionIdSchema.annotate({
+  description: "Direction id of the prototype. null for the main direction.",
+});
+
+const NO_DIRECTION = Effect.succeed(null);
+
+const PORT_WIDTH_FALLBACK = Effect.succeed(PORT_WIDTH_DEFAULT);
+
+const PortWidthSchema = Schema.Int.check(
+  Schema.isBetween({ maximum: PORT_WIDTH_MAX, minimum: PORT_WIDTH_MIN })
+).annotate({
+  description: "Width in px to render both pages at. Default 1280.",
+});
+
+const PORT_AREA_MAX = 9;
+
+const PORT_AREA_DEFAULT = Effect.succeed(PORT_AREA_MAX);
+
+const PortAreaLimitSchema = Schema.Int.check(
+  Schema.isBetween({ maximum: PORT_AREA_MAX, minimum: 1 })
+).annotate({
+  description:
+    "How many of the areas under 80 to list, worst first, from 1 to 9. Default 9.",
+});
+
+const PortCheckInputSchema = Schema.Struct({
+  directionId: Schema.NullOr(PortCheckDirectionSchema).pipe(
+    Schema.withDecodingDefaultKey(NO_DIRECTION)
+  ),
+  limit: PortAreaLimitSchema.pipe(
+    Schema.withDecodingDefaultKey(PORT_AREA_DEFAULT)
+  ),
+  path: PathTextSchema.check(Schema.isMinLength(1)).annotate({
+    description:
+      'HTML page in the prototype project that was moved, for example "index.html".',
+  }),
+  projectId: ProjectIdSchema.annotate({
+    description:
+      "The prototype project id (an HTML project), from list_projects.",
+  }),
+  routePath: RouteTextSchema.check(Schema.isMinLength(1)).annotate({
+    description:
+      'The app route that the port wrote, for example "/classes" or "/(design)/classes".',
+  }),
+  targetProjectId: ProjectIdSchema.annotate({
+    description:
+      "The attached app project id that holds the route, from list_projects.",
+  }),
+  width: PortWidthSchema.pipe(
+    Schema.withDecodingDefaultKey(PORT_WIDTH_FALLBACK)
+  ),
+});
+
+const PortAreaSchema = Schema.Struct({
+  col: Schema.Int,
+  name: Schema.String,
+  row: Schema.Int,
+  score: Schema.Int,
+});
+
+const PortMatchSchema = Schema.Struct({
+  appPath: Schema.String,
+  areas: Schema.Array(PortAreaSchema),
+  diffPath: Schema.String,
+  isLow: Schema.Boolean,
+  prototypePath: Schema.String,
+  score: Schema.Int,
+});
+
 type PortStarted = typeof PortStartedSchema.Type;
 
-export { PortRouteSchema, PortStartInputSchema, PortStartedSchema };
+type PortArea = typeof PortAreaSchema.Type;
 
-export type { PortStarted };
+type PortMatch = typeof PortMatchSchema.Type;
+
+type PortAreaWire = typeof PortAreaSchema.Encoded;
+
+type PortMatchWire = typeof PortMatchSchema.Encoded;
+
+export {
+  PortAreaSchema,
+  PortCheckInputSchema,
+  PortMatchSchema,
+  PortRouteSchema,
+  PortStartInputSchema,
+  PortStartedSchema,
+};
+
+export type { PortArea, PortAreaWire, PortMatch, PortMatchWire, PortStarted };

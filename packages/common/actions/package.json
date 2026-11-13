@@ -443,6 +443,7 @@
     "./port/errors/index": "./src/port/errors/index.ts",
     "./port/errors/status": "./src/port/errors/status.ts",
     "./port/index": "./src/port/index.ts",
+    "./port/inspect": "./src/port/inspect.ts",
     "./port/routes": "./src/port/routes.ts",
     "./port/schema": "./src/port/schema.ts",
     "./port/start": "./src/port/start.ts",

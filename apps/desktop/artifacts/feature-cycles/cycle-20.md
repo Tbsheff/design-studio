@@ -216,3 +216,13 @@ All 5 can run at once. Merge 2 (starter-tokens, server design-system only), then
 10. Agent engine choice (Codex, Gemini CLI), as in doop and Open Design; high effort.
 
 Sources: [mcp.directory 2026 comparison](https://mcp.directory/blog/claude-design-vs-stitch-vs-v0-vs-lovable-vs-figma-make-2026), [konigi.com Claude Design](https://konigi.com/articles/claude-design-has-the-incumbents-scrambling/), [monkfrom.earth Claude Design vs Figma, Lovable, v0](https://monkfrom.earth/blogs/claude-design-vs-figma-lovable-v0), [claudefa.st Claude Design handoff](https://claudefa.st/blog/guide/mechanics/claude-design-handoff), [chatgate.ai doop](https://chatgate.ai/en/post/doop), [glama.ai doop](https://glama.ai/mcp/servers/kgoedecke/doop).
+
+## Results
+
+- Merged in order: starter-tokens, state-runs, layout-grid, ruler-guides, safe-frame-remove. Main at ade410d8d.
+- Conflicts resolved by keeping both sides: layout-grid vs state-runs in `canvas/copy.ts`; ruler-guides vs layout-grid in `canvas-writer.ts`, `canvas/frame/schema.ts`, the actions export map, `canvas/copy.ts` and 3 generated lists (regenerated with gen-routes); safe-frame-remove vs layout-grid in `frame-menu-groups-model.ts` (Arrange has both Layout grid… and Remove frame).
+- One merge commit first failed oxfmt on the joined `copy.ts`; formatted and committed.
+- Post-merge check on a test server: `canvas.setLayoutGrid` and `canvas.setGuides` pass on HTTP, MCP and agent with 0 diffs, and each keeps the other's data.
+- Checks: gen-routes --check pass, typecheck 0 errors, lint:gate pass (59663, baseline 89733), build:ui pass, desktop:pack pass.
+- Installed app: :4570 returns 200. Server idle CPU 0.00 CPU-s/min over 60 s.
+- Open: the Arrange submenu is cut off at the right edge in a narrow window. No layout version on quit. Ctrl+G not in the shortcuts list. Layers inside the preview do not snap to guides. MCP snapshots not refreshed (user decision).

@@ -144,6 +144,23 @@ const isStyleContext = (code: string, start: number): boolean => {
   return anchor !== -1 && !lookback.slice(anchor).includes(">");
 };
 
+const STYLE_OPEN = /<style\b/giu;
+
+const STYLE_CLOSE = /<\/style\b/giu;
+
+const toLastIndex = (code: string, pattern: RegExp, start: number): number => {
+  let last = -1;
+
+  for (const match of code.slice(0, start).matchAll(pattern)) {
+    last = match.index;
+  }
+
+  return last;
+};
+
+const isStyleBlock = (code: string, start: number): boolean =>
+  toLastIndex(code, STYLE_OPEN, start) > toLastIndex(code, STYLE_CLOSE, start);
+
 const lineTextBefore = (code: string, start: number): string => {
   const lineStart = code.lastIndexOf("\n", start - 1) + 1;
 
@@ -161,7 +178,7 @@ const allowsLiteral = (
     return false;
   }
 
-  return isCss || isStyleContext(code, start);
+  return isCss || isStyleContext(code, start) || isStyleBlock(code, start);
 };
 
 const overlaps = (taken: readonly Candidate[], start: number): boolean =>

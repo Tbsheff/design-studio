@@ -5,3 +5,8 @@ export { useModalDialog } from "@design-studio/ui";
 export { errorText } from "../../api.js";
 
 export { call } from "../../platform/http.js";
+
+export {
+  clearPrototypeRoute,
+  prototypeRoute,
+} from "../../platform/prototype-route.js";

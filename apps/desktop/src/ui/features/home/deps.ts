@@ -28,3 +28,11 @@ export type {
 export type { ConnectionState } from "../../platform/events.js";
 
 export { openPrototypeDialog } from "../../platform/prototype-dialog.js";
+
+export {
+  openRoutePrototype,
+  routeSource,
+  setRouteSource,
+} from "../../platform/prototype-route.js";
+
+export { routes as devServerRoutes } from "@design-studio/actions/dev-server/routes";

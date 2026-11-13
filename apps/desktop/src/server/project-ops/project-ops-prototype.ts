@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import type { Input } from "@design-studio/actions/_core/action";
@@ -183,7 +183,7 @@ const writePrototypeFiles = Effect.fn("ProjectOpsPrototype.writeFiles")(
   function* run(
     folder: string,
     tokens: PrototypeTokens,
-    page: string,
+    page: string | null,
     context: string
   ) {
     const { css } = tokens;
@@ -194,9 +194,12 @@ const writePrototypeFiles = Effect.fn("ProjectOpsPrototype.writeFiles")(
       );
     }
 
-    yield* attemptKnown(() =>
-      writeFile(path.join(folder, ENTRY_FILE), page, "utf-8")
-    );
+    if (page !== null) {
+      yield* attemptKnown(() =>
+        writeFile(path.join(folder, ENTRY_FILE), page, "utf-8")
+      );
+    }
+
     yield* attemptKnown(() =>
       writeFile(path.join(folder, CONTEXT_FILE), context, "utf-8")
     );
@@ -233,7 +236,11 @@ const createPrototypeWith = Effect.fn("ProjectOpsPrototype.create")(
     const app = yield* toAppProject(runtime, input.projectId);
     const name = input.name ?? nameFromPrompt(input.prompt);
     const tokens = yield* toPrototypeTokens(runtime, app);
-    const page = toPrototypePage(name, app.name, tokens.css !== null);
+    let page: string | null = null;
+
+    if (input.routePath === null) {
+      page = toPrototypePage(name, app.name, tokens.css !== null);
+    }
 
     const context = yield* getFolderContext(
       toAppFolder(runtime, app),
@@ -262,7 +269,7 @@ const createPrototypeWith = Effect.fn("ProjectOpsPrototype.create")(
     runtime.watchDirection(project, main);
     let runId: string | null = null;
 
-    if (input.shouldStartRun) {
+    if (input.shouldStartRun && input.routePath === null) {
       runId = yield* attemptKnown(() =>
         runtime.startRun(project, main, toRunRequest(input))
       );
@@ -279,6 +286,47 @@ const createPrototypeWith = Effect.fn("ProjectOpsPrototype.create")(
   }
 );
 
-export { createPrototypeWith };
+const TOKENS_LINK_ATTRS = 'rel="stylesheet" href="tokens.css"';
+
+const HEAD_OPEN = /<head[^>]*>/iu;
+
+const isFilePresent = (file: string): Effect.Effect<boolean> =>
+  attemptKnown(() => access(file)).pipe(
+    Effect.as(true),
+    Effect.orElseSucceed(() => false)
+  );
+
+const toLinkedPage = (html: string): string => {
+  if (html.includes('href="tokens.css"')) {
+    return html;
+  }
+
+  return html.replace(
+    HEAD_OPEN,
+    (head) => `${head}\n<link ${TOKENS_LINK_ATTRS}>`
+  );
+};
+
+const setPrototypeTokensLink = Effect.fn("ProjectOpsPrototype.setTokensLink")(
+  function* run(folder: string, page: string) {
+    const hasTokens = yield* isFilePresent(path.join(folder, TOKENS_FILE));
+
+    if (!hasTokens) {
+      return false;
+    }
+
+    const file = path.join(folder, page);
+    const html = yield* attemptKnown(() => readFile(file, "utf-8"));
+    const linked = toLinkedPage(html);
+
+    if (linked !== html) {
+      yield* attemptKnown(() => writeFile(file, linked, "utf-8"));
+    }
+
+    return true;
+  }
+);
+
+export { createPrototypeWith, setPrototypeTokensLink };
 
 export type { CreatedPrototype };

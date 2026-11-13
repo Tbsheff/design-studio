@@ -14,6 +14,7 @@ import type { ActivityState } from "./use-activity.js";
 import { useEditAppConfirm } from "./use-edit-app-confirm.js";
 import type { EditAppConfirm } from "./use-edit-app-confirm.js";
 import { setComposerFocus, useHomeKeys } from "./use-home-keys.js";
+import { useRouteSource } from "./use-plus-routes.js";
 import type { WorkspaceNav } from "./use-workspace-nav.js";
 import type { WorkspaceTarget } from "./use-workspace-target.js";
 import { toDefaultLine } from "./workspace-model.js";
@@ -147,6 +148,7 @@ const useHomeIde = (input: HomeIdeInput): HomeIde => {
   const defaultLine = toDefaultLine(selected, isEditApp);
 
   useCommandSource(input, nav);
+  useRouteSource(selected?.app?.id ?? null);
   useHomeKeys({ count, onLayer, onSelect });
 
   const onTrash = useCallback((): void => {

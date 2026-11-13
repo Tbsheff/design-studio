@@ -131,6 +131,7 @@ const copy = {
   putEveryVariation: "Put every variation back on the canvas",
   readingTheSource: "Reading the source…",
   rectTool: "Shape",
+  redesignAsPrototype: "Redesign as prototype",
   reload: "Reload",
   reloadPreview: "Reload preview",
   removeFrame: "Remove frame",

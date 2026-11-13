@@ -280,6 +280,7 @@ const copy = {
   slash: "/",
   sortProjects: "Sort projects",
   startFromATemplate: "Start from a template",
+  startFromRoute: "Start from a route",
   startNextDev: "Start next dev",
   startServer: "Start",
   starter: " starter",

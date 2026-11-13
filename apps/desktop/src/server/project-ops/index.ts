@@ -11,6 +11,10 @@ export { ProjectOpsStore } from "./project-ops-store.js";
 
 export { ProjectOpsWriter } from "./project-ops-writer.js";
 
+export { setPrototypeTokensLink } from "./project-ops-prototype.js";
+
+export { isRouteMatch } from "./engine/is-route-match.js";
+
 export { DevStatusStore, DevStatusWriter } from "./dev-status/index.js";
 
 export type {

@@ -86,6 +86,7 @@ const FrameLabelExtras = ({
       <RouteSourceChip
         activate={activate}
         directionId={did ?? live.directionId}
+        frameId={frameId}
         frames={layout.frames}
         path={frame.path ?? null}
         projectId={projectId}

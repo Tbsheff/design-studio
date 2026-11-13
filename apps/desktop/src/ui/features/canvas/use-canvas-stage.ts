@@ -22,6 +22,7 @@ import { useFrameStates } from "./frame-states-model.js";
 import { useResetPassiveGateInFirstRender } from "./passive-mount.js";
 import { unionRect, useCanvasFrames } from "./use-canvas-frames.js";
 import { useCanvasDraw } from "./use-draw-tool.js";
+import { useFrameZoom } from "./use-frame-zoom.js";
 import { usePanZoom } from "./use-pan-zoom.js";
 import { usePreviewUrl, useRenderCheck } from "./use-preview-url.js";
 import { useZoomInput } from "./use-zoom-input.js";
@@ -126,6 +127,8 @@ const useStageViewport = (props: ViewProps): StageViewport => {
   });
 
   const zoomBy = useZoomInput(pz.applyZoomKey);
+
+  useFrameZoom({ active, layout, projectId, zoomToBox: pz.zoomToBox });
 
   return {
     active,

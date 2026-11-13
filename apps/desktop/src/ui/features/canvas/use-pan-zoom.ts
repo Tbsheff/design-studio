@@ -4,6 +4,7 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 
 import type { LiveStore } from "../../platform/live-store.js";
 import { isTypingTarget } from "../../platform/typing-target.js";
+import type { Box } from "./canvas-frames-model.js";
 import { toCommittedZoom } from "./pan-zoom-actions.js";
 import { toPanZoomApi } from "./pan-zoom-api.js";
 import { handlePointerDown } from "./pan-zoom-pointer.js";
@@ -32,6 +33,7 @@ interface PanZoom {
   zoomStep: (direction: 1 | -1) => void;
   fit: () => void;
   zoomToActive: () => void;
+  zoomToBox: (box: Box) => void;
   freeze: () => void;
   applyZoomKey: (key: ZoomKey) => void;
   frameWheel: (frame: HTMLIFrameElement | null, frameWheel: FrameWheel) => void;

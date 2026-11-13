@@ -211,4 +211,5 @@ export {
   zoomStep,
   zoomTo,
   zoomToActive,
+  zoomToBox,
 };

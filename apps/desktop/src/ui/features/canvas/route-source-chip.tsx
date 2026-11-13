@@ -13,6 +13,7 @@ import { stop } from "./variation-model.js";
 interface RouteSourceChipProps {
   readonly activate: (frame: CanvasFrame) => void;
   readonly directionId: string | null;
+  readonly frameId: string;
   readonly frames: readonly CanvasFrame[];
   readonly path: string | null;
   readonly projectId: string;

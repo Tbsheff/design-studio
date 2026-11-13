@@ -1,3 +1,5 @@
+import type { CanvasLayoutGrid } from "@design-studio/contracts/layout-grid";
+
 interface LayoutBox {
   x: number;
   y: number;
@@ -35,6 +37,7 @@ interface TargetFrame {
   path: string;
   width: number;
   height: number;
+  layoutGrid?: CanvasLayoutGrid | null;
 }
 
 interface RunTarget extends TargetFrame {

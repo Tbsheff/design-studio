@@ -1,6 +1,7 @@
 import { Schema } from "effect";
 
 import { DirectionIdSchema } from "../../_core/ids.js";
+import { LayoutGridSchema } from "../layout-grid/schema.js";
 
 const FRAME_REF_FIELD_MAX = 60;
 
@@ -178,6 +179,7 @@ const FrameViewSchema = Schema.Struct({
   hidden: Schema.optionalKey(Schema.Boolean),
   id: Schema.String,
   label: Schema.NullOr(Schema.String),
+  layoutGrid: Schema.optionalKey(LayoutGridSchema),
   page: Schema.String,
   width: Schema.Int,
   x: Schema.Int,

@@ -80,6 +80,7 @@ function frameOf(
     height: saved?.height ?? ref.height,
     id: saved?.id ?? ref.frameId,
     label: saved?.label ?? ref.label ?? null,
+    layoutGrid: saved?.layoutGrid ?? null,
     path: saved ? (saved.path ?? "") : ref.path,
     width: saved?.width ?? ref.width,
   };

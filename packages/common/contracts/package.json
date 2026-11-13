@@ -29,6 +29,7 @@
     "./image-search": "./src/image-search.ts",
     "./insert": "./src/insert.ts",
     "./layer-effect": "./src/layer-effect.ts",
+    "./layout-grid": "./src/layout-grid.ts",
     "./link-interaction": "./src/link-interaction.ts",
     "./link-labels": "./src/link-labels.ts",
     "./link-variable": "./src/link-variable.ts",

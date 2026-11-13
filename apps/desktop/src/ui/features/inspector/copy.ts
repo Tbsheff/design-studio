@@ -355,7 +355,6 @@ const borderSideCopy = {
   right: "Right",
   rightShort: "R",
   rightWidth: "Border right width",
-  sides: "Sides",
   sidesLabel: "Border sides",
   top: "Top",
   topShort: "T",

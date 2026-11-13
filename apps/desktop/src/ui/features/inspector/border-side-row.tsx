@@ -17,9 +17,6 @@ const BorderSideRow = ({
   onSidePick,
 }: BorderSideRowProps): ReactElement => (
   <div className="ins-field select">
-    <label htmlFor={SIDE_SELECT_ID} className="ins-scrub static">
-      {borderSideCopy.sides}
-    </label>
     <UiSelect
       id={SIDE_SELECT_ID}
       aria-label={borderSideCopy.sidesLabel}

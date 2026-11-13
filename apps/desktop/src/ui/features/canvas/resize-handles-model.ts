@@ -2,13 +2,14 @@ import type {
   BridgeToParent,
   SelectionContext,
 } from "@design-studio/contracts";
+import type { CanvasGuide } from "@design-studio/contracts/canvas-file";
 import type { PointerEvent as ReactPointerEvent } from "react";
 
 import type { ParentMessageBody } from "../../platform/bridge.js";
 import { createLiveStore } from "../../platform/live-store.js";
 import type { LiveStore } from "../../platform/live-store.js";
+import { snapLayerRect } from "./layer-snap-lines-model.js";
 import type { ScaleCorner, ScaleGhost } from "./scale-drag-model.js";
-import { snapRect } from "./snap-model.js";
 import type { Rect, SnapGuide, SnapKind } from "./snap-model.js";
 
 type ResizeEdge = "e" | "s" | "se";
@@ -31,6 +32,7 @@ interface Options {
   ) => void;
   refreshRects: () => void;
   onError: (message: string) => void;
+  readLines: (zoom: number) => readonly CanvasGuide[];
 }
 
 interface Drag {
@@ -44,6 +46,7 @@ interface Drag {
   target: SelectionContext;
   axes: Set<"width" | "height">;
   candidates: Rect[];
+  lines: readonly CanvasGuide[];
   guides: SnapGuide[];
   stopListen: () => void;
   detach: () => void;
@@ -228,11 +231,14 @@ const toSnapKind = (isFree: boolean): SnapKind => {
 };
 
 const snapSize = (
-  delta: Pick<Drag, "edge" | "base" | "target" | "candidates" | "zoom">,
+  delta: Pick<
+    Drag,
+    "edge" | "base" | "target" | "candidates" | "lines" | "zoom"
+  >,
   next: Size,
   isOff: boolean
 ): SnappedSize => {
-  if (isOff || delta.candidates.length === 0) {
+  if (isOff || (delta.candidates.length === 0 && delta.lines.length === 0)) {
     return { guides: [], size: next };
   }
 
@@ -245,8 +251,9 @@ const snapSize = (
     y: source.y,
   };
 
-  const snapped = snapRect({
+  const snapped = snapLayerRect({
     candidates: delta.candidates,
+    lines: delta.lines,
     rect: box,
     x: toSnapKind(delta.edge === "s"),
     y: toSnapKind(delta.edge === "e"),

@@ -118,7 +118,12 @@ const createBegin =
       return;
     }
 
-    session.current = { candidates: toCandidates(start), start, target };
+    session.current = {
+      candidates: toCandidates(start),
+      lines: cur.readLines(cur.zoom),
+      start,
+      target,
+    };
     document.body.classList.add("element-moving");
     cur.holdSwap?.(true, false);
     setView({

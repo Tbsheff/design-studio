@@ -9,16 +9,20 @@ interface PortPictures {
   readonly prototype: Buffer;
 }
 
-const STEM_RADIX = 36;
-
 const toSafeStem = (text: string): string =>
   text.replaceAll(/[^A-Za-z0-9_-]/gu, "");
 
-const toPortFileStem = (projectId: string, targetProjectId: string): string =>
+const toPortFileStem = (
+  projectId: string,
+  targetProjectId: string,
+  routePath: string,
+  width: number
+): string =>
   [
     toSafeStem(projectId),
     toSafeStem(targetProjectId),
-    Date.now().toString(STEM_RADIX),
+    toSafeStem(routePath.replaceAll("/", "_")),
+    String(width),
   ].join("-");
 
 const createPortFiles = async (

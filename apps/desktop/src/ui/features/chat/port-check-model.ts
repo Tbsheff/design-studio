@@ -75,6 +75,10 @@ const toPortCheckInput = (
 };
 
 const toAreaText = (count: number): string => {
+  if (count === 0) {
+    return "every area matches";
+  }
+
   if (count === 1) {
     return "1 area differs";
   }

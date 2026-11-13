@@ -72,7 +72,12 @@ const readPortMatch = Effect.fn("PortMatchStore.readPortMatch")(function* run(
   const files = yield* attemptKnown(() =>
     createPortFiles(
       path.join(loadConfig().dataDir, PORT_CHECK_DIR),
-      toPortFileStem(query.projectId, query.targetProjectId),
+      toPortFileStem(
+        query.projectId,
+        query.targetProjectId,
+        query.routePath,
+        query.width
+      ),
       {
         app: PNG.sync.write(app),
         diff: pictureSheet(prototype, app, diff),

@@ -56,6 +56,7 @@ const ChromeTopBar = ({
       onExport={onExport}
       onShip={onShip}
       onShareLink={onShareLink}
+      theme={chrome.view.theme ?? null}
     />
   );
 };

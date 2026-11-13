@@ -142,7 +142,7 @@ const CanvasTopBar = (props: Props): ReactElement => {
         onTool={props.onTool}
       />
     ),
-    zoom: <ZoomControl control={zoom} />,
+    zoom: <ZoomControl control={zoom} theme={props.theme} />,
   };
 
   return <>{toHosted(parts, props.hosts)}</>;

@@ -3,32 +3,48 @@ import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 
+interface ThemeControl {
+  readonly dark: boolean;
+  readonly onToggle: () => void;
+}
+
+const toSwitchClass = (place: "row" | "zoom"): string => {
+  if (place === "zoom") {
+    return "canvas-zoom-step canvas-theme";
+  }
+
+  return "icon-btn theme-switch";
+};
+
 const ThemeSwitch = ({
   control,
+  place,
 }: {
-  control: { dark: boolean; onToggle: () => void };
+  readonly control: ThemeControl;
+  readonly place: "row" | "zoom";
 }): ReactElement => {
   const { dark, onToggle } = control;
 
-  let datatip: "Preview dark mode" | "Back to the default mode" =
-    "Preview dark mode";
+  let datatip: string = copy.previewDarkMode;
 
   if (dark) {
-    datatip = "Back to the default mode";
+    datatip = copy.previewDefaultMode;
   }
 
   return (
     <button
       type="button"
-      className="icon-btn theme-switch"
+      className={toSwitchClass(place)}
       aria-label={copy.previewDarkMode}
       aria-pressed={dark}
       data-tip={datatip}
       onClick={onToggle}
     >
-      <Icon name="moon" />
+      <Icon name="moon" size={14} />
     </button>
   );
 };
 
 export { ThemeSwitch };
+
+export type { ThemeControl };

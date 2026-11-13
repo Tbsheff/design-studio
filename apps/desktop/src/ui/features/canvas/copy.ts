@@ -108,6 +108,7 @@ const copy = {
   present: "Present",
   presentedDesign: "Presented design",
   previewDarkMode: "Preview dark mode",
+  previewDefaultMode: "Back to the default mode",
   previewSource: "Preview source",
   previewState: "Preview state",
   prototype: "Prototype",
@@ -149,6 +150,8 @@ const copy = {
   text: "Text",
   text2: "%",
   textKept: "Claude changed this text while you typed. Your text is kept.",
+  textPlaceHint: "Click to add a text box. Esc stops.",
+  textPlaceTool: "Text tool",
   times: "×",
   times2: " × ",
   toSignInFor:

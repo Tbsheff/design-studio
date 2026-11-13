@@ -109,9 +109,20 @@
 .frame-label:is(:hover, :has(:focus-visible), :has([aria-expanded="true"]))
   > .frame-label-tools,
 .canvas-frame:hover > .frame-label > .frame-label-tools {
-  flex-shrink: 1;
+  flex-shrink: 0;
   overflow: visible;
   visibility: visible;
+}
+
+.frame-label.variation {
+  container-type: inline-size;
+}
+
+@container (max-width: 300px) {
+  .frame-label-tools > .frame-menu-root:has(> .frame-chip.page),
+  .frame-label-tools > .variation-status.completed {
+    display: none;
+  }
 }
 
 .frame-label-tools .frame-chip.pin,

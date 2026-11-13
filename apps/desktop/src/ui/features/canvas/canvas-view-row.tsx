@@ -41,7 +41,7 @@ const CanvasViewRow = (props: Props): ReactElement => {
     >
       <ViewportControls viewport={props.viewport} />
       {props.addFrame}
-      {props.theme && <ThemeSwitch control={props.theme} />}
+      {props.theme && <ThemeSwitch control={props.theme} place="row" />}
       {props.lofi && <LofiSwitch control={props.lofi} />}
       {props.links && <LinksSwitch control={props.links} />}
       {props.rulers && <RulersSwitch control={props.rulers} />}

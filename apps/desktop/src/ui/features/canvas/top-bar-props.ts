@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import type { LiveStore } from "../../platform/live-store.js";
 import type { ZoomSetting } from "../../platform/storage.js";
 import type { TopBarHosts } from "./canvas-shell.js";
+import type { ThemeControl } from "./theme-switch.js";
 import type {
   CanvasTool,
   MenuGroup,
@@ -31,6 +32,7 @@ interface Props {
   onExport: () => void;
   onShip?: (() => void) | null;
   onShareLink?: ((mode?: "link" | "publish") => void) | null;
+  readonly theme: ThemeControl | null;
 }
 
 export type { Props };

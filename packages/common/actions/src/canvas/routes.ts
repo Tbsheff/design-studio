@@ -47,6 +47,12 @@ const routes = {
     method: "DELETE",
     path: "/api/projects/:projectId/canvas/frames",
   },
+  deleteFramesCanvas: {
+    id: "canvas.deleteFrames",
+    invalidates: ["canvas.getDoc", "canvas.inspect", "canvas.listLinks"],
+    method: "POST",
+    path: "/api/projects/:projectId/canvas/frames/delete",
+  },
   deleteLinkCanvas: {
     id: "canvas.deleteLink",
     invalidates: ["canvas.listImplicitLinks", "canvas.listLinks"],

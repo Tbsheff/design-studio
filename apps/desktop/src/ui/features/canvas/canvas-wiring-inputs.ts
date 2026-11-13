@@ -78,6 +78,7 @@ interface CanvasWiring {
   readonly onResizeStart: FrameActions["onResizeStart"];
   readonly proto: ReturnType<typeof usePrototype>;
   readonly registerPassive: FrameActions["registerPassive"];
+  readonly removedCount: FrameActions["removedCount"];
   readonly sandbox: FrameSandbox | undefined;
   readonly stageMode: ReturnType<typeof stageCursor>;
   readonly undoRemove: FrameActions["undoRemove"];

@@ -11,6 +11,7 @@ import { call } from "../../platform/http.js";
 import { isTypingTarget } from "../../platform/typing-target.js";
 import { useLatest } from "../../platform/use-latest.js";
 import { canvasStore } from "./canvas-frames-model.js";
+import { toSelectedIds } from "./frame-selection-store.js";
 import { toInsideIds } from "./section-model.js";
 
 interface TidyFramesInput {
@@ -52,13 +53,27 @@ const toSectionId = (
 const toTidyWire = (
   forProject: string,
   frameId: string | null
-): TidyFramesWire => ({
-  frames: null,
-  gap: TIDY_GAP,
-  layout: "tidy",
-  projectId: forProject,
-  section: toSectionId(forProject, frameId),
-});
+): TidyFramesWire => {
+  const selected = toSelectedIds(forProject);
+
+  if (selected.length >= 2) {
+    return {
+      frames: [...selected],
+      gap: TIDY_GAP,
+      layout: "tidy",
+      projectId: forProject,
+      section: null,
+    };
+  }
+
+  return {
+    frames: null,
+    gap: TIDY_GAP,
+    layout: "tidy",
+    projectId: forProject,
+    section: toSectionId(forProject, frameId),
+  };
+};
 
 const isTidyKey = (event: KeyboardEvent, selectionCount: number): boolean => {
   if (event.defaultPrevented || event.repeat || selectionCount > 0) {

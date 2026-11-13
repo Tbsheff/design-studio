@@ -2,9 +2,19 @@ import { useRef } from "react";
 import type { PointerEvent as ReactPointerEvent, RefObject } from "react";
 
 import { moveFrame } from "./canvas-frame-ops.js";
-import type { CanvasFrame } from "./canvas-frames-model.js";
+import type { CanvasFrame, CanvasLayout } from "./canvas-frames-model.js";
 import { startFrameDrag, toPointer } from "./frame-drag.js";
 import type { Point } from "./frame-drag.js";
+import {
+  isGroupMember,
+  toMovedLayout,
+  toToggledIds,
+} from "./frame-selection-model.js";
+import {
+  clearFrameSelection,
+  setSelectedIds,
+  toSelectedIds,
+} from "./frame-selection-store.js";
 import type { CanvasFrames } from "./use-canvas-frames.js";
 import type { ClickThrough } from "./use-click-through.js";
 import type { PanZoom } from "./use-pan-zoom.js";
@@ -46,6 +56,30 @@ const isDoubleTitle = (
 
 const MENU_BUTTON = 2;
 
+const toDragGroupIds = (
+  selected: readonly string[],
+  id: string
+): readonly string[] => {
+  if (isGroupMember(selected, id)) {
+    return selected;
+  }
+
+  return [];
+};
+
+const moveDragged = (
+  layout: CanvasLayout,
+  group: readonly string[],
+  moved: CanvasFrame,
+  world: Point
+): CanvasLayout => {
+  if (group.length > 0) {
+    return toMovedLayout(layout, group, world);
+  }
+
+  return moveFrame(layout, moved.id, world.x, world.y);
+};
+
 const toBodyPoint = (
   event: ReactPointerEvent,
   isBody: boolean,
@@ -83,6 +117,35 @@ const hasOpenedMenu = (
   return true;
 };
 
+const hasToggledFrame = (
+  event: ReactPointerEvent,
+  frame: CanvasFrame,
+  projectId: string
+): boolean => {
+  if (event.button !== 0 || !event.shiftKey) {
+    return false;
+  }
+
+  event.preventDefault();
+  event.stopPropagation();
+  setSelectedIds(projectId, toToggledIds(toSelectedIds(projectId), frame.id));
+
+  return true;
+};
+
+const tapFrame = (
+  input: Pick<FramePointerInput, "clickThrough" | "frames">,
+  tapped: CanvasFrame,
+  tapPoint: Point | null
+): void => {
+  clearFrameSelection();
+  input.frames.activate(tapped);
+
+  if (tapPoint) {
+    input.clickThrough?.(tapPoint, false);
+  }
+};
+
 const useFramePointer = ({
   artboardRef,
   clickThrough,
@@ -109,24 +172,21 @@ const useFramePointer = ({
     event.preventDefault();
     event.stopPropagation();
     const point = toBodyPoint(event, isBody, pz.zoom);
+    const dragGroup = toDragGroupIds(toSelectedIds(frames.projectId), frame.id);
 
     startFrameDrag(
       {
         artboard: () => artboardRef.current,
+        group: dragGroup,
         layout: frames.layout,
         onMoved: (moved, world) => {
           pz.freeze();
           frames.update((layout) =>
-            moveFrame(layout, moved.id, world.x, world.y)
+            moveDragged(layout, dragGroup, moved, world)
           );
         },
-        onTap: (tapped, tapPoint) => {
-          frames.activate(tapped);
-
-          if (tapPoint) {
-            clickThrough?.(tapPoint, false);
-          }
-        },
+        onTap: (tapped, tapPoint) =>
+          tapFrame({ clickThrough, frames }, tapped, tapPoint),
         passive: passiveRefs.current,
         zoom: pz.zoom,
       },
@@ -140,6 +200,10 @@ const useFramePointer = ({
     event: ReactPointerEvent,
     frame: CanvasFrame
   ): void => {
+    if (hasToggledFrame(event, frame, frames.projectId)) {
+      return;
+    }
+
     const last = lastTitle.current;
     const now = performance.now();
     lastTitle.current = { at: now, id: frame.id };

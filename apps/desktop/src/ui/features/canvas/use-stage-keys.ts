@@ -9,6 +9,10 @@ import { focusStageQuietly } from "../../platform/focus.js";
 import { canvasHasKeys, isTextField } from "../../platform/typing-target.js";
 import type { CanvasShell } from "./canvas-shell.js";
 import type { Props } from "./canvas-types.js";
+import {
+  clearFrameSelection,
+  hasFrameSelection,
+} from "./frame-selection-store.js";
 import { isTypingTarget } from "./use-pan-zoom.js";
 import { PREVIEW_LAYOUT_KEY_EVENT } from "./use-preview-frames.js";
 import type { usePreviewFrames } from "./use-preview-frames.js";
@@ -134,7 +138,12 @@ const useFirstSelectKeys = (
     const onKey = (event3: KeyboardEvent): void => {
       const cur = latest.current;
 
-      if (!cur.on || !cur.empty || event3.defaultPrevented) {
+      if (
+        !cur.on ||
+        !cur.empty ||
+        event3.defaultPrevented ||
+        hasFrameSelection()
+      ) {
         return;
       }
 
@@ -288,6 +297,10 @@ const useStageKeys = (stageKeys: StageKeys): void => {
   });
   const { setSelection } = stageKeys;
   useSelectKey(stageKeys.setSelectMode, stageKeys.offProto, () => {
+    if (clearFrameSelection()) {
+      return true;
+    }
+
     if (selection.current.length === 0) {
       return false;
     }

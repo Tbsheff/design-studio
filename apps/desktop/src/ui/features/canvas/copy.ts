@@ -80,6 +80,10 @@ const copy = {
   frame: "Frame",
   framePage: "Frame page",
   frameRemoved: "Frame removed.",
+  frameSelectCount: " frames",
+  frameSelectRemoved: " frames removed.",
+  frameSelectTip:
+    "Drag a label to move them together. Arrow keys nudge. Delete removes them. Esc clears.",
   frameState: "Frame state",
   hand: "Hand",
   height: "Height",

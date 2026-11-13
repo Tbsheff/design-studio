@@ -19,6 +19,8 @@ type BinaryResolver = () => Promise<string>;
 
 const NEWLINE_BYTE = 0x0a;
 const DONE = "done";
+const IDLE_CLOSE_MS = 20_000;
+const MAX_LIVE_READERS = 4;
 
 const ignoreError = (): null => null;
 
@@ -26,12 +28,16 @@ const deliver = (pending: Pending, outcome: Outcome): void => {
   pending.signal.dispatchEvent(new CustomEvent(DONE, { detail: outcome }));
 };
 
+const liveReaders = new Set<BatchReader>();
+
 class BatchReader {
   private buffer: Buffer = Buffer.alloc(0);
   private child: ChildProcessWithoutNullStreams | null = null;
   private readonly binary: BinaryResolver;
   private readonly cwd: string;
   private readonly env: NodeJS.ProcessEnv;
+  private active = 0;
+  private idleTimer: NodeJS.Timeout | null = null;
   private queue: Pending[] = [];
 
   public constructor(
@@ -45,12 +51,36 @@ class BatchReader {
   }
 
   public async read(sha: string): Promise<RawObject | null> {
+    this.stopIdle();
+    this.active += 1;
+
+    try {
+      return await this.readOnce(sha);
+    } finally {
+      this.active -= 1;
+      this.armIdle();
+    }
+  }
+
+  public close(): void {
+    this.stopIdle();
+    liveReaders.delete(this);
+    this.child?.stdin.end();
+    this.child = null;
+  }
+
+  public isIdle(): boolean {
+    return this.active === 0;
+  }
+
+  private async readOnce(sha: string): Promise<RawObject | null> {
     const child = await this.start();
     const signal = new EventTarget();
     const settled = once(signal, DONE);
 
     this.queue.push({ sha, signal });
     child.stdin.write(`${sha}\n`);
+    this.markLive();
 
     const [event] = (await settled) as [CustomEvent<Outcome>];
 
@@ -61,9 +91,43 @@ class BatchReader {
     return event.detail.value;
   }
 
-  public close(): void {
-    this.child?.stdin.end();
-    this.child = null;
+  private stopIdle(): void {
+    if (this.idleTimer !== null) {
+      clearTimeout(this.idleTimer);
+      this.idleTimer = null;
+    }
+  }
+
+  private armIdle(): void {
+    this.stopIdle();
+
+    if (!this.isIdle() || this.child === null) {
+      return;
+    }
+
+    this.idleTimer = setTimeout(() => {
+      this.idleTimer = null;
+
+      if (this.isIdle()) {
+        this.close();
+      }
+    }, IDLE_CLOSE_MS);
+    this.idleTimer.unref();
+  }
+
+  private markLive(): void {
+    liveReaders.delete(this);
+    liveReaders.add(this);
+
+    for (const reader of liveReaders) {
+      if (liveReaders.size <= MAX_LIVE_READERS) {
+        return;
+      }
+
+      if (reader !== this && reader.isIdle()) {
+        reader.close();
+      }
+    }
   }
 
   private async start(): Promise<ChildProcessWithoutNullStreams> {
@@ -105,6 +169,7 @@ class BatchReader {
     }
 
     this.child = null;
+    liveReaders.delete(this);
 
     this.buffer = Buffer.alloc(0);
 

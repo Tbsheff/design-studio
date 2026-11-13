@@ -7,6 +7,12 @@ import type {
 
 import type { RenderClip, RenderErrors } from "../../shared/render-rpc.js";
 import type { RenderBackend, RenderPage } from "../../shared/server-ports.js";
+import {
+  createChromeRecord,
+  createOwnerMarker,
+  deleteChromeRecord,
+  toOwnerArg,
+} from "../platform/chrome-owner/index.js";
 import { NAVIGATION_TIMEOUT_MS, SETTLE_TIMEOUT_MS } from "./render-contract.js";
 
 function isFaviconMiss(url: string): boolean {
@@ -198,7 +204,31 @@ function wrapPage(context: BrowserContext, page: Page): RenderPage {
   };
 }
 
-export function createPlaywrightBackend(): RenderBackend {
+const startOwnedChrome = async (ownerFile: string | null): Promise<Browser> => {
+  const { chromium } = await import("playwright-core");
+  const marker = createOwnerMarker();
+  const launched = await chromium.launch({
+    args: [toOwnerArg(marker)],
+    channel: "chrome",
+    headless: true,
+  });
+
+  if (ownerFile === null) {
+    return launched;
+  }
+
+  const pid = await createChromeRecord(ownerFile, marker);
+
+  launched.on("disconnected", () => {
+    void deleteChromeRecord(ownerFile, pid);
+  });
+
+  return launched;
+};
+
+export function createPlaywrightBackend(
+  ownerFile: string | null = null
+): RenderBackend {
   let browserPromise: Promise<Browser> | null = null;
   let closed = false;
 
@@ -208,25 +238,21 @@ export function createPlaywrightBackend(): RenderBackend {
     }
 
     if (!browserPromise) {
-      const pending: Promise<Browser> = import("playwright-core")
-        .then(({ chromium }) =>
-          chromium.launch({ channel: "chrome", headless: true })
-        )
-        .then(
-          (launched) => {
-            launched.on("disconnected", () => {
-              if (browserPromise === pending) {
-                browserPromise = null;
-              }
-            });
+      const pending: Promise<Browser> = startOwnedChrome(ownerFile).then(
+        (launched) => {
+          launched.on("disconnected", () => {
+            if (browserPromise === pending) {
+              browserPromise = null;
+            }
+          });
 
-            return launched;
-          },
-          (error: unknown) => {
-            browserPromise = null;
-            throw error;
-          }
-        );
+          return launched;
+        },
+        (error: unknown) => {
+          browserPromise = null;
+          throw error;
+        }
+      );
 
       browserPromise = pending;
     }

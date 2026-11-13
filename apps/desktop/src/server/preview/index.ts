@@ -12,6 +12,7 @@ import type {
 import type {
   PreviewService,
   ProjectStore,
+  RenderCheckOptions,
   ServerConfig,
   VersionStore,
 } from "../../shared/server-ports.js";
@@ -24,10 +25,10 @@ import { buildErrorMessage, syncDesignSystem } from "../design-system/sync.js";
 import { noteTreeChange } from "../events/index.js";
 import type { EventBus } from "../events/index.js";
 import { loadBridgeScript } from "./bridge-bundle.js";
-import type { BrowserPool, RenderCheckOptions } from "./browser.js";
 import { startHtmlServer } from "./html-server.js";
 import type { HtmlServer, RootKind } from "./html-server.js";
 import { applyWatchedChange, startSourceWrites } from "./peek-writes.js";
+import { createBrowserPool } from "./render-backend.js";
 import { SourceStamps, type SourceStamp } from "./source-stamp.js";
 import { warmComponentUsage } from "./usage-scope.js";
 import type { ViteManager, ViteTarget } from "./vite-manager.js";
@@ -213,14 +214,12 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     });
   });
 
-  const browsers = lazily<BrowserPool>(async () => {
-    const { BrowserPool: Pool } = await import("./browser.js");
-
-    return new Pool(config.previewOrigin, undefined, {
+  const browsers = lazily(() =>
+    createBrowserPool(config.previewOrigin, config.dataDir, {
       stampFor,
       landed: (url: string, href: string) => stamps.landed(url, href),
-    });
-  });
+    })
+  );
 
   startSourceWrites(() => browsers.loaded(), config.previewPort);
 

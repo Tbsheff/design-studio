@@ -21,3 +21,7 @@ export type {
 } from "./run-log-runtime.js";
 
 export { RunLogWriter } from "./run-log-writer.js";
+
+export { RunDraftStore } from "./run-draft-store.js";
+
+export { setDraftComplete, setDraftText } from "./run-draft-map.js";

@@ -723,6 +723,13 @@ export type StudioEventBody =
   | { type: "run.thinking.delta"; runId: string; text: string }
   | { type: "run.thinking"; runId: string; text: string }
   | {
+      type: "run.write.delta";
+      runId: string;
+      toolUseId: string;
+      path: string;
+      text: string;
+    }
+  | {
       type: "run.tool.started";
       runId: string;
       toolUseId: string;

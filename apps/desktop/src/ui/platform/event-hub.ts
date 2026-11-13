@@ -37,6 +37,7 @@ const EVERY_EVENT_TYPE: Record<StudioEventBody["type"], true> = {
   "run.tool.started": true,
   "run.usage": true,
   "run.user": true,
+  "run.write.delta": true,
   "status.changed": true,
   "version.created": true,
   "versions.changed": true,

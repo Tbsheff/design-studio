@@ -6,6 +6,12 @@ const routes = {
     method: "GET",
     path: "/api/projects/:projectId/d/:directionId/run-context",
   },
+  getDraftRun: {
+    id: "run.getDraft",
+    invalidates: [],
+    method: "GET",
+    path: "/api/projects/:projectId/runs/:runId/draft",
+  },
   getRun: {
     id: "run.get",
     invalidates: [],

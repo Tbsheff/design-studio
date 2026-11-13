@@ -7,6 +7,7 @@ interface DraftEntry {
   readonly isComplete: boolean;
   readonly kind: DraftKind;
   readonly oldString: string | null;
+  readonly pageText: string | null;
   readonly path: string;
   readonly projectId: string;
   readonly text: string;
@@ -51,6 +52,68 @@ const toCappedHtml = (text: string): string => {
   return decoder.decode(bytes.slice(0, DRAFT_HTML_MAX_BYTES));
 };
 
+const TAG = /\u003C(?<body>[^\u003C>]*)>/gu;
+
+const TAG_NAME = /^\/?(?<name>[A-Za-z][\w-]*)/u;
+
+const VOID_TAGS = new Set([
+  "area",
+  "base",
+  "br",
+  "col",
+  "embed",
+  "hr",
+  "img",
+  "input",
+  "link",
+  "meta",
+  "source",
+  "track",
+  "wbr",
+]);
+
+const toWholeTags = (text: string): string => {
+  const open = text.lastIndexOf("\u003C");
+
+  if (open > text.lastIndexOf(">")) {
+    return text.slice(0, open);
+  }
+
+  return text;
+};
+
+const toOpenTags = (text: string): string[] => {
+  const stack: string[] = [];
+
+  for (const match of text.matchAll(TAG)) {
+    const body = match.groups?.body ?? "";
+    const name = TAG_NAME.exec(body)?.groups?.name?.toLowerCase() ?? "";
+    const isClose = body.startsWith("/");
+
+    const isSelf = body.endsWith("/") || VOID_TAGS.has(name) || name === "";
+
+    if (isClose && stack.at(-1) === name) {
+      stack.pop();
+    }
+
+    if (!isClose && !isSelf) {
+      stack.push(name);
+    }
+  }
+
+  return stack;
+};
+
+const toClosedPartial = (text: string): string => {
+  const whole = toWholeTags(text);
+
+  const closers = toOpenTags(whole)
+    .toReversed()
+    .map((name) => `\u003C/${name}>`);
+
+  return `${whole}${closers.join("")}`;
+};
+
 const toBaseText = (runId: string, filePath: string): string | null =>
   bases.get(runId)?.get(filePath) ?? null;
 
@@ -68,10 +131,20 @@ const toEditText = (runId: string, entry: DraftEntry): string | null => {
     return null;
   }
 
-  return `${base.slice(0, at)}${entry.text}${base.slice(at + old.length)}`;
+  let middle = entry.text;
+
+  if (!entry.isComplete) {
+    middle = toClosedPartial(entry.text);
+  }
+
+  return `${base.slice(0, at)}${middle}${base.slice(at + old.length)}`;
 };
 
 const toPageText = (runId: string, entry: DraftEntry): string | null => {
+  if (entry.pageText !== null) {
+    return entry.pageText;
+  }
+
   if (entry.kind === "edit") {
     return toEditText(runId, entry);
   }
@@ -151,6 +224,7 @@ const setDraftText = (chunk: DraftChunk): void => {
     isComplete: false,
     kind: chunk.kind,
     oldString: chunk.oldString,
+    pageText: null,
     path: chunk.path,
     projectId: chunk.projectId,
     text: fullText,
@@ -166,8 +240,10 @@ const setDraftComplete = (runId: string, toolUseId: string): void => {
     return;
   }
 
-  drafts.set(runId, { ...entry, isComplete: true });
-  const text = toPageText(runId, entry);
+  const done = { ...entry, isComplete: true };
+  const text = toPageText(runId, done);
+
+  drafts.set(runId, { ...done, pageText: text });
 
   if (text !== null) {
     toRunBases(runId).set(entry.path, text);

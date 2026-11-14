@@ -18,6 +18,9 @@ import type { DirectEditDeps } from "../direct-edit/index.js";
 import { logError } from "../platform/logger/index.js";
 import { applyRunPhotoArt } from "../share/index.js";
 
+const PORT_QUEUE_LEAD =
+  "The user sent this during the Move to app run. Apply it to the same routes:";
+
 interface RunFollowUpDeps {
   readonly editDeps: DirectEditDeps;
   readonly editHistory: EditHistory;
@@ -58,6 +61,15 @@ const toQueueRequest = (previous: RunRequest, text: string): RunRequest => {
   return request;
 };
 
+const toPortQueueRequest = (
+  previous: RunRequest,
+  queueText: string
+): RunRequest =>
+  ({
+    ...previous,
+    prompt: [previous.prompt, PORT_QUEUE_LEAD, queueText].join("\n\n"),
+  }) satisfies RunRequest;
+
 const toNextRequest = (
   previous: RunRequest,
   next: RunNext
@@ -66,8 +78,8 @@ const toNextRequest = (
     return toQueueRequest(previous, next.text);
   }
 
-  if (next.reason !== "steer") {
-    return null;
+  if (next.reason === "queue") {
+    return toPortQueueRequest(previous, next.text);
   }
 
   return toPortSteerRequest(previous, next.text);

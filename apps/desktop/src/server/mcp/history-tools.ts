@@ -59,7 +59,7 @@ const batchEdit = z
     style: style
       .optional()
       .describe(
-        "CSS properties to set, as kebab-case (margin-left) or camelCase (marginLeft) keys. null removes the property."
+        "CSS properties to set, as kebab-case (margin-left) or camelCase (marginLeft) keys. null removes the property. Use rotate (45deg writes rotate-45) and scale (-1 1 flips horizontally to -scale-x-100, 1 -1 flips vertically)."
       ),
     text: z.string().max(5000).optional(),
     classes: classes.optional(),

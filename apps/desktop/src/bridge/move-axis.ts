@@ -6,6 +6,8 @@ interface LockedDrag {
   readonly lock: MoveLock;
 }
 
+type ShiftRepeat = (isShiftHeld: boolean) => void;
+
 interface PointerSample {
   readonly altKey: boolean;
   readonly buttons: number;
@@ -66,31 +68,27 @@ const toRepeatEvent = (
 ): PointerEvent =>
   new PointerEvent("pointermove", { ...sample, shiftKey: isShiftHeld });
 
-const installShiftRepeat = (move: (event: PointerEvent) => boolean): void => {
+const createShiftRepeat = (
+  move: (event: PointerEvent) => boolean
+): ShiftRepeat => {
   let sample: PointerSample | null = null;
 
   const onPointer = (event: PointerEvent): void => {
     sample = toSample(event);
   };
 
-  const onKey = (event: KeyboardEvent): void => {
-    if (event.key !== "Shift" || sample === null || event.repeat) {
-      return;
-    }
-
-    if (sample.buttons % 2 === 0) {
-      return;
-    }
-
-    move(toRepeatEvent(sample, event.type === "keydown"));
-  };
-
   globalThis.addEventListener("pointermove", onPointer, { capture: true });
   globalThis.addEventListener("pointerup", onPointer, { capture: true });
-  globalThis.addEventListener("keydown", onKey, { capture: true });
-  globalThis.addEventListener("keyup", onKey, { capture: true });
+
+  return (isShiftHeld: boolean): void => {
+    if (sample === null || sample.buttons % 2 === 0) {
+      return;
+    }
+
+    move(toRepeatEvent(sample, isShiftHeld));
+  };
 };
 
-export { installShiftRepeat, toLockedDrag };
+export { createShiftRepeat, toLockedDrag };
 
-export type { LockedDrag, MoveLock };
+export type { LockedDrag, MoveLock, ShiftRepeat };

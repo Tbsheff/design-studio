@@ -192,6 +192,7 @@ const useFreeMove = (
     const controller = createMoveController({ commit, live, session, setView });
 
     globalThis.addEventListener("keydown", controller.onKey, true);
+    globalThis.addEventListener("keyup", controller.onKey, true);
 
     const stop = listen((message) => {
       switch (message.type) {
@@ -226,6 +227,7 @@ const useFreeMove = (
       stop();
       controller.end(false);
       globalThis.removeEventListener("keydown", controller.onKey, true);
+      globalThis.removeEventListener("keyup", controller.onKey, true);
     };
   }, [listen, setView]);
 

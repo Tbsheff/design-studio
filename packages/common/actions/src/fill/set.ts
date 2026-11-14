@@ -5,11 +5,11 @@ import { ElementTargetSchema } from "../_core/element-target.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
+import { StyleVariantSchema } from "../_core/style-variant.js";
 import {
   FillChangeSchema,
   FillInputSchema,
   FillTargetFields,
-  FillVariantSchema,
 } from "./schema.js";
 
 const setFill = defineAction({
@@ -34,7 +34,7 @@ const setFill = defineAction({
     ...FillTargetFields,
     fill: FillInputSchema,
     target: ElementTargetSchema,
-    variant: FillVariantSchema,
+    variant: StyleVariantSchema,
   }),
   invalidates: ["fill.get"],
   mcp: { name: "set_fill" },

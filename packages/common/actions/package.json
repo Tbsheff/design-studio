@@ -27,6 +27,7 @@
     "./_core/image-output": "./src/_core/image-output.ts",
     "./_core/list-page": "./src/_core/list-page.ts",
     "./_core/permissions": "./src/_core/permissions.ts",
+    "./_core/style-variant": "./src/_core/style-variant.ts",
     "./_core/wire": "./src/_core/wire.ts",
     "./accessibility/errors/index": "./src/accessibility/errors/index.ts",
     "./accessibility/errors/status": "./src/accessibility/errors/status.ts",

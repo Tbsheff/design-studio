@@ -1,9 +1,10 @@
 import type { KitDriftSchema } from "@design-studio/actions/kit-drift/schema";
 
 import type { Project } from "./deps.js";
-import type { DriftMatch } from "./engine/index.js";
+import type { DriftMatch, MarkupDrift } from "./engine/index.js";
 import { getImportPath } from "./kit-drift-import.js";
 import type { ImportScope } from "./kit-drift-import.js";
+import { isKitPrototype, listPrototypeDrift } from "./kit-drift-prototype.js";
 import { listDriftFiles } from "./kit-drift-scan.js";
 import type { FileDrift } from "./kit-drift-scan.js";
 import { getKitInventory } from "./kit-inventory.js";
@@ -25,6 +26,11 @@ interface KitDriftPage {
   readonly next: string | null;
 }
 
+interface PageSlice<Value> {
+  readonly next: string | null;
+  readonly slice: readonly Value[];
+}
+
 interface Located {
   readonly absolute: string;
   readonly match: DriftMatch;
@@ -38,6 +44,21 @@ const toOffset = (cursor: string | null): number => {
   }
 
   return 0;
+};
+
+const toPageSlice = <Value>(
+  values: readonly Value[],
+  command: ListKitDriftCommand
+): PageSlice<Value> => {
+  const offset = toOffset(command.cursor);
+  const end = offset + command.limit;
+  let next: string | null = null;
+
+  if (end < values.length) {
+    next = String(end);
+  }
+
+  return { next, slice: values.slice(offset, end) };
 };
 
 const toRank = (located: Located): number => {
@@ -109,21 +130,38 @@ const listKitDriftPage = async (
 ): Promise<KitDriftPage> => {
   const files = await listDriftFiles(ts, inventory, command.page);
   const located = listLocated(files);
-  const offset = toOffset(command.cursor);
-  const end = offset + command.limit;
-
-  const items = await listItems(
-    { inventory, project, ts },
-    located.slice(offset, end)
-  );
-
-  let next: string | null = null;
-
-  if (end < located.length) {
-    next = String(end);
-  }
+  const { next, slice } = toPageSlice(located, command);
+  const items = await listItems({ inventory, project, ts }, slice);
 
   return { items, next };
+};
+
+const toMarkupItem = (drift: MarkupDrift): KitDrift => ({
+  column: drift.column,
+  confidence: drift.confidence,
+  droppedClasses: drift.droppedClasses,
+  file: drift.file,
+  id: drift.id,
+  keptClasses: drift.keptClasses,
+  kitComponent: {
+    importPath: drift.recipe.source,
+    name: drift.recipe.component.name,
+  },
+  line: drift.line,
+  suggestedSize: drift.suggestedSize,
+  suggestedVariant: drift.suggestedVariant,
+  tag: drift.tag,
+});
+
+const listPrototypePage = async (
+  project: Project,
+  workTree: string,
+  command: ListKitDriftCommand
+): Promise<KitDriftPage> => {
+  const drift = await listPrototypeDrift(project, workTree, command.page);
+  const { next, slice } = toPageSlice(drift, command);
+
+  return { items: slice.map((entry) => toMarkupItem(entry)), next };
 };
 
 const runKitDriftList = async (
@@ -132,6 +170,10 @@ const runKitDriftList = async (
   workTree: string,
   command: ListKitDriftCommand
 ): Promise<KitDriftPage> => {
+  if (isKitPrototype(project)) {
+    return await listPrototypePage(project, workTree, command);
+  }
+
   const inventory = await getKitInventory(ts, project, workTree);
 
   return await listKitDriftPage(ts, project, inventory, command);

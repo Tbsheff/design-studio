@@ -4,7 +4,6 @@ import path from "node:path";
 import type {
   AppReviewRecord,
   FinalCheck,
-  QualityFinding,
   RenderCheckResult,
 } from "@design-studio/contracts";
 import { PORT_TASK } from "@design-studio/contracts/port";
@@ -29,14 +28,14 @@ import type { CanvasService } from "../canvas/index.js";
 import { countSeverities } from "../preview/quality.js";
 import { runReviewFrameTool } from "../review/agent-tool.js";
 import { buildCheckReport, saveCheck } from "./check-tool.js";
-import { regionFindings } from "./fit-check.js";
-import { probeLayout } from "./layout-region.js";
 import { cutLine, mobileCuts, type CutElement } from "./mobile-cut.js";
 import {
   EDIT_TOOL_NAMES as EDIT_TOOLS,
   REVIEW_FRAME_TOOL,
 } from "./permissions.js";
 import { recordShot } from "./polish-loop.js";
+import { listKitLines, toReviewOpening } from "./prototype-kit-review.js";
+import { listOutsideLines } from "./review-layout.js";
 import { defaultShotTarget, isContextFrame } from "./run-target.js";
 import {
   changedLinesSince,
@@ -415,27 +414,11 @@ function reviewLine(item: ReviewItem): string {
   return `- [${item.severity}] ${item.kind} on ${item.element}${item.source ? ` (${item.source})` : ""}: ${item.message}${fix}`;
 }
 
-function outsideLine(finding: QualityFinding): string {
-  return `- [${finding.severity}] ${finding.check}: ${finding.message} Fix: ${finding.fix ?? ""}`;
-}
-
-async function layoutNow(input: StudioReviewInput): Promise<QualityFinding[]> {
-  const target = input.ctx.target;
-  const url = defaultShotTarget(input.ctx)?.url;
-  if (!target?.layout || !url) return [];
-  return regionFindings(
-    target.layout,
-    await probeLayout(input.preview, url),
-    target.owner,
-    input.ctx.request.prompt
-  );
-}
-
 export async function studioAppReview(
   input: StudioReviewInput,
   gaps: AppReviewGaps
 ): Promise<StudioReview> {
-  const [image, review, outside, { cuts, oldCode: oldCuts }] =
+  const [image, review, outside, { cuts, oldCode: oldCuts }, kit] =
     await Promise.all([
       gaps.mobile
         ? mobileImage(input).catch(() => null)
@@ -450,10 +433,11 @@ export async function studioAppReview(
             )
           )
         : Promise.resolve(NO_ITEMS),
-      layoutNow(input).catch(() => []),
+      listOutsideLines(input),
       gaps.mobile
         ? cutsNow(input).catch(() => NO_CUTS)
         : Promise.resolve(NO_CUTS),
+      listKitLines(input.ctx),
     ]);
   const log = input.run.log;
   if (image && log) recordShot(log, "mobile");
@@ -463,9 +447,10 @@ export async function studioAppReview(
       frame: null,
     });
   const lines = [
-    ...outside.map(outsideLine),
+    ...outside,
     ...cuts.slice(0, LISTED).map(cutLine),
     ...review.items.slice(0, LISTED).map(reviewLine),
+    ...kit,
   ];
   const oldCode = review.oldCode + oldCuts;
   const record: AppReviewRecord = {
@@ -483,21 +468,8 @@ export function appReviewPrompt(
   gaps: AppReviewGaps,
   pass = 1
 ): string | null {
-  if (review.lines.length === 0) return null;
-  const ran = [
-    gaps.mobile
-      ? "a mobile screenshot at 390 px wide, 2400 px tall so content in inner scroll areas shows (attached)"
-      : null,
-    gaps.review
-      ? "review_frame on the context frame at its size and at 390 px"
-      : null,
-  ]
-    .filter(Boolean)
-    .join(" and ");
-  const opening =
-    pass > 1
-      ? `You edited again after the studio checks, so the studio ran ${ran} once more.`
-      : `You finished ${gaps.isPrototype ? "a prototype" : "an app"} run without ${ran}, so the studio ran them.`;
+  const opening = toReviewOpening(gaps, pass);
+  if (review.lines.length === 0 || opening === null) return null;
   return [
     "<studio-continue>",
     opening,

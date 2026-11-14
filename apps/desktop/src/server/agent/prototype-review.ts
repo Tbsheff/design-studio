@@ -4,12 +4,13 @@ import type { AgentRunContext } from "../../shared/server-ports.js";
 import { appReviewGaps } from "./final-check.js";
 import type { AppReviewGaps } from "./final-check.js";
 import { EDIT_TOOL_NAMES } from "./permissions.js";
+import { isStudioRan, toKitGaps, toKitNote } from "./prototype-kit-review.js";
 import { isContextFrame } from "./run-target.js";
 import type { RunToolState } from "./types.js";
 
 type ReviewContext = Pick<
   AgentRunContext,
-  "project" | "target" | "request" | "previewUrl"
+  "direction" | "project" | "target" | "request" | "previewUrl"
 >;
 
 const isPrototypeRun = (ctx: ReviewContext, run: RunToolState): boolean =>
@@ -56,13 +57,29 @@ const toPrototypeReviewGaps = (
   };
 };
 
+const toKitReviewGaps = (
+  ctx: ReviewContext,
+  run: RunToolState,
+  toolOrder: readonly string[]
+): AppReviewGaps | null => {
+  if (!isPrototypeRun(ctx, run)) {
+    return null;
+  }
+
+  return toKitGaps(
+    ctx,
+    toolOrder.some((name) => EDIT_TOOL_NAMES.has(name))
+  );
+};
+
 const toReviewGaps = (
   ctx: ReviewContext,
   run: RunToolState,
   toolOrder: readonly string[]
 ): AppReviewGaps | null =>
   appReviewGaps(ctx, run, toolOrder) ??
-  toPrototypeReviewGaps(ctx, run, toolOrder);
+  toPrototypeReviewGaps(ctx, run, toolOrder) ??
+  toKitReviewGaps(ctx, run, toolOrder);
 
 const toPassText = (record: AppReviewRecord, index: number): string => {
   let old = "";
@@ -95,13 +112,15 @@ const toRanText = (record: AppReviewRecord): string => {
 };
 
 const toReviewNote = (
-  ctx: Pick<AgentRunContext, "project">,
+  ctx: Pick<AgentRunContext, "direction" | "project" | "request">,
   records: readonly AppReviewRecord[]
 ): string => {
-  const [first] = records;
+  const kit = toKitNote(ctx, records);
+  const ran = records.filter((record) => isStudioRan(record));
+  const [first] = ran;
 
   if (!first) {
-    return "";
+    return kit;
   }
 
   let label = "Studio check";
@@ -110,9 +129,10 @@ const toReviewNote = (
     label = "Studio app check";
   }
 
-  const passes = records.map((record, index) => toPassText(record, index));
+  const passes = ran.map((record, index) => toPassText(record, index));
+  const note = `${label}: the agent skipped the ${toRanText(first)} after its last edit, so the studio ran them (desktop and 390 px); ${passes.join("; ")}.`;
 
-  return `${label}: the agent skipped the ${toRanText(first)} after its last edit, so the studio ran them (desktop and 390 px); ${passes.join("; ")}.`;
+  return [note, kit].filter((text) => text !== "").join(" ");
 };
 
 export { toPrototypeReviewGaps, toReviewGaps, toReviewNote };

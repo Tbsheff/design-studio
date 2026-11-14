@@ -1,0 +1,58 @@
+call-action direct-edit.apply on http://127.0.0.1:46510. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 6 ms, git spawns: not counted (server side)
+{
+  "applied": {
+    "style": [
+      "outline-color",
+      "outline-offset"
+    ],
+    "text": false
+  },
+  "file": "index.html",
+  "tailwind": {
+    "classes": [
+      "w-64",
+      "rounded-lg",
+      "p-6",
+      "border-2",
+      "border-slate-300",
+      "outline-2",
+      "outline",
+      "outline-[#3b82f6]",
+      "-outline-offset-1"
+    ],
+    "delta": {
+      "add": [
+        "outline-[#3b82f6]",
+        "-outline-offset-1"
+      ],
+      "remove": []
+    },
+    "dynamic": false,
+    "mode": "classes",
+    "note": null
+  },
+  "version": {
+    "changedFiles": [
+      "index.html"
+    ],
+    "createdAt": 1794622337168,
+    "directionId": "main",
+    "id": "pending-ed6e1c0b0f0e30be",
+    "meta": {
+      "kind": "manual",
+      "prompt": "Direct edit of index.html:3:1: outline-color: #3b82f6; outline-offset: -1px"
+    },
+    "parentId": "1573bd20c1bb613b92cb8ae7e3bbd87ed1833233",
+    "title": "Edit div: outline-color, outline-offset"
+  }
+}
+
+[mcp] skipped: mcp binding is off (legacy-mcp)
+
+[agent] skipped: agent binding is off (legacy-agent)
+
+answered approval cards: none
+
+call-action: pass, 1 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

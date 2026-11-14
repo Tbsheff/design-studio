@@ -67,7 +67,7 @@ const SimpleSections = ({
       {extras.has("shadow") && (
         <EffectsSection edit={edit} isRevealed={revealed.has("shadow")} />
       )}
-      <BorderSection edit={edit} />
+      <BorderSection edit={edit} selection={selection} classes={classes} />
     </>
   );
 };

@@ -259,12 +259,91 @@ const toBorderSideMap = (map: SideMap): SideMap => {
   );
 };
 
+const toSplitValues = (value: string): string[] => {
+  const parts: string[] = [];
+  let depth = 0;
+  let current = "";
+
+  for (const char of value.trim()) {
+    if (char === "(") {
+      depth += 1;
+    }
+
+    if (char === ")") {
+      depth -= 1;
+    }
+
+    if (/\s/u.test(char) && depth === 0) {
+      if (current) {
+        parts.push(current);
+      }
+
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+
+  if (current) {
+    parts.push(current);
+  }
+
+  return parts;
+};
+
+const toFourParts = (
+  value: string
+): readonly [string, string, string, string] | null => {
+  const parts = toSplitValues(value);
+  const [top, right, bottom, left] = parts;
+
+  if (!top || parts.length > BOX_ORDER.length) {
+    return null;
+  }
+
+  const across = right ?? top;
+
+  return [top, across, bottom ?? top, left ?? across];
+};
+
+const toCornerValues = (
+  value: string
+): Record<"tl" | "tr" | "br" | "bl", string> | null => {
+  const parts = toFourParts(value);
+
+  if (!parts || value.includes("/")) {
+    return null;
+  }
+
+  const [topLeft, topRight, bottomRight, bottomLeft] = parts;
+
+  return { bl: bottomLeft, br: bottomRight, tl: topLeft, tr: topRight };
+};
+
+const toBoxValues = (
+  value: string
+): Readonly<Record<string, string>> | null => {
+  const parts = toFourParts(value);
+
+  if (!parts) {
+    return null;
+  }
+
+  return Object.fromEntries(
+    BOX_ORDER.map((side, index) => [side, parts[index] ?? parts[0]])
+  );
+};
+
 export {
   BORDER_PREFIX,
   isBorderWidthProperty,
+  isBorderWidthSuffix,
   toBorderClassProps,
   toBorderEdits,
   toBorderGroup,
   toBorderSideMap,
   toBorderWidthClass,
+  toBoxValues,
+  toCornerValues,
+  toSplitValues,
 };

@@ -5,6 +5,9 @@ import {
   toBorderWidthClass,
 } from "./border-sides.js";
 import { KEYWORD_GROUPS } from "./keyword-groups.js";
+import { SINGLE_PROPS } from "./map.js";
+import { toOutlineClass } from "./outline.js";
+import type { OutlineGroup } from "./outline.js";
 import type { TailwindTheme } from "./theme-model.js";
 import { lengthToPx } from "./units.js";
 
@@ -70,7 +73,8 @@ export type SingleGroup =
   | "bg-size"
   | "bg-position"
   | "bg-repeat"
-  | "text-wrap";
+  | "text-wrap"
+  | OutlineGroup;
 
 export type Group = SidedGroup | SingleGroup;
 
@@ -223,44 +227,6 @@ const SHADOW_NAMES = new Set([
 
 const BG_NOT_COLOR =
   /^(fixed|local|scroll|clip-|origin-|repeat|no-repeat|cover|contain|auto$|center|top|bottom|left|right|none$|linear|radial|conic|gradient|blend-|size-|position-|\[url|\[image:|\[length:|\[size:|\[position:)/;
-
-const ARBITRARY_PROPERTY: Record<string, SingleGroup> = {
-  color: "color",
-  "background-color": "bg",
-  "font-size": "font-size",
-  "font-weight": "font-weight",
-  "font-family": "font-family",
-  "line-height": "leading",
-  "letter-spacing": "tracking",
-  "text-align": "text-align",
-  "border-style": "border-style",
-  "border-color": "border-color",
-  display: "display",
-  opacity: "opacity",
-  "flex-direction": "flex-direction",
-  "flex-wrap": "flex-wrap",
-  "justify-content": "justify",
-  "align-items": "items",
-  "align-self": "self",
-  flex: "flex",
-  "box-shadow": "shadow",
-  filter: "filter",
-  "font-style": "font-style",
-  "text-decoration-line": "decoration",
-  "text-transform": "case",
-  "text-wrap": "text-wrap",
-  overflow: "overflow",
-  "text-shadow": "text-shadow",
-  transform: "transform",
-  position: "position",
-  "justify-items": "justify-items",
-  "object-fit": "object-fit",
-  "object-position": "object-position",
-  "background-image": "bg-image",
-  "background-size": "bg-size",
-  "background-position": "bg-position",
-  "background-repeat": "bg-repeat",
-};
 
 function splitVariants(raw: string): string[] {
   const parts: string[] = [];
@@ -636,7 +602,7 @@ export function classify(
   const property = /^\[([a-z-]+):(.+)\]$/.exec(utility);
 
   if (property) {
-    return single(ARBITRARY_PROPERTY[property[1] ?? ""] ?? null);
+    return single(SINGLE_PROPS[property[1] ?? ""] ?? null);
   }
 
   const keyword = KEYWORD_GROUPS.get(utility);
@@ -647,6 +613,12 @@ export function classify(
 
   if (/^(grayscale|invert|sepia|blur|drop-shadow)$/.test(utility)) {
     return single("filter");
+  }
+
+  const outline = toOutlineClass(utility);
+
+  if (outline) {
+    return outline;
   }
 
   const border = toBorderWidthClass(utility);

@@ -372,4 +372,18 @@ const spaceStackCopy = {
   tip: "Gap edits write a space class. Other auto layout edits turn it into flex with gap",
 };
 
-export { borderSideCopy, copy, spaceStackCopy };
+const strokePositionCopy = {
+  center: "Center",
+  color: "Color",
+  colorLabel: "Stroke color",
+  inside: "Inside",
+  outside: "Outside",
+  positionLabel: "Stroke position",
+  sidesTip: "Center and Outside work on all sides",
+  style: "Style",
+  styleLabel: "Stroke style",
+  width: "Width",
+  widthLabel: "Stroke width",
+};
+
+export { borderSideCopy, copy, spaceStackCopy, strokePositionCopy };

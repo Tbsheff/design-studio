@@ -2,6 +2,9 @@ import {
   isBorderWidthProperty,
   toBorderClassProps,
   toBorderEdits,
+  toBoxValues,
+  toCornerValues,
+  toSplitValues,
 } from "./border-sides.js";
 import type {
   Classified,
@@ -14,6 +17,7 @@ import { colorDistance, parseColor } from "./color.js";
 import type { ParsedColor } from "./color.js";
 import { toFilterToken } from "./filter-token.js";
 import { toKeywordClass } from "./keyword-classes.js";
+import { OUTLINE_PROPS, toOutlineToken } from "./outline.js";
 import type { TailwindTheme, ThemeNamespace } from "./theme-model.js";
 import { emValue, lengthToPx, percent, plainNumber } from "./units.js";
 
@@ -58,7 +62,7 @@ const FRACTIONS: [number, string][] = [
   [1100 / 12, "11/12"],
 ];
 
-const SINGLE_PROPS: Record<string, SingleGroup> = {
+export const SINGLE_PROPS: Record<string, SingleGroup> = {
   color: "color",
   "background-color": "bg",
   "font-size": "font-size",
@@ -94,6 +98,7 @@ const SINGLE_PROPS: Record<string, SingleGroup> = {
   "background-size": "bg-size",
   "background-position": "bg-position",
   "background-repeat": "bg-repeat",
+  ...OUTLINE_PROPS,
 };
 
 const BOX_PROPS: Record<string, [SidedGroup, Side]> = {
@@ -729,6 +734,12 @@ function singleToken(
     return image(value);
   }
 
+  const outline = toOutlineToken(prop, value, theme);
+
+  if (outline) {
+    return outline;
+  }
+
   switch (prop) {
     case "color": {
       return `text-${colorSuffix(value, theme, "color")}`;
@@ -738,6 +749,9 @@ function singleToken(
     }
     case "border-color": {
       return `border-${colorSuffix(value, theme, "color")}`;
+    }
+    case "outline-color": {
+      return `outline-${colorSuffix(value, theme, "color")}`;
     }
     case "font-size": {
       return fontSizeToken(value, theme);
@@ -775,64 +789,6 @@ function singleToken(
       return `[${prop}:${arbitrary(value).slice(1, -1)}]`;
     }
   }
-}
-
-function splitValues(value: string): string[] {
-  const parts: string[] = [];
-  let depth = 0;
-  let current = "";
-
-  for (const char of value.trim()) {
-    if (char === "(") {
-      depth += 1;
-    }
-
-    if (char === ")") {
-      depth -= 1;
-    }
-
-    if (/\s/.test(char) && depth === 0) {
-      if (current) {
-        parts.push(current);
-      }
-
-      current = "";
-    } else {
-      current += char;
-    }
-  }
-
-  if (current) {
-    parts.push(current);
-  }
-
-  return parts;
-}
-
-function cornerValues(
-  value: string
-): Record<"tl" | "tr" | "br" | "bl", string> | null {
-  const parts = splitValues(value);
-  const [a, b = a, c = a, d = b] = parts;
-
-  if (!a || !b || !c || !d || parts.length > 4 || value.includes("/")) {
-    return null;
-  }
-
-  return { tl: a, tr: b, br: c, bl: d };
-}
-
-function boxValues(
-  value: string
-): Record<"t" | "r" | "b" | "l", string> | null {
-  const parts = splitValues(value);
-  const [a, b = a, c = a, d = b] = parts;
-
-  if (!a || !b || !c || !d || parts.length > 4) {
-    return null;
-  }
-
-  return { t: a, r: b, b: c, l: d };
 }
 
 function sidedValue(
@@ -879,7 +835,7 @@ function shorthandEdits(
   }
 
   const parts =
-    prop === "border-radius" ? cornerValues(value) : boxValues(value);
+    prop === "border-radius" ? toCornerValues(value) : toBoxValues(value);
 
   if (!parts) {
     return null;
@@ -903,7 +859,7 @@ function gapEdits(
     return [{ kind: "sided", group: "gap", values: { x: null, y: null } }];
   }
 
-  const [row, column = row] = splitValues(value);
+  const [row, column = row] = toSplitValues(value);
 
   if (!row || !column) {
     return null;

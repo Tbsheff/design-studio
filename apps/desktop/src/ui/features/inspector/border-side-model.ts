@@ -200,17 +200,11 @@ const toOneSidePatch = (
   };
 };
 
-const toAllPatch = (
-  width: string,
-  dirty: readonly DirectStyleProperty[]
-): Partial<StyleValues> => {
-  const stale = SIDES.filter((side) => dirty.includes(SIDE_PROPS[side]));
-
-  return {
-    "border-width": width,
-    ...Object.fromEntries(stale.map((side) => [SIDE_PROPS[side], width])),
-  };
-};
+const toAllPatch = (width: string): Partial<StyleValues> =>
+  Object.fromEntries([
+    ...SIDES.map((side) => [SIDE_PROPS[side], ""]),
+    [SHORTHAND, width],
+  ]);
 
 const isOpenPart = (part: string): boolean =>
   part.split("(").length > part.split(")").length;
@@ -237,6 +231,8 @@ const toLookParts = (raw: string): Readonly<Record<Side, string>> => {
 
   return { bottom, left, right, top };
 };
+
+const toFirstPart = (raw: string): string => toTopLevelParts(raw)[0] ?? "";
 
 const toDrawnSide = (widths: SideWidths): Side =>
   SIDES.find((side) => widths[side] === toMaxWidth(widths)) ?? "top";
@@ -272,7 +268,7 @@ const toSidePatch = (
   }
 
   if (next === "all") {
-    return { ...look, ...toAllPatch(width, edit.dirty) };
+    return { ...look, ...toAllPatch(width) };
   }
 
   return { ...look, ...toOneSidePatch(next, width, edit.dirty) };
@@ -292,10 +288,10 @@ const toWidthFields = (side: BorderSide): readonly NumberFieldConfig[] => {
 
 const toStyleCellClass = (side: BorderSide): string => {
   if (side === "custom") {
-    return "";
+    return "wide";
   }
 
-  return "wide";
+  return "";
 };
 
 export {
@@ -303,6 +299,7 @@ export {
   NO_BORDER,
   isBorderSide,
   toBorderSide,
+  toFirstPart,
   toMaxWidth,
   toShownSide,
   toSidePatch,

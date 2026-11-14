@@ -1,0 +1,114 @@
+call-action state-style.set on http://127.0.0.1:46510. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 7 ms, git spawns: not counted (server side)
+{
+  "breakpoint": "base",
+  "classes": {
+    "add": [
+      "hover:outline-4"
+    ],
+    "remove": []
+  },
+  "files": [
+    "index.html"
+  ],
+  "mode": "classes",
+  "prefix": "hover:",
+  "property": "outline-width",
+  "state": "hover",
+  "title": "State hover: outline-width 4px",
+  "value": "4px",
+  "versionId": "pending-537f3400657f3a62"
+}
+
+[mcp] error, 9 ms, git spawns: not counted (server side)
+"The layer already has this value in this state."
+
+[agent] error, 4 ms, git spawns: not counted (server side)
+"The layer already has this value in this state."
+
+diff http -> mcp:
+- {
++ "The layer already has this value in this state."
+-   "breakpoint": "base",
++ 
+-   "classes": {
++ 
+-     "add": [
++ 
+-       "hover:outline-4"
++ 
+-     ],
++ 
+-     "remove": []
++ 
+-   },
++ 
+-   "files": [
++ 
+-     "index.html"
++ 
+-   ],
++ 
+-   "mode": "classes",
++ 
+-   "prefix": "hover:",
++ 
+-   "property": "outline-width",
++ 
+-   "state": "hover",
++ 
+-   "title": "State hover: outline-width 4px",
++ 
+-   "value": "4px",
++ 
+-   "versionId": "pending-537f3400657f3a62"
++ 
+- }
++ 
+
+diff http -> agent:
+- {
++ "The layer already has this value in this state."
+-   "breakpoint": "base",
++ 
+-   "classes": {
++ 
+-     "add": [
++ 
+-       "hover:outline-4"
++ 
+-     ],
++ 
+-     "remove": []
++ 
+-   },
++ 
+-   "files": [
++ 
+-     "index.html"
++ 
+-   ],
++ 
+-   "mode": "classes",
++ 
+-   "prefix": "hover:",
++ 
+-   "property": "outline-width",
++ 
+-   "state": "hover",
++ 
+-   "title": "State hover: outline-width 4px",
++ 
+-   "value": "4px",
++ 
+-   "versionId": "pending-537f3400657f3a62"
++ 
+- }
++ 
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 2 error results
+
+fix: compare the outputs above, then run call-action again with the id state-style.set and the same input

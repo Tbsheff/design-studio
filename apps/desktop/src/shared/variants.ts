@@ -1,8 +1,12 @@
 import {
   DATA_STATE_NAMES,
   fromDataStateVariant,
+  fromGroupVariant,
+  GROUP_STATE_NAMES,
   isDataStateName,
+  isGroupStateName,
   toDataStateVariant,
+  toGroupVariant,
 } from "@design-studio/contracts/state-styles";
 
 export const VARIANT_STATES = ["hover", "focus", "active"] as const;
@@ -15,7 +19,11 @@ const POINTER_STATES = [
   "disabled",
 ] as const;
 
-export const PSEUDO_STATES = [...DATA_STATE_NAMES, ...POINTER_STATES] as const;
+export const PSEUDO_STATES = [
+  ...DATA_STATE_NAMES,
+  ...GROUP_STATE_NAMES,
+  ...POINTER_STATES,
+] as const;
 
 export type PseudoState = (typeof PSEUDO_STATES)[number];
 
@@ -35,6 +43,7 @@ export interface Breakpoint {
 export interface ParsedVariant {
   breakpoint: string | null;
   dark: boolean;
+  group: string | null;
   states: PseudoState[];
 }
 
@@ -54,6 +63,12 @@ function isState(part: string): part is PseudoState {
 }
 
 function stateOfPart(part: string): PseudoState | null {
+  const grouped = fromGroupVariant(part);
+
+  if (grouped !== null) {
+    return grouped.state;
+  }
+
   if (isState(part)) {
     return part;
   }
@@ -61,7 +76,11 @@ function stateOfPart(part: string): PseudoState | null {
   return fromDataStateVariant(part);
 }
 
-function toVariantPart(state: PseudoState): string {
+function toVariantPart(state: PseudoState, group: string | null): string {
+  if (isGroupStateName(state)) {
+    return toGroupVariant(state, group);
+  }
+
   if (isDataStateName(state)) {
     return toDataStateVariant(state);
   }
@@ -73,7 +92,7 @@ export function parseVariant(raw: string): ParsedVariant | null {
   const text = raw.trim();
 
   if (text === "" || text === "base") {
-    return { breakpoint: null, dark: false, states: [] };
+    return { breakpoint: null, dark: false, group: null, states: [] };
   }
 
   if (text.length > MAX_VARIANT) {
@@ -81,10 +100,16 @@ export function parseVariant(raw: string): ParsedVariant | null {
   }
 
   const parts = text.split(/[:+\s]+/).filter(Boolean);
-  const out: ParsedVariant = { breakpoint: null, dark: false, states: [] };
+  const out: ParsedVariant = {
+    breakpoint: null,
+    dark: false,
+    group: null,
+    states: [],
+  };
 
   for (const part of parts) {
     const state = stateOfPart(part);
+    out.group = fromGroupVariant(part)?.name ?? out.group;
 
     if (state === null && !PART.test(part)) {
       return null;
@@ -114,7 +139,7 @@ export function variantPrefix(variant: ParsedVariant): string {
   const parts = [
     ...(variant.breakpoint ? [variant.breakpoint] : []),
     ...(variant.dark ? ["dark"] : []),
-    ...variant.states.map(toVariantPart),
+    ...variant.states.map((state) => toVariantPart(state, variant.group)),
   ];
 
   return parts.map((part) => `${part}:`).join("");

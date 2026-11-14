@@ -7,7 +7,20 @@ const STYLE_STATES = [
   "open",
   "checked",
   "selected",
+  "group-hover",
+  "group-open",
+  "group-checked",
 ] as const;
+
+const GROUP_STATE_VARIANTS = {
+  "group-checked": "group-data-[state=checked]",
+  "group-hover": "group-hover",
+  "group-open": "group-data-[state=open]",
+} as const;
+
+const GROUP_CLASS = /^group(?:\/(?<name>[a-z0-9][a-z0-9_-]*))?$/u;
+
+const GROUP_NAME_MAX = 40;
 
 const DATA_STATE_VARIANTS = {
   checked: "data-[state=checked]",
@@ -25,6 +38,31 @@ type StyleState = (typeof STYLE_STATES)[number];
 type DataStateName = keyof typeof DATA_STATE_VARIANTS;
 
 type DataStateStyle = "checked" | "open" | "selected";
+
+type GroupStateName = keyof typeof GROUP_STATE_VARIANTS;
+
+type ForcedStatePart =
+  | "active"
+  | "disabled"
+  | "focus"
+  | "focus-visible"
+  | "hover"
+  | DataStateName
+  | GroupStateName;
+
+interface GroupPart {
+  readonly name: string | null;
+  readonly state: GroupStateName;
+}
+
+interface GroupClass {
+  readonly name: string | null;
+}
+
+interface GroupAncestor {
+  readonly hasDataState: boolean;
+  readonly name: string | null;
+}
 
 type StateStyleMode = "classes" | "css" | "none";
 
@@ -51,6 +89,7 @@ interface ForcedFrameState {
 
 interface StateListResult {
   readonly forced: readonly ForcedFrameState[];
+  readonly group: GroupAncestor | null;
   readonly layer: StateLayer;
   readonly states: readonly StyleState[];
 }
@@ -113,6 +152,50 @@ const toStyleStateName = (name: string): StyleState | null => {
 const isDataStateStyle = (state: StyleState): state is DataStateStyle =>
   state === "open" || state === "checked" || state === "selected";
 
+const GROUP_STATE_NAMES = Object.keys(GROUP_STATE_VARIANTS) as GroupStateName[];
+
+const isGroupStateName = (value: string): value is GroupStateName =>
+  (GROUP_STATE_NAMES as readonly string[]).includes(value);
+
+const toGroupVariant = (state: GroupStateName, name: string | null): string => {
+  if (name === null) {
+    return GROUP_STATE_VARIANTS[state];
+  }
+
+  return `${GROUP_STATE_VARIANTS[state]}/${name}`;
+};
+
+const isGroupName = (name: string): boolean =>
+  name.length <= GROUP_NAME_MAX && GROUP_CLASS.test(`group/${name}`);
+
+const fromGroupVariant = (part: string): GroupPart | null => {
+  for (const state of GROUP_STATE_NAMES) {
+    const base = GROUP_STATE_VARIANTS[state];
+
+    if (part === base) {
+      return { name: null, state };
+    }
+
+    const name = part.slice(base.length + 1);
+
+    if (part.startsWith(`${base}/`) && isGroupName(name)) {
+      return { name, state };
+    }
+  }
+
+  return null;
+};
+
+const fromGroupClass = (token: string): GroupClass | null => {
+  const hit = GROUP_CLASS.exec(token);
+
+  if (hit === null) {
+    return null;
+  }
+
+  return { name: hit.groups?.["name"] ?? null };
+};
+
 const toForcedParam = (forced: ForcedStateWire): string => {
   if (forced.selector === null) {
     return forced.state;
@@ -160,6 +243,12 @@ export {
   DATA_STATE_VARIANTS,
   FORCE_STATE_PARAM,
   fromDataStateVariant,
+  fromGroupClass,
+  fromGroupVariant,
+  GROUP_STATE_NAMES,
+  GROUP_STATE_VARIANTS,
+  isGroupStateName,
+  toGroupVariant,
   fromForcedParam,
   isDataStateName,
   isDataStateStyle,
@@ -177,7 +266,12 @@ export type {
   DataStateName,
   DataStateStyle,
   ForcedFrameState,
+  ForcedStatePart,
   ForcedStateWire,
+  GroupAncestor,
+  GroupClass,
+  GroupPart,
+  GroupStateName,
   StateLayer,
   StateListResult,
   StateOverride,

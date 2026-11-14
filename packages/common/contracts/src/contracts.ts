@@ -8,6 +8,7 @@ import type {
   LinkRectReport,
   LinksFile,
 } from "@design-studio/contracts/links";
+import type { ForcedStatePart } from "@design-studio/contracts/state-styles";
 import type { StatesRequest } from "@design-studio/contracts/states";
 import type {
   StyleQuery,
@@ -1787,17 +1788,7 @@ export type ParentToBridge =
       token: string;
       type: "force-state";
       selector: string | null;
-      states: (
-        | "hover"
-        | "focus"
-        | "focus-visible"
-        | "active"
-        | "disabled"
-        | "open"
-        | "checked"
-        | "selected"
-        | "selected-item"
-      )[];
+      states: ForcedStatePart[];
       dark: boolean;
       track: boolean;
     }

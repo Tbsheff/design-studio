@@ -1,6 +1,6 @@
 # Cycle 35, pick 3: mixed-range
 
-Branch `feat/mixed-range`. Commits: `b5ae28ab6` (feature), `6e9e39606` (in-place reload fix), and this report.
+Branch `feat/mixed-range`. Commits: `b5ae28ab6` (feature), `6e9e39606` (in-place reload fix), `a273024d6` (stale resume fix), and this report.
 
 ## What works
 
@@ -19,7 +19,7 @@ HTML prototype (mock agent, port 6490, `STUDIO_DATA_DIR=ds-wt/mixed-range-data`)
 
 - Passes: Enter, select "today", `Mod+B` gives `<strong>today</strong>`, and the edit stays open with "today" selected. Select "save", `Mod+U` gives `<u>save</u>`, and the edit stays open. Select "today", `Mod+B` sends `isRemove: true` on the child (`index.html:9:49`) and removes the bold. 3 writes.
 - Passes: Escape, then 3 `Mod+Z` steps undo the 3 writes, one at a time.
-- Passes: type "x" in range mode. The text does not change and the notice shows. Escape closes the edit.
+- Passes: type "x" or press Backspace in range mode. The text does not change and the notice shows. Escape closes the edit.
 - Passes: a selection across `today| and` refuses with the cross message, and the source does not change.
 - Passes: a plain `h1` still takes typed text and commits it.
 
@@ -51,4 +51,5 @@ Gates, run once at the end: `pnpm run typecheck`, `pnpm run lint:gate` (59612 di
 - **Double-click on a styled word** starts a plain edit on the `<strong>` itself, because it has no element children. Typing there is allowed and writes only that child.
 - **Nested inline tags** (`<a><strong>x</strong></a>`) are not range mode. The layer stays not editable, as before.
 - **Mod+Z inside an open edit** goes to the browser, so it does nothing in range mode. Escape first, then `Mod+Z` undoes the write.
+- **Two frames of one page** on the canvas were not checked. A `ready` from the other frame could take the resume token, and then the edit does not reopen.
 - **Next child source.** A child gets a source location only after `appSourceFor` resolves. A selection made before that falls back to the layer, and the writer refuses with the cross message.

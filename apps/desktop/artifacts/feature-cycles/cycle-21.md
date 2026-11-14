@@ -225,3 +225,11 @@ All 5 can run at once. Merge 3 (trusted-folders, isolated UI and one schema fiel
 10. Export a frame to Figma as editable layers (Claude Design still lacks it); needs a Figma plugin.
 
 Sources: [mcp.directory 2026 comparison](https://mcp.directory/blog/claude-design-vs-stitch-vs-v0-vs-lovable-vs-figma-make-2026), [konigi.com Claude Design](https://konigi.com/articles/claude-design-has-the-incumbents-scrambling/), [monkfrom.earth Claude Design vs Figma, Lovable, v0](https://monkfrom.earth/blogs/claude-design-vs-figma-lovable-v0), [refontelearning.com design-to-code tools](https://www.refontelearning.com/blog/ai-design-to-code-tools-figma-make-v0-lovable), [chatgate.ai doop](https://chatgate.ai/en/post/doop), [glama.ai doop](https://glama.ai/mcp/servers/kgoedecke/doop), [enterprisedna.co doop](https://enterprisedna.co/resources/ai-pulse/ai-pulse-2026-08-23-a-multiplayer-canvas-lets-agents-design-live-alongside-human).
+
+## Results
+
+- Merged with no conflicts, in order: trusted-folders, border-sides, layer-snap, state-queue, menu-fit. Main at fa6662dcf.
+- check:clip on merged main: the wider check (canvas menus inside `.stage`, 900 px window) found 4 text overflows of 3 px in the inspector Text wrap buttons. Fixed in f66beb469 (smaller label type). One rerun timed out under load (load average about 7); the next run gave 0 findings of every kind.
+- Checks: gen-routes --check pass, typecheck 0 errors, lint:gate pass (59630, baseline 89733), build:ui pass, check:clip 0, desktop:pack pass.
+- Installed app: :4570 returns 200. Server idle CPU 0.01 CPU-s/min over 60 s.
+- Open: the floating tools bar is not in the menu bounds. Border sides not opened on Bonaparte in the app. State queue skip rule not proven with a real model. check:clip can time out when the machine is busy. MCP snapshots for edit_element, the state-style tools, start_states_run, get_states_run, inspect_state_frames_canvas and stop_run not refreshed (user decision).

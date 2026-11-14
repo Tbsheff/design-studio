@@ -8,8 +8,14 @@ const hasRangeSelection = (): boolean => {
   return selection !== null && !selection.isCollapsed;
 };
 
+const RANGE_KEY_IDS: ReadonlySet<string> = new Set([
+  "text-bold",
+  "text-strike",
+  "text-underline",
+]);
+
 const isKeptForRange = (id: string, isEditing: boolean): boolean =>
-  isEditing && id === "text-bold" && hasRangeSelection();
+  isEditing && RANGE_KEY_IDS.has(id) && hasRangeSelection();
 
 const forwardTextKey = (
   context: BridgeContext,

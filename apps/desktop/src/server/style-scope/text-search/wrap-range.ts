@@ -2,7 +2,9 @@ import { markupAttribute } from "./encode.js";
 import { HTML_FILE, layerExtent } from "./range-extent.js";
 import type { Segment } from "./segment.js";
 
-type RangeStyle = "bold" | "class" | "italic" | "link";
+type RangeStyle = "bold" | "class" | "italic" | "link" | "strike" | "underline";
+
+type LineStyle = Extract<RangeStyle, "strike" | "underline">;
 
 interface RangeSpec {
   readonly className: string | null;
@@ -58,7 +60,22 @@ const TAGS = {
   class: ["span"],
   italic: ["em", "i"],
   link: ["a"],
+  strike: ["s", "del", "strike"],
+  underline: ["u", "ins"],
 } as const satisfies Readonly<Record<RangeStyle, readonly string[]>>;
+
+const LINE_CLASSES = {
+  strike: "line-through",
+  underline: "underline",
+} as const satisfies Readonly<Record<LineStyle, string>>;
+
+const LINE_PATTERNS = {
+  strike: /["'\s]line-through["'\s]/u,
+  underline: /["'\s]underline["'\s]/u,
+} as const satisfies Readonly<Record<LineStyle, RegExp>>;
+
+const TAILWIND_CLASS =
+  /className=["'`{][^"'`]*\b(?:flex|grid|text-|bg-|font-|gap-|rounded|[mp][xytrbl]?-\d)/u;
 
 const CLASS_PATTERN = /^[\w:/.[\]%#!-]+(?: [\w:/.[\]%#!-]+)*$/u;
 
@@ -281,29 +298,75 @@ const TAG_CLOSE = ">";
 const toAttributeOf = (name: string, value: string | null): string =>
   ` ${name}="${markupAttribute('"')(value ?? "")}"`;
 
-const toOpenTag = (spec: RangeSpec, isJsx: boolean): string => {
-  const [tag = "span"] = TAGS[spec.style];
-  let attribute = "";
+const isLineStyle = (style: RangeStyle): style is LineStyle =>
+  Object.hasOwn(LINE_CLASSES, style);
 
+const toTagName = (spec: RangeSpec, isClassLine: boolean): string => {
+  const [tag = "span"] = TAGS[spec.style];
+
+  if (isClassLine) {
+    return "span";
+  }
+
+  return tag;
+};
+
+const toAttribute = (
+  spec: RangeSpec,
+  isJsx: boolean,
+  isClassLine: boolean
+): string => {
   if (spec.style === "link") {
-    attribute = toAttributeOf("href", spec.href);
+    return toAttributeOf("href", spec.href);
+  }
+
+  if (isClassLine && isLineStyle(spec.style)) {
+    return toAttributeOf("className", LINE_CLASSES[spec.style]);
   }
 
   if (spec.style === "class" && isJsx) {
-    attribute = toAttributeOf("className", spec.className);
+    return toAttributeOf("className", spec.className);
   }
 
-  if (spec.style === "class" && !isJsx) {
-    attribute = toAttributeOf("class", spec.className);
+  if (spec.style === "class") {
+    return toAttributeOf("class", spec.className);
   }
 
-  return `${TAG_OPEN}${tag}${attribute}${TAG_CLOSE}`;
+  return "";
 };
 
-const toCloseTag = (spec: RangeSpec): string => {
-  const [tag = "span"] = TAGS[spec.style];
+const toOpenTag = (
+  spec: RangeSpec,
+  isJsx: boolean,
+  isClassLine: boolean
+): string =>
+  `${TAG_OPEN}${toTagName(spec, isClassLine)}${toAttribute(spec, isJsx, isClassLine)}${TAG_CLOSE}`;
 
-  return `${TAG_OPEN}/${tag}${TAG_CLOSE}`;
+const toCloseTag = (spec: RangeSpec, isClassLine: boolean): string =>
+  `${TAG_OPEN}/${toTagName(spec, isClassLine)}${TAG_CLOSE}`;
+
+const isClassLineOf = (
+  source: string,
+  spec: RangeSpec,
+  isJsx: boolean
+): boolean => isJsx && isLineStyle(spec.style) && TAILWIND_CLASS.test(source);
+
+const hasLineClass = (open: string, style: RangeStyle): boolean => {
+  if (!isLineStyle(style)) {
+    return false;
+  }
+
+  return LINE_PATTERNS[style].test(open);
+};
+
+const isStyledTag = (spec: RangeSpec, tag: string, open: string): boolean => {
+  const tags: readonly string[] = TAGS[spec.style];
+
+  if (tags.includes(tag.toLowerCase())) {
+    return true;
+  }
+
+  return tag === "span" && hasLineClass(open, spec.style);
 };
 
 const toWrapped = (
@@ -311,12 +374,17 @@ const toWrapped = (
   ends: RawEnds,
   spec: RangeSpec,
   isJsx: boolean
-): string =>
-  source.slice(0, ends.start) +
-  toOpenTag(spec, isJsx) +
-  source.slice(ends.start, ends.end) +
-  toCloseTag(spec) +
-  source.slice(ends.end);
+): string => {
+  const isClassLine = isClassLineOf(source, spec, isJsx);
+
+  return (
+    source.slice(0, ends.start) +
+    toOpenTag(spec, isJsx, isClassLine) +
+    source.slice(ends.start, ends.end) +
+    toCloseTag(spec, isClassLine) +
+    source.slice(ends.end)
+  );
+};
 
 const toUnwrapped = (
   file: string,
@@ -330,15 +398,14 @@ const toUnwrapped = (
     return toFail("This layer has no closing tag, so no style can be removed.");
   }
 
-  const tags: readonly string[] = TAGS[spec.style];
+  const open = source.slice(extent.openStart, extent.openEnd);
 
-  if (!tags.includes(extent.tag.toLowerCase())) {
+  if (!isStyledTag(spec, extent.tag, open)) {
     return toFail(
       "This layer does not have that style. Select the styled text."
     );
   }
 
-  const open = source.slice(extent.openStart, extent.openEnd);
   const close = source.slice(extent.closeStart, extent.closeEnd);
   const before = source.slice(extent.openEnd, ends.start);
   const after = source.slice(ends.end, extent.closeStart);

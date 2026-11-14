@@ -38,7 +38,7 @@ const useTextRangeActions = (
       setHeld(shown);
       setIsLinkOpen(false);
       apply({
-        isRemove: style !== "class" && toIsRemove(style, shown.tag),
+        isRemove: style !== "class" && toIsRemove(style, shown.tag, ""),
         reading: shown,
         style,
         value,
@@ -51,7 +51,7 @@ const useTextRangeActions = (
   const handleItalic = useCallback((): void => run("italic", null), [run]);
 
   const handleLink = useCallback((): void => {
-    if (shown && toIsRemove("link", shown.tag)) {
+    if (shown && toIsRemove("link", shown.tag, "")) {
       run("link", null);
 
       return;

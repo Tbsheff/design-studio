@@ -23,11 +23,11 @@ const applyRangeText = defineAction({
     name: "apply_range_text",
     set: "core",
     short:
-      "Bold, italic, link or color part of one text layer by character range, as one version.",
+      "Bold, italic, underline, strike, link or color part of one text layer by character range, as one version.",
   },
   confirm: "none",
   description:
-    "Wrap or unwrap a character range of the text of one layer in strong, em, a with href, or span with a token class. Set start and end as character offsets in the rendered text of the layer. A range that crosses a dynamic expression or the end of a text part is refused. Works in HTML and JSX files. One version, one undo step.",
+    "Wrap or unwrap a character range of the text of one layer in strong, em, u, s, a with href, or span with a token class. In Tailwind JSX, underline and strike write a span with the underline or line-through class. Set start and end as character offsets in the rendered text of the layer. A range that crosses a dynamic expression or the end of a text part is refused. Works in HTML and JSX files. One version, one undo step.",
   errors: [BadRequest, Conflict, NotFound],
   http: {
     method: "POST",

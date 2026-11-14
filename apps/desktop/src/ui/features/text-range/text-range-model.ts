@@ -48,7 +48,17 @@ const STYLE_TAGS = {
   bold: ["strong", "b"],
   italic: ["em", "i"],
   link: ["a"],
+  strike: ["s", "del", "strike"],
+  underline: ["u", "ins"],
 } as const satisfies Readonly<Record<TextRangeCommand, readonly string[]>>;
+
+const LINE_CLASSES: Readonly<Record<TextRangeCommand, string | null>> = {
+  bold: null,
+  italic: null,
+  link: null,
+  strike: "line-through",
+  underline: "underline",
+};
 
 const COLOR_VALUE = /^(?:#|rgb|hsl|oklch|oklab|lab|lch|color\()/iu;
 
@@ -81,10 +91,31 @@ const toKeyReading = (
   text: message.text,
 });
 
-const toIsRemove = (command: TextRangeCommand, tag: string): boolean => {
+const hasLineClass = (
+  command: TextRangeCommand,
+  className: string
+): boolean => {
+  const line = LINE_CLASSES[command];
+
+  if (line === null) {
+    return false;
+  }
+
+  return className.split(/\s+/u).includes(line);
+};
+
+const toIsRemove = (
+  command: TextRangeCommand,
+  tag: string,
+  className: string
+): boolean => {
   const tags: readonly string[] = STYLE_TAGS[command];
 
-  return tags.includes(tag);
+  if (tags.includes(tag)) {
+    return true;
+  }
+
+  return tag === "span" && hasLineClass(command, className);
 };
 
 const toSpot = (

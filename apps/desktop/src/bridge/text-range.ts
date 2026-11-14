@@ -1,5 +1,6 @@
 import type { BridgeToParent } from "@design-studio/contracts";
 
+import { toTextKeyId } from "../shared/text-keys.js";
 import { IS_MAC } from "./dom-input.js";
 
 type TextRangeMessage = Extract<BridgeToParent, { type: "text-range" }>;
@@ -71,7 +72,27 @@ const toReading = (element: HTMLElement): RangeReading | null => {
   };
 };
 
+const toLineCommandOf = (event: KeyboardEvent): TextRangeCommand | null => {
+  const id = toTextKeyId(event, IS_MAC);
+
+  if (id === "text-underline") {
+    return "underline";
+  }
+
+  if (id === "text-strike") {
+    return "strike";
+  }
+
+  return null;
+};
+
 const toCommandOf = (event: KeyboardEvent): TextRangeCommand | null => {
+  const line = toLineCommandOf(event);
+
+  if (line !== null) {
+    return line;
+  }
+
   let hasMod = event.ctrlKey;
 
   if (IS_MAC) {
@@ -173,7 +194,10 @@ const createTextRange = (deps: TextRangeDeps): TextRangeReporter => {
     const shot = toShot(current, reading, deps.textOf(current.element));
 
     if (!shot.isDirty) {
+      const className = current.element.getAttribute("class") ?? "";
+
       deps.post({
+        className,
         command,
         end: shot.end,
         selector: shot.selector,

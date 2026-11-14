@@ -157,7 +157,14 @@ const TextRewriteResultSchema = Schema.Struct({
   versionId: Schema.NullOr(Schema.String),
 });
 
-const TEXT_RANGE_STYLES = ["bold", "italic", "link", "class"] as const;
+const TEXT_RANGE_STYLES = [
+  "bold",
+  "italic",
+  "link",
+  "class",
+  "underline",
+  "strike",
+] as const;
 
 const TEXT_RANGE_OFFSET_MAX = 5000;
 
@@ -167,7 +174,7 @@ const TEXT_RANGE_CLASS_MAX = 200;
 
 const TextRangeStyleSchema = Schema.Literals(TEXT_RANGE_STYLES).annotate({
   description:
-    "bold (strong), italic (em), link (a with href) or class (span with a token class).",
+    "bold (strong), italic (em), link (a with href), class (span with a token class), underline (u, or a span with the underline class in Tailwind JSX) or strike (s, or a span with the line-through class in Tailwind JSX).",
 });
 
 const TextRangeOffsetSchema = Schema.Int.check(

@@ -451,6 +451,8 @@ const textKeysCopy = {
     "This text layer has no single source location, so the text keys cannot change it. Ask the agent in Chat.",
   noText:
     "Select a text layer first. The text keys change only layers that hold text.",
+  notTextLayer:
+    "This layer holds other blocks, not only text. Select the text layer inside it, or press Enter to edit its text.",
 };
 
 export {

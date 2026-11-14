@@ -37,8 +37,58 @@ const LINE_VALUES: Record<LineKeyId, string> = {
   "text-underline": "underline",
 };
 
-const isTextLayer = (target: SelectionContext): boolean =>
+const INLINE_TAGS: ReadonlySet<string> = new Set([
+  "a",
+  "abbr",
+  "b",
+  "bdi",
+  "bdo",
+  "br",
+  "cite",
+  "code",
+  "data",
+  "del",
+  "dfn",
+  "em",
+  "font",
+  "i",
+  "img",
+  "ins",
+  "kbd",
+  "label",
+  "mark",
+  "q",
+  "s",
+  "samp",
+  "small",
+  "span",
+  "strong",
+  "sub",
+  "sup",
+  "svg",
+  "time",
+  "u",
+  "var",
+  "wbr",
+]);
+
+const SVG_BODY = /<svg[\s>][\s\S]*?<\/svg>/giu;
+
+const CHILD_TAG = /<(?<tag>[a-z][\w-]*)/giu;
+
+const toInnerHtml = (outer: string): string =>
+  outer.slice(outer.indexOf(">") + 1).replaceAll(SVG_BODY, "");
+
+const hasBlockChild = (target: SelectionContext): boolean =>
+  [...toInnerHtml(target.outerHTML).matchAll(CHILD_TAG)].some(
+    (match) => !INLINE_TAGS.has((match.groups?.["tag"] ?? "").toLowerCase())
+  );
+
+const hasText = (target: SelectionContext): boolean =>
   target.text.trim() !== "";
+
+const isTextLayer = (target: SelectionContext): boolean =>
+  hasText(target) && !hasBlockChild(target);
 
 const toTextLayers = (
   selection: readonly SelectionContext[]
@@ -46,6 +96,10 @@ const toTextLayers = (
 
 const toTextBlock = (selection: readonly SelectionContext[]): string | null => {
   const layers = toTextLayers(selection);
+
+  if (layers.length === 0 && selection.some((target) => hasText(target))) {
+    return textKeysCopy.notTextLayer;
+  }
 
   if (layers.length === 0) {
     return textKeysCopy.noText;

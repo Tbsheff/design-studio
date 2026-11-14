@@ -7,9 +7,9 @@ import { textRoutes, useAction } from "./deps.js";
 import type { PreviewPort, SourceLoc } from "./deps.js";
 import type { TextRangeReading } from "./text-range-model.js";
 
-type TextRangeStyle = "bold" | "class" | "italic" | "link";
-
 type TextRangeBody = RouteInput<typeof textRoutes.applyRangeText>;
+
+type TextRangeStyle = TextRangeBody["style"];
 
 interface TextRangeApplySetup {
   readonly directionId: string | null;

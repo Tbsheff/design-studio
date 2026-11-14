@@ -25,6 +25,7 @@ export type {
 } from "./to-tsx-card-drift.js";
 
 export type {
+  ChildKind,
   DriftMatch,
   DriftSkipReason,
   DriftTag,

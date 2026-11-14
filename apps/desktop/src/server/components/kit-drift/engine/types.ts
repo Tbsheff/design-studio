@@ -6,6 +6,7 @@ type DriftTag =
   | "input"
   | "label"
   | "select"
+  | "skeleton"
   | "table"
   | "textarea";
 
@@ -20,6 +21,8 @@ type DriftSkipReason =
 
 type AttributeKind = "expression" | "flag" | "spread" | "string";
 
+type ChildKind = "elements" | "empty" | "text";
+
 interface RawAttribute {
   readonly end: number;
   readonly kind: AttributeKind;
@@ -30,6 +33,7 @@ interface RawAttribute {
 
 interface RawElement {
   readonly attributes: readonly RawAttribute[];
+  readonly childKind: ChildKind;
   readonly closeNameEnd: number | null;
   readonly closeNameStart: number | null;
   readonly column: number;
@@ -85,6 +89,7 @@ interface Splice {
 
 export type {
   AttributeKind,
+  ChildKind,
   DriftConfidence,
   DriftMatch,
   DriftSkipReason,

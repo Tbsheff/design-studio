@@ -2,6 +2,7 @@ import { isColorToken, toClassTokens } from "./class-names.js";
 import { toClassPlan } from "./to-class-plan.js";
 import type { ClassPlan } from "./to-class-plan.js";
 import { toDriftId } from "./to-drift-id.js";
+import { toSkeletonMatch } from "./to-skeleton-drift.js";
 import type {
   DriftConfidence,
   DriftMatch,
@@ -41,6 +42,7 @@ const COMPONENT_OF: Readonly<Record<DriftTag, string>> = {
   input: "Input",
   label: "Label",
   select: "NativeSelect",
+  skeleton: "Skeleton",
   table: "Table",
   textarea: "Textarea",
 };
@@ -54,6 +56,8 @@ const PLAIN_TAGS = new Map<string, DriftTag>([
 ]);
 
 const BUTTON_SPACING = ["h-", "px-", "py-"];
+
+const BLOCK_TAGS: ReadonlySet<string> = new Set(["div", "span"]);
 
 const getAttribute = (element: RawElement, name: string): RawAttribute | null =>
   element.attributes.find((attribute) => attribute.name === name) ?? null;
@@ -151,6 +155,10 @@ const toElementMatch = (
   input: MatchInput,
   element: RawElement
 ): DriftMatch[] => {
+  if (BLOCK_TAGS.has(element.tag)) {
+    return toSkeletonMatch(input.file, input.kit, element);
+  }
+
   const tag = toDriftTag(element);
 
   if (tag === null) {

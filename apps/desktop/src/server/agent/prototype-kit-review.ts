@@ -65,6 +65,7 @@ const TAG_WORDS: Readonly<Record<DriftTag, string>> = {
   input: "input",
   label: "label",
   select: "select",
+  skeleton: "loading block",
   table: "table",
   textarea: "text area",
 };
@@ -77,6 +78,7 @@ const PLURAL_WORDS: Readonly<Record<DriftTag, string>> = {
   input: "inputs",
   label: "labels",
   select: "selects",
+  skeleton: "loading blocks",
   table: "tables",
   textarea: "text areas",
 };

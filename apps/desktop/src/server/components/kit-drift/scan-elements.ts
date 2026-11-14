@@ -1,4 +1,4 @@
-import type { RawAttribute, RawElement } from "./engine/index.js";
+import type { ChildKind, RawAttribute, RawElement } from "./engine/index.js";
 import type {
   Ts,
   TsJsxAttribute,
@@ -19,6 +19,12 @@ const SCANNED_TAGS: ReadonlySet<string> = new Set([
   "table",
   "textarea",
 ]);
+
+const PULSE_TAGS: ReadonlySet<string> = new Set(["div", "span"]);
+
+const PULSE_TOKEN = "animate-pulse";
+
+const NO_TAGS: ReadonlySet<string> = new Set();
 
 const toStringText = (ts: Ts, node: TsNode): string | null => {
   if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
@@ -113,9 +119,66 @@ const toClosingName = (
 };
 
 interface ScanScope {
+  readonly pulseTags: ReadonlySet<string>;
   readonly source: TsSourceFile;
   readonly tags: ReadonlySet<string>;
 }
+
+const toNodeKind = (ts: Ts, node: TsNode): ChildKind => {
+  if (ts.isJsxText(node)) {
+    if (node.text.trim() === "") {
+      return "empty";
+    }
+
+    return "text";
+  }
+
+  if (ts.isJsxExpression(node)) {
+    if (node.expression) {
+      return "text";
+    }
+
+    return "empty";
+  }
+
+  return "elements";
+};
+
+const toChildKind = (
+  ts: Ts,
+  node: TsJsxElement | TsJsxSelfClosingElement
+): ChildKind => {
+  if (!ts.isJsxElement(node)) {
+    return "empty";
+  }
+
+  const kinds = new Set(node.children.map((child) => toNodeKind(ts, child)));
+
+  if (kinds.has("text")) {
+    return "text";
+  }
+
+  if (kinds.has("elements")) {
+    return "elements";
+  }
+
+  return "empty";
+};
+
+const isPulseBlock = (attributes: readonly RawAttribute[]): boolean =>
+  attributes.some(
+    (attribute) =>
+      attribute.name === "className" &&
+      attribute.kind === "string" &&
+      attribute.text.split(/\s+/u).includes(PULSE_TOKEN)
+  );
+
+const isScannedTag = (
+  scope: ScanScope,
+  tag: string,
+  attributes: readonly RawAttribute[]
+): boolean =>
+  scope.tags.has(tag) || (scope.pulseTags.has(tag) && isPulseBlock(attributes));
 
 const toElement = (
   ts: Ts,
@@ -126,18 +189,22 @@ const toElement = (
   const opening = toOpening(ts, node);
   const { tagName } = opening;
 
-  if (!ts.isIdentifier(tagName) || !scope.tags.has(tagName.text)) {
+  if (!ts.isIdentifier(tagName)) {
+    return null;
+  }
+
+  const attributes = opening.attributes.properties.map((attribute) =>
+    toAttribute(ts, source, attribute)
+  );
+
+  if (!isScannedTag(scope, tagName.text, attributes)) {
     return null;
   }
 
   const elementStart = node.getStart(source);
   const place = source.getLineAndCharacterOfPosition(elementStart);
   const closing = toClosingName(ts, node);
-
-  const attributes = opening.attributes.properties.map((attribute) =>
-    toAttribute(ts, source, attribute)
-  );
-
+  const childKind = toChildKind(ts, node);
   const closeNameEnd = closing?.getEnd() ?? null;
   const closeNameStart = closing?.getStart(source) ?? null;
   const column = place.character + 1;
@@ -149,6 +216,7 @@ const toElement = (
 
   return {
     attributes,
+    childKind,
     closeNameEnd,
     closeNameStart,
     column,
@@ -161,11 +229,11 @@ const toElement = (
   };
 };
 
-const listTaggedElements = (
+const listScopedElements = (
   ts: Ts,
   file: string,
   code: string,
-  tags: ReadonlySet<string>
+  scan: Omit<ScanScope, "source">
 ): RawElement[] => {
   let kind = ts.ScriptKind.TSX;
 
@@ -185,7 +253,7 @@ const listTaggedElements = (
 
   const visit = (node: TsNode): void => {
     if (ts.isJsxElement(node) || ts.isJsxSelfClosingElement(node)) {
-      const element = toElement(ts, { source, tags }, node);
+      const element = toElement(ts, { ...scan, source }, node);
 
       if (element !== null) {
         found.push(element);
@@ -200,7 +268,18 @@ const listTaggedElements = (
   return found;
 };
 
+const listTaggedElements = (
+  ts: Ts,
+  file: string,
+  code: string,
+  tags: ReadonlySet<string>
+): RawElement[] =>
+  listScopedElements(ts, file, code, { pulseTags: NO_TAGS, tags });
+
 const listRawElements = (ts: Ts, file: string, code: string): RawElement[] =>
-  listTaggedElements(ts, file, code, SCANNED_TAGS);
+  listScopedElements(ts, file, code, {
+    pulseTags: PULSE_TAGS,
+    tags: SCANNED_TAGS,
+  });
 
 export { listRawElements, listTaggedElements };

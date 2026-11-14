@@ -29,6 +29,7 @@ const KIT_NAMES: ReadonlySet<string> = new Set([
   "Input",
   "Label",
   "NativeSelect",
+  "Skeleton",
   "Table",
   "Textarea",
 ]);

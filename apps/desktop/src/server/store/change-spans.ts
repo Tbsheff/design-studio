@@ -221,4 +221,12 @@ const toElementSpans = (
   return [];
 };
 
-export { isSpanFile, toElementSpans };
+export {
+  isHtmlElement,
+  isSpanFile,
+  toElementSpans,
+  toHtmlChildren,
+  toHtmlSpan,
+};
+
+export type { HtmlElement, HtmlNode };

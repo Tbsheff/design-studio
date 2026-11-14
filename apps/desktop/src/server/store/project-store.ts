@@ -1,6 +1,6 @@
+import { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import { Context, Effect, Layer } from "effect";
 
-import { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import type { KnownFailure } from "../platform/attempt/index.js";
 import { LocalOrgScope } from "./local-org-scope.js";
 import {

@@ -1,9 +1,9 @@
 import { stat } from "node:fs/promises";
 import path from "node:path";
 
+import { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import { Context, Effect, Layer } from "effect";
 
-import { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import { loadConfig } from "../platform/config/index.js";
 
 interface ProjectAccessApi {

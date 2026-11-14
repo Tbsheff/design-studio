@@ -14,6 +14,7 @@ import type {
   StyleQuery,
   StyleScanResult,
 } from "@design-studio/contracts/style-search";
+import { TEXT_FORMAT_PROPERTIES } from "@design-studio/contracts/text-format-properties";
 import { TRANSFORM_STYLE_PROPERTIES } from "@design-studio/contracts/transform-style-properties";
 import type { EditScope } from "@design-studio/contracts/usage-scope";
 
@@ -1993,9 +1994,7 @@ export const DIRECT_STYLE_PROPERTIES = [
   "flex",
   "box-shadow",
   "filter",
-  "font-style",
-  "text-decoration-line",
-  "text-transform",
+  ...TEXT_FORMAT_PROPERTIES,
   "overflow",
   "text-shadow",
   ...TRANSFORM_STYLE_PROPERTIES,

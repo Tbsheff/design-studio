@@ -40,6 +40,8 @@ const NAMES_BY_GROUP: readonly (readonly [SingleGroup, readonly string[]])[] = [
   ],
   ["flex-wrap", ["flex-nowrap", "flex-wrap", "flex-wrap-reverse"]],
   ["font-style", ["italic", "not-italic"]],
+  ["list-style-position", ["list-inside", "list-outside"]],
+  ["list-style-type", ["list-decimal", "list-disc", "list-none"]],
   [
     "object-fit",
     [
@@ -65,4 +67,8 @@ const KEYWORD_GROUPS: ReadonlyMap<string, SingleGroup> = new Map(
   )
 );
 
+type KeywordGroup = "list-style-position" | "list-style-type" | "text-wrap";
+
 export { KEYWORD_GROUPS };
+
+export type { KeywordGroup };

@@ -35,6 +35,8 @@ const STYLE_KEYS = [
   "font-style",
   "text-decoration-line",
   "text-transform",
+  "list-style-type",
+  "list-style-position",
   "overflow",
   "text-shadow",
   "transform",

@@ -5,6 +5,7 @@ import {
   toBorderWidthClass,
 } from "./border-sides.js";
 import { KEYWORD_GROUPS } from "./keyword-groups.js";
+import type { KeywordGroup } from "./keyword-groups.js";
 import { SINGLE_PROPS } from "./map.js";
 import { toOutlineClass } from "./outline.js";
 import type { OutlineGroup } from "./outline.js";
@@ -75,7 +76,7 @@ export type SingleGroup =
   | "bg-size"
   | "bg-position"
   | "bg-repeat"
-  | "text-wrap"
+  | KeywordGroup
   | OutlineGroup
   | RotateScaleGroup;
 
@@ -522,9 +523,8 @@ function classifySided(
   return undefined;
 }
 
-function single(group: SingleGroup | null): Classified | null {
-  return group ? { kind: "single", group } : null;
-}
+const single = (group: SingleGroup | null): Classified | null =>
+  group ? { group, kind: "single" } : null;
 
 type PrefixRule = (
   suffix: string,

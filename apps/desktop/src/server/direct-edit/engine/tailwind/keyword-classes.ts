@@ -96,6 +96,15 @@ const KEYWORDS = {
     start: "justify-items-start",
     stretch: "justify-items-stretch",
   },
+  "list-style-position": {
+    inside: "list-inside",
+    outside: "list-outside",
+  },
+  "list-style-type": {
+    decimal: "list-decimal",
+    disc: "list-disc",
+    none: "list-none",
+  },
   "object-fit": {
     contain: "object-contain",
     cover: "object-cover",

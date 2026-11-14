@@ -16,6 +16,7 @@ import type {
 import { colorDistance, parseColor } from "./color.js";
 import type { ParsedColor } from "./color.js";
 import { toFilterToken } from "./filter-token.js";
+import { toFlexToken } from "./flex-token.js";
 import { toKeywordClass } from "./keyword-classes.js";
 import { OUTLINE_PROPS, toOutlineToken } from "./outline.js";
 import {
@@ -93,6 +94,8 @@ export const SINGLE_PROPS: Record<string, SingleGroup> = {
   "text-decoration-line": "decoration",
   "text-transform": "case",
   "text-wrap": "text-wrap",
+  "list-style-type": "list-style-type",
+  "list-style-position": "list-style-position",
   overflow: "overflow",
   "text-shadow": "text-shadow",
   ...ROTATE_SCALE_PROPS,
@@ -695,28 +698,6 @@ function shadowToken(value: string, theme: TailwindTheme): string {
   return `shadow-${arbitrary(text)}`;
 }
 
-function flexToken(value: string): string {
-  const text = value.trim().replaceAll(/\s+/g, " ");
-
-  if (/^(1|1 1 0%|1 1 0px|1 1 0)$/.test(text)) {
-    return "flex-1";
-  }
-
-  if (/^(auto|1 1 auto)$/.test(text)) {
-    return "flex-auto";
-  }
-
-  if (/^(initial|0 1 auto)$/.test(text)) {
-    return "flex-initial";
-  }
-
-  if (/^(none|0 0 auto)$/.test(text)) {
-    return "flex-none";
-  }
-
-  return `flex-${arbitrary(text)}`;
-}
-
 const IMAGE_TOKENS: Record<string, (value: string) => string> = {
   "object-position": (value) => `object-${arbitrary(value)}`,
   "background-image": (value) =>
@@ -782,7 +763,7 @@ function singleToken(
       return shadowToken(value, theme);
     }
     case "flex": {
-      return flexToken(value);
+      return toFlexToken(value);
     }
     case "filter": {
       return toFilterToken(value, theme);

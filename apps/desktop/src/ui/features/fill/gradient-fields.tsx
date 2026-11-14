@@ -17,6 +17,7 @@ interface GradientFieldsProps {
   readonly draft: FillDraft;
   readonly edit: DirectEdit;
   readonly onDraft: (next: FillDraft) => void;
+  readonly onEnter: () => void;
 }
 
 const GradientFields = ({
@@ -24,6 +25,7 @@ const GradientFields = ({
   draft,
   edit,
   onDraft,
+  onEnter,
 }: GradientFieldsProps): ReactElement => {
   const stop = selectedStop(draft);
   const index = draft.stops.findIndex((item) => item.id === draft.selected);
@@ -46,6 +48,7 @@ const GradientFields = ({
           label={`${copy.stopColorLabel} ${index + 1}`}
           short={`${copy.stopColor} ${index + 1}`}
           onColor={handleColor}
+          onEnter={onEnter}
         />
       )}
       {draft.type === "linear" && (

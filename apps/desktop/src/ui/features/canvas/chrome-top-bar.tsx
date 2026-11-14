@@ -51,6 +51,7 @@ const ChromeTopBar = ({
       vectorAvailable={vector.available}
       onTool={onTool}
       onPresent={onPresent}
+      canPlay={proto.canPlay}
       presentDisabled={!chrome.presentUrl}
       canExport={canExport}
       onExport={onExport}

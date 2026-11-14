@@ -133,6 +133,28 @@
   color: var(--text);
 }
 
+.studio-top-end .topbar-present-split {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.studio-top-end .topbar-present-split > .topbar-present {
+  padding-right: var(--s-1-5);
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+
+.studio-top-end .topbar-present-split .topbar-present-more {
+  padding: 0 var(--s-1);
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+}
+
+.studio-top-end .topbar-present-more > svg {
+  color: var(--text-3);
+}
+
 .studio-top-end .btn.topbar-review > svg {
   display: none;
 }

@@ -331,6 +331,11 @@ const layoutGridCopy = {
   title: "Layout grid",
 } as const;
 
+const presentCopy = {
+  more: "More ways to present",
+  playTip: "Play prototype. The arrow shows more ways to present",
+} as const;
+
 const rulerGuideCopy = {
   guide: "Drag to move the guide. Drag it onto the ruler to remove it.",
 } as const;
@@ -338,6 +343,7 @@ const rulerGuideCopy = {
 export {
   copy,
   layoutGridCopy,
+  presentCopy,
   rulerGuideCopy,
   scaleCopy,
   startCopy,

@@ -27,6 +27,7 @@ interface Props {
   vectorAvailable: boolean;
   onTool: (tool: Exclude<CanvasTool, null>) => void;
   onPresent: (mode: PresentMode) => void;
+  canPlay: boolean;
   presentDisabled: boolean;
   canExport: boolean;
   onExport: () => void;

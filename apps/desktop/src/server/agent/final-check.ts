@@ -212,6 +212,7 @@ export function noteReview(
 export interface AppReviewGaps {
   mobile: boolean;
   review: boolean;
+  isPrototype: boolean;
 }
 
 export function appReviewGaps(
@@ -236,7 +237,7 @@ export function appReviewGaps(
       note.at > lastEdit &&
       (note.frame === null || isContextFrame(ctx, note.frame))
   );
-  return mobile || review ? { mobile, review } : null;
+  return mobile || review ? { isPrototype: false, mobile, review } : null;
 }
 
 interface ReviewItem {
@@ -345,15 +346,14 @@ async function reviewAt(
 }
 
 async function changedFiles(input: StudioReviewInput): Promise<ChangedFile[]> {
-  const app = input.ctx.project.app;
-  return app && input.run.startedAt !== undefined
-    ? changedLinesSince(
+  return input.run.startedAt === undefined
+    ? []
+    : changedLinesSince(
         input.ctx.direction.workTree,
-        app.appDir,
+        input.ctx.project.app?.appDir ?? "",
         input.run.startedAt,
         input.baseFile
-      )
-    : [];
+      );
 }
 
 interface Cuts {
@@ -495,7 +495,7 @@ export function appReviewPrompt(
   const opening =
     pass > 1
       ? `You edited again after the studio checks, so the studio ran ${ran} once more.`
-      : `You finished an app run without ${ran}, so the studio ran them.`;
+      : `You finished ${gaps.isPrototype ? "a prototype" : "an app"} run without ${ran}, so the studio ran them.`;
   return [
     "<studio-continue>",
     opening,
@@ -509,25 +509,6 @@ export function appReviewPrompt(
   ]
     .filter(Boolean)
     .join("\n");
-}
-
-function passText(record: AppReviewRecord, index: number): string {
-  const old = record.oldCode
-    ? ` (${record.oldCode} on old code not counted)`
-    : "";
-  return `pass ${index + 1}: ${record.findings} finding(s) on changed lines${old}, ${record.fixLoop ? "a fix loop ran" : "no fix loop"}`;
-}
-
-export function appReviewNote(records: readonly AppReviewRecord[]): string {
-  const first = records[0];
-  if (!first) return "";
-  const ran = [
-    first.mobileShot === "studio" ? "mobile screenshot" : null,
-    first.review === "studio" ? "review_frame" : null,
-  ]
-    .filter(Boolean)
-    .join(" and ");
-  return `Studio app check: the agent skipped the ${ran || "app checks"} after its last edit, so the studio ran them (desktop and 390 px); ${records.map(passText).join("; ")}.`;
 }
 
 export function mergeAppReviews(

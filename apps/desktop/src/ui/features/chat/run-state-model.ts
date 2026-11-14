@@ -60,6 +60,7 @@ interface RunView {
   permissions: PermissionRequest[];
   todos: TodoItem[] | null;
   contextTokens: number | null;
+  contextWindow: number | null;
   retry: RetryState | null;
   summary: RunSummary | null;
 }
@@ -165,6 +166,7 @@ const emptyRun = (
   initial: RunRequest | null = null
 ): RunView => ({
   contextTokens: null,
+  contextWindow: null,
   directionId: owner,
   hasStarted: false,
   parts: [],
@@ -252,6 +254,7 @@ const finishedView = (
   return {
     ...finished,
     contextTokens: finished.contextTokens ?? prev.contextTokens,
+    contextWindow: finished.contextWindow ?? prev.contextWindow,
     parts,
     todos: finished.todos ?? prev.todos,
     tools,
@@ -328,6 +331,7 @@ const applyControlEvent = (run: RunView, event: StudioEvent): void => {
 
     case "run.usage": {
       run.contextTokens = event.contextTokens;
+      run.contextWindow = event.contextWindow ?? run.contextWindow;
       break;
     }
 

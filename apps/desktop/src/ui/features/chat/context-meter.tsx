@@ -15,23 +15,25 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
 const ContextMeter = ({
   tokens,
+  window: reported,
   model,
 }: {
-  tokens: number | null;
-  model: string;
+  readonly tokens: number | null;
+  readonly window: number | null;
+  readonly model: string;
 }): ReactElement | null => {
   if (tokens === null || tokens <= 0) {
     return null;
   }
 
-  const share = contextShare(tokens, model);
+  const share = contextShare(tokens, model, reported);
 
   if (share < SHOW_FROM) {
     return null;
   }
 
   const percent = Math.round(share * PERCENT);
-  const window = contextWindowFor(model);
+  const window = contextWindowFor(model, reported);
   let tone: "" | "danger" | "warn" = "";
 
   if (share >= DANGER_FROM) {

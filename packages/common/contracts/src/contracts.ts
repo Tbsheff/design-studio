@@ -766,7 +766,12 @@ export type StudioEventBody =
       allow: boolean;
     }
   | { type: "run.todos"; runId: string; todos: TodoItem[] }
-  | { type: "run.usage"; runId: string; contextTokens: number }
+  | {
+      type: "run.usage";
+      runId: string;
+      contextTokens: number;
+      contextWindow: number | null;
+    }
   | {
       type: "run.retry";
       runId: string;

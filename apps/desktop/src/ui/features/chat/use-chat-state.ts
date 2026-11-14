@@ -29,6 +29,7 @@ interface ChatState {
   history: string[];
   todos: { todos: TodoItem[]; running: boolean } | null;
   contextTokens: number | null;
+  contextWindow: number | null;
 }
 
 const useChatState = (runs: readonly RunView[]): ChatState => {
@@ -45,7 +46,15 @@ const useChatState = (runs: readonly RunView[]): ChatState => {
     return null;
   }, [todoList, running]);
 
-  return { contextTokens: last?.contextTokens ?? null, history, todos };
+  const contextWindow =
+    runs.findLast((run) => run.contextWindow !== null)?.contextWindow ?? null;
+
+  return {
+    contextTokens: last?.contextTokens ?? null,
+    contextWindow,
+    history,
+    todos,
+  };
 };
 
 export { promptHistoryOf, useChatState };

@@ -1,7 +1,8 @@
 import { execFile } from "node:child_process";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-export type Env = Record<string, string>;
+type Env = Record<string, string>;
 
 type SourceEnv = NodeJS.ProcessEnv;
 
@@ -33,7 +34,7 @@ function studioVars(source: SourceEnv): Env {
   return pick(source, keys);
 }
 
-export function nodeDirs(source: SourceEnv, execPath: string): string[] {
+function nodeDirs(source: SourceEnv, execPath: string): string[] {
   const dirs: string[] = [];
 
   if (path.basename(execPath) === "node") {
@@ -49,7 +50,7 @@ export function nodeDirs(source: SourceEnv, execPath: string): string[] {
   return dirs;
 }
 
-export function knownPathDirs(home: string, extra: string[]): string[] {
+function knownPathDirs(home: string, extra: string[]): string[] {
   return [
     "/opt/homebrew/bin",
     "/usr/local/bin",
@@ -62,7 +63,7 @@ export function knownPathDirs(home: string, extra: string[]): string[] {
   ];
 }
 
-export function parseShellPath(output: string): string[] {
+function parseShellPath(output: string): string[] {
   const start = output.indexOf(PATH_MARK);
   const end = output.indexOf(PATH_MARK, start + PATH_MARK.length);
 
@@ -73,7 +74,7 @@ export function parseShellPath(output: string): string[] {
   return output.slice(start + PATH_MARK.length, end).split(":");
 }
 
-export function loginShellPath(source: SourceEnv): Promise<string[]> {
+function loginShellPath(source: SourceEnv): Promise<string[]> {
   const shell = source.SHELL || "/bin/zsh";
   const script = `printf '${PATH_MARK}%s${PATH_MARK}' "$PATH"`;
 
@@ -89,7 +90,7 @@ export function loginShellPath(source: SourceEnv): Promise<string[]> {
   });
 }
 
-export function mergePath(...lists: string[][]): string {
+function mergePath(...lists: string[][]): string {
   const seen = new Set<string>();
 
   for (const dir of lists.flat()) {
@@ -101,11 +102,11 @@ export function mergePath(...lists: string[][]): string {
   return [...seen].join(":");
 }
 
-export function baseEnv(source: SourceEnv, searchPath: string): Env {
+function baseEnv(source: SourceEnv, searchPath: string): Env {
   return { ...pick(source, BASE_KEYS), PATH: searchPath };
 }
 
-export function buildServerEnv(
+function buildServerEnv(
   source: SourceEnv,
   searchPath: string,
   overrides: Env
@@ -119,3 +120,39 @@ export function buildServerEnv(
     ELECTRON_RUN_AS_NODE: "1",
   };
 }
+
+async function readSavedLoginPath(file: string): Promise<string[]> {
+  try {
+    const text = await readFile(file, "utf-8");
+
+    return text
+      .trim()
+      .split(":")
+      .filter((dir) => path.isAbsolute(dir));
+  } catch {
+    return [];
+  }
+}
+
+async function saveLoginPath(file: string, dirs: string[]): Promise<void> {
+  if (dirs.length === 0) {
+    return;
+  }
+
+  await mkdir(path.dirname(file), { recursive: true });
+  await writeFile(file, `${dirs.join(":")}\n`);
+}
+
+export {
+  baseEnv,
+  buildServerEnv,
+  knownPathDirs,
+  loginShellPath,
+  mergePath,
+  nodeDirs,
+  parseShellPath,
+  readSavedLoginPath,
+  saveLoginPath,
+};
+
+export type { Env };

@@ -1,6 +1,5 @@
 import path from "node:path";
 
-import { build } from "esbuild";
 import type { BuildOptions, BuildResult } from "esbuild";
 
 const BRIDGE_ENTRY = path.resolve(
@@ -25,8 +24,12 @@ const toOutput = (outfile: string | null): BuildOptions => {
   return { outfile, write: true };
 };
 
-const buildBridge = (options: BuildBridgeOptions): Promise<BuildResult> =>
-  build({
+const buildBridge = async (
+  options: BuildBridgeOptions
+): Promise<BuildResult> => {
+  const { build } = await import("esbuild");
+
+  return build({
     bundle: true,
     entryPoints: [BRIDGE_ENTRY],
     format: "iife",
@@ -36,6 +39,7 @@ const buildBridge = (options: BuildBridgeOptions): Promise<BuildResult> =>
     target: ["es2020"],
     ...toOutput(options.outfile),
   });
+};
 
 const bundleBridgeText = async (): Promise<string | null> => {
   const result = await buildBridge({ logLevel: "silent", outfile: null });

@@ -342,6 +342,7 @@ const presentCopy = {
 
 const rotateHandleCopy = {
   degree: "°",
+  each: "Each",
   failed: "Could not rotate the layer",
 } as const;
 

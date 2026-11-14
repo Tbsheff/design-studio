@@ -18,7 +18,7 @@ const RotateAngleLabel = ({
     data-testid="rotate-label"
     style={toLabelStyle(label)}
   >
-    {toAngleLabel(label.angle)}
+    {toAngleLabel(label)}
   </span>
 );
 

@@ -13,8 +13,37 @@ interface RotatePoint {
 
 interface RotateLabel {
   readonly angle: number;
+  readonly isEach: boolean;
   readonly x: number;
   readonly y: number;
+}
+
+interface RotateStyle {
+  readonly left?: string;
+  readonly rotate?: string;
+  readonly top?: string;
+  readonly translate?: string;
+}
+
+interface RotateLayer {
+  readonly center: RotatePoint;
+  readonly isAbsolute: boolean;
+  readonly left: number;
+  readonly snapX: number;
+  readonly snapY: number;
+  readonly top: number;
+}
+
+interface RotateLayout {
+  readonly center: RotatePoint;
+  readonly isEach: boolean;
+  readonly isTailwind: boolean;
+  readonly layers: readonly RotateLayer[];
+}
+
+interface RotateLayerInput {
+  readonly classes: readonly string[] | null;
+  readonly target: SelectionContext;
 }
 
 interface RotateBody {
@@ -156,7 +185,7 @@ interface RotateEdit {
   readonly component?: string;
   readonly selector: string;
   readonly source: SelectionContext["source"];
-  readonly style: { readonly rotate: string };
+  readonly style: RotateStyle;
   readonly tag?: string;
 }
 
@@ -173,7 +202,7 @@ interface RotateBatchBody {
 
 const toRotateEdit = (
   target: SelectionContext,
-  style: { readonly rotate: string }
+  style: RotateStyle
 ): RotateEdit => ({
   selector: target.selector,
   source: target.source,
@@ -212,14 +241,189 @@ const toGroupAngles = (
 const isRotateDrag = (from: RotatePoint, to: RotatePoint): boolean =>
   Math.max(Math.abs(to.x - from.x), Math.abs(to.y - from.y)) >= MIN_DRAG_PX;
 
-const toAngleLabel = (angle: number): string =>
-  `${angle}${rotateHandleCopy.degree}`;
+const toAngleLabel = (label: RotateLabel): string => {
+  const text = `${label.angle}${rotateHandleCopy.degree}`;
+
+  if (label.isEach) {
+    return `${text} ${rotateHandleCopy.each}`;
+  }
+
+  return text;
+};
+
+const SCALE_STEP_PX = 4;
+
+const PX_UNIT = "px";
+
+const SCALE_CLASSES = {
+  left: /^-?left-(?:\d|px$)/u,
+  top: /^-?top-(?:\d|px$)/u,
+} as const;
+
+const MOVED_POSITIONS: ReadonlySet<string> = new Set(["absolute", "fixed"]);
+
+const toPx = (value: string | undefined): number | null => {
+  const text = value?.trim() ?? "";
+
+  if (!text.endsWith(PX_UNIT)) {
+    return null;
+  }
+
+  const amount = Number(text.slice(0, -PX_UNIT.length));
+
+  if (!Number.isFinite(amount)) {
+    return null;
+  }
+
+  return amount;
+};
+
+const toSnapStep = (
+  classes: readonly string[] | null,
+  side: "left" | "top"
+): number => {
+  const pattern = SCALE_CLASSES[side];
+
+  const isOnScale = (classes ?? []).some((token) =>
+    pattern.test(token.split(":").at(-1) ?? "")
+  );
+
+  if (isOnScale) {
+    return SCALE_STEP_PX;
+  }
+
+  return 1;
+};
+
+const toRectCenter = (rect: SelectionContext["rect"]): RotatePoint => ({
+  x: rect.x + rect.width / 2,
+  y: rect.y + rect.height / 2,
+});
+
+const toGroupCenter = (
+  rects: readonly SelectionContext["rect"][]
+): RotatePoint => {
+  const lefts = rects.map((rect) => rect.x);
+  const tops = rects.map((rect) => rect.y);
+  const rights = rects.map((rect) => rect.x + rect.width);
+  const bottoms = rects.map((rect) => rect.y + rect.height);
+
+  return {
+    x: (Math.min(...lefts) + Math.max(...rights)) / 2,
+    y: (Math.min(...tops) + Math.max(...bottoms)) / 2,
+  };
+};
+
+const toRotateLayer = (input: RotateLayerInput): RotateLayer => {
+  const { classes, target } = input;
+  const left = toPx(target.styles.left);
+  const top = toPx(target.styles.top);
+  const isPositioned = MOVED_POSITIONS.has(target.styles.position ?? "");
+
+  return {
+    center: toRectCenter(target.rect),
+    isAbsolute: isPositioned && left !== null && top !== null,
+    left: left ?? 0,
+    snapX: toSnapStep(classes, "left"),
+    snapY: toSnapStep(classes, "top"),
+    top: top ?? 0,
+  };
+};
+
+const toRotateLayout = (
+  inputs: readonly RotateLayerInput[],
+  isTailwind: boolean
+): RotateLayout => {
+  const layers = inputs.map((input) => toRotateLayer(input));
+  const hasFlow = layers.some((layer) => !layer.isAbsolute);
+
+  return {
+    center: toGroupCenter(inputs.map((input) => input.target.rect)),
+    isEach: isTailwind && hasFlow,
+    isTailwind,
+    layers,
+  };
+};
+
+const toTurnedPoint = (
+  point: RotatePoint,
+  center: RotatePoint,
+  turn: number
+): RotatePoint => {
+  const radians = turn / DEGREES;
+  const dx = point.x - center.x;
+  const dy = point.y - center.y;
+
+  return {
+    x: center.x + dx * Math.cos(radians) - dy * Math.sin(radians),
+    y: center.y + dx * Math.sin(radians) + dy * Math.cos(radians),
+  };
+};
+
+const toSnapped = (value: number, step: number): number => {
+  const snapped = Math.round(value / step) * step;
+
+  if (Object.is(snapped, -0)) {
+    return 0;
+  }
+
+  return snapped;
+};
+
+const toLeftStyle = (from: number, to: number): RotateStyle => {
+  if (from === to) {
+    return {};
+  }
+
+  return { left: `${to}${PX_UNIT}` };
+};
+
+const toTopStyle = (from: number, to: number): RotateStyle => {
+  if (from === to) {
+    return {};
+  }
+
+  return { top: `${to}${PX_UNIT}` };
+};
+
+const toMoveStyle = (
+  layout: RotateLayout | null,
+  index: number,
+  turn: number
+): RotateStyle => {
+  const layer = layout?.layers[index] ?? null;
+
+  if (layout === null || layer === null || layout.isEach) {
+    return {};
+  }
+
+  const moved = toTurnedPoint(layer.center, layout.center, turn);
+  const dx = moved.x - layer.center.x;
+  const dy = moved.y - layer.center.y;
+
+  if (layer.isAbsolute) {
+    return {
+      ...toLeftStyle(layer.left, toSnapped(layer.left + dx, layer.snapX)),
+      ...toTopStyle(layer.top, toSnapped(layer.top + dy, layer.snapY)),
+    };
+  }
+
+  const moveX = toSnapped(dx, 1);
+  const moveY = toSnapped(dy, 1);
+
+  if (moveX === 0 && moveY === 0) {
+    return {};
+  }
+
+  return { translate: `${moveX}${PX_UNIT} ${moveY}${PX_UNIT}` };
+};
 
 export {
   ROTATE_CORNERS,
   isRotateDrag,
   toAngleLabel,
   toGroupAngles,
+  toMoveStyle,
   toPointerAngle,
   toPreviewRotate,
   toRotateAngle,
@@ -227,6 +431,7 @@ export {
   toRotateBatch,
   toRotateBody,
   toRotateEdit,
+  toRotateLayout,
   toRotateValue,
 };
 
@@ -238,5 +443,8 @@ export type {
   RotateCorner,
   RotateEdit,
   RotateLabel,
+  RotateLayerInput,
+  RotateLayout,
   RotatePoint,
+  RotateStyle,
 };

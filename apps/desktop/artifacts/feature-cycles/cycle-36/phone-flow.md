@@ -24,7 +24,8 @@ Branch `feat/phone-flow`, cut from main `79d75cc9f`.
 - **Kit copy `ds-wt/pf-kit`** (`design-system/components.md` Button recipe, a changed nav, the same phone gaps). The script fixes the kit classes between passes:
   - Main: pass 2 opening is `null`, so the flow line is dropped (`kit-two-pass-main.txt`).
   - Branch: pass 1 has 7 lines and one opening (kit, flow, phone). Pass 2 has the flow and 2 phone lines, and the opening names the linked pages and the 390 px check (`kit-two-pass-branch.txt`).
-- **Added seconds per pass:** the phone render takes 0.3 to 0.65 s per pass for 3 pages, run in parallel (seed 0.30 to 0.36 s, kit 0.40 to 0.48 s, real-run trees 0.55 to 0.65 s). The server does not log this, so the number comes from the script.
+  - Limit: the script makes the kit gaps once and uses them for both passes. In a live run, the fix-loop edits come after the agent's last review note, so pass 2 often goes through `toPrototypeReviewGaps`. That opening was never null. The script proves the opening for the kit-gaps path, not the live route.
+- **Added seconds per pass:** `listPhoneLines` alone takes 0.28 to 0.32 s on the seed, and 0.34 to 0.75 s on the main and branch run trees (3 pages each, rendered in parallel, 3 tries each; `phone-step-time.txt`). These numbers come from a script stub: a local static server and a fresh Chrome context with only the `load` wait. The studio `peekPage` path has its own settle waits and may be slower. The server does not log this step.
 - **`call-action.ts viewport.run`** on the seeded `plan.html` at 390 px: http, mcp and agent find the same horizontal scroll (1216 px). The only diffs are the contact-sheet file names, which have a time stamp (`call-viewport-run.txt`).
 - **Share link at 390 x 844** (branch run): Welcome, Choose your plan and You're in all have `innerWidth` 390 and `scrollWidth` 390. Tap through works. Screenshots: `phone-flow/share-{dark,light}-{0,1,2}.png`.
 - **Commands:**

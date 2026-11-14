@@ -274,3 +274,13 @@ Picks 3, 4 and 5 need none.
 10. The fixture route sentence shows in the chat bubble because it is part of the run prompt; needs a run context field on `RunRequest`.
 
 Sources: [mcp.directory 2026 comparison](https://mcp.directory/blog/claude-design-vs-stitch-vs-v0-vs-lovable-vs-figma-make-2026), [konigi.com Claude Design](https://konigi.com/articles/claude-design-has-the-incumbents-scrambling/), [monkfrom.earth Claude Design vs Figma, Lovable, v0](https://monkfrom.earth/blogs/claude-design-vs-figma-lovable-v0), [claudefa.st Claude Design handoff](https://claudefa.st/blog/guide/mechanics/claude-design-handoff), [creativeainews doop launch](https://www.creativeainews.com/articles/doop-open-source-ai-design-canvas-mcp-2026/), [chatgate doop](https://chatgate.ai/en/post/doop), [opendesigner.io open design 0.10](https://opendesigner.io/blog/open-design-0-10-all-in-one-workspace), [superdesign Bolt alternative](https://www.superdesign.dev/blog/bolt-alternative). No Claude Design, Figma Make, v0, Lovable or Bolt result was newer than May 2026.
+
+## Results
+
+- Merged in order: route-apply, run-wait, starter-fonts, polish-28, axis-lock (main at 7059b67e8). One conflict: run-wait and route-apply both changed the start_port description; kept route-apply's text plus "and waitSeconds".
+- Real runs: route-apply 2 runs onto a fake Next app kept data reads, 0 sample rows, scores 48 and 77. starter-fonts: Fraunces/Inter (was Helvetica Neue), 71.4 s vs 75.8 s, $0.231 vs $0.236.
+- run-wait: 1 get_run call per run (was 24 with a 2 s poll); afterEvent returns only new events.
+- polish-28: Next hydration console errors 2 -> 0; route copies no longer show "Unfinished changes".
+- Checks: gen-routes --check pass, typecheck 0 errors, lint:gate pass (59615, baseline 89733), build:ui pass, check:clip 0 findings, desktop:pack pass.
+- Installed app: :4570 returns 200. Server idle CPU 0.02 CPU-s/min over 60 s.
+- Open: a closed MCP request does not end a get_run wait (120 s cap, fix in mcp/registry.ts); a Look pick does not update font names in pack.json; flows onto existing routes are not supported; quoted photo queries are searched every call.

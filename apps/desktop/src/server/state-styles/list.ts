@@ -2,6 +2,7 @@ import {
   elementClassInfo,
   htmlVariantProps,
   loadStyleSite,
+  toOtherStateParts,
   stateClassOverridesOf,
   stateCssOverridesOf,
   STYLE_STATES,
@@ -28,31 +29,42 @@ const cssLayer = (site: StyleSite, loc: SourceLoc): StateLayer => ({
   reason: null,
 });
 
+interface LayerRead {
+  readonly layer: StateLayer;
+  readonly other: readonly string[];
+}
+
 const layerOf = async (
   scope: StyleScope,
   site: StyleSite,
   loc: SourceLoc
-): Promise<StateLayer> => {
+): Promise<LayerRead> => {
   const info = await elementClassInfo(scope.workTree, scope.project.kind, loc);
 
   if (site.theme !== null && info.tailwind?.mode === "classes") {
     return {
-      file: site.relative,
-      mode: "classes",
-      overrides: stateClassOverridesOf(info.tailwind.classes, site.theme),
-      reason: null,
+      layer: {
+        file: site.relative,
+        mode: "classes",
+        overrides: stateClassOverridesOf(info.tailwind.classes, site.theme),
+        reason: null,
+      },
+      other: toOtherStateParts(info.tailwind.classes),
     };
   }
 
   if (site.html) {
-    return cssLayer(site, loc);
+    return { layer: cssLayer(site, loc), other: [] };
   }
 
   return {
-    file: site.relative,
-    mode: "none",
-    overrides: [],
-    reason: info.variants.reason,
+    layer: {
+      file: site.relative,
+      mode: "none",
+      overrides: [],
+      reason: info.variants.reason,
+    },
+    other: [],
   };
 };
 
@@ -85,13 +97,15 @@ const getStateStyleInfo = async (
   source: SourceLoc
 ): Promise<StateListResult> => {
   const site = await loadStyleSite(scope, source);
-  const found = await layerOf(scope, site, source);
+  const rest = await layerOf(scope, site, source);
+  const found = rest.layer;
 
   return {
     edge: toEdgeKind(site, source, found),
     forced: forcedList(scope.project.id),
     group: toListedGroup(site, source, found),
     layer: found,
+    other: rest.other,
     states: STYLE_STATES,
   };
 };

@@ -1,8 +1,8 @@
 import {
   commitScopedStyle,
   elementClassInfo,
-  hasSelectedItem,
   guardScopedEdit,
+  hasItemPart,
   loadStyleSite,
   parseDirectEditRequest,
   planDirectEdit,
@@ -111,11 +111,14 @@ const resolved = <Value>(
   return result.value;
 };
 
-const isSelectedItemAt = async (
+const isItemAt = async (
   scope: StyleScope,
   request: StateStyleRequest
 ): Promise<boolean> => {
-  if (request.input.state !== "selected") {
+  if (
+    request.input.state !== "selected" &&
+    request.input.state !== "disabled"
+  ) {
     return false;
   }
 
@@ -125,7 +128,7 @@ const isSelectedItemAt = async (
     request.target.source
   );
 
-  return hasSelectedItem(info.tailwind?.classes ?? []);
+  return hasItemPart(info.tailwind?.classes ?? [], request.input.state);
 };
 
 const planStateStyle = async (
@@ -137,7 +140,7 @@ const planStateStyle = async (
 
   const part = toStatePart(
     styleInput.state,
-    await isSelectedItemAt(scope, request),
+    await isItemAt(scope, request),
     await toGroupNameFor(scope, site, request.target.source, styleInput.state)
   );
 

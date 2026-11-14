@@ -18,11 +18,11 @@ const setStateStyle = defineAction({
     name: "set_state_style",
     set: "core",
     short:
-      "Set one style property of one layer in one state, such as hover, dark, open or group-hover.",
+      "Set one style property of one layer in one state, such as hover, dark, open, on, invalid or group-hover.",
   },
   confirm: "none",
   description:
-    "Set one style property of one layer in one state: hover, focus-visible, active, disabled, dark, open, checked, selected, group-hover, group-open, group-checked, first, last, odd or even. breakpoint is base (default) or a breakpoint name, so md with last writes md:last:. open writes data-[state=open]:, checked data-[state=checked]:, selected data-[state=active]:. The group states need a group parent and write group-hover: or group-data-[state=open]:. first, last, odd and even write first: to even: (:first-child to :nth-child(even) in HTML). reset true removes the value. Saves one version.",
+    "Set one style property of one layer in one state (list_state_styles lists them). breakpoint is base (default) or a breakpoint name: md with last writes md:last:. open, closed, checked and on write data-[state=open]: and so on, selected data-[state=active]:, active-item data-[active=true]:, invalid aria-invalid:. disabled writes data-[disabled]: when the layer has it, else disabled:. The group states need a group parent and write group-hover: or group-data-[state=open]:. first to even write first: to even: (:first-child in HTML). reset true removes the value. Saves one version.",
   errors: [BadRequest, Conflict, NotFound],
   http: {
     method: "POST",

@@ -7,6 +7,10 @@ const STYLE_STATES = [
   "open",
   "checked",
   "selected",
+  "closed",
+  "on",
+  "active-item",
+  "invalid",
   "group-hover",
   "group-open",
   "group-checked",
@@ -34,11 +38,22 @@ const GROUP_CLASS = /^group(?:\/(?<name>[a-z0-9][a-z0-9_-]*))?$/u;
 const GROUP_NAME_MAX = 40;
 
 const DATA_STATE_VARIANTS = {
+  "active-item": "data-[active=true]",
   checked: "data-[state=checked]",
+  closed: "data-[state=closed]",
+  "disabled-item": "data-[disabled]",
+  on: "data-[state=on]",
   open: "data-[state=open]",
   selected: "data-[state=active]",
   "selected-item": "data-[state=selected]",
 } as const;
+
+const ARIA_STATE_VARIANTS = {
+  invalid: "aria-invalid",
+} as const;
+
+const DATA_STATE_PART =
+  /^data-\[(?<name>[a-z][a-z-]*)(?:=(?<value>[a-z]+))?\]$/u;
 
 const FORCE_STATE_PARAM = "__studio_force";
 
@@ -48,7 +63,20 @@ type StyleState = (typeof STYLE_STATES)[number];
 
 type DataStateName = keyof typeof DATA_STATE_VARIANTS;
 
-type DataStateStyle = "checked" | "open" | "selected";
+type AriaStateName = keyof typeof ARIA_STATE_VARIANTS;
+
+type DataStateStyle =
+  | "active-item"
+  | "checked"
+  | "closed"
+  | "on"
+  | "open"
+  | "selected";
+
+interface DataStateAttribute {
+  readonly name: string;
+  readonly value: string;
+}
 
 type GroupStateName = keyof typeof GROUP_STATE_VARIANTS;
 
@@ -62,6 +90,7 @@ type ForcedStatePart =
   | "focus"
   | "focus-visible"
   | "hover"
+  | AriaStateName
   | DataStateName
   | EdgeStateName
   | GroupStateName;
@@ -112,6 +141,7 @@ interface StateListResult {
   readonly forced: readonly ForcedFrameState[];
   readonly group: GroupAncestor | null;
   readonly layer: StateLayer;
+  readonly other: readonly string[];
   readonly states: readonly StyleState[];
 }
 
@@ -159,19 +189,54 @@ const fromDataStateVariant = (part: string): DataStateName | null =>
 const toDataStateVariant = (name: DataStateName): string =>
   DATA_STATE_VARIANTS[name];
 
-const toDataStateValue = (name: DataStateName): string =>
-  DATA_STATE_VARIANTS[name].slice("data-[state=".length, -1);
+const toDataStateAttribute = (name: DataStateName): DataStateAttribute => {
+  const groups = DATA_STATE_PART.exec(DATA_STATE_VARIANTS[name])?.groups;
+
+  return {
+    name: `data-${groups?.["name"] ?? "state"}`,
+    value: groups?.["value"] ?? "",
+  };
+};
+
+const ARIA_STATE_NAMES = Object.keys(ARIA_STATE_VARIANTS) as AriaStateName[];
+
+const isAriaStateName = (value: string): value is AriaStateName =>
+  (ARIA_STATE_NAMES as readonly string[]).includes(value);
+
+const fromAriaStateVariant = (part: string): AriaStateName | null =>
+  ARIA_STATE_NAMES.find((name) => ARIA_STATE_VARIANTS[name] === part) ?? null;
+
+const toAriaStateVariant = (name: AriaStateName): string =>
+  ARIA_STATE_VARIANTS[name];
+
+const isOtherStatePart = (part: string): boolean =>
+  (part.startsWith("data-") || part.startsWith("aria-")) &&
+  fromDataStateVariant(part) === null &&
+  fromAriaStateVariant(part) === null;
 
 const toStyleStateName = (name: string): StyleState | null => {
   if (name === "selected-item") {
     return "selected";
   }
 
+  if (name === "disabled-item") {
+    return "disabled";
+  }
+
   return STYLE_STATES.find((state) => state === name) ?? null;
 };
 
+const DATA_STATE_STYLES: readonly DataStateStyle[] = [
+  "active-item",
+  "checked",
+  "closed",
+  "on",
+  "open",
+  "selected",
+];
+
 const isDataStateStyle = (state: StyleState): state is DataStateStyle =>
-  state === "open" || state === "checked" || state === "selected";
+  (DATA_STATE_STYLES as readonly string[]).includes(state);
 
 const GROUP_STATE_NAMES = Object.keys(GROUP_STATE_VARIANTS) as GroupStateName[];
 
@@ -272,6 +337,12 @@ const withForcedParam = (
 };
 
 export {
+  ARIA_STATE_NAMES,
+  ARIA_STATE_VARIANTS,
+  fromAriaStateVariant,
+  isAriaStateName,
+  isOtherStatePart,
+  toAriaStateVariant,
   DATA_STATE_NAMES,
   DATA_STATE_VARIANTS,
   EDGE_STATE_NAMES,
@@ -291,7 +362,7 @@ export {
   isStyleState,
   STATE_SELECTOR_MAX,
   STYLE_STATES,
-  toDataStateValue,
+  toDataStateAttribute,
   toDataStateVariant,
   toEdgePseudo,
   toForcedParam,
@@ -300,6 +371,8 @@ export {
 };
 
 export type {
+  AriaStateName,
+  DataStateAttribute,
   DataStateName,
   DataStateStyle,
   EdgeStateName,

@@ -1,13 +1,18 @@
 import {
+  ARIA_STATE_NAMES,
   DATA_STATE_NAMES,
   EDGE_STATE_NAMES,
   GROUP_STATE_NAMES,
+  isAriaStateName,
   isDataStateName,
   isEdgeStateName,
   isGroupStateName,
-  toDataStateValue,
+  toAriaStateVariant,
+  toDataStateAttribute,
 } from "@design-studio/contracts/state-styles";
 import type {
+  AriaStateName,
+  DataStateAttribute,
   DataStateName,
   EdgeStateName,
   GroupStateName,
@@ -30,11 +35,13 @@ const DARK_TEST = /\(\s*prefers-color-scheme\s*:\s*dark\s*\)/;
 const HOVER_MEDIA = /\(\s*hover\s*:\s*hover\s*\)/g;
 const CLIMBING = new Set(["hover", "active"]);
 const DATA_STATE_ATTR = "data-state";
+const DISABLED_ITEM: DataStateAttribute = { name: "data-disabled", value: "" };
 
 type PointerState = "hover" | "focus" | "focus-visible" | "active" | "disabled";
 
 export type ForcedState =
   | PointerState
+  | AriaStateName
   | DataStateName
   | GroupStateName
   | EdgeStateName;
@@ -50,18 +57,21 @@ const POINTER_STATES: readonly PointerState[] = [
 export const FORCED_STATES: readonly ForcedState[] = [
   ...POINTER_STATES,
   ...DATA_STATE_NAMES,
+  ...ARIA_STATE_NAMES,
   ...GROUP_STATE_NAMES,
   ...EDGE_STATE_NAMES,
 ];
 
 interface HeldDataState {
   readonly element: Element;
+  readonly name: string;
   readonly old: string | null;
 }
 
 function isPointerState(state: ForcedState): state is PointerState {
   return (
     !isDataStateName(state) &&
+    !isAriaStateName(state) &&
     !isGroupStateName(state) &&
     !isEdgeStateName(state)
   );
@@ -264,22 +274,40 @@ function styleElement(): HTMLStyleElement {
 
 function restoreDataState(held: HeldDataState): void {
   if (held.old === null) {
-    held.element.removeAttribute(DATA_STATE_ATTR);
+    held.element.removeAttribute(held.name);
 
     return;
   }
 
-  held.element.setAttribute(DATA_STATE_ATTR, held.old);
+  held.element.setAttribute(held.name, held.old);
 }
 
-function wantedDataState(states: readonly ForcedState[]): string | null {
+function wantedDataState(
+  states: readonly ForcedState[]
+): DataStateAttribute | null {
   for (const state of states) {
     if (isDataStateName(state)) {
-      return toDataStateValue(state);
+      return toDataStateAttribute(state);
+    }
+
+    if (isAriaStateName(state)) {
+      return { name: toAriaStateVariant(state), value: "true" };
+    }
+
+    if (state === "disabled") {
+      return DISABLED_ITEM;
     }
   }
 
   return null;
+}
+
+function toGroupWant(value: string | null): DataStateAttribute | null {
+  if (value === null) {
+    return null;
+  }
+
+  return { name: DATA_STATE_ATTR, value };
 }
 
 interface HoldResult {
@@ -290,9 +318,10 @@ interface HoldResult {
 function holdDataState(
   held: HeldDataState | null,
   element: Element | null,
-  want: string | null
+  want: DataStateAttribute | null
 ): HoldResult {
-  const isSame = held !== null && held.element === element;
+  const isSame =
+    held !== null && held.element === element && held.name === want?.name;
   let isChanged = false;
 
   if (held !== null && (!isSame || want === null)) {
@@ -306,15 +335,16 @@ function holdDataState(
 
   let next: HeldDataState = {
     element,
-    old: element.getAttribute(DATA_STATE_ATTR),
+    name: want.name,
+    old: element.getAttribute(want.name),
   };
 
   if (held !== null && isSame) {
     next = held;
   }
 
-  if (element.getAttribute(DATA_STATE_ATTR) !== want) {
-    element.setAttribute(DATA_STATE_ATTR, want);
+  if (element.getAttribute(want.name) !== want.value) {
+    element.setAttribute(want.name, want.value);
     isChanged = true;
   }
 
@@ -327,7 +357,7 @@ interface ForceTargets {
   readonly group: Element | null;
   readonly isGroupHover: boolean;
   readonly pointer: PointerState[];
-  readonly want: string | null;
+  readonly want: DataStateAttribute | null;
 }
 
 const NO_TARGETS: ForceTargets = {
@@ -365,7 +395,7 @@ function targetsOf(current: Forced | null): ForceTargets {
     dataElement: group,
     isGroupHover: grouped === "group-hover",
     pointer: pointerStates,
-    want: toGroupDataValue(grouped),
+    want: toGroupWant(toGroupDataValue(grouped)),
     element,
     group,
   };

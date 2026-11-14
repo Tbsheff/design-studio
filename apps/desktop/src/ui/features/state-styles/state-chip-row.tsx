@@ -56,6 +56,15 @@ const StateChipRow = (props: StateChipRowProps): ReactElement => {
             onPick={state.handlePick}
           />
         ))}
+        {(state.info?.other ?? []).map((part) => (
+          <span
+            className={`${styles.chip} ${styles.other}`}
+            data-tip={copy.otherTip}
+            key={part}
+          >
+            {part}
+          </span>
+        ))}
       </div>
       <StateNote
         isError={false}

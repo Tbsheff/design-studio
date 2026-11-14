@@ -13,7 +13,8 @@ export {
 } from "./scoped-style.js";
 
 export {
-  hasSelectedItem,
+  hasItemPart,
+  toOtherStateParts,
   stateClassOverridesOf,
   stateCssOverridesOf,
   statePrefixOf,

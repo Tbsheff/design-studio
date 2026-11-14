@@ -1,7 +1,9 @@
 import {
+  isAriaStateName,
   isDataStateName,
   isEdgeStateName,
-  toDataStateValue,
+  toAriaStateVariant,
+  toDataStateAttribute,
   toEdgePseudo,
 } from "@design-studio/contracts/state-styles";
 import type { DefaultTreeAdapterMap } from "parse5";
@@ -30,7 +32,7 @@ const KEY_CLASS = /^sv-[a-z0-9]{6}$/;
 const CHILD_RULE = " > * + *";
 
 const RULE_LINE =
-  /^(?:@media (.+?) \{ )?(\.sv-[a-z0-9]{6}(?:\[data-state="[a-z]+"\])?(?::[a-z-]+(?:\((?:odd|even)\))?)*(?: > \* \+ \*)?) \{ (.*?) \}(?: \})?$/;
+  /^(?:@media (.+?) \{ )?(\.sv-[a-z0-9]{6}(?:\[(?:data|aria)-[a-z-]+(?:="[a-z]+")?\])?(?::[a-z-]+(?:\((?:odd|even)\))?)*(?: > \* \+ \*)?) \{ (.*?) \}(?: \})?$/;
 
 interface Rule {
   media: string | null;
@@ -97,13 +99,37 @@ function toPseudoPart(state: ParsedVariant["states"][number]): string {
   return state;
 }
 
+function toAttributePart(state: ParsedVariant["states"][number]): string {
+  if (isAriaStateName(state)) {
+    return `[${toAriaStateVariant(state)}="true"]`;
+  }
+
+  if (!isDataStateName(state)) {
+    return "";
+  }
+
+  const attribute = toDataStateAttribute(state);
+
+  if (attribute.value === "") {
+    return `[${attribute.name}]`;
+  }
+
+  return `[${attribute.name}="${attribute.value}"]`;
+}
+
 function selectorOf(key: string, variant: ParsedVariant): string {
-  const data = variant.states
-    .filter(isDataStateName)
-    .map((state) => `[data-state="${toDataStateValue(state)}"]`);
+  const data = variant.states.flatMap((state) => {
+    const part = toAttributePart(state);
+
+    if (part === "") {
+      return [];
+    }
+
+    return [part];
+  });
 
   const pseudo = variant.states
-    .filter((state) => !isDataStateName(state))
+    .filter((state) => !isDataStateName(state) && !isAriaStateName(state))
     .map((state) => `:${toPseudoPart(state)}`);
 
   return `.${key}${[...data, ...pseudo].join("")}`;

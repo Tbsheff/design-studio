@@ -1,0 +1,10 @@
+panel closed opacity 50:
+data-[state=closed]: {'add': ['data-[state=closed]:opacity-50'], 'remove': ['data-[state=closed]:opacity-0']} None
+item disabled opacity 25:
+data-[disabled]: {'add': ['data-[disabled]:opacity-25'], 'remove': ['data-[disabled]:opacity-50']} None
+plain disabled opacity 50:
+disabled: {'add': ['disabled:opacity-50'], 'remove': []} None
+input md invalid border:
+md:aria-invalid: {'add': ['md:aria-invalid:border-[#ef4444]'], 'remove': []} None
+nav active-item bg:
+data-[active=true]: {'add': ['data-[active=true]:bg-slate-200'], 'remove': []} None

@@ -37,6 +37,14 @@
   outline-offset: 1px;
 }
 
+.other {
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-faint);
+  font-family: var(--mono);
+  cursor: default;
+}
+
 .chip:disabled,
 .chip[aria-disabled="true"] {
   color: var(--text-faint);

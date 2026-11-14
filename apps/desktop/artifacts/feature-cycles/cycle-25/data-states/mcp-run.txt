@@ -1,0 +1,5 @@
+== set_state_style on
+{"jsonrpc":"2.0","id":2,"result":{"content":[{"text":"{\"breakpoint\":\"base\",\"classes\":{\"add\":[\"data-[state=on]:opacity-75\"],\"remove\":[]},\"files\":[\"src/App.tsx\"],\"mode\":\"classes\",\"prefix\":\"data-[state=on]:\",\"property\":\"opacity\",\"state\":\"on\",\"title\":\"State data-[state=on]: opacity 0.75\",\"value\":\"0.75\",\"versionId\":\"pending-a6a3354e1b30ce4a\"}","type":"text"}],"isError":false}}
+
+== list_state_styles
+{"jsonrpc":"2.0","id":2,"result":{"content":[{"text":"{\"edge\":\"siblings\",\"forced\":[{\"frameId\":\"f1\",\"selector\":\"#toggle\",\"state\":\"on\"}],\"group\":null,\"layer\":{\"file\":\"src/App.tsx\",\"mode\":\"classes\",\"overrides\":[{\"breakpoint\":\"base\",\"prefix\":\"data-[state=on]:\",\"props\":[\"opacity\"],\"set\":[\"data-[state=on]:opacity-75\"],\"state\":\"on\"}],\"reason\":null},\"other\":[\"data-[side=top]\"],\"states\":[\"hover\",\"focus-visible\",\"active\",\"disabled\",\"dark\",\"open\",\"checked\",\"selected\",\"closed\",\"on\",\"active-item\",\"invalid\",\"group-hover\",\"group-open\",\"group-checked\",\"first\",\"last\",\"odd\",\"even\"]}","type":"text"}],"isError":false}}

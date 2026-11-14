@@ -1,9 +1,20 @@
 import {
   DATA_STATE_NAMES,
+  GROUP_STATE_NAMES,
   isDataStateName,
+  isGroupStateName,
   toDataStateValue,
 } from "@design-studio/contracts/state-styles";
-import type { DataStateName } from "@design-studio/contracts/state-styles";
+import type {
+  DataStateName,
+  GroupStateName,
+} from "@design-studio/contracts/state-styles";
+
+import {
+  toGroupDataValue,
+  toGroupElement,
+  toGroupState,
+} from "./force-group.js";
 
 const STYLE_ID = "studio-force-state";
 const ATTR = "data-studio-force";
@@ -18,7 +29,7 @@ const DATA_STATE_ATTR = "data-state";
 
 type PointerState = "hover" | "focus" | "focus-visible" | "active" | "disabled";
 
-export type ForcedState = PointerState | DataStateName;
+export type ForcedState = PointerState | DataStateName | GroupStateName;
 
 const POINTER_STATES: readonly PointerState[] = [
   "hover",
@@ -31,6 +42,7 @@ const POINTER_STATES: readonly PointerState[] = [
 export const FORCED_STATES: readonly ForcedState[] = [
   ...POINTER_STATES,
   ...DATA_STATE_NAMES,
+  ...GROUP_STATE_NAMES,
 ];
 
 interface HeldDataState {
@@ -39,7 +51,7 @@ interface HeldDataState {
 }
 
 function isPointerState(state: ForcedState): state is PointerState {
-  return !isDataStateName(state);
+  return !isDataStateName(state) && !isGroupStateName(state);
 }
 
 interface Forced {
@@ -296,6 +308,64 @@ function holdDataState(
   return { held: next, isChanged };
 }
 
+interface ForceTargets {
+  readonly dataElement: Element | null;
+  readonly element: Element | null;
+  readonly group: Element | null;
+  readonly isGroupHover: boolean;
+  readonly pointer: PointerState[];
+  readonly want: string | null;
+}
+
+const NO_TARGETS: ForceTargets = {
+  dataElement: null,
+  element: null,
+  group: null,
+  isGroupHover: false,
+  pointer: [],
+  want: null,
+};
+
+function targetsOf(current: Forced | null): ForceTargets {
+  if (current === null) {
+    return NO_TARGETS;
+  }
+
+  const element = query(current.selector);
+  const pointerStates = current.states.filter((state) => isPointerState(state));
+  const grouped = toGroupState(current.states);
+
+  if (grouped === null) {
+    return {
+      dataElement: element,
+      group: null,
+      isGroupHover: false,
+      pointer: pointerStates,
+      want: wantedDataState(current.states),
+      element,
+    };
+  }
+
+  const group = toGroupElement(element);
+
+  return {
+    dataElement: group,
+    isGroupHover: grouped === "group-hover",
+    pointer: pointerStates,
+    want: toGroupDataValue(grouped),
+    element,
+    group,
+  };
+}
+
+function cssStatesOf(targets: ForceTargets): ForcedState[] {
+  if (targets.isGroupHover && targets.group !== null) {
+    return [...targets.pointer, "hover"];
+  }
+
+  return targets.pointer;
+}
+
 export function createForceState(onChanged: () => void): ForceStateControl {
   let forced: Forced | null = null;
   let held: HeldDataState | null = null;
@@ -305,20 +375,11 @@ export function createForceState(onChanged: () => void): ForceStateControl {
   const apply = (): boolean => {
     clearMarks();
     const current = forced;
-    let element: Element | null = null;
-    let want: string | null = null;
-    let pointer: PointerState[] = [];
-
-    if (current) {
-      element = query(current.selector);
-      want = wantedDataState(current.states);
-      pointer = current.states.filter((state) => isPointerState(state));
-    }
-
-    const hold = holdDataState(held, element, want);
+    const targets = targetsOf(current);
+    const hold = holdDataState(held, targets.dataElement, targets.want);
     ({ held } = hold);
-
-    const needed = current !== null && (pointer.length > 0 || current.dark);
+    const states = cssStatesOf(targets);
+    const needed = current !== null && (states.length > 0 || current.dark);
 
     if (!current || !needed) {
       document.getElementById(STYLE_ID)?.remove();
@@ -326,11 +387,15 @@ export function createForceState(onChanged: () => void): ForceStateControl {
       return hold.isChanged;
     }
 
-    if (element && pointer.length > 0) {
-      mark(element, pointer);
+    if (targets.element && targets.pointer.length > 0) {
+      mark(targets.element, targets.pointer);
     }
 
-    const css = buildCss(current);
+    if (targets.isGroupHover && targets.group !== null) {
+      mark(targets.group, ["hover"]);
+    }
+
+    const css = buildCss({ ...current, states });
     const style = styleElement();
 
     if (style.textContent === css) {

@@ -1,0 +1,114 @@
+call-action state-style.set on http://127.0.0.1:49610. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 9 ms, git spawns: not counted (server side)
+{
+  "breakpoint": "md",
+  "classes": {
+    "add": [
+      "md:group-hover/menu-item:text-slate-900"
+    ],
+    "remove": []
+  },
+  "files": [
+    "index.html"
+  ],
+  "mode": "classes",
+  "prefix": "md:group-hover/menu-item:",
+  "property": "color",
+  "state": "group-hover",
+  "title": "State md:group-hover/menu-item: color #0f172a",
+  "value": "#0f172a",
+  "versionId": "pending-6505db06e09b3c37"
+}
+
+[mcp] error, 10 ms, git spawns: not counted (server side)
+"The layer already has this value in this state."
+
+[agent] error, 5 ms, git spawns: not counted (server side)
+"The layer already has this value in this state."
+
+diff http -> mcp:
+- {
++ "The layer already has this value in this state."
+-   "breakpoint": "md",
++ 
+-   "classes": {
++ 
+-     "add": [
++ 
+-       "md:group-hover/menu-item:text-slate-900"
++ 
+-     ],
++ 
+-     "remove": []
++ 
+-   },
++ 
+-   "files": [
++ 
+-     "index.html"
++ 
+-   ],
++ 
+-   "mode": "classes",
++ 
+-   "prefix": "md:group-hover/menu-item:",
++ 
+-   "property": "color",
++ 
+-   "state": "group-hover",
++ 
+-   "title": "State md:group-hover/menu-item: color #0f172a",
++ 
+-   "value": "#0f172a",
++ 
+-   "versionId": "pending-6505db06e09b3c37"
++ 
+- }
++ 
+
+diff http -> agent:
+- {
++ "The layer already has this value in this state."
+-   "breakpoint": "md",
++ 
+-   "classes": {
++ 
+-     "add": [
++ 
+-       "md:group-hover/menu-item:text-slate-900"
++ 
+-     ],
++ 
+-     "remove": []
++ 
+-   },
++ 
+-   "files": [
++ 
+-     "index.html"
++ 
+-   ],
++ 
+-   "mode": "classes",
++ 
+-   "prefix": "md:group-hover/menu-item:",
++ 
+-   "property": "color",
++ 
+-   "state": "group-hover",
++ 
+-   "title": "State md:group-hover/menu-item: color #0f172a",
++ 
+-   "value": "#0f172a",
++ 
+-   "versionId": "pending-6505db06e09b3c37"
++ 
+- }
++ 
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 2 error results
+
+fix: compare the outputs above, then run call-action again with the id state-style.set and the same input

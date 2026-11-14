@@ -27,7 +27,7 @@
   cursor: pointer;
 }
 
-.chip:hover:not(:disabled) {
+.chip:hover:not(:disabled, [aria-disabled="true"]) {
   background: var(--surface-hover);
   color: var(--text);
 }
@@ -37,7 +37,8 @@
   outline-offset: 1px;
 }
 
-.chip:disabled {
+.chip:disabled,
+.chip[aria-disabled="true"] {
   color: var(--text-faint);
   cursor: default;
 }

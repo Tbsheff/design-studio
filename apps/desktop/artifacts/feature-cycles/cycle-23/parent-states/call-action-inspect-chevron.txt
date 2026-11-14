@@ -1,0 +1,125 @@
+call-action state-style.inspect on http://127.0.0.1:49610. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 19 ms, git spawns: not counted (server side)
+{
+  "forced": [],
+  "group": {
+    "hasDataState": true,
+    "name": null
+  },
+  "layer": {
+    "file": "index.html",
+    "mode": "classes",
+    "overrides": [
+      {
+        "breakpoint": "base",
+        "prefix": "group-data-[state=open]:",
+        "props": [
+          "transform"
+        ],
+        "set": [
+          "group-data-[state=open]:rotate-180"
+        ],
+        "state": "group-open"
+      }
+    ],
+    "reason": null
+  },
+  "states": [
+    "hover",
+    "focus-visible",
+    "active",
+    "disabled",
+    "dark",
+    "open",
+    "checked",
+    "selected",
+    "group-hover",
+    "group-open",
+    "group-checked"
+  ]
+}
+
+[mcp] ok, 13 ms, git spawns: not counted (server side)
+{
+  "forced": [],
+  "group": {
+    "hasDataState": true,
+    "name": null
+  },
+  "layer": {
+    "file": "index.html",
+    "mode": "classes",
+    "overrides": [
+      {
+        "breakpoint": "base",
+        "prefix": "group-data-[state=open]:",
+        "props": [
+          "transform"
+        ],
+        "set": [
+          "group-data-[state=open]:rotate-180"
+        ],
+        "state": "group-open"
+      }
+    ],
+    "reason": null
+  },
+  "states": [
+    "hover",
+    "focus-visible",
+    "active",
+    "disabled",
+    "dark",
+    "open",
+    "checked",
+    "selected",
+    "group-hover",
+    "group-open",
+    "group-checked"
+  ]
+}
+
+[agent] ok, 5 ms, git spawns: not counted (server side)
+{
+  "forced": [],
+  "group": {
+    "hasDataState": true,
+    "name": null
+  },
+  "layer": {
+    "file": "index.html",
+    "mode": "classes",
+    "overrides": [
+      {
+        "breakpoint": "base",
+        "prefix": "group-data-[state=open]:",
+        "props": [
+          "transform"
+        ],
+        "set": [
+          "group-data-[state=open]:rotate-180"
+        ],
+        "state": "group-open"
+      }
+    ],
+    "reason": null
+  },
+  "states": [
+    "hover",
+    "focus-visible",
+    "active",
+    "disabled",
+    "dark",
+    "open",
+    "checked",
+    "selected",
+    "group-hover",
+    "group-open",
+    "group-checked"
+  ]
+}
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

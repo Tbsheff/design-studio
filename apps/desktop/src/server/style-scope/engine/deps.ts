@@ -11,8 +11,10 @@ export {
 
 export {
   isDataStateStyle,
+  isGroupStateName,
   STYLE_STATES,
   toDataStateVariant,
+  toGroupVariant,
   toStyleStateName,
 } from "@design-studio/contracts/state-styles";
 

@@ -1,0 +1,49 @@
+call-action state-style.set on http://127.0.0.1:49610. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] error, 7 ms, git spawns: not counted (server side)
+{
+  "_tag": "BadRequest",
+  "code": null,
+  "error": "BadRequest",
+  "message": "Add the group class to the parent layer in this file, then set the parent state."
+}
+
+[mcp] error, 10 ms, git spawns: not counted (server side)
+"Add the group class to the parent layer in this file, then set the parent state."
+
+[agent] error, 5 ms, git spawns: not counted (server side)
+"Add the group class to the parent layer in this file, then set the parent state."
+
+diff http -> mcp:
+- {
++ "Add the group class to the parent layer in this file, then set the parent state."
+-   "_tag": "BadRequest",
++ 
+-   "code": null,
++ 
+-   "error": "BadRequest",
++ 
+-   "message": "Add the group class to the parent layer in this file, then set the parent state."
++ 
+- }
++ 
+
+diff http -> agent:
+- {
++ "Add the group class to the parent layer in this file, then set the parent state."
+-   "_tag": "BadRequest",
++ 
+-   "code": null,
++ 
+-   "error": "BadRequest",
++ 
+-   "message": "Add the group class to the parent layer in this file, then set the parent state."
++ 
+- }
++ 
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 3 error results
+
+fix: compare the outputs above, then run call-action again with the id state-style.set and the same input

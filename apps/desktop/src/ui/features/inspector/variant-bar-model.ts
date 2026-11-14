@@ -32,7 +32,12 @@ const SHOWN_BREAKPOINTS = 4;
 
 const ANY_WIDTH = "";
 
-const BASE: ParsedVariant = { breakpoint: null, dark: false, states: [] };
+const BASE: ParsedVariant = {
+  breakpoint: null,
+  dark: false,
+  group: null,
+  states: [],
+};
 
 const DARK_CHIP = "dark";
 

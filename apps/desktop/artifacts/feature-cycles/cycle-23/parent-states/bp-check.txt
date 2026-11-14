@@ -1,0 +1,16 @@
+Bonaparte git status lines before:       14
+All group-hover and group-data-[state=...] tokens in *.tsx:
+     152
+Read as a parent state (group-hover, group-data-[state=open|checked], with or without /name):
+   6 group-data-[state=checked]:
+   8 group-data-[state=open]/name:
+  11 group-data-[state=open]:
+  21 group-hover/name:
+  93 group-hover:
+Not read (other data-state values):
+   8 group-data-[state=active]:
+   2 group-data-[state=closed]/name:
+   1 group-data-[state=closed]:
+   2 group-data-[state=indeterminate]:
+Files with group-hover:       76
+Bonaparte git status lines after:       14

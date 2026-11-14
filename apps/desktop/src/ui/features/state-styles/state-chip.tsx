@@ -12,6 +12,7 @@ interface StateChipProps {
   readonly hasStyles: boolean;
   readonly isDisabled: boolean;
   readonly isOn: boolean;
+  readonly isUnavailable: boolean;
   readonly onPick: (chip: ChipId) => void;
 }
 
@@ -23,7 +24,15 @@ const classOf = (isOn: boolean): string => {
   return styles.chip ?? "";
 };
 
-const tipOf = (chip: ChipId, hasStyles: boolean): string => {
+const tipOf = (
+  chip: ChipId,
+  hasStyles: boolean,
+  isUnavailable: boolean
+): string => {
+  if (isUnavailable) {
+    return copy.groupOff;
+  }
+
   if (hasStyles) {
     return `${copy.chipTip[chip]}. ${copy.hasStyles}`;
   }
@@ -36,15 +45,21 @@ const StateChip = ({
   hasStyles,
   isDisabled,
   isOn,
+  isUnavailable,
   onPick,
 }: StateChipProps): ReactElement => {
-  const handlePick = useCallback(() => onPick(chip), [chip, onPick]);
+  const handlePick = useCallback(() => {
+    if (!isUnavailable) {
+      onPick(chip);
+    }
+  }, [chip, isUnavailable, onPick]);
 
   return (
     <button
+      aria-disabled={isUnavailable}
       aria-pressed={isOn}
       className={classOf(isOn)}
-      data-tip={tipOf(chip, hasStyles)}
+      data-tip={tipOf(chip, hasStyles, isUnavailable)}
       disabled={isDisabled}
       onClick={handlePick}
       type="button"

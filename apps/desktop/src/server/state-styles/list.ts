@@ -7,6 +7,7 @@ import {
   STYLE_STATES,
 } from "./deps.js";
 import type {
+  GroupAncestor,
   SourceLoc,
   StateLayer,
   StateListResult,
@@ -14,6 +15,8 @@ import type {
   StyleSite,
 } from "./deps.js";
 import { forcedList } from "./forced-store.js";
+import { toGroupAncestor } from "./group-ancestor.js";
+import { toOwnGroupPart } from "./group-state.js";
 
 const cssLayer = (site: StyleSite, loc: SourceLoc): StateLayer => ({
   file: site.relative,
@@ -52,6 +55,30 @@ const layerOf = async (
   };
 };
 
+const toListedGroup = (
+  site: StyleSite,
+  source: SourceLoc,
+  layer: StateLayer
+): GroupAncestor | null => {
+  if (layer.mode !== "classes") {
+    return null;
+  }
+
+  const ancestor = toGroupAncestor(site, source);
+
+  if (ancestor !== null) {
+    return ancestor;
+  }
+
+  const own = toOwnGroupPart(layer.overrides.flatMap((entry) => entry.set));
+
+  if (own === null) {
+    return null;
+  }
+
+  return { hasDataState: own.state !== "group-hover", name: own.name };
+};
+
 const getStateStyleInfo = async (
   scope: StyleScope,
   source: SourceLoc
@@ -61,6 +88,7 @@ const getStateStyleInfo = async (
 
   return {
     forced: forcedList(scope.project.id),
+    group: toListedGroup(site, source, found),
     layer: found,
     states: STYLE_STATES,
   };

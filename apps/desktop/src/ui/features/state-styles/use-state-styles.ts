@@ -37,6 +37,7 @@ interface StateStylesView {
   readonly error: string | null;
   readonly isOff: boolean;
   readonly handlePick: (chip: ChipId) => void;
+  readonly info: StateListResult | null;
   readonly reason: string | null;
   readonly styled: ReadonlySet<StyleState>;
 }
@@ -186,7 +187,7 @@ const useStateStyles = (options: StateStylesOptions): StateStylesView => {
   const isOff = info?.layer.mode === "none";
   const reason = info?.layer.reason ?? null;
 
-  return { active, chips, error, handlePick, isOff, reason, styled };
+  return { active, chips, error, handlePick, info, isOff, reason, styled };
 };
 
 export { useStateStyles };

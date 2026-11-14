@@ -21,7 +21,7 @@ const setForcedStateStyle = defineAction({
   },
   confirm: "none",
   description:
-    "Show one canvas frame in a state without a real pointer, so get_screenshot with frameId shows it. hover, focus-visible, active or disabled applies the rules of that state to the layer (a CSS selector). open, checked and selected set data-state to open, checked or active on the layer, and put the old value back when the frame shows the default again. A Radix part that renders again can set its own value back. dark applies the dark rules (no layer needed). Pass state null to show the frame as it is. The source files do not change.",
+    "Show one canvas frame in a state without a real pointer, so get_screenshot with frameId shows it. hover, focus-visible, active or disabled applies the rules of that state to the layer (a CSS selector). open, checked and selected set data-state on the layer. group-hover, group-open and group-checked do this on the nearest parent with the group class. The old value comes back when the frame shows the default again. dark applies the dark rules (no layer needed). Pass state null to show the frame as it is. The source files do not change.",
   errors: [BadRequest, Conflict, NotFound],
   http: {
     method: "POST",

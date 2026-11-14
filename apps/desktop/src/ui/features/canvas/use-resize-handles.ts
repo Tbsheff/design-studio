@@ -22,6 +22,7 @@ import {
   styleFor,
   toResizeLive,
   toResizeTarget,
+  toRotateTargets,
 } from "./resize-handles-model.js";
 import type {
   Drag,
@@ -85,6 +86,7 @@ const useResizeLive = ({
   onRotateDown,
   onScaleDown,
   rotateLabel: rotateLabelStore,
+  rotateTargets,
 }: ResizeHandles): ResizeControl => {
   const size = useLive(sizes);
   const ghost = useLive(ghostStore);
@@ -100,6 +102,7 @@ const useResizeLive = ({
     onRotateDown,
     onScaleDown,
     rotateLabel,
+    rotateTargets,
     target,
   };
 };
@@ -114,6 +117,12 @@ const useResizeHandles = (options: Options): ResizeHandles => {
   const drag = useRef<Drag | null>(null);
   const sizes = useMemo(() => createLiveStore<LiveSize | null>(null), []);
   const target = toResizeTarget(options);
+  const { enabled, selection } = options;
+
+  const rotateTargets = useMemo(
+    () => toRotateTargets(enabled, selection),
+    [enabled, selection]
+  );
 
   const commit = useCallback(
     (finished: Drag): Promise<void> => commitDrag(live, finished),
@@ -134,7 +143,11 @@ const useResizeHandles = (options: Options): ResizeHandles => {
   useEffect(() => (): void => cancelDrag(context), [context]);
 
   const { ghost, onScaleDown } = useScaleDrag(live, target);
-  const { label: rotateLabel, onRotateDown } = useRotateDrag(live, target);
+
+  const { label: rotateLabel, onRotateDown } = useRotateDrag(
+    live,
+    rotateTargets
+  );
 
   return {
     ghost,
@@ -142,6 +155,7 @@ const useResizeHandles = (options: Options): ResizeHandles => {
     onRotateDown,
     onScaleDown,
     rotateLabel,
+    rotateTargets,
     sizes,
     target,
   };

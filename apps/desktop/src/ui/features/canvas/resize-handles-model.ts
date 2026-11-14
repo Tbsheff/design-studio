@@ -80,6 +80,7 @@ interface ResizeControl {
   readonly onScaleDown: ScaleDown;
   readonly onRotateDown: RotateDown;
   readonly rotateLabel: RotateLabel | null;
+  readonly rotateTargets: readonly SelectionContext[];
 }
 
 interface LiveSize {
@@ -97,6 +98,7 @@ interface ResizeHandles {
   readonly onScaleDown: ScaleDown;
   readonly onRotateDown: RotateDown;
   readonly rotateLabel: LiveStore<RotateLabel | null>;
+  readonly rotateTargets: readonly SelectionContext[];
 }
 
 interface ResizeReadout {
@@ -139,6 +141,19 @@ const toResizeTarget = (options: Options): SelectionContext | null => {
   }
 
   return null;
+};
+
+const toRotateTargets = (
+  isEnabled: boolean,
+  selection: readonly SelectionContext[]
+): readonly SelectionContext[] => {
+  const isSourced = selection.every((item) => item.source !== null);
+
+  if (!isEnabled || selection.length === 0 || !isSourced) {
+    return [];
+  }
+
+  return selection;
 };
 
 const toPixels = (value: string | undefined, fallback: number): number => {
@@ -316,6 +331,7 @@ export {
   toPixels,
   toResizeLive,
   toResizeTarget,
+  toRotateTargets,
   toScale,
 };
 

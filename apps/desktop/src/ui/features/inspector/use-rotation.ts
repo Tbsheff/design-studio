@@ -97,17 +97,13 @@ const useFlipKeys = (flip: (axis: FlipAxis) => void): void => {
   }, [latest]);
 };
 
-const useRotation = (edit: DirectEdit): Rotation => {
+const useRotationState = (
+  edit: DirectEdit,
+  flip: (axis: FlipAxis) => void
+): Rotation => {
   const [isOpened, setIsOpened] = useState(false);
   const [focusCount, setFocusCount] = useState(0);
   const inputRef = useRef<HTMLInputElement | null>(null);
-
-  const flip = useCallback(
-    (axis: FlipAxis): void => {
-      setEdit(edit, { scale: toFlippedScale(edit.values.scale, axis) });
-    },
-    [edit]
-  );
 
   const open = useCallback((): void => {
     setIsOpened(true);
@@ -119,8 +115,9 @@ const useRotation = (edit: DirectEdit): Rotation => {
       return;
     }
 
-    const frame = requestAnimationFrame(() => {
+    let frame = requestAnimationFrame(() => {
       inputRef.current?.focus();
+      frame = requestAnimationFrame(() => inputRef.current?.select());
     });
 
     return (): void => cancelAnimationFrame(frame);
@@ -130,11 +127,25 @@ const useRotation = (edit: DirectEdit): Rotation => {
   useCommands(() => toRotationCommands(flip, open));
 
   const isShown =
-    isOpened || isRotated(edit.values.rotate) || edit.dirty.includes("rotate");
+    isOpened ||
+    isRotated(edit.values.rotate) ||
+    edit.mixed.has("rotate") ||
+    edit.dirty.includes("rotate");
 
   return { inputRef, isShown };
 };
 
-export { useRotation };
+const useRotation = (edit: DirectEdit): Rotation => {
+  const flip = useCallback(
+    (axis: FlipAxis): void => {
+      setEdit(edit, { scale: toFlippedScale(edit.values.scale, axis) });
+    },
+    [edit]
+  );
+
+  return useRotationState(edit, flip);
+};
+
+export { useRotation, useRotationState };
 
 export type { Rotation };

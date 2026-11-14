@@ -152,6 +152,63 @@ const toRotateBody = (
   ...toTargetFields(target),
 });
 
+interface RotateEdit {
+  readonly component?: string;
+  readonly selector: string;
+  readonly source: SelectionContext["source"];
+  readonly style: { readonly rotate: string };
+  readonly tag?: string;
+}
+
+interface GroupAngles {
+  readonly angles: readonly number[];
+  readonly label: number;
+}
+
+interface RotateBatchBody {
+  readonly directionId: string;
+  readonly edits: readonly RotateEdit[];
+  readonly projectId: string;
+}
+
+const toRotateEdit = (
+  target: SelectionContext,
+  style: { readonly rotate: string }
+): RotateEdit => ({
+  selector: target.selector,
+  source: target.source,
+  style,
+  ...toTargetFields(target),
+});
+
+const toRotateBatch = (
+  ids: { readonly directionId: string; readonly projectId: string },
+  list: readonly RotateEdit[]
+): RotateBatchBody => ({
+  directionId: ids.directionId,
+  edits: list,
+  projectId: ids.projectId,
+});
+
+const toGroupAngles = (
+  bases: readonly RotateBase[],
+  delta: number,
+  isSnapped: boolean
+): GroupAngles => {
+  if (bases.length === 1) {
+    const angle = toRotateAngle(bases[0]?.start ?? 0, delta, isSnapped);
+
+    return { angles: [angle], label: angle };
+  }
+
+  const turn = toRotateAngle(0, delta, isSnapped);
+
+  return {
+    angles: bases.map((base) => toRotateAngle(base.start, turn, false)),
+    label: turn,
+  };
+};
+
 const isRotateDrag = (from: RotatePoint, to: RotatePoint): boolean =>
   Math.max(Math.abs(to.x - from.x), Math.abs(to.y - from.y)) >= MIN_DRAG_PX;
 
@@ -162,12 +219,24 @@ export {
   ROTATE_CORNERS,
   isRotateDrag,
   toAngleLabel,
+  toGroupAngles,
   toPointerAngle,
   toPreviewRotate,
   toRotateAngle,
   toRotateBase,
+  toRotateBatch,
   toRotateBody,
+  toRotateEdit,
   toRotateValue,
 };
 
-export type { RotateBase, RotateBody, RotateCorner, RotateLabel, RotatePoint };
+export type {
+  GroupAngles,
+  RotateBase,
+  RotateBatchBody,
+  RotateBody,
+  RotateCorner,
+  RotateEdit,
+  RotateLabel,
+  RotatePoint,
+};

@@ -9,6 +9,7 @@ import { SimpleMultiBody } from "./simple-multi-body.js";
 import type { ScopeInput } from "./token-scope-model.js";
 import { useDirectEdits } from "./use-direct-edits.js";
 import { useInspectorTokens } from "./use-inspector-tokens.js";
+import { useMultiRotation } from "./use-multi-rotation.js";
 import { TokenUiContext } from "./use-token-snap.js";
 
 const SimpleMultiEditor = (
@@ -37,6 +38,8 @@ const SimpleMultiEditor = (
     selections: props.selection,
   });
 
+  const rotation = useMultiRotation(props, edit);
+
   const keepRaw = useCallback(
     (raw: Partial<StyleValues>) => {
       tokens.snap.keepRaw(raw);
@@ -56,6 +59,7 @@ const SimpleMultiEditor = (
         edit={edit}
         tokens={tokens}
         keepRaw={keepRaw}
+        rotation={rotation}
       />
       <MultiCreateTokenHost
         projectId={props.projectId}

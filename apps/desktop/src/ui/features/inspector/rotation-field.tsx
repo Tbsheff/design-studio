@@ -16,19 +16,24 @@ const RotationField = ({
   readonly edit: DirectEdit;
   readonly inputRef: RefObject<HTMLInputElement | null>;
 }): ReactElement => {
+  const isMixed = edit.mixed.has("rotate");
   const display = toRotationDisplay(edit.values.rotate);
 
-  const spec = useMemo(
-    () => ({
-      display,
+  const spec = useMemo(() => {
+    const base = {
       edit,
       label: rotationCopy.label,
       prop: "rotate" as const,
       shiftStep: ROTATE_SHIFT_STEP,
       unit: "deg",
-    }),
-    [display, edit]
-  );
+    };
+
+    if (isMixed) {
+      return base;
+    }
+
+    return { ...base, display };
+  }, [display, edit, isMixed]);
 
   useEffect(() => {
     const input = inputRef.current;

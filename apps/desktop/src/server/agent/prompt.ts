@@ -106,7 +106,7 @@ const QUALITY_RULES = `## Design quality
 - Real content only: no invented metrics, testimonials, customer logos, awards, or fake user counts. When a plain fact is missing (an address, a date, a price), use a realistic sample value and say in your reply that it is a sample. Never show draft markers such as "TBD", "to come" or "placeholder" to end users.
 - No emoji as icons. Use inline SVG icons or plain text.
 - No generic purple or indigo gradient hero. Choose a palette that fits the subject.
-- Clear hierarchy: one primary action per view, a consistent spacing scale (for example 4/8/12/16/24/32/48/64 px), a type scale with real contrast between levels.
+- Clear hierarchy: one primary action per view, a consistent spacing scale (for example 4/8/12/16/24/32/48/64 px), a type scale with real contrast between levels. Review lists measured type and spacing findings; fix the medium and high ones.
 - Accessible contrast (WCAG AA: 4.5:1 for body text), visible focus states, semantic HTML, alt text, labels on inputs.
 - Responsive: the layout must work at 375px and at 1440px wide with no horizontal scroll.
 - Short labels (times, prices, dates, button text) never wrap. No fact shows twice in one view.

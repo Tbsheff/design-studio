@@ -30,7 +30,8 @@ const isFresh = (pending: PendingResume): boolean => {
 };
 
 const isResumed = (message: BridgeToParent, pending: PendingResume): boolean =>
-  message.type === "text-edit" && message.token === pending.frameToken;
+  message.type === "text-edit" &&
+  (pending.frameToken === null || message.token === pending.frameToken);
 
 const useTextRangeResume = (
   port: RefObject<PreviewPort | null>,

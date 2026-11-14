@@ -31,7 +31,7 @@ import {
   toWriteArtAssets,
 } from "./photo-art-plan.js";
 import type { PhotoArtPlan } from "./photo-art-plan.js";
-import { toTrimmedArt, toTrimmedHtml } from "./photo-art-trim.js";
+import { toTrimmedFill, toTrimmedHtml } from "./photo-art-trim.js";
 import { isRunDraft, toArtFill } from "./photo-art.js";
 import { toPicks } from "./photo-pick.js";
 import type { PhotoFillScope, PhotoPage, PhotoPick } from "./photo-pick.js";
@@ -349,13 +349,14 @@ const toCommitFill = async (
     return null;
   }
 
-  const credit = await toCredits(scope.workTree, picks);
-  const edits = { code: toFilledSource(page, planned), credit };
+  const [credit, trimmed] = await Promise.all([
+    toCredits(scope.workTree, picks),
+    toTrimmedFill(page, toFilledSource(page, planned), planned.art),
+  ]);
 
-  const plan = {
-    ...planned,
-    art: await toTrimmedArt(page, edits.code, planned.art),
-  };
+  const edits = { code: trimmed.code, credit };
+
+  const plan = { ...planned, art: trimmed.art };
 
   const isSame = edits.code === page.source && picks.length === 0;
 

@@ -6,6 +6,7 @@ export type {
   BridgeToParent,
   ParentToBridge,
   SourceLoc,
+  TextRangeLayer,
 } from "@design-studio/contracts";
 
 export { useAction } from "../../platform/query.js";

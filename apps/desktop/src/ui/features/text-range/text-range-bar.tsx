@@ -34,6 +34,14 @@ const TextRangeBar = (props: TextRangeSetup): ReactElement | null => {
     [spot]
   );
 
+  if (spot === null && view.notice !== null) {
+    return (
+      <output aria-live="polite" className="ds-toast-slot">
+        <div className="ds-toast">{view.notice}</div>
+      </output>
+    );
+  }
+
   if (spot === null) {
     return null;
   }
@@ -66,6 +74,7 @@ const TextRangeBar = (props: TextRangeSetup): ReactElement | null => {
         <TextRangeLinkField onSubmit={view.handleLinkSubmit} />
       )}
       {view.isDirty && <p className={styles.note}>{copy.dirty}</p>}
+      {view.notice !== null && <p className={styles.note}>{view.notice}</p>}
       {view.failure !== null && (
         <p className={`${styles.note} ${styles.error}`} role="alert">
           {view.failure}

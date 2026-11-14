@@ -15,6 +15,8 @@ const copy = {
   linkLabel: "Link address",
   linkPlaceholder: "https://",
   linkTip: "Link (Mod+K)",
+  mixedNote:
+    "This line has styled text. Select a range to style it. To change the words, edit one part.",
   removeLink: "Remove link",
   toolbarLabel: "Text style",
 } as const;

@@ -12,6 +12,7 @@ import { useTextRangeActions } from "./use-text-range-actions.js";
 import type { TextRangeActions } from "./use-text-range-actions.js";
 import { useTextRangeApply } from "./use-text-range-apply.js";
 import { useTextRangeFeed } from "./use-text-range-feed.js";
+import { useTextRangeNotice } from "./use-text-range-notice.js";
 
 interface TextRangeSetup {
   readonly directionId: string | null;
@@ -26,6 +27,7 @@ interface TextRangeView extends TextRangeActions {
   readonly isDirty: boolean;
   readonly isLinkOpen: boolean;
   readonly isPending: boolean;
+  readonly notice: string | null;
   readonly spot: TextRangeSpot | null;
   readonly tag: string;
 }
@@ -78,6 +80,7 @@ const useTextRange = (setup: TextRangeSetup): TextRangeView => {
   });
 
   const shown = held ?? feed.reading;
+  const notice = useTextRangeNotice(setup.port, setup.selector);
 
   const actions = useTextRangeActions({
     apply,
@@ -99,6 +102,7 @@ const useTextRange = (setup: TextRangeSetup): TextRangeView => {
     isDirty: shown?.isDirty ?? false,
     isLinkOpen,
     isPending: applied.isPending,
+    notice,
     spot,
     tag: shown?.tag ?? "",
   };

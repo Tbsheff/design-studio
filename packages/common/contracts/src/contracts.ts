@@ -335,6 +335,13 @@ export interface WorkTreeStatus {
   changed: string[];
 }
 
+export interface TextRangeLayer {
+  readonly selector: string;
+  readonly start: number;
+  readonly end: number;
+  readonly text: string;
+}
+
 export interface SourceLoc {
   file: string;
   line: number;
@@ -1168,6 +1175,7 @@ export const CLOUD_BLOCKED_BRIDGE_TYPES: readonly BridgeToParent["type"][] = [
   "text-edit",
   "text-range",
   "text-range-key",
+  "text-edit-blocked",
   "move-start",
   "move-live",
   "move-drop",
@@ -1309,7 +1317,9 @@ export type BridgeToParent =
       type: "text-edit";
       selector: string;
       state: "start" | "cancel";
+      isRangeMode: boolean;
     }
+  | { ns: "studio"; token: string; type: "text-edit-blocked"; selector: string }
   | {
       ns: "studio";
       token: string;
@@ -1330,6 +1340,8 @@ export type BridgeToParent =
       tag: string;
       isDirty: boolean;
       rect: { x: number; y: number; width: number; height: number } | null;
+      source: SourceLoc | null;
+      layer: TextRangeLayer;
     }
   | {
       ns: "studio";
@@ -1342,6 +1354,8 @@ export type BridgeToParent =
       end: number;
       text: string;
       tag: string;
+      source: SourceLoc | null;
+      layer: TextRangeLayer;
     }
   | { ns: "studio"; token: string; type: "history-key"; redo: boolean }
   | { ns: "studio"; token: string; type: "layout-key" }
@@ -1870,6 +1884,12 @@ export type ParentToBridge =
   | { ns: "studio"; token: string; type: "text-edit-allowed"; allowed: boolean }
   | { ns: "studio"; token: string; type: "text-edit-stop" }
   | { ns: "studio"; token: string; type: "text-edit-start"; selector: string }
+  | ({
+      ns: "studio";
+      token: string;
+      type: "text-edit-resume";
+      frameToken: string;
+    } & TextRangeLayer)
   | {
       ns: "studio";
       token: string;

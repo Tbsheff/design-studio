@@ -259,14 +259,50 @@ const startTextEdit = (
   }
 };
 
+type TextEditResume = Extract<ParentToBridge, { type: "text-edit-resume" }>;
+
+const resumeTextEdit = (
+  context: BridgeContext,
+  message: TextEditResume,
+  left: number
+): void => {
+  const element = queryElement(message.selector);
+
+  if (context.textEditor.canEdit(element)) {
+    context.textEditor.resume(
+      element,
+      message.start,
+      message.end,
+      message.text
+    );
+
+    return;
+  }
+
+  if (left > 0) {
+    window.setTimeout(
+      () => resumeTextEdit(context, message, left - 1),
+      TEXT_EDIT_RETRY_MS
+    );
+  }
+};
+
 const createTextEditHandlers = (
   context: BridgeContext
 ): Pick<
   MessageHandlers,
-  "text-edit-allowed" | "text-edit-start" | "text-edit-stop"
+  | "text-edit-allowed"
+  | "text-edit-resume"
+  | "text-edit-start"
+  | "text-edit-stop"
 > => ({
   "text-edit-allowed": (message) =>
     context.textEditor.allow(message.allowed === true),
+  "text-edit-resume": (message) => {
+    if (message.frameToken === message.token) {
+      resumeTextEdit(context, message, TEXT_EDIT_RETRIES);
+    }
+  },
   "text-edit-start": (message) => {
     startTextEdit(context, message.selector, TEXT_EDIT_RETRIES);
   },

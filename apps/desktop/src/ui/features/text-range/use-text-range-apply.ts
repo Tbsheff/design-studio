@@ -6,6 +6,7 @@ import { copy } from "./copy.js";
 import { textRoutes, useAction } from "./deps.js";
 import type { PreviewPort, SourceLoc } from "./deps.js";
 import type { TextRangeReading } from "./text-range-model.js";
+import { useTextRangeResume } from "./use-text-range-resume.js";
 
 type TextRangeBody = RouteInput<typeof textRoutes.applyRangeText>;
 
@@ -16,6 +17,7 @@ interface TextRangeApplySetup {
   readonly onResult: (isOk: boolean) => void;
   readonly port: RefObject<PreviewPort | null>;
   readonly projectId: string;
+  readonly selector: string | null;
   readonly source: SourceLoc | null;
 }
 
@@ -60,7 +62,7 @@ const toApplyBody = (
   setup: TextRangeApplySetup,
   input: TextRangeApplyInput
 ): TextRangeBody | null => {
-  const { source } = setup;
+  const source = input.reading.source ?? setup.source;
 
   if (source === null || setup.directionId === null) {
     return null;
@@ -97,11 +99,12 @@ const toFailureOf = (
 };
 
 const useTextRangeApply = (setup: TextRangeApplySetup): TextRangeApply => {
-  const { onResult, port } = setup;
+  const { onResult, port, selector } = setup;
   const [pending, startApply] = useTransition();
   const [isMissing, setIsMissing] = useState(false);
   const [dismissed, setDismissed] = useState<Error | null>(null);
   const { error, run } = useAction(textRoutes.applyRangeText);
+  const { arm, drop } = useTextRangeResume(port, selector);
 
   const apply = useCallback(
     (input: TextRangeApplyInput): void => {
@@ -112,14 +115,18 @@ const useTextRangeApply = (setup: TextRangeApplySetup): TextRangeApply => {
         return;
       }
 
-      port.current?.post({ type: "text-edit-stop" });
+      arm(input.reading.layer);
       startApply(async () => {
         const result = await run(body);
+
+        if (result === null) {
+          drop();
+        }
 
         onResult(result !== null);
       });
     },
-    [onResult, port, run, setup]
+    [arm, drop, onResult, run, setup]
   );
 
   const clear = useCallback((): void => {

@@ -1,6 +1,6 @@
 import type { MouseEvent } from "react";
 
-import type { BridgeToParent } from "./deps.js";
+import type { BridgeToParent, SourceLoc, TextRangeLayer } from "./deps.js";
 
 type TextRangeMessage = Extract<BridgeToParent, { type: "text-range" }>;
 
@@ -18,8 +18,10 @@ interface TextRangeBox {
 interface TextRangeReading {
   readonly end: number;
   readonly isDirty: boolean;
+  readonly layer: TextRangeLayer;
   readonly rect: TextRangeBox;
   readonly selector: string;
+  readonly source: SourceLoc | null;
   readonly start: number;
   readonly tag: string;
   readonly text: string;
@@ -70,8 +72,10 @@ const toReading = (message: TextRangeMessage): TextRangeReading | null => {
   return {
     end: message.end,
     isDirty: message.isDirty,
+    layer: message.layer,
     rect: message.rect,
     selector: message.selector,
+    source: message.source,
     start: message.start,
     tag: message.tag,
     text: message.text,
@@ -84,8 +88,10 @@ const toKeyReading = (
 ): TextRangeReading => ({
   end: message.end,
   isDirty: false,
+  layer: message.layer,
   rect: box,
   selector: message.selector,
+  source: message.source,
   start: message.start,
   tag: message.tag,
   text: message.text,

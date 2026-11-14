@@ -222,7 +222,7 @@ const toRoutesPrompt = (checks: readonly RouteCheck[]): string => {
   const low = toLowChecks(checks);
 
   return toContinueText([
-    `The studio checked ${checks.length} routes of the flow. ${low.length} of them fail to render or score under ${REFERENCE_LOW_SCORE}. Fix only these routes:`,
+    `The studio checked ${checks.length} routes of the flow. ${low.length} of them fail to render, score under ${REFERENCE_LOW_SCORE}, or have kit or dark gaps. Fix only these routes:`,
     ...low.flatMap((item) => toFixLines(item.input.gaps, item.check)),
   ]);
 };

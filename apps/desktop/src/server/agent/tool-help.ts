@@ -49,7 +49,7 @@ export const TOOL_SHORT = {
   replace_style:
     "Replace one raw style value with a token on every element of the page that uses it. Skips .map() elements and computed classNames.",
   review_frame:
-    "Read only. Review panel checks on one frame: contrast, tap targets, axe, tokens, clipping, type, hover and focus, broken images. Findings have a fix or null.",
+    "Read only. Review panel checks on one frame: contrast, tap targets, axe, tokens, clipping, type, hover and focus, broken images, alignment. Findings have a fix or null.",
   screenshot:
     "PNG screenshots of one page (default: the <canvas-context> frame), up to four images from y offset `from`. The text says if more of the page is below.",
   select_matching:
@@ -105,7 +105,7 @@ export const TOOL_HELP: Record<
   replace_style:
     'Replace one style value with a token on every element of the page (or frame) that uses it, with the same code as "Replace with token…" in the studio inspector. token is a CSS variable or, in a Tailwind project, a theme class; Tailwind projects get classes, not inline style. Elements made by .map(), elements with a className built in code, and shared elements where only some copies use the value are skipped and counted. Use it to move raw values such as #1c1f23 or p-[13px] to tokens.',
   review_frame:
-    "Run the studio Review panel checks on one canvas frame of the live page: color contrast with the nearest passing color token, tap target size, missing alt text and other axe-core rules, off-token values (raw colors or spacing that are not project tokens, Tailwind arbitrary values), clipped or overflowing content, type (type scale, line length, line height and spacing steps), interaction (no hover style, focus ring removed, emoji used as icons) and broken-image (an img or background image that did not load). Returns JSON findings with severity, element, selector, source, message and directFix (the exact style for edit_element) or null when the fix needs judgment. Read only.",
+    "Run the studio Review panel checks on one canvas frame of the live page: color contrast with the nearest passing color token, tap target size, missing alt text and other axe-core rules, off-token values (raw colors or spacing that are not project tokens, Tailwind arbitrary values), clipped or overflowing content, type (type scale, line length, line height and spacing steps), interaction (no hover style, focus ring removed, emoji used as icons), broken-image (an img or background image that did not load) and align (an edge 1 to 3 px off its siblings, or uneven gaps in a list). Returns JSON findings with severity, element, selector, source, message and directFix (the exact style for edit_element) or null when the fix needs judgment. Read only.",
   screenshot:
     "Take PNG screenshots of one page of the live preview. With no frame or path it shows the frame from <canvas-context> (its page, size and frame state), or the entry page. Returns up to four images, top to bottom, starting at the y offset `from`. The text names the page and says whether more of it is below.",
   select_matching: SELECT_MATCHING_DESCRIPTION,

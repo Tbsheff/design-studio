@@ -9,6 +9,7 @@ export const REVIEW_KINDS = [
   "clipped",
   "rule",
   "type",
+  "align",
   "interaction",
   "broken-image",
 ] as const;
@@ -19,6 +20,7 @@ export type ReviewSeverity = "high" | "medium" | "low";
 
 export const REVIEW_KIND_LABEL: Record<ReviewKind, string> = {
   a11y: "Accessibility",
+  align: "Alignment and gaps",
   "alt-text": "Missing alt text",
   "broken-image": "Broken images",
   clipped: "Clipped or overflowing",

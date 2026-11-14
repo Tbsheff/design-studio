@@ -353,27 +353,44 @@ const postSettled = (
   }
 };
 
+const toVariantBody = <Body extends object>(
+  body: Body,
+  variant: string
+): Body => {
+  if (variant === "") {
+    return body;
+  }
+
+  return { ...body, variant };
+};
+
 const toCommitBody = (
   ids: { readonly directionId: string; readonly projectId: string },
   request: RotateRequest,
-  styles: readonly RotateStyle[]
+  styles: readonly RotateStyle[],
+  variant: string
 ): RotateBody | RotateBatchBody => {
   const edits = request.targets.map((target, index) =>
-    toRotateEdit(target, styles[index] ?? {})
+    toVariantBody(toRotateEdit(target, styles[index] ?? {}), variant)
   );
 
   const [first] = request.targets;
 
   if (edits.length === 1 && first) {
-    return toRotateBody(ids, first, {
-      rotate: toRotateValue(request.angles[0] ?? 0),
-    });
+    return toVariantBody(
+      toRotateBody(ids, first, {
+        rotate: toRotateValue(request.angles[0] ?? 0),
+      }),
+      variant
+    );
   }
 
   return toRotateBatch(ids, edits);
 };
 
-const useRotateCommit = (): RotateSession["commit"] => {
+const useRotateCommit = (
+  readVariant: () => string
+): RotateSession["commit"] => {
   const { run } = useAction(directEditRoutes.applyDirectEdit);
   const [, startWork] = useTransition();
 
@@ -395,7 +412,8 @@ const useRotateCommit = (): RotateSession["commit"] => {
           toCommitBody(
             { directionId, projectId: options.projectId },
             request,
-            styles
+            styles,
+            readVariant()
           )
         );
 
@@ -410,16 +428,17 @@ const useRotateCommit = (): RotateSession["commit"] => {
         options.refreshRects();
       });
     },
-    [run]
+    [readVariant, run]
   );
 };
 
 const useRotateDrag = (
   live: RefObject<Options>,
-  targets: readonly SelectionContext[]
+  targets: readonly SelectionContext[],
+  readVariant: () => string
 ): RotateDrag => {
   const label = useMemo(() => createLiveStore<RotateLabel | null>(null), []);
-  const commit = useRotateCommit();
+  const commit = useRotateCommit(readVariant);
 
   const session = useMemo(
     () => ({ commit, label, live }),

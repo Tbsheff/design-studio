@@ -19,6 +19,7 @@ Branch `feat/route-fidelity`, cut from main `7e8cda099`.
   - `review/index.ts`: one export line, for the area index rule.
   - `preview/mcp-read-store.ts`: the new method.
   - The new preview files.
+- **`read-service-io`**: `probedScreenshot` takes a screenshot in an `access: "read"` service, as `screenshot` does. The `screenshot(` call sits in `probed-preview.ts`, one file below `probed-shot-read.ts`. That is the depth `screenshot` already uses through `captureFrame`. The split is not a way around the rule. A reviewer can mark the service `write` at merge if the rule should cover both.
 
 ## Checked
 
@@ -29,6 +30,7 @@ Setup:
 - I hand-wrote a designed prototype page (card, header row, ward pills).
 - After the copy, the app got "Ward list for today." and 6 rows of new data (the prototype has 5 sample rows).
 - Studio on port 5720, data in `ds-wt/route-fidelity-data`.
+- Replay inputs (`route-fidelity/replay-inputs/`): the prototype page, the app files before the run, the app data and the correct-port CSS. The fault variant is the correct port with `.card { border: none }` and `.title { font-size: 20px }`.
 
 The cycle-28 `real-run-2-*.jsx` files are tracked and present. They were scored against another prototype, so I did not use them as the before score. I made the before score with my own real run on main.
 
@@ -66,6 +68,8 @@ Other checks:
 
 - **`rf-next-tw` real run**: not done. The 2 real runs went to the main before score and the branch. Instead, a `package.json`-only check covers the style-stack line.
 - **Kept text spacing**: run 2 shows that a hidden kept line still leaves the gaps around it wrong. The new fix-prompt sentence aims at this, but no run measures it.
+- **Hidden-row note**: the "Hid 1 extra data row on the app page." text shows in `masked` and in the fix prompt. The run note ("Studio port check: score 71 ...") does not show it. No run could prove a note change, because the mock page drops `PatientList`.
+- **App-change rule limit**: the rule hides any added app text that is in neither the copy snapshot nor the prototype. So text that the agent adds off the prototype is not scored. The fault check covered style faults only.
 - **UI fix prompt**: "Fix differences" (`ui/features/chat/port-check-model.ts`) does not list `masked` or `elements`. The file is not on the owned list.
 - **Union masks**: the masks are the union of both pages' cell boxes. When the app layout is shifted, the union boxes show past the prototype card on the sheet (the run 1 replay).
 - **Bonaparte**: `get_port_plan` for a route copy was not run (it needs its database).

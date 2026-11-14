@@ -31,6 +31,7 @@ import {
   toWriteArtAssets,
 } from "./photo-art-plan.js";
 import type { PhotoArtPlan } from "./photo-art-plan.js";
+import { toTrimmedArt, toTrimmedHtml } from "./photo-art-trim.js";
 import { isRunDraft, toArtFill } from "./photo-art.js";
 import { toPicks } from "./photo-pick.js";
 import type { PhotoFillScope, PhotoPage, PhotoPick } from "./photo-pick.js";
@@ -198,7 +199,13 @@ const toFilledSource = (page: PhotoPage, plan: PhotoFillPlan): string => {
     code = setAttrs(code, position, edit.changes);
   }
 
-  return toArtCode(page, code, plan.art);
+  const sheeted = toArtCode(page, code, plan.art);
+
+  if (!isHtml) {
+    return sheeted;
+  }
+
+  return toTrimmedHtml(sheeted);
 };
 
 const toCredits = async (
@@ -334,16 +341,22 @@ const toCommitFill = async (
   deps: DirectEditDeps,
   scope: PhotoFillScope,
   page: PhotoPage,
-  plan: PhotoFillPlan
+  planned: PhotoFillPlan
 ): Promise<Version | null> => {
-  const { picks } = plan;
+  const { picks } = planned;
 
-  if (picks.length === 0 && plan.misses.length === 0) {
+  if (picks.length === 0 && planned.misses.length === 0) {
     return null;
   }
 
   const credit = await toCredits(scope.workTree, picks);
-  const edits = { code: toFilledSource(page, plan), credit };
+  const edits = { code: toFilledSource(page, planned), credit };
+
+  const plan = {
+    ...planned,
+    art: await toTrimmedArt(page, edits.code, planned.art),
+  };
+
   const isSame = edits.code === page.source && picks.length === 0;
 
   if (isSame && toArtAssetFiles(plan.art).length === 0) {

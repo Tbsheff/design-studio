@@ -20,6 +20,7 @@ import { htmlNameSplice, htmlPositionAt, planHtmlMove } from "./structure.js";
 import { htmlClassSite } from "./tailwind/html-site.js";
 import { decideClassEdit, describeSite } from "./tailwind/index.js";
 import type { TailwindTheme } from "./tailwind/index.js";
+import { toRotateTransformChanges } from "./tailwind/rotate-scale.js";
 import { variantCssProps, variantCssSplices } from "./variant-css.js";
 
 type ParentNode = DefaultTreeAdapterMap["parentNode"];
@@ -178,9 +179,10 @@ function styleSplice(
     );
     if (quick) return quick;
   }
+  const before = attr ? parseDeclarations(attr.value) : [];
   const declarations = applyDeclarationChanges(
-    attr ? parseDeclarations(attr.value) : [],
-    style
+    before,
+    Object.fromEntries(toRotateTransformChanges(before, style))
   );
   const serialized = serializeDeclarations(declarations);
   if (attr && attrLocation) {

@@ -349,7 +349,8 @@ body.frame-dragging * {
 }
 
 body.frame-dragging .frame,
-body.element-resizing .frame {
+body.element-resizing .frame,
+body.element-rotating .frame {
   pointer-events: none;
 }
 
@@ -1072,6 +1073,68 @@ fieldset.compare-modes {
   position: absolute;
   border: calc(var(--stroke) * 1) dashed var(--select);
   background: color-mix(in oklch, var(--select) 8%, transparent);
+  pointer-events: none;
+}
+
+.rotate-zone {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  transform: scale(var(--inv-zoom, 1));
+  pointer-events: auto;
+  touch-action: none;
+  cursor:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Cpath d='M5 13a6 6 0 1 0 1.8-7.3' fill='none' stroke='%23fff' stroke-width='4' stroke-linecap='round'/%3E%3Cpath d='M5 13a6 6 0 1 0 1.8-7.3' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round'/%3E%3Cpath d='M3.6 3.4 7.6 5.3 4.6 8.6Z' fill='%23000' stroke='%23fff' stroke-width='1'/%3E%3C/svg%3E")
+      10 10,
+    crosshair;
+}
+
+.rotate-zone.nw {
+  left: 0;
+  top: 0;
+  translate: -100% -100%;
+  transform-origin: 100% 100%;
+}
+
+.rotate-zone.ne {
+  left: 100%;
+  top: 0;
+  translate: 0 -100%;
+  transform-origin: 0 100%;
+}
+
+.rotate-zone.sw {
+  left: 0;
+  top: 100%;
+  translate: -100% 0;
+  transform-origin: 100% 0;
+}
+
+.rotate-zone.se {
+  left: 100%;
+  top: 100%;
+  transform-origin: 0 0;
+}
+
+body.element-rotating,
+body.element-rotating * {
+  cursor:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Cpath d='M5 13a6 6 0 1 0 1.8-7.3' fill='none' stroke='%23fff' stroke-width='4' stroke-linecap='round'/%3E%3Cpath d='M5 13a6 6 0 1 0 1.8-7.3' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round'/%3E%3Cpath d='M3.6 3.4 7.6 5.3 4.6 8.6Z' fill='%23000' stroke='%23fff' stroke-width='1'/%3E%3C/svg%3E")
+      10 10,
+    crosshair !important;
+}
+
+.rotate-label {
+  position: absolute;
+  transform-origin: 0 0;
+  transform: scale(var(--inv-zoom, 1)) translate(14px, 14px);
+  padding: 0 var(--s-1);
+  border-radius: var(--r-sm);
+  background: oklch(0.52 0.2 254);
+  color: #fff;
+  font: 500 var(--t-xs) / 20px var(--font);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
   pointer-events: none;
 }
 

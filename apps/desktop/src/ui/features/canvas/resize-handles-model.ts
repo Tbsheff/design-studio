@@ -9,6 +9,7 @@ import type { ParentMessageBody } from "../../platform/bridge.js";
 import { createLiveStore } from "../../platform/live-store.js";
 import type { LiveStore } from "../../platform/live-store.js";
 import { snapLayerRect } from "./layer-snap-lines-model.js";
+import type { RotateLabel } from "./rotate-drag-model.js";
 import type { ScaleCorner, ScaleGhost } from "./scale-drag-model.js";
 import type { Rect, SnapGuide, SnapKind } from "./snap-model.js";
 
@@ -60,6 +61,8 @@ interface ResizeLive {
   guides: SnapGuide[];
 }
 
+type RotateDown = (event: ReactPointerEvent<HTMLElement>) => void;
+
 type ScaleDown = (
   corner: ScaleCorner,
   event: ReactPointerEvent<HTMLElement>
@@ -75,6 +78,8 @@ interface ResizeControl {
   readonly ghost: ScaleGhost | null;
   readonly isScaling: boolean;
   readonly onScaleDown: ScaleDown;
+  readonly onRotateDown: RotateDown;
+  readonly rotateLabel: RotateLabel | null;
 }
 
 interface LiveSize {
@@ -90,6 +95,8 @@ interface ResizeHandles {
   onHandleDown: ResizeControl["onHandleDown"];
   readonly ghost: LiveStore<ScaleGhost | null>;
   readonly onScaleDown: ScaleDown;
+  readonly onRotateDown: RotateDown;
+  readonly rotateLabel: LiveStore<RotateLabel | null>;
 }
 
 interface ResizeReadout {

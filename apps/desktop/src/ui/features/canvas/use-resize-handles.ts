@@ -34,6 +34,7 @@ import type {
   ResizeReadout,
 } from "./resize-handles-model.js";
 import { beginResize, cancelDrag } from "./resize-handles-session.js";
+import { useRotateDrag } from "./use-rotate-drag.js";
 import { useScaleDrag } from "./use-scale-drag.js";
 
 const commitDrag = async (
@@ -81,14 +82,26 @@ const useResizeLive = ({
   sizes,
   onHandleDown,
   ghost: ghostStore,
+  onRotateDown,
   onScaleDown,
+  rotateLabel: rotateLabelStore,
 }: ResizeHandles): ResizeControl => {
   const size = useLive(sizes);
   const ghost = useLive(ghostStore);
+  const rotateLabel = useLive(rotateLabelStore);
   const isScaling = useLive(scaleMode) && target !== null;
   const live = toResizeLive(size, target);
 
-  return { ghost, isScaling, live, onHandleDown, onScaleDown, target };
+  return {
+    ghost,
+    isScaling,
+    live,
+    onHandleDown,
+    onRotateDown,
+    onScaleDown,
+    rotateLabel,
+    target,
+  };
 };
 
 const useResizeHandles = (options: Options): ResizeHandles => {
@@ -121,8 +134,17 @@ const useResizeHandles = (options: Options): ResizeHandles => {
   useEffect(() => (): void => cancelDrag(context), [context]);
 
   const { ghost, onScaleDown } = useScaleDrag(live, target);
+  const { label: rotateLabel, onRotateDown } = useRotateDrag(live, target);
 
-  return { ghost, onHandleDown, onScaleDown, sizes, target };
+  return {
+    ghost,
+    onHandleDown,
+    onRotateDown,
+    onScaleDown,
+    rotateLabel,
+    sizes,
+    target,
+  };
 };
 
 export {

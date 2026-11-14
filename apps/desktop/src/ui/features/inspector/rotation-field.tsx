@@ -1,6 +1,7 @@
 import type { ReactElement, RefObject } from "react";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 
+import { focusStageQuietly } from "../../platform/focus.js";
 import { rotationCopy } from "./copy.js";
 import type { DirectEdit } from "./deps.js";
 import { toRotationDisplay } from "./flip-model.js";
@@ -28,6 +29,24 @@ const RotationField = ({
     }),
     [display, edit]
   );
+
+  useEffect(() => {
+    const input = inputRef.current;
+
+    if (!input) {
+      return;
+    }
+
+    const onKeyUp = (event: KeyboardEvent): void => {
+      if (event.key === "Enter" && document.activeElement === input) {
+        focusStageQuietly();
+      }
+    };
+
+    input.addEventListener("keyup", onKeyUp);
+
+    return (): void => input.removeEventListener("keyup", onKeyUp);
+  }, [inputRef]);
 
   return (
     <div className="ins-grid" data-tip={rotationCopy.tip}>

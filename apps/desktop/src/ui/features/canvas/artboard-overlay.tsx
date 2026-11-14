@@ -40,6 +40,17 @@ const labelPlace = (screenTop: number): "" | " inside" => {
   return "";
 };
 
+const toLiveRect = (
+  rect: SelectionContext["rect"],
+  live: ResizeLive | null
+): SelectionContext["rect"] => {
+  if (live) {
+    return { ...rect, x: live.boxX, y: live.boxY };
+  }
+
+  return rect;
+};
+
 const toLiveSize = (
   live: ResizeLive | null
 ): { height: number; width: number } | null => {
@@ -93,7 +104,10 @@ const ArtboardOverlay = ({
             key={selectionContext3.selector}
             className="box selected"
             data-selector={selectionContext3.selector}
-            style={toRectStyle(selectionContext3.rect, toLiveSize(live))}
+            style={toRectStyle(
+              toLiveRect(selectionContext3.rect, live),
+              toLiveSize(live)
+            )}
           />
         );
       })}

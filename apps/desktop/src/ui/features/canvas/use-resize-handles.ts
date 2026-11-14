@@ -19,7 +19,8 @@ import {
   resizeReadout,
   resizedSize,
   snapSize,
-  styleFor,
+  toBackStyle,
+  toDragStyle,
   toResizeLive,
   toResizeTarget,
   toRotateTargets,
@@ -35,6 +36,7 @@ import type {
   ResizeReadout,
 } from "./resize-handles-model.js";
 import { beginResize, cancelDrag } from "./resize-handles-session.js";
+import { useGroupResize } from "./use-group-resize.js";
 import { useRotateDrag } from "./use-rotate-drag.js";
 import { useScaleDrag } from "./use-scale-drag.js";
 
@@ -43,7 +45,7 @@ const commitDrag = async (
   drag: Drag
 ): Promise<void> => {
   const cur = live.current;
-  const style = styleFor(drag.size, drag.base);
+  const style = toDragStyle(drag);
   const req = createCurrentEditRequest(drag.target, style);
 
   if (!req || !cur.directionId) {
@@ -66,10 +68,7 @@ const commitDrag = async (
   } catch (error) {
     optimistic.failed(errorText(error));
 
-    const back = {
-      height: drag.target.styles.height ?? "",
-      width: drag.target.styles.width ?? "",
-    };
+    const back = toBackStyle(drag);
 
     live.current.setSelection((prev) =>
       applyCommit(prev, { selector, style: back })
@@ -83,6 +82,8 @@ const useResizeLive = ({
   sizes,
   onHandleDown,
   ghost: ghostStore,
+  groupBox: groupBoxStore,
+  onGroupDown,
   onRotateDown,
   onScaleDown,
   rotateLabel: rotateLabelStore,
@@ -90,14 +91,17 @@ const useResizeLive = ({
 }: ResizeHandles): ResizeControl => {
   const size = useLive(sizes);
   const ghost = useLive(ghostStore);
+  const groupBox = useLive(groupBoxStore);
   const rotateLabel = useLive(rotateLabelStore);
   const isScaling = useLive(scaleMode) && target !== null;
   const live = toResizeLive(size, target);
 
   return {
     ghost,
+    groupBox,
     isScaling,
     live,
+    onGroupDown,
     onHandleDown,
     onRotateDown,
     onScaleDown,
@@ -149,8 +153,12 @@ const useResizeHandles = (options: Options): ResizeHandles => {
     rotateTargets
   );
 
+  const { box: groupBox, onGroupDown } = useGroupResize(live, rotateTargets);
+
   return {
     ghost,
+    groupBox,
+    onGroupDown,
     onHandleDown,
     onRotateDown,
     onScaleDown,

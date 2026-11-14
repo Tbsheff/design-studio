@@ -8,6 +8,7 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 import type { ParentMessageBody } from "../../platform/bridge.js";
 import { createLiveStore } from "../../platform/live-store.js";
 import type { LiveStore } from "../../platform/live-store.js";
+import type { GroupBox, GroupEdge } from "./group-resize-model.js";
 import { snapLayerRect } from "./layer-snap-lines-model.js";
 import type { RotateLabel } from "./rotate-drag-model.js";
 import type { ScaleCorner, ScaleGhost } from "./scale-drag-model.js";
@@ -36,6 +37,11 @@ interface Options {
   readLines: (zoom: number) => readonly CanvasGuide[];
 }
 
+interface Place {
+  readonly left: number;
+  readonly top: number;
+}
+
 interface Drag {
   edge: ResizeEdge;
   pointerId: number;
@@ -46,6 +52,9 @@ interface Drag {
   size: Size;
   target: SelectionContext;
   axes: Set<"width" | "height">;
+  hasCentered: boolean;
+  isCentered: boolean;
+  place: Place | null;
   candidates: Rect[];
   lines: readonly CanvasGuide[];
   guides: SnapGuide[];
@@ -58,6 +67,8 @@ interface ResizeLive {
   height: number;
   boxWidth: number;
   boxHeight: number;
+  boxX: number;
+  boxY: number;
   guides: SnapGuide[];
 }
 
@@ -65,6 +76,11 @@ type RotateDown = (event: ReactPointerEvent<HTMLElement>) => void;
 
 type ScaleDown = (
   corner: ScaleCorner,
+  event: ReactPointerEvent<HTMLElement>
+) => void;
+
+type GroupDown = (
+  edge: GroupEdge,
   event: ReactPointerEvent<HTMLElement>
 ) => void;
 
@@ -76,7 +92,9 @@ interface ResizeControl {
     event: ReactPointerEvent<HTMLElement>
   ) => void;
   readonly ghost: ScaleGhost | null;
+  readonly groupBox: GroupBox | null;
   readonly isScaling: boolean;
+  readonly onGroupDown: GroupDown;
   readonly onScaleDown: ScaleDown;
   readonly onRotateDown: RotateDown;
   readonly rotateLabel: RotateLabel | null;
@@ -95,6 +113,8 @@ interface ResizeHandles {
   sizes: LiveStore<LiveSize | null>;
   onHandleDown: ResizeControl["onHandleDown"];
   readonly ghost: LiveStore<ScaleGhost | null>;
+  readonly groupBox: LiveStore<GroupBox | null>;
+  readonly onGroupDown: GroupDown;
   readonly onScaleDown: ScaleDown;
   readonly onRotateDown: RotateDown;
   readonly rotateLabel: LiveStore<RotateLabel | null>;
@@ -127,6 +147,8 @@ const toResizeLive = (
   return {
     boxHeight: size.rect.height + size.size.height - size.base.height,
     boxWidth: size.rect.width + size.size.width - size.base.width,
+    boxX: size.rect.x,
+    boxY: size.rect.y,
     guides: size.guides,
     height: size.size.height,
     width: size.size.width,
@@ -316,19 +338,121 @@ const toAxisEntries = (
     return [toAxisEntry(axis, size)];
   });
 
-const axisStyle = (drag: Drag, size: Size): AxisStyle =>
-  Object.fromEntries(toAxisEntries((axis) => drag.axes.has(axis), size));
+const MOVED_POSITIONS: ReadonlySet<string> = new Set(["absolute", "fixed"]);
 
-const styleFor = (size: Size, base: Size): AxisStyle =>
-  Object.fromEntries(toAxisEntries((axis) => size[axis] !== base[axis], size));
+const toPlace = (target: SelectionContext): Place | null => {
+  const { left, position, top } = target.styles;
+  const isPx = left?.endsWith("px") === true && top?.endsWith("px") === true;
+
+  if (!MOVED_POSITIONS.has(position ?? "") || !isPx) {
+    return null;
+  }
+
+  return {
+    left: toPixels(left, Number.NaN),
+    top: toPixels(top, Number.NaN),
+  };
+};
+
+const toCenteredPlace = (drag: Drag, size: Size): Place | null => {
+  if (!drag.isCentered || drag.place === null) {
+    return null;
+  }
+
+  return {
+    left: Math.round(drag.place.left - (size.width - drag.base.width) / 2),
+    top: Math.round(drag.place.top - (size.height - drag.base.height) / 2),
+  };
+};
+
+const toPlaceEntries = (
+  place: Place | null,
+  start: Place | null
+): [string, string][] => {
+  if (place === null || start === null) {
+    return [];
+  }
+
+  const entries: [string, string][] = [];
+
+  if (place.left !== start.left) {
+    entries.push(["left", `${place.left}px`]);
+  }
+
+  if (place.top !== start.top) {
+    entries.push(["top", `${place.top}px`]);
+  }
+
+  return entries;
+};
+
+const toPreviewPlace = (drag: Drag, size: Size): [string, string][] => {
+  if (drag.place === null || !drag.hasCentered) {
+    return [];
+  }
+
+  const place = toCenteredPlace(drag, size) ?? drag.place;
+
+  return [
+    ["left", `${place.left}px`],
+    ["top", `${place.top}px`],
+  ];
+};
+
+const axisStyle = (drag: Drag, size: Size): AxisStyle =>
+  Object.fromEntries([
+    ...toAxisEntries((axis) => drag.axes.has(axis), size),
+    ...toPreviewPlace(drag, size),
+  ]);
+
+const toDragStyle = (drag: Drag): AxisStyle =>
+  Object.fromEntries([
+    ...toAxisEntries((axis) => drag.size[axis] !== drag.base[axis], drag.size),
+    ...toPlaceEntries(toCenteredPlace(drag, drag.size), drag.place),
+  ]);
+
+const toBackPlace = (drag: Drag): [string, string][] => {
+  if (toCenteredPlace(drag, drag.size) === null) {
+    return [];
+  }
+
+  return [
+    ["left", drag.target.styles.left ?? ""],
+    ["top", drag.target.styles.top ?? ""],
+  ];
+};
+
+const toBackStyle = (drag: Drag): AxisStyle =>
+  Object.fromEntries([
+    ["height", drag.target.styles.height ?? ""],
+    ["width", drag.target.styles.width ?? ""],
+    ...toBackPlace(drag),
+  ]);
+
+const toLiveRect = (drag: Drag, size: Size): Rect => {
+  const { rect } = drag.target;
+
+  if (toCenteredPlace(drag, size) === null) {
+    return rect;
+  }
+
+  return {
+    ...rect,
+    x: rect.x - (size.width - drag.base.width) / 2,
+    y: rect.y - (size.height - drag.base.height) / 2,
+  };
+};
 
 export {
   axisStyle,
   resizeReadout,
   resizedSize,
   snapSize,
-  styleFor,
+  toBackStyle,
+  toDragStyle,
+  toLiveRect,
   toPixels,
+  toPlace,
   toResizeLive,
   toResizeTarget,
   toRotateTargets,
@@ -338,8 +462,10 @@ export {
 export type {
   AxisStyle,
   Drag,
+  GroupDown,
   LiveSize,
   Options,
+  Place,
   ResizeControl,
   ResizeEdge,
   ResizeHandles,

@@ -31,6 +31,7 @@ const ACCEPTED_IMAGES = "image/png,image/jpeg,image/gif,image/webp";
 
 interface PromptToolbarProps {
   readonly contextTokens: number | null;
+  readonly contextWindow: number | null;
   readonly designs: DesignsSetting | undefined;
   readonly effort: RunEffort | null;
   readonly level: RunLevel;
@@ -107,7 +108,11 @@ const PromptToolbar = (props: PromptToolbarProps): ReactElement => {
       />
       <ReferenceFileInput inputRef={referenceRef} onFiles={onReferenceFiles} />
       <div data-slot="composer-toolbar-spacer" className={SPACER_CLASS}>
-        <ContextMeter tokens={props.contextTokens} model={props.model} />
+        <ContextMeter
+          tokens={props.contextTokens}
+          window={props.contextWindow}
+          model={props.model}
+        />
         <LevelPill
           level={props.level}
           onLevel={props.onChooseLevel}

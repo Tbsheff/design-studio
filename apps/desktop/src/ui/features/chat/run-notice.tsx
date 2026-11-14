@@ -23,7 +23,11 @@ const RunNotice = ({
     return null;
   }
 
-  const share = contextShare(run.contextTokens, run.summary?.model ?? "");
+  const share = contextShare(
+    run.contextTokens,
+    run.summary?.model ?? "",
+    run.contextWindow
+  );
 
   if (share < CONTEXT_WARN) {
     return null;

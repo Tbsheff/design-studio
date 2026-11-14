@@ -111,6 +111,7 @@ const promptProps = (
     ...run.runControls,
     components: componentList.components,
     contextTokens: chatState.contextTokens,
+    contextWindow: chatState.contextWindow,
     directionId: core.directionId,
     history: chatState.history,
     mentionRequest: ui.mentionRequest,

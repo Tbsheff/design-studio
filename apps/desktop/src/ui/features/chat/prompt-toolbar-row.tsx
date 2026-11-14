@@ -21,10 +21,12 @@ const PromptToolbarRow = ({ parts }: { parts: PromptParts }): ReactElement => {
   const { spoken } = sending.status;
   const project = usePlusProject(box, base.sheet);
   const contextTokens = box.contextTokens ?? null;
+  const contextWindow = box.contextWindow ?? null;
 
   return (
     <PromptToolbar
       contextTokens={contextTokens}
+      contextWindow={contextWindow}
       designs={designs}
       effort={effort}
       level={level}

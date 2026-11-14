@@ -51,6 +51,7 @@ interface PromptBoxProps {
   onSteer?: (text: string) => void;
   history?: string[];
   contextTokens?: number | null;
+  contextWindow?: number | null;
   directionId?: string | null;
   tokens?: CompiledTokenEntry[];
   components?: ComponentInfo[] | null;

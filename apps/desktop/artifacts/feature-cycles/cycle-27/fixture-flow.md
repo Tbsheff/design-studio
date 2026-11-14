@@ -32,7 +32,8 @@ Setup: a fake Next 16.4.1 app at `ds-wt/fixture-next-app`. Route `/patients` awa
 
 ## Left out
 
-- **Undo takes 2 steps, not 1.** After the import, the existing `importRouteCopy` removes the empty frame `f1`, and that removal is its own history entry. So without a run, 2 undos return to the empty copy. To get 1 step, history entries would need grouping, in canvas and history files outside this pick.
+- **Undo takes 2 steps, not 1.** After the import, the existing `importRouteCopy` removes the empty frame `f1`, and that removal is its own history entry. So without a run, 2 undos return to the empty copy. Every normal route copy has the same import and frame-removal pair, so this comes from the shared import path. To get 1 step, history entries would need grouping, in canvas and history files outside this pick.
+- **Near-empty first copy: not checked.** Only the 500 case was run. From reading the code: when the first copy imported a page with 3 elements or fewer, that page and its frame stay. The fixture import then adds `index-2.html` with a new frame, so the empty frame likely stays on the canvas, and 1 undo returns to the empty copy.
 - **`tokensFile` is `null`** when `intoProjectId` is set. The tokens file was written when the empty copy was made.
 - **`recordRouteSource` keeps the fixture route.** Its source file is the fixture page in the app. Move to app should get the source route `/patients`. That is a follow-up for the port pick.
 - **"Unfinished changes in 1 file"** shows on every route copy, because `folder-context.md` is not committed when the project is made. Undo of the first run also removes it. This was already true before this pick.

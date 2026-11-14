@@ -23,6 +23,7 @@ interface SetFillCommand extends DirectionIds {
   readonly selector: string | null;
   readonly source: SourceLoc;
   readonly tag: string | null;
+  readonly variant: string;
 }
 
 interface FillChange {
@@ -71,7 +72,11 @@ const runFillSet = (
       const { plan, version } = await applyFill(
         runtime.editDeps,
         { direction, project, workTree: direction.workTree },
-        { input: command.fill, target: toTarget(command) }
+        {
+          input: command.fill,
+          target: toTarget(command),
+          variant: command.variant,
+        }
       );
 
       return {

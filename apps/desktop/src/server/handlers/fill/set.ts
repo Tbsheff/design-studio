@@ -18,6 +18,7 @@ const handle = Effect.fn("fill.set")(function* run(input: SetFillInput) {
     selector: target.selector ?? null,
     source: target.source,
     tag: target.tag ?? null,
+    variant: input.variant,
   });
 }) satisfies Handle<typeof setFill>;
 

@@ -1,5 +1,5 @@
 import { gradientCss } from "./css.js";
-import { classify, classProps, parseClass } from "./deps.js";
+import { classify, classProps, normalizeVariant, parseClass } from "./deps.js";
 import type {
   FillBlend,
   FillPaint,
@@ -14,6 +14,12 @@ import { FillError } from "./errors.js";
 interface ClassChanges {
   add: string[];
   remove: string[];
+}
+
+interface FillPaintPlan {
+  blend: FillBlend | null;
+  fill: FillSpec;
+  variant: string;
 }
 
 const CLASS_MAX = 100;
@@ -161,44 +167,74 @@ const toFillClasses = (fill: FillSpec, theme: TailwindTheme): string[] => {
 const toBlendClass = (blend: FillBlend): string =>
   `${BLEND_PREFIX[blend.property]}${blend.mode}`;
 
-const isBackgroundClass = (token: string, theme: TailwindTheme): boolean => {
+const isBackgroundUtility = (
+  token: string,
+  theme: TailwindTheme,
+  variant: string
+): boolean => {
   const parsed = parseClass(token);
 
-  if (parsed.variants !== "" || parsed.utility.includes("url(")) {
+  const same =
+    parsed.variants === variant ||
+    normalizeVariant(parsed.variants) === variant;
+
+  if (!same || parsed.utility.includes("url(")) {
     return false;
   }
 
-  if (GRADIENT_CLASS.test(token) || STOP_CLASS.test(parsed.utility)) {
+  const bare = token.slice(parsed.variants.length);
+
+  if (GRADIENT_CLASS.test(bare) || STOP_CLASS.test(parsed.utility)) {
     return true;
   }
 
-  const cls = classify(parsed, theme);
+  const cls = classify(parseClass(bare), theme);
 
   return Boolean(cls && classProps(cls).some((prop) => BG_PROPS.has(prop)));
 };
 
-const isBlendClass = (token: string, blend: FillBlend | null): boolean =>
-  blend !== null && token.startsWith(BLEND_PREFIX[blend.property]);
+const isBackgroundClass = (token: string, theme: TailwindTheme): boolean =>
+  isBackgroundUtility(token, theme, "");
+
+const isBlendClass = (token: string, paint: FillPaintPlan): boolean =>
+  paint.blend !== null &&
+  token.startsWith(`${paint.variant}${BLEND_PREFIX[paint.blend.property]}`);
+
+const toWantedClasses = (
+  paint: FillPaintPlan,
+  theme: TailwindTheme
+): string[] => {
+  const wanted = toFillClasses(paint.fill, theme);
+
+  if (paint.blend) {
+    wanted.push(toBlendClass(paint.blend));
+  }
+
+  const prefixed = wanted.map((token) => `${paint.variant}${token}`);
+
+  if (prefixed.some((token) => token.length > CLASS_MAX)) {
+    throw new FillError(
+      "This gradient is too long for one Tailwind class. Use fewer stops or color tokens."
+    );
+  }
+
+  return prefixed;
+};
 
 const toPlanClasses = (
   current: readonly string[],
-  fill: FillSpec,
-  blend: FillBlend | null,
+  paint: FillPaintPlan,
   theme: TailwindTheme
 ): ClassChanges => {
-  const wanted = toFillClasses(fill, theme);
-
-  if (blend) {
-    wanted.push(toBlendClass(blend));
-  }
-
+  const wanted = toWantedClasses(paint, theme);
   const keep = new Set(wanted);
   const have = new Set(current);
 
   const remove = current.filter(
     (token) =>
       !keep.has(token) &&
-      (isBackgroundClass(token, theme) || isBlendClass(token, blend))
+      (isBackgroundUtility(token, theme, paint.variant) ||
+        isBlendClass(token, paint))
   );
 
   return { add: wanted.filter((token) => !have.has(token)), remove };
@@ -211,4 +247,4 @@ export {
   toPlanClasses as planClasses,
 };
 
-export type { ClassChanges };
+export type { ClassChanges, FillPaintPlan };

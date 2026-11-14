@@ -10,7 +10,7 @@ import {
   FILL_TYPES,
   RADIAL_FORMS,
 } from "@design-studio/contracts/fill";
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 
 import { DirectionIdSchema, ProjectIdSchema } from "../_core/ids.js";
 
@@ -119,9 +119,21 @@ const FillChangeSchema = Schema.Struct({
   versionId: Schema.String,
 });
 
+const BASE_VARIANT = Effect.succeed("");
+
+const FillVariantSchema = Schema.String.pipe(
+  Schema.withDecodingDefaultKey(BASE_VARIANT)
+);
+
 const FillTargetFields = {
   directionId: DirectionIdSchema,
   projectId: ProjectIdSchema,
 } as const;
 
-export { FillChangeSchema, FillInfoSchema, FillInputSchema, FillTargetFields };
+export {
+  FillChangeSchema,
+  FillInfoSchema,
+  FillInputSchema,
+  FillTargetFields,
+  FillVariantSchema,
+};

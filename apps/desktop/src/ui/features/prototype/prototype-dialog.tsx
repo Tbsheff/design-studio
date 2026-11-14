@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 
 import { useModalDialog } from "./deps.js";
+import { FixtureOfferFoot } from "./fixture-offer-foot.js";
 import { PrototypeField } from "./prototype-field.js";
 import { PrototypeFoot } from "./prototype-foot.js";
 import { toPrototypeText } from "./prototype-model.js";
@@ -38,13 +39,22 @@ const PrototypeDialog = ({
           prompt={create.prompt}
           text={text}
         />
-        <PrototypeFoot
-          failure={create.failure}
-          isEmpty={create.prompt.trim() === ""}
-          isPending={create.isPending}
-          onCancel={onClose}
-          routePath={routePath}
-        />
+        {create.offer === null && (
+          <PrototypeFoot
+            failure={create.failure}
+            isEmpty={create.prompt.trim() === ""}
+            isPending={create.isPending}
+            onCancel={onClose}
+            routePath={routePath}
+          />
+        )}
+        {create.offer !== null && (
+          <FixtureOfferFoot
+            offer={create.offer}
+            onCreated={onCreated}
+            prompt={create.prompt.trim()}
+          />
+        )}
       </form>
     </dialog>
   );

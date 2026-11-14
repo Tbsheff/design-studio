@@ -26,6 +26,8 @@ const EXTERNAL_EXCLUDES = [
 
 const STUDIO_DIR_LINE = /^\/?\.studio(?:\/\*{0,2})?$/u;
 
+const FIXTURE_DIR_LINE = /^\/?%5F%5Fstudio-fixture\/?$/u;
+
 const isExternalTree = (project: Project): boolean =>
   Boolean(project.app) ||
   (project.imported !== null && project.imported.created !== true);
@@ -44,11 +46,13 @@ const toRepoExcludeLines = (
   project: Project,
   lines: readonly string[]
 ): string[] => {
+  const kept = lines.filter((line) => !FIXTURE_DIR_LINE.test(line));
+
   if (project.app) {
-    return [...lines];
+    return kept;
   }
 
-  return lines.filter((line) => !STUDIO_DIR_LINE.test(line));
+  return kept.filter((line) => !STUDIO_DIR_LINE.test(line));
 };
 
 export { isExternalTree, toCleanStatus, toRepoExcludeLines, toStudioExcludes };

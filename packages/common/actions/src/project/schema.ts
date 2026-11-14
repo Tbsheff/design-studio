@@ -194,7 +194,23 @@ const ProjectPrototypeFields = {
     .pipe(Schema.withDecodingDefaultKey(Effect.succeed(null))),
 } as const;
 
+const FixtureOfferSchema = Schema.Struct({
+  appProjectId: Schema.String.annotate({
+    description: "The attached app project to pass to create_fixture.",
+  }),
+  reason: Schema.String.annotate({
+    description: "Why the route copy failed or is empty.",
+  }),
+  route: Schema.String.annotate({
+    description: "The route to pass to create_fixture.",
+  }),
+});
+
 const ProjectPrototypeCreatedSchema = Schema.Struct({
+  fixtureOffer: Schema.NullOr(FixtureOfferSchema).annotate({
+    description:
+      "Set when the route copy failed or is empty. The page can need server data. Ask the user, then call create_fixture with this route, then copy the fixture route.",
+  }),
   folder: Schema.String,
   project: ProjectSchema,
   runId: Schema.NullOr(Schema.String),

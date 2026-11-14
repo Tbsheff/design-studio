@@ -1,4 +1,4 @@
-import type { Input } from "@design-studio/actions/_core/action";
+import type { Input, Output } from "@design-studio/actions/_core/action";
 import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
 import { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import type { createPrototypeProject } from "@design-studio/actions/project/create-prototype";
@@ -23,6 +23,10 @@ import type { Handle } from "../_core/handler.js";
 
 type CreatePrototypeProjectInput = Input<typeof createPrototypeProject>;
 
+type FixtureOffer = NonNullable<
+  Output<typeof createPrototypeProject>["fixtureOffer"]
+>;
+
 interface RouteRunBody {
   readonly canvas: {
     readonly frameId: string;
@@ -36,13 +40,23 @@ interface RouteRunBody {
 }
 
 interface RouteCopy {
+  readonly elements: number;
   readonly frameId: string;
   readonly height: number;
   readonly page: string;
   readonly width: number;
 }
 
+interface CopyOutcome {
+  readonly copy: RouteCopy | null;
+  readonly failure: string;
+}
+
 const ENTRY_NAME = "index";
+const EMPTY_ELEMENTS_MAX = 3;
+const EMPTY_REASON = "The route copy has almost no content.";
+const ESCAPED_UNDERSCORE = /%5F/giu;
+const DATA_FAILURE = /answered [45]\d\d\.$|had nothing to copy/u;
 const ENTRY_FRAME = "f1";
 const MAIN_DIRECTION = "main";
 
@@ -55,6 +69,9 @@ const toRoutePath = (routePath: string): string => {
 
   return `/${trimmed}`;
 };
+
+const toUrlRoute = (route: string): string =>
+  route.replaceAll(ESCAPED_UNDERSCORE, "_");
 
 const toRouteName = (name: string | null, routePath: string): string => {
   if (name !== null) {
@@ -93,7 +110,9 @@ const isKnownRoute = Effect.fn("project.createPrototype.isKnownRoute")(
     const servers = yield* DevServerStore;
     const { routes } = yield* servers.routes(projectId);
 
-    return routes.some((route) => isRouteMatch(route.route, routePath));
+    return routes.some((route) =>
+      isRouteMatch(toUrlRoute(route.route), routePath)
+    );
   }
 );
 
@@ -122,6 +141,7 @@ const importRouteCopy = Effect.fn("project.createPrototype.importRouteCopy")(
     }
 
     const copy: RouteCopy = {
+      elements: imported.elements,
       frameId: imported.frameId,
       height: imported.height,
       page: imported.page,
@@ -131,6 +151,34 @@ const importRouteCopy = Effect.fn("project.createPrototype.importRouteCopy")(
     return copy;
   }
 );
+
+const toCopyOutcome = Effect.fn("project.createPrototype.toCopyOutcome")(
+  function* run(
+    target: { readonly directionId: string; readonly projectId: string },
+    routeUrl: string,
+    viewport: number | null
+  ) {
+    return yield* importRouteCopy(target, routeUrl, viewport).pipe(
+      Effect.map((copy): CopyOutcome => ({ copy, failure: "" })),
+      Effect.catchTag("BadRequest", (error) => {
+        if (!DATA_FAILURE.test(error.message)) {
+          return Effect.fail(error);
+        }
+
+        return Effect.succeed<CopyOutcome>({
+          copy: null,
+          failure: error.message,
+        });
+      })
+    );
+  }
+);
+
+const toFixtureOffer = (
+  appProjectId: string,
+  route: string,
+  reason: string
+): FixtureOffer => ({ appProjectId, reason, route });
 
 const applyRouteTokens = Effect.fn("project.createPrototype.applyRouteTokens")(
   function* run(
@@ -231,12 +279,32 @@ const createRoutePrototype = Effect.fn("project.createPrototype.route")(
     };
 
     const url = toAppRouteUrl(upstream, routePath);
-    const copy = yield* importRouteCopy(target, url, input.viewport);
+    const outcome = yield* toCopyOutcome(target, url, input.viewport);
+
+    if (outcome.copy === null) {
+      return {
+        ...created,
+        fixtureOffer: toFixtureOffer(
+          input.projectId,
+          routePath,
+          outcome.failure
+        ),
+      };
+    }
+
+    const { copy } = outcome;
     yield* applyRouteTokens(target, created.folder, copy.page);
     yield* recordRouteSource(target, input, routePath, copy);
 
+    if (copy.elements <= EMPTY_ELEMENTS_MAX) {
+      return {
+        ...created,
+        fixtureOffer: toFixtureOffer(input.projectId, routePath, EMPTY_REASON),
+      };
+    }
+
     if (!input.shouldStartRun) {
-      return created;
+      return { ...created, fixtureOffer: null };
     }
 
     const runs = yield* RunLogWriter;
@@ -246,7 +314,7 @@ const createRoutePrototype = Effect.fn("project.createPrototype.route")(
       body: toRouteRunBody(input, routePath, copy),
     });
 
-    return { ...created, runId };
+    return { ...created, fixtureOffer: null, runId };
   }
 );
 
@@ -258,8 +326,9 @@ const handle = Effect.fn("project.createPrototype")(function* run(
   }
 
   const writer = yield* ProjectOpsWriter;
+  const created = yield* writer.createPrototype(input);
 
-  return yield* writer.createPrototype(input);
+  return { ...created, fixtureOffer: null };
 }) satisfies Handle<typeof createPrototypeProject>;
 
 export { handle };

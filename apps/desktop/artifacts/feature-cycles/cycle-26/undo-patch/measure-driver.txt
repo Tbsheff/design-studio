@@ -1,0 +1,95 @@
+import { readFile, writeFile } from "node:fs/promises";
+import { chromium } from "/Volumes/DevProjects/code/ds-wt/undo-patch/node_modules/playwright-core/index.mjs";
+const O = "http://127.0.0.1:47310";
+const [PID, KIND = "text", N = "5", TAG = "run", SCHEME = "dark", SHOT = ""] = process.argv.slice(2);
+const key = (await readFile("/Volumes/DevProjects/code/ds-wt/undo-secret", "utf-8")).trim();
+const browser = await chromium.launch({ channel: "chrome", headless: true });
+const ctx = await browser.newContext({ colorScheme: SCHEME, viewport: { width: 1440, height: 900 } });
+await ctx.addInitScript(() => {
+  const now = () => performance.timeOrigin + performance.now();
+  window.addEventListener("keydown", (e) => { if (e.key.toLowerCase() === "z" && (e.metaKey || e.ctrlKey)) console.log(`DSK ${now()} ${e.shiftKey ? "redo" : "undo"}`); }, true);
+  let last = "";
+  const look = () => {
+    const h = document.querySelector("h1");
+    const c = document.querySelector("#card");
+    if (!h || !c) return;
+    const v = `${h.textContent}|${getComputedStyle(c).paddingTop}`;
+    if (v !== last) { last = v; console.log(`DSM ${now()} ${v}`); }
+  };
+  const start = () => { new MutationObserver(() => { look(); requestAnimationFrame(look); }).observe(document.documentElement, { subtree: true, childList: true, characterData: true, attributes: true }); look(); };
+  if (document.documentElement) start(); else document.addEventListener("DOMContentLoaded", start);
+});
+const page = await ctx.newPage();
+const events = [];
+page.on("console", (m) => { const t = m.text(); if (t.startsWith("DSK") || t.startsWith("DSM")) { const [k, ts, ...rest] = t.split(" "); events.push({ k, ts: Number(ts), v: rest.join(" ") }); } });
+const reqs = [];
+page.on("requestfinished", (r) => { const u = r.url(); if (u.includes("/api/")) { const t = r.timing(); reqs.push({ m: r.method(), u: u.replace(O, "").split("?")[0], start: t.startTime, end: t.startTime + t.responseEnd }); } });
+page.on("pageerror", (e) => console.log("PAGEERR", e.message));
+await page.goto(`${O}/api/session/open?key=${key}`);
+await page.goto(`${O}/p/${PID}?theme=${SCHEME}`);
+await page.waitForTimeout(10000);
+const frame = () => page.frames().find((f) => f !== page.mainFrame() && f.url().startsWith("http") && !f.url().includes("/p/"));
+const at = async (sel) => {
+  const fbox = await page.locator("iframe").first().boundingBox();
+  const e = await frame().locator(sel).first().evaluate((el) => { const r = el.getBoundingClientRect(); return { x: r.x + 6, y: r.y + r.height / 2 }; });
+  const scale = fbox.width / (await frame().evaluate(() => window.innerWidth));
+  return { x: fbox.x + e.x * scale, y: fbox.y + e.y * scale };
+};
+const read = () => frame().evaluate(() => `${document.querySelector("h1").textContent}|${getComputedStyle(document.querySelector("#card")).paddingTop}`);
+await page.keyboard.press("v");
+const results = [];
+for (let i = 0, ok = 0; ok < Number(N) && i < Number(N) * 2; i++) {
+  const before = await read();
+  if (KIND === "text") {
+    for (let t = 0; t < 4; t++) {
+      await page.keyboard.press("Escape");
+      await page.waitForTimeout(400);
+      const p = await at("h1");
+      await page.mouse.click(p.x, p.y);
+      await page.waitForTimeout(700);
+      await page.mouse.dblclick(p.x, p.y);
+      await page.waitForTimeout(700);
+      if (await frame().evaluate(() => document.activeElement?.isContentEditable === true)) break;
+    }
+    if (!(await frame().evaluate(() => document.activeElement?.isContentEditable === true))) { console.log("skip-noedit", i); continue; }
+    await page.keyboard.press("Meta+a");
+    await page.keyboard.type(`Edited ${i}`);
+    await page.keyboard.press("Enter");
+  } else {
+    const p = await at("#card");
+    await page.mouse.click(p.x, p.y);
+    await page.waitForTimeout(1200);
+    const f = page.getByLabel("Padding top").first();
+    await f.click();
+    await f.fill(String(40 + i * 4));
+    await f.press("Enter");
+    await page.waitForTimeout(300);
+    const q = await at("h1");
+    await page.mouse.click(q.x + 400, q.y - 60);
+  }
+  await page.waitForTimeout(Number(process.env.WAIT ?? 4000));
+  const edited = await read();
+  if (edited === before && !process.env.WAIT) { console.log("skip", i); continue; }
+  ok += 1;
+  if (SHOT) await page.screenshot({ path: `${SHOT}-edited-${SCHEME}.png` });
+  const mark = events.length;
+  const rmark = reqs.length;
+  await frame().locator("body").evaluate(() => null);
+  await page.keyboard.press("Meta+z");
+  await page.waitForTimeout(4000);
+  const after = await read();
+  const kd = events.slice(mark).find((e) => e.k === "DSK");
+  const want = before;
+  const shown = events.slice(mark).filter((e) => e.k === "DSM" && e.ts >= (kd?.ts ?? 0));
+  const firstOld = shown.find((e) => e.v === want);
+  const flash = firstOld ? shown.filter((e) => e.ts > firstOld.ts && e.v !== want).map((e) => e.v) : [];
+  const step = reqs.slice(rmark).filter((r) => r.m === "POST" && /edit-history\/(undo|redo)/.test(r.u));
+  const gets = reqs.slice(rmark).filter((r) => r.m === "GET");
+  const r = { i, before, edited, after, show: firstOld && kd ? Math.round(firstOld.ts - kd.ts) : null, studio: step[0] && kd ? Math.round(step[step.length - 1].end - kd.ts) : null, stepStart: step[0] && kd ? Math.round(step[0].start - kd.ts) : null, gets: gets.filter((g) => g.u.includes("edit-history")).map((g) => `${g.u.slice(-40)}:${Math.round(g.start - kd.ts)}-${Math.round(g.end - kd.ts)}`), flash };
+  r.reqs = []; void reqs.slice(rmark).map((x) => `${x.m} ${x.u.slice(-45)} ${Math.round(x.start - kd.ts)}-${Math.round(x.end - kd.ts)}`);
+  results.push(r);
+  console.log(JSON.stringify(r));
+  if (SHOT) await page.screenshot({ path: `${SHOT}-undone-${SCHEME}.png` });
+}
+await writeFile(`/Volumes/DevProjects/code/ds-wt/undo-measure-${TAG}.json`, JSON.stringify(results, null, 1));
+await browser.close();

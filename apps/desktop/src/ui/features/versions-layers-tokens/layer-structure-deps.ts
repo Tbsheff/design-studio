@@ -2,6 +2,7 @@ import type {
   LayerNode,
   SelectionContext,
   StructureEditRequest,
+  SourceLoc,
   StructureTarget,
 } from "@design-studio/contracts";
 
@@ -26,9 +27,13 @@ interface StructureDeps {
     selection: SelectionContext,
     notify: (message: string) => void
   ) => Promise<void>;
+  readonly readSource: (
+    ids: PasteIds,
+    loc: SourceLoc
+  ) => Promise<string | null>;
   readonly selectionTargets: (
     selection: SelectionContext[]
   ) => StructureTarget[] | null;
 }
 
-export type { StructureDeps };
+export type { PasteIds, StructureDeps };

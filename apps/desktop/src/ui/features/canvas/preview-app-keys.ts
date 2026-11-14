@@ -1,5 +1,7 @@
 import type { AppKey } from "@design-studio/contracts";
 
+import { LAYER_STYLE_KEY_EVENT } from "../../domain/layer-style-key-events.js";
+import type { LayerStyleAppKey } from "../../domain/layer-style-key-events.js";
 import { requestCanvasTool } from "../../platform/canvas-tool.js";
 import type { CanvasToolId } from "../../platform/canvas-tool.js";
 import { findElement } from "../../platform/find-element.js";
@@ -24,6 +26,23 @@ const COMMAND_OF_KEY: Partial<Record<AppKey, string>> = {
   "column-versions": "panel.versions",
   inspector: "panel.inspector",
   "view-outline": "view.outline",
+};
+
+const STYLE_APP_KEYS: ReadonlySet<AppKey> = new Set<LayerStyleAppKey>([
+  "style-copy",
+  "style-paste",
+]);
+
+const runPreviewStyleKey = (id: AppKey): boolean => {
+  if (!STYLE_APP_KEYS.has(id)) {
+    return false;
+  }
+
+  globalThis.dispatchEvent(
+    new CustomEvent(LAYER_STYLE_KEY_EVENT, { detail: { id } })
+  );
+
+  return true;
 };
 
 const isPlaying = (): boolean =>
@@ -58,4 +77,4 @@ const runPreviewToolKey = (id: AppKey): boolean => {
 const toPreviewCommandId = (id: AppKey): string | null =>
   COMMAND_OF_KEY[id] ?? null;
 
-export { runPreviewToolKey, toPreviewCommandId };
+export { runPreviewStyleKey, runPreviewToolKey, toPreviewCommandId };

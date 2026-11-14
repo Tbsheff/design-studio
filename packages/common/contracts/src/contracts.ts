@@ -1604,6 +1604,8 @@ export type AppKey =
   | "column-components"
   | "column-system"
   | "inspector"
+  | "style-copy"
+  | "style-paste"
   | "view-outline";
 
 const MOD_APP_KEYS: Record<string, AppKey> = {
@@ -1642,9 +1644,29 @@ interface PlainKeyEvent {
   readonly shiftKey: boolean;
 }
 
-const altAppKeyOf = (event: PlainKeyEvent): AppKey | null => {
-  if (event.metaKey || event.ctrlKey || event.shiftKey) {
+const MOD_ALT_APP_KEYS = new Map<string, AppKey>([
+  ["KeyC", "style-copy"],
+  ["KeyV", "style-paste"],
+]);
+
+const modAltAppKeyOf = (
+  event: PlainKeyEvent,
+  typing: boolean
+): AppKey | null => {
+  if (typing || event.shiftKey) {
     return null;
+  }
+
+  return MOD_ALT_APP_KEYS.get(event.code) ?? null;
+};
+
+const altAppKeyOf = (event: PlainKeyEvent, typing: boolean): AppKey | null => {
+  if (event.shiftKey) {
+    return null;
+  }
+
+  if (event.metaKey || event.ctrlKey) {
+    return modAltAppKeyOf(event, typing);
   }
 
   return ALT_APP_KEYS.get(event.code) ?? null;
@@ -1678,7 +1700,7 @@ export function appKeyOf(
   typing: boolean
 ): AppKey | null {
   if (event.altKey) {
-    return altAppKeyOf(event);
+    return altAppKeyOf(event, typing);
   }
 
   const modKey =

@@ -30,7 +30,11 @@ import {
   toStructureMenuEntries,
   useEditVariant,
 } from "../inspector/index.js";
-import { LayerStyleSlot, useLayerStyleHost } from "../layer-style/index.js";
+import {
+  LayerStyleSlot,
+  useLayerStyleHost,
+  useLayerStyleKeys,
+} from "../layer-style/index.js";
 import { PatternSlot, usePatternHost } from "../pattern/index.js";
 import { PropSlot, usePropHost } from "../prop/index.js";
 import type { LayerEdits } from "../versions-layers-tokens/use-layer-edits.js";
@@ -452,6 +456,7 @@ const usePreviewMenu = (options: Options): PreviewMenuHandle => {
 
   const { directionId, projectId } = options.ids;
   const { notify } = options.edits;
+  useLayerStyleKeys({ host: hosts.layerStyle, notify, selection });
 
   const handlers = useMemo(
     () => ({ onClose: close, onCreate: openCreate }),

@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 
 import { copy } from "./copy.js";
 import { useLive } from "./deps.js";
-import type { IconName, SelectionContext } from "./deps.js";
+import type { IconName, KeyId, SelectionContext } from "./deps.js";
 import {
   copiedStyleStore,
   toLayerId,
@@ -25,6 +25,7 @@ interface LayerStyleMenuItem {
   readonly disabled?: string;
   readonly icon: IconName;
   readonly id: string;
+  readonly keyId?: KeyId;
   readonly label: string;
   readonly run: () => void;
 }
@@ -111,6 +112,7 @@ const toCopyItem = (
   return {
     icon: "copy",
     id: "copy-style",
+    keyId: "copy-style",
     label: copy.copy,
     run,
     ...toDisabledBy(toCopyReason(id)),
@@ -154,7 +156,7 @@ const useLayerStyleHost = (options: LayerStyleHostOptions): LayerStyleHost => {
 
       return [
         toCopyItem(target, scope, notify),
-        pasteItem,
+        { ...pasteItem, keyId: "paste-style" },
         {
           ...pasteItem,
           id: "paste-style-some",

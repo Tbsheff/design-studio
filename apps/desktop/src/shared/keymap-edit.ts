@@ -99,6 +99,18 @@ const EDIT_KEYS = [
     keys: ["Mod+Alt+J"],
     label: "Justify text",
   },
+  {
+    group: "Edit",
+    id: "copy-style",
+    keys: ["Mod+Alt+C"],
+    label: "Copy the style of the selected layer",
+  },
+  {
+    group: "Edit",
+    id: "paste-style",
+    keys: ["Mod+Alt+V"],
+    label: "Paste the copied style on the selected layers",
+  },
 ] as const satisfies readonly KeyBinding[];
 
 export { EDIT_KEYS };

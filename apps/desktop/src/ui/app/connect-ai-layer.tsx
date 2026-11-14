@@ -1,8 +1,13 @@
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
 import { CONNECT_AI_EVENT } from "../domain/connect-ai-events";
-import { ConnectAiDialog } from "../features/share-publish-ship-export";
+
+const ConnectAiDialog = lazy(async () => {
+  const loaded = await import("../features/share-publish-ship-export");
+
+  return { default: await loaded.loadConnectAiDialog() };
+});
 
 const ConnectAiLayer = (): ReactNode => {
   const [isOpen, setIsOpen] = useState(false);

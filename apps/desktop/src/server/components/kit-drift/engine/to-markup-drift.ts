@@ -5,6 +5,8 @@ import { toCardDrift } from "./to-card-drift.js";
 import type { CardFind } from "./to-card-drift.js";
 import { toDriftId } from "./to-drift-id.js";
 import type { PackRecipe } from "./to-pack-recipes.js";
+import { toSkeletonFinds, toSkeletonPlan } from "./to-skeleton-drift.js";
+import type { SkeletonFind } from "./to-skeleton-drift.js";
 import type { DriftConfidence, DriftTag, KitComponent } from "./types.js";
 
 interface MarkupInput {
@@ -85,6 +87,7 @@ const COMPONENT_NAMES: Readonly<Record<DriftTag, ReadonlySet<string>>> = {
   input: new Set(["Input"]),
   label: new Set(["Label"]),
   select: new Set(["NativeSelect", "Select"]),
+  skeleton: new Set(["Skeleton"]),
   table: new Set(["Table"]),
   textarea: new Set(["Textarea"]),
 };
@@ -359,6 +362,44 @@ const toBadgeItem = (input: MarkupInput, find: BadgeFind): MarkupDrift => {
   };
 };
 
+const toSkeletonItem = (
+  input: MarkupInput,
+  find: SkeletonFind
+): MarkupDrift => {
+  const plan = toSkeletonPlan(find.recipe.component, find.tokens);
+  const { column, line } = toPlace(input.html, find.offset);
+  const { file } = input;
+  const { confidence, recipe } = find;
+  const droppedClasses = plan.dropped;
+  const id = toDriftId(file, line, column);
+  const keptClasses = plan.kept;
+  const isScriptBuilt = false;
+  const parts: readonly PackRecipe[] = [];
+  const scriptText = null;
+  const suggestedSize = null;
+  const suggestedVariant = null;
+  const tag: DriftTag = "skeleton";
+  const variant = null;
+
+  return {
+    column,
+    confidence,
+    droppedClasses,
+    file,
+    id,
+    isScriptBuilt,
+    keptClasses,
+    line,
+    parts,
+    recipe,
+    scriptText,
+    suggestedSize,
+    suggestedVariant,
+    tag,
+    variant,
+  };
+};
+
 const toOrder = (left: MarkupDrift, right: MarkupDrift): number =>
   left.line - right.line || left.column - right.column;
 
@@ -369,6 +410,7 @@ const toMarkupDrift = (input: MarkupInput): MarkupDrift[] =>
     ),
     ...toCardDrift(input).map((find) => toCardItem(input, find)),
     ...toBadgeDrift(input).map((find) => toBadgeItem(input, find)),
+    ...toSkeletonFinds(input).map((find) => toSkeletonItem(input, find)),
   ].toSorted(toOrder);
 
 export { toMarkupDrift, toPlace };

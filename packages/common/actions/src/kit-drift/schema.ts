@@ -14,6 +14,7 @@ const KitDriftTagSchema = Schema.Literals([
   "a-as-button",
   "card",
   "badge",
+  "skeleton",
 ]);
 
 const KitDriftConfidenceSchema = Schema.Literals(["high", "medium"]);

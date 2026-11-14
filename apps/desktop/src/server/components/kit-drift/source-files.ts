@@ -26,6 +26,7 @@ const SKIPPED_DIRS: ReadonlySet<string> = new Set([
 const SOURCE_PATTERN = /\.(?:tsx|jsx)$/u;
 const SKIPPED_FILE_PATTERN = /\.(?:test|spec|stories|story)\.[jt]sx$/u;
 const TAG_PATTERN = /<(?:a|button|input|label|select|table|textarea)[\s/>]/u;
+const PULSE_TOKEN = "animate-pulse";
 const MAX_FILES = 6000;
 const PAGE_FILE_PATTERN = /\.html?$/u;
 const DESIGN_SYSTEM_DIR = "design-system";
@@ -126,7 +127,7 @@ const listFileElements = async (
   const code = await readFile(absolute, "utf-8");
   let elements: readonly RawElement[] = [];
 
-  if (TAG_PATTERN.test(code)) {
+  if (TAG_PATTERN.test(code) || code.includes(PULSE_TOKEN)) {
     elements = listRawElements(ts, absolute, code);
   }
 

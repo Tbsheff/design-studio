@@ -1,0 +1,113 @@
+call-action kit-drift.list on http://127.0.0.1:6640. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 6 ms, git spawns: not counted (server side)
+{
+  "items": [
+    {
+      "column": 9,
+      "confidence": "high",
+      "droppedClasses": [
+        "inline-flex",
+        "h-9",
+        "items-center",
+        "rounded-md",
+        "bg-primary",
+        "px-4",
+        "text-sm",
+        "font-medium",
+        "text-primary-foreground"
+      ],
+      "file": "app/crew/page.tsx",
+      "id": "08aebe261454b085",
+      "isScriptBuilt": false,
+      "keptClasses": [],
+      "kitComponent": {
+        "importPath": "@/components/ui/button",
+        "name": "Button"
+      },
+      "line": 33,
+      "parts": [],
+      "suggestedSize": "default",
+      "suggestedVariant": "default",
+      "tag": "button",
+      "variant": null
+    }
+  ],
+  "next": null
+}
+
+[mcp] ok, 7 ms, git spawns: not counted (server side)
+{
+  "items": [
+    {
+      "column": 9,
+      "confidence": "high",
+      "droppedClasses": [
+        "inline-flex",
+        "h-9",
+        "items-center",
+        "rounded-md",
+        "bg-primary",
+        "px-4",
+        "text-sm",
+        "font-medium",
+        "text-primary-foreground"
+      ],
+      "file": "app/crew/page.tsx",
+      "id": "08aebe261454b085",
+      "isScriptBuilt": false,
+      "keptClasses": [],
+      "kitComponent": {
+        "importPath": "@/components/ui/button",
+        "name": "Button"
+      },
+      "line": 33,
+      "parts": [],
+      "suggestedSize": "default",
+      "suggestedVariant": "default",
+      "tag": "button",
+      "variant": null
+    }
+  ],
+  "next": null
+}
+
+[agent] ok, 3 ms, git spawns: not counted (server side)
+{
+  "items": [
+    {
+      "column": 9,
+      "confidence": "high",
+      "droppedClasses": [
+        "inline-flex",
+        "h-9",
+        "items-center",
+        "rounded-md",
+        "bg-primary",
+        "px-4",
+        "text-sm",
+        "font-medium",
+        "text-primary-foreground"
+      ],
+      "file": "app/crew/page.tsx",
+      "id": "08aebe261454b085",
+      "isScriptBuilt": false,
+      "keptClasses": [],
+      "kitComponent": {
+        "importPath": "@/components/ui/button",
+        "name": "Button"
+      },
+      "line": 33,
+      "parts": [],
+      "suggestedSize": "default",
+      "suggestedVariant": "default",
+      "tag": "button",
+      "variant": null
+    }
+  ],
+  "next": null
+}
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

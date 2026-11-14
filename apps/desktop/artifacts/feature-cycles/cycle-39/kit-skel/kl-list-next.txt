@@ -1,0 +1,347 @@
+call-action kit-drift.list on http://127.0.0.1:6640. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 7 ms, git spawns: not counted (server side)
+{
+  "items": [
+    {
+      "column": 7,
+      "confidence": "high",
+      "droppedClasses": [
+        "animate-pulse",
+        "rounded-md",
+        "bg-muted"
+      ],
+      "file": "app/loading/page.tsx",
+      "id": "139c391a367a4900",
+      "isScriptBuilt": false,
+      "keptClasses": [
+        "h-4",
+        "w-32"
+      ],
+      "kitComponent": {
+        "importPath": "@/components/ui/skeleton",
+        "name": "Skeleton"
+      },
+      "line": 5,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "skeleton",
+      "variant": null
+    },
+    {
+      "column": 7,
+      "confidence": "high",
+      "droppedClasses": [
+        "animate-pulse",
+        "rounded-md",
+        "bg-gray-200"
+      ],
+      "file": "app/loading/page.tsx",
+      "id": "139c7c23367b4b01",
+      "isScriptBuilt": false,
+      "keptClasses": [
+        "mt-2",
+        "h-4",
+        "w-48"
+      ],
+      "kitComponent": {
+        "importPath": "@/components/ui/skeleton",
+        "name": "Skeleton"
+      },
+      "line": 6,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "skeleton",
+      "variant": null
+    },
+    {
+      "column": 7,
+      "confidence": "high",
+      "droppedClasses": [
+        "animate-pulse",
+        "bg-zinc-200"
+      ],
+      "file": "app/loading/page.tsx",
+      "id": "139cbf2c367c4d02",
+      "isScriptBuilt": false,
+      "keptClasses": [
+        "block",
+        "size-10",
+        "rounded-full"
+      ],
+      "kitComponent": {
+        "importPath": "@/components/ui/skeleton",
+        "name": "Skeleton"
+      },
+      "line": 7,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "skeleton",
+      "variant": null
+    },
+    {
+      "column": 7,
+      "confidence": "medium",
+      "droppedClasses": [
+        "animate-pulse",
+        "rounded-md",
+        "bg-muted"
+      ],
+      "file": "app/loading/page.tsx",
+      "id": "139d0235367d4f03",
+      "isScriptBuilt": false,
+      "keptClasses": [
+        "flex",
+        "items-center",
+        "gap-4",
+        "p-4"
+      ],
+      "kitComponent": {
+        "importPath": "@/components/ui/skeleton",
+        "name": "Skeleton"
+      },
+      "line": 8,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "skeleton",
+      "variant": null
+    }
+  ],
+  "next": null
+}
+
+[mcp] ok, 9 ms, git spawns: not counted (server side)
+{
+  "items": [
+    {
+      "column": 7,
+      "confidence": "high",
+      "droppedClasses": [
+        "animate-pulse",
+        "rounded-md",
+        "bg-muted"
+      ],
+      "file": "app/loading/page.tsx",
+      "id": "139c391a367a4900",
+      "isScriptBuilt": false,
+      "keptClasses": [
+        "h-4",
+        "w-32"
+      ],
+      "kitComponent": {
+        "importPath": "@/components/ui/skeleton",
+        "name": "Skeleton"
+      },
+      "line": 5,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "skeleton",
+      "variant": null
+    },
+    {
+      "column": 7,
+      "confidence": "high",
+      "droppedClasses": [
+        "animate-pulse",
+        "rounded-md",
+        "bg-gray-200"
+      ],
+      "file": "app/loading/page.tsx",
+      "id": "139c7c23367b4b01",
+      "isScriptBuilt": false,
+      "keptClasses": [
+        "mt-2",
+        "h-4",
+        "w-48"
+      ],
+      "kitComponent": {
+        "importPath": "@/components/ui/skeleton",
+        "name": "Skeleton"
+      },
+      "line": 6,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "skeleton",
+      "variant": null
+    },
+    {
+      "column": 7,
+      "confidence": "high",
+      "droppedClasses": [
+        "animate-pulse",
+        "bg-zinc-200"
+      ],
+      "file": "app/loading/page.tsx",
+      "id": "139cbf2c367c4d02",
+      "isScriptBuilt": false,
+      "keptClasses": [
+        "block",
+        "size-10",
+        "rounded-full"
+      ],
+      "kitComponent": {
+        "importPath": "@/components/ui/skeleton",
+        "name": "Skeleton"
+      },
+      "line": 7,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "skeleton",
+      "variant": null
+    },
+    {
+      "column": 7,
+      "confidence": "medium",
+      "droppedClasses": [
+        "animate-pulse",
+        "rounded-md",
+        "bg-muted"
+      ],
+      "file": "app/loading/page.tsx",
+      "id": "139d0235367d4f03",
+      "isScriptBuilt": false,
+      "keptClasses": [
+        "flex",
+        "items-center",
+        "gap-4",
+        "p-4"
+      ],
+      "kitComponent": {
+        "importPath": "@/components/ui/skeleton",
+        "name": "Skeleton"
+      },
+      "line": 8,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "skeleton",
+      "variant": null
+    }
+  ],
+  "next": null
+}
+
+[agent] ok, 3 ms, git spawns: not counted (server side)
+{
+  "items": [
+    {
+      "column": 7,
+      "confidence": "high",
+      "droppedClasses": [
+        "animate-pulse",
+        "rounded-md",
+        "bg-muted"
+      ],
+      "file": "app/loading/page.tsx",
+      "id": "139c391a367a4900",
+      "isScriptBuilt": false,
+      "keptClasses": [
+        "h-4",
+        "w-32"
+      ],
+      "kitComponent": {
+        "importPath": "@/components/ui/skeleton",
+        "name": "Skeleton"
+      },
+      "line": 5,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "skeleton",
+      "variant": null
+    },
+    {
+      "column": 7,
+      "confidence": "high",
+      "droppedClasses": [
+        "animate-pulse",
+        "rounded-md",
+        "bg-gray-200"
+      ],
+      "file": "app/loading/page.tsx",
+      "id": "139c7c23367b4b01",
+      "isScriptBuilt": false,
+      "keptClasses": [
+        "mt-2",
+        "h-4",
+        "w-48"
+      ],
+      "kitComponent": {
+        "importPath": "@/components/ui/skeleton",
+        "name": "Skeleton"
+      },
+      "line": 6,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "skeleton",
+      "variant": null
+    },
+    {
+      "column": 7,
+      "confidence": "high",
+      "droppedClasses": [
+        "animate-pulse",
+        "bg-zinc-200"
+      ],
+      "file": "app/loading/page.tsx",
+      "id": "139cbf2c367c4d02",
+      "isScriptBuilt": false,
+      "keptClasses": [
+        "block",
+        "size-10",
+        "rounded-full"
+      ],
+      "kitComponent": {
+        "importPath": "@/components/ui/skeleton",
+        "name": "Skeleton"
+      },
+      "line": 7,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "skeleton",
+      "variant": null
+    },
+    {
+      "column": 7,
+      "confidence": "medium",
+      "droppedClasses": [
+        "animate-pulse",
+        "rounded-md",
+        "bg-muted"
+      ],
+      "file": "app/loading/page.tsx",
+      "id": "139d0235367d4f03",
+      "isScriptBuilt": false,
+      "keptClasses": [
+        "flex",
+        "items-center",
+        "gap-4",
+        "p-4"
+      ],
+      "kitComponent": {
+        "importPath": "@/components/ui/skeleton",
+        "name": "Skeleton"
+      },
+      "line": 8,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "skeleton",
+      "variant": null
+    }
+  ],
+  "next": null
+}
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

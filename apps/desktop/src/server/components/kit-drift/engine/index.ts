@@ -33,6 +33,7 @@ export type {
 export type { TsxLookPlanInput } from "./to-tsx-look-plan.js";
 
 export type {
+  ChildKind,
   DriftMatch,
   DriftSkipReason,
   DriftTag,

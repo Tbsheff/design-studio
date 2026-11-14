@@ -1,5 +1,6 @@
 import { appKeyOf, isModZoomKey, zoomKeyOf } from "@design-studio/contracts";
 
+import { toEditChord } from "../shared/edit-keys.js";
 import { toFlipChord } from "../shared/flip.js";
 import { vectorToolKeyOf } from "../shared/vector.js";
 import type { OutgoingBody } from "./bridge-types.js";
@@ -41,7 +42,8 @@ const forwardKey = (
     return;
   }
 
-  const chord = arrangeChordOf(event) ?? toFlipChord(event);
+  const chord =
+    arrangeChordOf(event) ?? toFlipChord(event) ?? toEditChord(event);
 
   if (chord && !isTypingElement(eventElement(event))) {
     event.preventDefault();

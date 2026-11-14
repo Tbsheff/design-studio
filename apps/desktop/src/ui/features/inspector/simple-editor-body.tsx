@@ -7,6 +7,7 @@ import { SimpleMiddle } from "./simple-middle.js";
 import type { SimpleEditorProps, SimpleEditorState } from "./simple-model.js";
 import { SimpleTail } from "./simple-tail.js";
 import { TokenNotes } from "./token-notes.js";
+import { useEditKeys } from "./use-edit-keys.js";
 
 interface SimpleEditorBodyProps {
   readonly props: SimpleEditorProps;
@@ -22,8 +23,17 @@ const SimpleEditorBody = ({
   const { keepRaw, tokens } = state;
   const { dismiss, note } = tokens.snap;
 
+  const keysRoot = useEditKeys(
+    state.edit,
+    state.classes.tailwind?.mode === "classes"
+  );
+
   return (
-    <section className="inspector ins-simple" aria-label={copy.designInspector}>
+    <section
+      ref={keysRoot}
+      className="inspector ins-simple"
+      aria-label={copy.designInspector}
+    >
       <SimpleHead props={props} state={state} />
       <div className="ins-scroll">
         <SimpleLead props={props} state={state} />

@@ -399,6 +399,19 @@ const rotationCopy = {
   tip: "Rotation in degrees. Shift and an arrow key step 15°",
 };
 
+const editKeysCopy = {
+  fontSizeDown: "Font size down",
+  fontSizeUp: "Font size up",
+  letterSpacingDown: "Letter spacing down",
+  letterSpacingUp: "Letter spacing up",
+  lineHeightDown: "Line height down",
+  lineHeightUp: "Line height up",
+  opacity: "Opacity",
+  opacityKeywords: "opacity transparency alpha fade see through",
+  typeKeywords:
+    "type text font size letter spacing tracking line height leading",
+};
+
 const textListCopy = {
   bullets: "Bullets",
   bulletsTip: "Bullets: show a dot before each item",
@@ -430,6 +443,7 @@ export {
   borderSideCopy,
   copy,
   dividerCopy,
+  editKeysCopy,
   rotationCopy,
   spaceStackCopy,
   strokePositionCopy,

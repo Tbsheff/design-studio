@@ -6,11 +6,15 @@ export { toMarkupDrift } from "./to-markup-drift.js";
 
 export { toPackRecipes } from "./to-pack-recipes.js";
 
+export { toScriptDrift } from "./to-script-drift.js";
+
 export type { MatchInput } from "./to-drift-matches.js";
 
 export type { MarkupDrift, MarkupInput } from "./to-markup-drift.js";
 
 export type { PackRecipe } from "./to-pack-recipes.js";
+
+export type { ScriptDriftInput } from "./to-script-drift.js";
 
 export type {
   DriftMatch,

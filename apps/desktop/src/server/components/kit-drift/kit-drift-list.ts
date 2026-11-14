@@ -5,6 +5,7 @@ import type { DriftMatch, MarkupDrift } from "./engine/index.js";
 import { getImportPath } from "./kit-drift-import.js";
 import type { ImportScope } from "./kit-drift-import.js";
 import { isKitPrototype, listPrototypeDrift } from "./kit-drift-prototype.js";
+import type { RenderSource } from "./kit-drift-render.js";
 import { listDriftFiles } from "./kit-drift-scan.js";
 import type { FileDrift } from "./kit-drift-scan.js";
 import { getKitInventory } from "./kit-inventory.js";
@@ -29,6 +30,12 @@ interface KitDriftPage {
 interface PageSlice<Value> {
   readonly next: string | null;
   readonly slice: readonly Value[];
+}
+
+interface ListScope {
+  readonly project: Project;
+  readonly render: RenderSource | null;
+  readonly workTree: string;
 }
 
 interface Located {
@@ -85,6 +92,7 @@ const toItem = (located: Located, importPath: string): KitDrift => {
     droppedClasses: match.droppedClasses,
     file: match.file,
     id: match.id,
+    isScriptBuilt: false,
     keptClasses: match.keptClasses,
     kitComponent: { importPath, name: match.component },
     line: match.line,
@@ -144,6 +152,7 @@ const toMarkupItem = (drift: MarkupDrift): KitDrift => ({
   droppedClasses: drift.droppedClasses,
   file: drift.file,
   id: drift.id,
+  isScriptBuilt: drift.isScriptBuilt,
   keptClasses: drift.keptClasses,
   kitComponent: {
     importPath: drift.recipe.source,
@@ -160,22 +169,30 @@ const toMarkupItem = (drift: MarkupDrift): KitDrift => ({
 const listPrototypePage = async (
   project: Project,
   workTree: string,
-  command: ListKitDriftCommand
+  command: ListKitDriftCommand,
+  render: RenderSource | null
 ): Promise<KitDriftPage> => {
-  const drift = await listPrototypeDrift(project, workTree, command.page);
-  const { next, slice } = toPageSlice(drift, command);
+  const drift = await listPrototypeDrift(
+    project,
+    workTree,
+    command.page,
+    render
+  );
+
+  const { next, slice } = toPageSlice(drift.finds, command);
 
   return { items: slice.map((entry) => toMarkupItem(entry)), next };
 };
 
 const runKitDriftList = async (
   ts: Ts,
-  project: Project,
-  workTree: string,
+  scope: ListScope,
   command: ListKitDriftCommand
 ): Promise<KitDriftPage> => {
+  const { project, render, workTree } = scope;
+
   if (isKitPrototype(project)) {
-    return await listPrototypePage(project, workTree, command);
+    return await listPrototypePage(project, workTree, command, render);
   }
 
   const inventory = await getKitInventory(ts, project, workTree);

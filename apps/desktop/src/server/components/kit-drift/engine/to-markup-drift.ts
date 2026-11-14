@@ -20,10 +20,12 @@ interface MarkupDrift {
   readonly droppedClasses: readonly string[];
   readonly file: string;
   readonly id: string;
+  readonly isScriptBuilt: boolean;
   readonly keptClasses: readonly string[];
   readonly line: number;
   readonly parts: readonly PackRecipe[];
   readonly recipe: PackRecipe;
+  readonly scriptText: string | null;
   readonly suggestedSize: string | null;
   readonly suggestedVariant: string | null;
   readonly tag: DriftTag;
@@ -86,6 +88,8 @@ const COMPONENT_NAMES: Readonly<Record<DriftTag, ReadonlySet<string>>> = {
   table: new Set(["Table"]),
   textarea: new Set(["Textarea"]),
 };
+
+const BASE_ONLY_NAMES: ReadonlySet<string> = new Set(["Button", "Table"]);
 
 const VARIANT_PROP = "variant";
 const SIZE_PROP = "size";
@@ -160,16 +164,20 @@ const getRecipe = (
 const isJudgeable = (recipe: PackRecipe): boolean =>
   recipe.slot !== null || recipe.component.base.length > 0;
 
-const isKitStyled = (recipe: PackRecipe, element: MarkupElement): boolean => {
-  if (
-    recipe.slot !== null &&
-    element.attributes.get("data-slot") === recipe.slot
-  ) {
-    return true;
-  }
+const isSlotOnlyKit = (recipe: PackRecipe): boolean =>
+  !BASE_ONLY_NAMES.has(recipe.component.name) ||
+  recipe.component.base.length === 0;
 
+const isKitStyled = (recipe: PackRecipe, element: MarkupElement): boolean => {
   const tokens = new Set(toClassList(element));
   const { base } = recipe.component;
+
+  const isSlot =
+    recipe.slot !== null && element.attributes.get("data-slot") === recipe.slot;
+
+  if (isSlot && isSlotOnlyKit(recipe)) {
+    return true;
+  }
 
   return base.length > 0 && base.every((token) => tokens.has(token));
 };
@@ -232,8 +240,10 @@ const toElementDrift = (
   const droppedClasses = tokens.filter((token) => covered.has(token));
   const { file } = input;
   const id = toDriftId(file, line, column);
+  const isScriptBuilt = false;
   const keptClasses = tokens.filter((token) => !covered.has(token));
   const parts: readonly PackRecipe[] = [];
+  const scriptText = null;
   const suggestedSize = toDefaultOf(recipe.component, SIZE_PROP);
   const suggestedVariant = toDefaultOf(recipe.component, VARIANT_PROP);
   const variant = null;
@@ -245,10 +255,12 @@ const toElementDrift = (
       droppedClasses,
       file,
       id,
+      isScriptBuilt,
       keptClasses,
       line,
       parts,
       recipe,
+      scriptText,
       suggestedSize,
       suggestedVariant,
       tag,
@@ -265,7 +277,9 @@ const toCardItem = (input: MarkupInput, find: CardFind): MarkupDrift => {
   const confidence: DriftConfidence = "medium";
   const droppedClasses = tokens.filter((token) => covered.has(token));
   const id = toDriftId(file, line, column);
+  const isScriptBuilt = false;
   const keptClasses = tokens.filter((token) => !covered.has(token));
+  const scriptText = null;
   const suggestedSize = null;
   const suggestedVariant = null;
   const tag: DriftTag = "card";
@@ -277,10 +291,12 @@ const toCardItem = (input: MarkupInput, find: CardFind): MarkupDrift => {
     droppedClasses,
     file,
     id,
+    isScriptBuilt,
     keptClasses,
     line,
     parts,
     recipe,
+    scriptText,
     suggestedSize,
     suggestedVariant,
     tag,
@@ -316,8 +332,10 @@ const toBadgeItem = (input: MarkupInput, find: BadgeFind): MarkupDrift => {
   const confidence: DriftConfidence = "medium";
   const droppedClasses = tokens.filter((token) => covered.has(token));
   const id = toDriftId(file, line, column);
+  const isScriptBuilt = false;
   const keptClasses = tokens.filter((token) => !covered.has(token));
   const parts: readonly PackRecipe[] = [];
+  const scriptText = null;
   const suggestedSize = null;
   const suggestedVariant = variant;
   const tag: DriftTag = "badge";
@@ -328,10 +346,12 @@ const toBadgeItem = (input: MarkupInput, find: BadgeFind): MarkupDrift => {
     droppedClasses,
     file,
     id,
+    isScriptBuilt,
     keptClasses,
     line,
     parts,
     recipe,
+    scriptText,
     suggestedSize,
     suggestedVariant,
     tag,
@@ -351,6 +371,6 @@ const toMarkupDrift = (input: MarkupInput): MarkupDrift[] =>
     ...toBadgeDrift(input).map((find) => toBadgeItem(input, find)),
   ].toSorted(toOrder);
 
-export { toMarkupDrift };
+export { toMarkupDrift, toPlace };
 
 export type { MarkupDrift, MarkupInput };

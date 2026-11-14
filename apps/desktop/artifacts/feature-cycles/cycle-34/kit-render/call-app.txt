@@ -1,0 +1,23 @@
+call-action kit-drift.list on http://127.0.0.1:6140. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 34 ms, git spawns: not counted (server side)
+{
+  "items": [],
+  "next": null
+}
+
+[mcp] ok, 7 ms, git spawns: not counted (server side)
+{
+  "items": [],
+  "next": null
+}
+
+[agent] ok, 3 ms, git spawns: not counted (server side)
+{
+  "items": [],
+  "next": null
+}
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

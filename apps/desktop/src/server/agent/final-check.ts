@@ -437,7 +437,7 @@ export async function studioAppReview(
       gaps.mobile
         ? cutsNow(input).catch(() => NO_CUTS)
         : Promise.resolve(NO_CUTS),
-      listKitLines(input.ctx),
+      listKitLines(input.ctx, input.preview),
     ]);
   const log = input.run.log;
   if (image && log) recordShot(log, "mobile");

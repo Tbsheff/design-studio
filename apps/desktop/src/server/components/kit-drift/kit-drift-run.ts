@@ -1,7 +1,12 @@
 import type { Effect } from "effect";
 
 import { loadTypeScript, runDirectionRead, runDirectionWrite } from "./deps.js";
-import type { DirectionIds, DirectionRun, KnownFailure } from "./deps.js";
+import type {
+  DirectionIds,
+  DirectionRun,
+  KnownFailure,
+  PreviewService,
+} from "./deps.js";
 import { KitDriftError } from "./errors.js";
 import { createKitDriftPlan } from "./kit-drift-apply.js";
 import type { Skipped } from "./kit-drift-apply.js";
@@ -47,16 +52,16 @@ const getTypeScript = async (): Promise<Ts> => {
 
 const runList = async (
   run: DirectionRun,
-  command: ListKitDriftCommand
+  command: ListKitDriftCommand,
+  preview: PreviewService
 ): Promise<KitDriftPage> => {
   const ts = await getTypeScript();
 
-  return await runKitDriftList(
-    ts,
-    run.project,
-    run.direction.workTree,
-    command
-  );
+  const render = { direction: run.direction, preview };
+  const { project } = run;
+  const { workTree } = run.direction;
+
+  return await runKitDriftList(ts, { project, render, workTree }, command);
 };
 
 const runApply = async (
@@ -90,11 +95,12 @@ const runApply = async (
 };
 
 const runKitDriftListEffect = (
-  command: ListKitDriftCommand
+  command: ListKitDriftCommand,
+  preview: PreviewService
 ): Effect.Effect<KitDriftPage, KnownFailure> =>
   runDirectionRead(
     toIds(command),
-    (run) => runList(run, command),
+    (run) => runList(run, command, preview),
     toKitDriftFailure
   );
 

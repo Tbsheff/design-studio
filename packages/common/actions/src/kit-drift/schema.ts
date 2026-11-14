@@ -39,6 +39,10 @@ const KitDriftSchema = Schema.Struct({
   droppedClasses: Schema.Array(Schema.String),
   file: Schema.String,
   id: Schema.String,
+  isScriptBuilt: Schema.Boolean.annotate({
+    description:
+      "True when a page script builds this markup, so the fix goes in the script template.",
+  }),
   keptClasses: Schema.Array(Schema.String),
   kitComponent: KitDriftComponentSchema,
   line: Schema.Int,

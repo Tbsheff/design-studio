@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Visits</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="p-8 font-sans">
+  <h1 class="text-xl font-semibold">Visits</h1>
+  <div class="flex gap-2 mt-4">
+    <span class="rounded-full bg-blue-100 text-blue-800 px-2 py-0.5 text-xs font-medium">This week</span>
+    <span class="rounded-full bg-gray-100 text-gray-700 px-2 py-0.5 text-xs">12 visits</span>
+    <button data-slot="button">Export</button>
+  </div>
+  <ul id="visits" class="mt-6 flex flex-col gap-2"></ul>
+  <script>
+    const visits = [
+      { name: "Ana Ruiz", time: "09:00", status: "Scheduled" },
+      { name: "Ben Ito", time: "09:45", status: "Completed" },
+      { name: "Cara Low", time: "10:30", status: "Missed" },
+      { name: "Dev Shah", time: "11:15", status: "Scheduled" },
+      { name: "Eli Park", time: "13:00", status: "Cancelled" },
+      { name: "Fay Moss", time: "14:30", status: "Completed" },
+    ];
+    const tone = {
+      Scheduled: "bg-amber-100 text-amber-800",
+      Completed: "bg-green-100 text-green-800",
+      Missed: "bg-red-100 text-red-700",
+      Cancelled: "bg-gray-100 text-gray-700",
+    };
+    document.getElementById("visits").innerHTML = visits
+      .map(
+        (visit) => `<li class="flex items-center justify-between gap-4 py-3">
+          <span class="text-sm">${visit.time} ${visit.name}</span>
+          <span class="rounded-full px-2 py-0.5 text-xs font-medium ${tone[visit.status]}">${visit.status}</span>
+          <button class="rounded-md bg-slate-900 text-white px-3 py-1 text-sm">Reschedule</button>
+        </li>`
+      )
+      .join("");
+  </script>
+</body>
+</html>

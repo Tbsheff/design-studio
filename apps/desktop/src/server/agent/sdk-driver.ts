@@ -86,11 +86,8 @@ import {
   type LoopDecision,
   type StopReason,
 } from "./polish-loop.js";
-import {
-  runPortReview,
-  toPortReviewGaps,
-  toPortChecked,
-} from "./port-review.js";
+import { runPortReview } from "./port-review-pass.js";
+import { toPortReviewGaps, toPortChecked } from "./port-review.js";
 import { buildSystemPrompt } from "./prompt.js";
 import { toReviewGaps, toReviewNote } from "./prototype-review.js";
 import { lockReadOnly } from "./read-only-lock.js";

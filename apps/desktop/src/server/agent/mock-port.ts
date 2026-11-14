@@ -8,8 +8,8 @@ import type { StudioRuntime } from "../platform/studio-runtime/index.js";
 import type { DriverInput, DriverOutcome } from "./lifecycle.js";
 import { toAssetMap, toAssetNotes } from "./port-assets.js";
 import type { AssetLine } from "./port-assets.js";
+import { runPortReview } from "./port-review-pass.js";
 import {
-  runPortReview,
   toPortChecked,
   toPortReviewGaps,
   toRouteFiles,
@@ -21,6 +21,12 @@ import type { RouteFileText } from "./port-route-update.js";
 const PORT_THROW_TAG = "[port-throw]";
 
 const PORT_LOW_TAG = "[port-low]";
+
+const PORT_KEEP_TAG = "[port-keep]";
+
+const PORT_WORSE_TAG = "[port-worse]";
+
+const MAIN_CLASS = 'main className="';
 
 const PAGE_START = "export default function Page() {";
 
@@ -201,6 +207,10 @@ const toUpdatedRoute = (prompt: string, now: RouteFileText): string => {
 const toRouteText = (prompt: string): string => {
   const now = toRouteFileNow(prompt);
 
+  if (now !== null && prompt.includes(PORT_KEEP_TAG)) {
+    return now.text;
+  }
+
   if (now !== null) {
     return toUpdatedRoute(prompt, now);
   }
@@ -237,7 +247,13 @@ const runMockPort = async (
 };
 
 const toFixedRoute = (prompt: string): string => {
-  if (toRouteFileNow(prompt) !== null) {
+  const now = toRouteFileNow(prompt);
+
+  if (now !== null && prompt.includes(PORT_WORSE_TAG)) {
+    return now.text.replace(MAIN_CLASS, `${MAIN_CLASS}mt-24 `);
+  }
+
+  if (now !== null) {
     return toRouteText(prompt);
   }
 

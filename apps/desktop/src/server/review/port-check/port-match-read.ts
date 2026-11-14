@@ -5,6 +5,8 @@ import { Effect } from "effect";
 import { PNG } from "pngjs";
 
 import { REFERENCE_LOW_SCORE } from "../../../shared/reference.js";
+import { projectTailwindTheme } from "../../direct-edit/index.js";
+import type { TailwindTheme } from "../../direct-edit/index.js";
 import { attemptKnown } from "../../platform/attempt/index.js";
 import { loadConfig } from "../../platform/config/index.js";
 import {
@@ -13,6 +15,7 @@ import {
 } from "../../preview/picture-diff/index.js";
 import type { PictureRegion } from "../../preview/picture-diff/index.js";
 import type { PortCheckQuery, PortReads } from "./port-check-query.js";
+import { toHintedMatch } from "./port-class-hints.js";
 import { createPortFiles, toPortFileStem } from "./port-diff-file.js";
 import type { ProbeElement } from "./port-mask-probe.js";
 import {
@@ -21,7 +24,9 @@ import {
   toAreaElements,
   toMaskedList,
 } from "./port-masks.js";
+import type { PairNode } from "./port-pairs-probe.js";
 import { toFirstShift, toPairedAreas, toPairs } from "./port-pairs.js";
+import type { PortPair } from "./port-pairs.js";
 import { toPortShots } from "./port-shots.js";
 
 const ROW_NAMES = ["top", "middle", "bottom"];
@@ -76,7 +81,25 @@ const toLowAreas = (
 const fromBase64Png = (data: string): PNG =>
   PNG.sync.read(Buffer.from(data, "base64"));
 
-const readPortMatch = Effect.fn("PortMatchStore.readPortMatch")(function* run(
+interface PortCheckRead {
+  readonly appNodes: readonly PairNode[];
+  readonly match: PortMatch;
+  readonly pairs: readonly PortPair[];
+}
+
+const getAppTheme = (
+  workTree: string | null
+): Effect.Effect<TailwindTheme | null> => {
+  if (workTree === null) {
+    return Effect.succeed(null);
+  }
+
+  return attemptKnown(() => projectTailwindTheme(workTree)).pipe(
+    Effect.orElseSucceed(() => null)
+  );
+};
+
+const readPortCheck = Effect.fn("PortMatchStore.readPortCheck")(function* run(
   reads: PortReads,
   query: PortCheckQuery
 ) {
@@ -111,7 +134,7 @@ const readPortMatch = Effect.fn("PortMatchStore.readPortMatch")(function* run(
     )
   );
 
-  const match: PortMatch = {
+  const unhinted: PortMatch = {
     ...files,
     areas: toPairedAreas(
       toLowAreas(diff.regions, shots.app.probe.elements, query.width).slice(
@@ -128,7 +151,24 @@ const readPortMatch = Effect.fn("PortMatchStore.readPortMatch")(function* run(
     score: diff.score,
   };
 
-  return match;
+  const theme = yield* getAppTheme(query.appWorkTree);
+
+  const match = toHintedMatch(unhinted, pairs, theme);
+
+  const check: PortCheckRead = { appNodes, match, pairs };
+
+  return check;
 });
 
-export { readPortMatch };
+const readPortMatch = Effect.fn("PortMatchStore.readPortMatch")(function* run(
+  reads: PortReads,
+  query: PortCheckQuery
+) {
+  const check = yield* readPortCheck(reads, query);
+
+  return check.match;
+});
+
+export { readPortCheck, readPortMatch };
+
+export type { PortCheckRead };

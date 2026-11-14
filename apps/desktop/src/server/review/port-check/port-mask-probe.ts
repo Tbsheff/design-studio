@@ -5,6 +5,7 @@ import { PairNodeSchema, toPairsSource } from "./port-pairs-probe.js";
 
 interface MaskProbeInput {
   readonly hide: readonly string[];
+  readonly isSourced: boolean;
   readonly rowLimits: readonly number[] | null;
 }
 
@@ -119,12 +120,12 @@ for (const node of document.body.querySelectorAll("h1, h2, h3, h4, h5, h6, p, ta
   const box = node.getBoundingClientRect();
   elements.push({ selector: toSelector(node), text: norm((node.tagName === "TABLE" && node.tHead ? node.tHead.innerText : node.innerText) || node.getAttribute("alt") || node.getAttribute("placeholder")).slice(0, 40), x: box.x + scrollX, y: box.y + scrollY, width: box.width, height: box.height });
 }
-return JSON.stringify({ cellTexts, cells, elements, hidden, hiddenRows, nodes: toPairNodes(rowSet), rowCounts });
+return JSON.stringify({ cellTexts, cells, elements, hidden, hiddenRows, nodes: await toPairNodes(rowSet), rowCounts });
 `;
 
 const toMaskProbe = (input: MaskProbeInput): string =>
   [
-    "(() => {",
+    "(async () => {",
     `const params = ${JSON.stringify(input)};`,
     toPairsSource(),
     PROBE_SOURCE,

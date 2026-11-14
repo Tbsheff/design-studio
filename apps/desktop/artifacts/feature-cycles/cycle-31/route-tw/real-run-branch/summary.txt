@@ -1,0 +1,10 @@
+run d8K9E0fTP6jpyT4bizgYG completed cost 0.04958659999999998 durationMs 11970 session 59370c50-ca16-4e0d-8304-19b016c75b50 tools ['Bash', 'Bash', 'mcp__studio__render_check', 'mcp__studio__inspect_port']
+I re-applied the port to `/patients`, because both files had gone back to the original markup. The port now scores 99 on `inspect_port`, with no low areas.
+
+- **Files:** `app/patients/page.jsx` and `app/patients/patient-list.jsx`.
+- **Kept:** the `prefetchPatients` call, the `usePatients` read, `dynamic`, and "Ward list for today.". The rows come from the app's data, not the prototype's samples.
+- **Kit:** the app has no kit components and no theme tokens, so I used a plain table with Tailwind palette classes. A few sizes are bracket values (`max-w-[880px]`, `text-[32px]`, `text-[15px]`).
+- **Checks:** `render_check` shows no new errors or findings. I did not take new screenshots or run `review_frame` in this pass.
+
+Updated app/patients/page.jsx and patient-list.jsx (kept 2 data reads).
+finalCheck null

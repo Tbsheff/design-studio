@@ -138,6 +138,7 @@ const toBorderDiff = (app: PairNode, prototype: PairNode): PortDiff[] => {
       app: toSidesText(appSides),
       property: BORDER_WIDTH,
       prototype: toSidesText(prototypeSides),
+      write: null,
     },
   ];
 };
@@ -156,6 +157,7 @@ const toBoxDiffs = (app: PairNode, prototype: PairNode): PortDiff[] =>
         app: `${Math.round(item.app)}px`,
         property: item.property,
         prototype: `${Math.round(item.prototype)}px`,
+        write: null,
       },
     ];
   });
@@ -169,7 +171,14 @@ const toValueDiffs = (app: PairNode, prototype: PairNode): PortDiff[] => [
       return [];
     }
 
-    return [{ app: appValue, property: rule.name, prototype: prototypeValue }];
+    return [
+      {
+        app: appValue,
+        property: rule.name,
+        prototype: prototypeValue,
+        write: null,
+      },
+    ];
   }),
   ...toBorderDiff(app, prototype),
   ...toBoxDiffs(app, prototype),

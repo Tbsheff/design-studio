@@ -100,10 +100,19 @@ const toAreaText = (count: number): string => {
   return `${count} areas differ`;
 };
 
+const toWriteText = (diff: PortDiffWire): string => {
+  if (diff.write === null) {
+    return "";
+  }
+
+  return ` (write ${diff.write})`;
+};
+
 const toDiffsText = (diffs: readonly PortDiffWire[]): string =>
   diffs
     .map(
-      (diff) => `${diff.property} app ${diff.app}, prototype ${diff.prototype}`
+      (diff) =>
+        `${diff.property} app ${diff.app}, prototype ${diff.prototype}${toWriteText(diff)}`
     )
     .join("; ");
 

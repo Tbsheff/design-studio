@@ -467,6 +467,7 @@
     "./pattern/list": "./src/pattern/list.ts",
     "./pattern/routes": "./src/pattern/routes.ts",
     "./pattern/schema": "./src/pattern/schema.ts",
+    "./port/apply": "./src/port/apply.ts",
     "./port/errors/index": "./src/port/errors/index.ts",
     "./port/errors/status": "./src/port/errors/status.ts",
     "./port/index": "./src/port/index.ts",

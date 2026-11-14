@@ -409,4 +409,12 @@ export function exposeHeadlessScan(selectorOf: SelectorOf): void {
 
     return result;
   };
+
+  (window as unknown as Record<string, unknown>).__studioSourceLocs = async (
+    elements: readonly Element[]
+  ): Promise<(SourceLoc | null)[]> => {
+    const found = await sourcesOf([...elements]);
+
+    return elements.map((element) => found.get(element) ?? null);
+  };
 }

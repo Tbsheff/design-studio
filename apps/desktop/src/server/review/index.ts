@@ -63,4 +63,9 @@ export {
   toPortSourceCommand,
 } from "./port-check/index.js";
 
-export type { PortMatchStoreApi } from "./port-check/index.js";
+export type {
+  PortApplyCheck,
+  PortApplyTarget,
+  PortMatchStoreApi,
+  PortWritePlan,
+} from "./port-check/index.js";

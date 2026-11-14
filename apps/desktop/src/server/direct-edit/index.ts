@@ -1,5 +1,9 @@
 export { DirectEditError, parseDirectEditRequest } from "./engine/index.js";
 
+export { decideClassEdit, projectTailwindTheme } from "./tailwind/index.js";
+
+export type { TailwindTheme } from "./tailwind/index.js";
+
 export * from "./commit/index.js";
 
 export { writeAndCommitAll, applyDirectEditBatch } from "./commit/batch.js";

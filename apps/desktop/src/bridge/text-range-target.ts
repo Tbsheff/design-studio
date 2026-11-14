@@ -69,6 +69,25 @@ const toStyledInside = (
   return head;
 };
 
+const listStyleTags = (
+  target: HTMLElement,
+  range: Range,
+  tags: ReadonlySet<string>
+): string[] => {
+  const found: string[] = [];
+  let current: Node | null = range.commonAncestorContainer;
+
+  while (current !== null && current !== target) {
+    if (current instanceof Element && tags.has(toTagOf(current))) {
+      found.push(toTagOf(current));
+    }
+
+    current = current.parentNode;
+  }
+
+  return found;
+};
+
 const toRangeTarget = (
   layer: HTMLElement,
   range: Range,
@@ -96,6 +115,6 @@ const toRangeTarget = (
   return { element, source, tag: toTagOf(element) };
 };
 
-export { toRangeTarget };
+export { listStyleTags, toRangeTarget };
 
 export type { RangeTarget };

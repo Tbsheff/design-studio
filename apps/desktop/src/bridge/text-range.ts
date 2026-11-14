@@ -3,7 +3,7 @@ import type { BridgeToParent } from "@design-studio/contracts";
 import { toTextKeyId } from "../shared/text-keys.js";
 import { IS_MAC } from "./dom-input.js";
 import { toPlainOffset } from "./text-edit-range-mode.js";
-import { toRangeTarget } from "./text-range-target.js";
+import { listStyleTags, toRangeTarget } from "./text-range-target.js";
 import type { RangeTarget } from "./text-range-target.js";
 
 type TextRangeMessage = Extract<BridgeToParent, { type: "text-range" }>;
@@ -48,6 +48,7 @@ interface RangeReading {
   readonly layerStart: number;
   readonly rect: TextRangeMessage["rect"];
   readonly start: number;
+  readonly styleTags: string[];
   readonly target: RangeTarget;
 }
 
@@ -60,6 +61,10 @@ const COMMAND_TAGS: Readonly<Record<TextRangeCommand, ReadonlySet<string>>> = {
 };
 
 const NO_TAGS: ReadonlySet<string> = new Set();
+
+const STYLE_TAGS: ReadonlySet<string> = new Set(
+  Object.values(COMMAND_TAGS).flatMap((tags) => tags.values().toArray())
+);
 
 const toReading = (
   element: HTMLElement,
@@ -90,6 +95,7 @@ const toReading = (
       range.startContainer,
       range.startOffset
     ),
+    styleTags: listStyleTags(target.element, range, STYLE_TAGS),
     target,
   };
 };
@@ -166,6 +172,7 @@ const toShot = (
       rect: null,
       source: null,
       start: 0,
+      styleTags: [],
       text: "",
     };
   }
@@ -185,6 +192,7 @@ const toShot = (
       rect: reading.rect,
       source: null,
       start: reading.start,
+      styleTags: reading.styleTags,
       tag: reading.target.tag,
     };
   }
@@ -199,6 +207,7 @@ const toShot = (
     selector: deps.selectorFor(child),
     source: reading.target.source,
     start: reading.start,
+    styleTags: reading.styleTags,
     tag: child.tagName.toLowerCase(),
     text: deps.textOf(child),
   };

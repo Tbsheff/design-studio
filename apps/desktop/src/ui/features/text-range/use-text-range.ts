@@ -29,6 +29,7 @@ interface TextRangeView extends TextRangeActions {
   readonly isPending: boolean;
   readonly notice: string | null;
   readonly spot: TextRangeSpot | null;
+  readonly styleTags: readonly string[];
   readonly tag: string;
 }
 
@@ -51,7 +52,7 @@ const useTextRange = (setup: TextRangeSetup): TextRangeView => {
       reading: TextRangeReading,
       className: string
     ): void => {
-      const isRemove = toIsRemove(command, reading.tag, className);
+      const isRemove = toIsRemove(command, reading, className);
 
       setHeld(reading);
 
@@ -104,6 +105,7 @@ const useTextRange = (setup: TextRangeSetup): TextRangeView => {
     isPending: applied.isPending,
     notice,
     spot,
+    styleTags: shown?.styleTags ?? [],
     tag: shown?.tag ?? "",
   };
 };

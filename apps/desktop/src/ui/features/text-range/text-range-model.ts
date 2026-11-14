@@ -23,6 +23,7 @@ interface TextRangeReading {
   readonly selector: string;
   readonly source: SourceLoc | null;
   readonly start: number;
+  readonly styleTags: readonly string[];
   readonly tag: string;
   readonly text: string;
 }
@@ -77,6 +78,7 @@ const toReading = (message: TextRangeMessage): TextRangeReading | null => {
     selector: message.selector,
     source: message.source,
     start: message.start,
+    styleTags: message.styleTags,
     tag: message.tag,
     text: message.text,
   };
@@ -93,6 +95,7 @@ const toKeyReading = (
   selector: message.selector,
   source: message.source,
   start: message.start,
+  styleTags: [],
   tag: message.tag,
   text: message.text,
 });
@@ -110,14 +113,23 @@ const hasLineClass = (
   return className.split(/\s+/u).includes(line);
 };
 
+const isStyleOn = (
+  command: TextRangeCommand,
+  reading: Pick<TextRangeReading, "styleTags" | "tag">
+): boolean => {
+  const tags: ReadonlySet<string> = new Set(STYLE_TAGS[command]);
+
+  return [reading.tag, ...reading.styleTags].some((tag) => tags.has(tag));
+};
+
 const toIsRemove = (
   command: TextRangeCommand,
-  tag: string,
+  reading: Pick<TextRangeReading, "styleTags" | "tag">,
   className: string
 ): boolean => {
-  const tags: readonly string[] = STYLE_TAGS[command];
+  const { tag } = reading;
 
-  if (tags.includes(tag)) {
+  if (isStyleOn(command, reading)) {
     return true;
   }
 
@@ -147,7 +159,15 @@ const keepFocus = (event: MouseEvent): void => event.preventDefault();
 
 const isColorValue = (value: string): boolean => COLOR_VALUE.test(value.trim());
 
-export { isColorValue, keepFocus, toIsRemove, toKeyReading, toReading, toSpot };
+export {
+  isColorValue,
+  isStyleOn,
+  keepFocus,
+  toIsRemove,
+  toKeyReading,
+  toReading,
+  toSpot,
+};
 
 export type {
   TextRangeBox,

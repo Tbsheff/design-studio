@@ -1338,6 +1338,7 @@ export type BridgeToParent =
       end: number;
       text: string;
       tag: string;
+      styleTags: string[];
       isDirty: boolean;
       rect: { x: number; y: number; width: number; height: number } | null;
       source: SourceLoc | null;

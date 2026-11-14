@@ -4,7 +4,7 @@ import path from "node:path";
 import type { ResolvedRunConfig } from "../../shared/run-levels.js";
 import { isLeanRun } from "./lean-run.js";
 import type { DriverInput } from "./lifecycle.js";
-import { isHtmlEntry, isPhotoSearchOn } from "./photo-search.js";
+import { isArtProject, isPhotoSearchOn } from "./photo-search.js";
 
 const PHOTO_ART_NOTE =
   "Photo slots show art from your colors. Turn on image search for real photos (image sheet, or STUDIO_IMAGE_SEARCH=on).";
@@ -19,6 +19,8 @@ const PHOTO_SLOT = "data-photo=";
 const PAGE_FILE = /\.(?:html?|[jt]sx)$/iu;
 
 const NOTE_LEVELS = new Set(["polish", "prototype"]);
+
+const SOURCE_FOLDER = "src";
 
 const toReadText = async (file: string): Promise<string> => {
   try {
@@ -48,8 +50,15 @@ const toPageFiles = async (
   workTree: string,
   entry: string
 ): Promise<readonly string[]> => {
-  const names = await toReadNames(workTree);
-  const pages = names.filter((name) => PAGE_FILE.test(name));
+  const [names, nested] = await Promise.all([
+    toReadNames(workTree),
+    toReadNames(path.join(workTree, SOURCE_FOLDER)),
+  ]);
+
+  const pages = [
+    ...names,
+    ...nested.map((name) => `${SOURCE_FOLDER}/${name}`),
+  ].filter((name) => PAGE_FILE.test(name));
 
   return [...new Set([entry, ...pages])].map((name) =>
     path.join(workTree, name)
@@ -91,7 +100,7 @@ const toPhotoNotes = async (
 
   await toWriteMarker(marker);
 
-  if (isHtmlEntry(input.ctx.project)) {
+  if (isArtProject(input.ctx.project)) {
     return [PHOTO_ART_NOTE];
   }
 

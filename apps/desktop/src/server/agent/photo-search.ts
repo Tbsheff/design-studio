@@ -9,10 +9,7 @@ const PHOTO_ART_RULE = `Keep icons and shapes inline (SVG, CSS). Image search is
 
 const PHOTO_OFF_RULE = `Keep icons and shapes inline (SVG, CSS). Image search is off: where a photo goes, write a gray box, a div with \`data-photo="<2 to 6 search words>"\` and a short label. Never write an <img> without a src, and never reference a file that does not exist.`;
 
-const HTML_ENTRY = /\.html?$/iu;
-
-const isHtmlEntry = (project: Project): boolean =>
-  HTML_ENTRY.test(project.entry);
+const isArtProject = (project: Project): boolean => !project.app;
 
 const isPhotoSearchOn = (project: Project): boolean =>
   imageSearchEnv().trim().toLowerCase() === "on" ||
@@ -25,11 +22,11 @@ const toPhotoRule = (project: Project): string => {
     return PHOTO_ON_RULE;
   }
 
-  if (isHtmlEntry(project)) {
+  if (isArtProject(project)) {
     return PHOTO_ART_RULE;
   }
 
   return PHOTO_OFF_RULE;
 };
 
-export { isHtmlEntry, isPhotoSearchOn, toPhotoRule };
+export { isArtProject, isPhotoSearchOn, toPhotoRule };

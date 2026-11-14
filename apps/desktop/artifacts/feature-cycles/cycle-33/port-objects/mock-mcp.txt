@@ -1,0 +1,10 @@
+# MCP start_port (approval card answered by script), mock [port-keep] [port-bash] [port-worse], app po-next
+app objects before: count: 14
+status completed <port-start tree="9744f697e46a0b691c10899e7657a6c8d7bbcd55"
+Moved the prototype into `app/patients/page.jsx`.
+
+Studio port check: score 22 (top right 15, top center 19, top left 32 under 80), route renders. Studio check: wrote 8 prototype values (border-3, max-w-[730px], mb-6, text-[32px], mb-3.5); port score 22 -> 80; a fix loop lowered the score; its edits were undone; kept score 80 (top right 72, top left 78 under 80), route renders.
+
+Updated app/patients/page.jsx (kept 0 data reads).
+{"errors":0,"high":0,"low":0,"medium":0,"ranBy":"studio","port":{"fixLoop":true,"rendered":true,"score":80}}
+app objects after: count: 14

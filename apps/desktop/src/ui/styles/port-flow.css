@@ -29,7 +29,7 @@
   font-size: var(--t-xs);
 }
 
-.port-page-taken {
-  color: var(--danger);
+.port-page-update {
+  color: var(--text-2);
   font-size: var(--t-xs);
 }

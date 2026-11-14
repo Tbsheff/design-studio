@@ -1,0 +1,150 @@
+call-action direct-edit.applyReviewFix on http://127.0.0.1:4271. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 12 ms, git spawns: not counted (server side)
+{
+  "applied": [
+    "type-5d7f3783ab"
+  ],
+  "files": [
+    "index.html"
+  ],
+  "skipped": [],
+  "version": {
+    "changedFiles": [
+      "index.html"
+    ],
+    "createdAt": 1794630911092,
+    "directionId": "main",
+    "id": "pending-c935af9828840601",
+    "meta": {
+      "kind": "manual",
+      "prompt": "Direct edit of index.html:21:1: max-width: 65ch"
+    },
+    "parentId": "7ab7362d5b0b1dffdd1d3481047771df56e4a0a1",
+    "title": "Edit p: max-width"
+  }
+}
+
+[mcp] ok, 439 ms, git spawns: not counted (server side)
+{
+  "applied": [],
+  "files": [],
+  "skipped": [
+    {
+      "id": "type-5d7f3783ab",
+      "reason": "This finding is gone from the latest review. Run the review again."
+    }
+  ],
+  "version": null
+}
+
+[agent] ok, 2 ms, git spawns: not counted (server side)
+{
+  "applied": [],
+  "files": [],
+  "skipped": [
+    {
+      "id": "type-5d7f3783ab",
+      "reason": "This finding is gone from the latest review. Run the review again."
+    }
+  ],
+  "version": null
+}
+
+diff http -> mcp:
+-   "applied": [
++   "applied": [],
+-     "type-5d7f3783ab"
++   "files": [],
+-   ],
++   "skipped": [
+-   "files": [
++     {
+-     "index.html"
++       "id": "type-5d7f3783ab",
+-   ],
++       "reason": "This finding is gone from the latest review. Run the review again."
+-   "skipped": [],
++     }
+-   "version": {
++   ],
+-     "changedFiles": [
++   "version": null
+-       "index.html"
++ }
+-     ],
++ 
+-     "createdAt": 1794630911092,
++ 
+-     "directionId": "main",
++ 
+-     "id": "pending-c935af9828840601",
++ 
+-     "meta": {
++ 
+-       "kind": "manual",
++ 
+-       "prompt": "Direct edit of index.html:21:1: max-width: 65ch"
++ 
+-     },
++ 
+-     "parentId": "7ab7362d5b0b1dffdd1d3481047771df56e4a0a1",
++ 
+-     "title": "Edit p: max-width"
++ 
+-   }
++ 
+- }
++ 
+
+diff http -> agent:
+-   "applied": [
++   "applied": [],
+-     "type-5d7f3783ab"
++   "files": [],
+-   ],
++   "skipped": [
+-   "files": [
++     {
+-     "index.html"
++       "id": "type-5d7f3783ab",
+-   ],
++       "reason": "This finding is gone from the latest review. Run the review again."
+-   "skipped": [],
++     }
+-   "version": {
++   ],
+-     "changedFiles": [
++   "version": null
+-       "index.html"
++ }
+-     ],
++ 
+-     "createdAt": 1794630911092,
++ 
+-     "directionId": "main",
++ 
+-     "id": "pending-c935af9828840601",
++ 
+-     "meta": {
++ 
+-       "kind": "manual",
++ 
+-       "prompt": "Direct edit of index.html:21:1: max-width: 65ch"
++ 
+-     },
++ 
+-     "parentId": "7ab7362d5b0b1dffdd1d3481047771df56e4a0a1",
++ 
+-     "title": "Edit p: max-width"
++ 
+-   }
++ 
+- }
++ 
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 0 error results
+
+fix: compare the outputs above, then run call-action again with the id direct-edit.applyReviewFix and the same input

@@ -1,0 +1,589 @@
+call-action direct-edit.runReview on http://127.0.0.1:4271. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 777 ms, git spawns: not counted (server side)
+{
+  "counts": {
+    "high": 8,
+    "low": 8,
+    "medium": 0
+  },
+  "directionId": "main",
+  "findings": [
+    {
+      "ask": "Review finding in frame 1440x900, off-token values (low): The class w-[1100px] is a raw value, not a project token.\nElement: p \"Every plan includes unlimited projects, shared libraries, ve\" (at index.html:10:1, selector body > p:nth-of-type(1)).\nUse the nearest design token or theme step, or add a token if the value is needed.",
+      "element": "p \"Every plan includes unlimited projects, shared libraries, ve\"",
+      "fix": {
+        "edit": {
+          "selector": "body > p:nth-of-type(1)",
+          "source": {
+            "col": 1,
+            "file": "index.html",
+            "line": 10
+          },
+          "style": {
+            "width": "1100px"
+          },
+          "tag": "p"
+        },
+        "label": "Use the theme scale"
+      },
+      "id": "off-token-b01ff37497",
+      "kind": "off-token",
+      "message": "The class w-[1100px] is a raw value, not a project token.",
+      "selector": "body > p:nth-of-type(1)",
+      "severity": "low",
+      "source": "index.html:10:1"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, off-token values (low): The class text-[13px] is a raw value, not a project token.\nElement: p \"Billed monthly and you can cancel at any time.\" (at index.html:12:183, selector body > div > div:nth-of-type(1) > p:nth-of-type(3)).\nUse the nearest design token or theme step, or add a token if the value is needed.",
+      "element": "p \"Billed monthly and you can cancel at any time.\"",
+      "fix": null,
+      "id": "off-token-f8cee8e69f",
+      "kind": "off-token",
+      "message": "The class text-[13px] is a raw value, not a project token.",
+      "selector": "body > div > div:nth-of-type(1) > p:nth-of-type(3)",
+      "severity": "low",
+      "source": "index.html:12:183"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, off-token values (low): The class text-[13px] is a raw value, not a project token.\nElement: p \"Billed yearly with a discount for each seat.\" (at index.html:13:171, selector body > div > div:nth-of-type(2) > p:nth-of-type(3)).\nUse the nearest design token or theme step, or add a token if the value is needed.",
+      "element": "p \"Billed yearly with a discount for each seat.\"",
+      "fix": null,
+      "id": "off-token-11370d9ce5",
+      "kind": "off-token",
+      "message": "The class text-[13px] is a raw value, not a project token.",
+      "selector": "body > div > div:nth-of-type(2) > p:nth-of-type(3)",
+      "severity": "low",
+      "source": "index.html:13:171"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, off-token values (low): The class text-[15px] is a raw value, not a project token.\nElement: p \"Talk to us for a custom contract.\" (at index.html:14:170, selector body > div > div:nth-of-type(3) > p:nth-of-type(3)).\nUse the nearest design token or theme step, or add a token if the value is needed.",
+      "element": "p \"Talk to us for a custom contract.\"",
+      "fix": null,
+      "id": "off-token-90449a49be",
+      "kind": "off-token",
+      "message": "The class text-[15px] is a raw value, not a project token.",
+      "selector": "body > div > div:nth-of-type(3) > p:nth-of-type(3)",
+      "severity": "low",
+      "source": "index.html:14:170"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, off-token values (low): The class text-[17px] is a raw value, not a project token.\nElement: p \"Odd seventeen.\" (at index.html:16:1, selector body > p:nth-of-type(2)).\nUse the nearest design token or theme step, or add a token if the value is needed.",
+      "element": "p \"Odd seventeen.\"",
+      "fix": null,
+      "id": "off-token-7f016ac6b4",
+      "kind": "off-token",
+      "message": "The class text-[17px] is a raw value, not a project token.",
+      "selector": "body > p:nth-of-type(2)",
+      "severity": "low",
+      "source": "index.html:16:1"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, off-token values (low): The class text-[19px] is a raw value, not a project token.\nElement: p \"Odd nineteen.\" (at index.html:16:42, selector body > p:nth-of-type(3)).\nUse the nearest design token or theme step, or add a token if the value is needed.",
+      "element": "p \"Odd nineteen.\"",
+      "fix": null,
+      "id": "off-token-2324e139c3",
+      "kind": "off-token",
+      "message": "The class text-[19px] is a raw value, not a project token.",
+      "selector": "body > p:nth-of-type(3)",
+      "severity": "low",
+      "source": "index.html:16:42"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, off-token values (low): The class text-[21px] is a raw value, not a project token.\nElement: p \"Odd twenty one.\" (at index.html:16:82, selector body > p:nth-of-type(4)).\nUse the nearest design token or theme step, or add a token if the value is needed.",
+      "element": "p \"Odd twenty one.\"",
+      "fix": null,
+      "id": "off-token-a501ca9d5d",
+      "kind": "off-token",
+      "message": "The class text-[21px] is a raw value, not a project token.",
+      "selector": "body > p:nth-of-type(4)",
+      "severity": "low",
+      "source": "index.html:16:82"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, off-token values (low): The class text-[23px] is a raw value, not a project token.\nElement: p \"Odd twenty three.\" (at index.html:16:124, selector body > p:nth-of-type(5)).\nUse the nearest design token or theme step, or add a token if the value is needed.",
+      "element": "p \"Odd twenty three.\"",
+      "fix": null,
+      "id": "off-token-4e5853bf9b",
+      "kind": "off-token",
+      "message": "The class text-[23px] is a raw value, not a project token.",
+      "selector": "body > p:nth-of-type(5)",
+      "severity": "low",
+      "source": "index.html:16:124"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (high): This body text is 13 px. Use 14 px or more for text people read. This text is 13 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer.\nElement: p \"Billed monthly and you can cancel at any time.\" (at index.html:12:183, selector body > div > div:nth-of-type(1) > p:nth-of-type(3)).\nSet body text at 14 px or more. Keep smaller sizes for labels, captions and badges. Use a short type scale: snap each rare font size to a size the frame already uses often, or to a type token.",
+      "element": "p \"Billed monthly and you can cancel at any time.\"",
+      "fix": {
+        "edit": {
+          "selector": "body > div > div:nth-of-type(1) > p:nth-of-type(3)",
+          "source": {
+            "col": 183,
+            "file": "index.html",
+            "line": 12
+          },
+          "style": {
+            "font-size": "14px"
+          },
+          "tag": "p"
+        },
+        "label": "Use 14 px"
+      },
+      "id": "type-c42803fc50",
+      "kind": "type",
+      "message": "This body text is 13 px. Use 14 px or more for text people read. This text is 13 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer.",
+      "selector": "body > div > div:nth-of-type(1) > p:nth-of-type(3)",
+      "severity": "high",
+      "source": "index.html:12:183"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (high): This body text is 13 px. Use 14 px or more for text people read. This text is 13 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer.\nElement: p \"Billed yearly with a discount for each seat.\" (at index.html:13:171, selector body > div > div:nth-of-type(2) > p:nth-of-type(3)).\nSet body text at 14 px or more. Keep smaller sizes for labels, captions and badges. Use a short type scale: snap each rare font size to a size the frame already uses often, or to a type token.",
+      "element": "p \"Billed yearly with a discount for each seat.\"",
+      "fix": {
+        "edit": {
+          "selector": "body > div > div:nth-of-type(2) > p:nth-of-type(3)",
+          "source": {
+            "col": 171,
+            "file": "index.html",
+            "line": 13
+          },
+          "style": {
+            "font-size": "14px"
+          },
+          "tag": "p"
+        },
+        "label": "Use 14 px"
+      },
+      "id": "type-8f20421072",
+      "kind": "type",
+      "message": "This body text is 13 px. Use 14 px or more for text people read. This text is 13 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer.",
+      "selector": "body > div > div:nth-of-type(2) > p:nth-of-type(3)",
+      "severity": "high",
+      "source": "index.html:13:171"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (high): This text is 16 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer. Lines in this text are about 114 characters long. Keep them at 85 characters or fewer.\nElement: p \"Every plan includes unlimited projects, shared libraries, ve\" (at index.html:10:1, selector body > p:nth-of-type(1)).\nUse a short type scale: snap each rare font size to a size the frame already uses often, or to a type token. Keep body lines at about 45 to 75 characters, for example with max-width: 65ch or max-w-prose.",
+      "element": "p \"Every plan includes unlimited projects, shared libraries, ve\"",
+      "fix": {
+        "edit": {
+          "classes": {
+            "add": [
+              "max-w-prose"
+            ],
+            "remove": []
+          },
+          "selector": "body > p:nth-of-type(1)",
+          "source": {
+            "col": 1,
+            "file": "index.html",
+            "line": 10
+          },
+          "style": {
+            "font-size": "14px"
+          },
+          "tag": "p"
+        },
+        "label": "Use 14 px; Limit line length"
+      },
+      "id": "type-d315038106",
+      "kind": "type",
+      "message": "This text is 16 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer. Lines in this text are about 114 characters long. Keep them at 85 characters or fewer.",
+      "selector": "body > p:nth-of-type(1)",
+      "severity": "high",
+      "source": "index.html:10:1"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (high): This text is 15 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer.\nElement: p \"Talk to us for a custom contract.\" (at index.html:14:170, selector body > div > div:nth-of-type(3) > p:nth-of-type(3)).\nUse a short type scale: snap each rare font size to a size the frame already uses often, or to a type token.",
+      "element": "p \"Talk to us for a custom contract.\"",
+      "fix": {
+        "edit": {
+          "selector": "body > div > div:nth-of-type(3) > p:nth-of-type(3)",
+          "source": {
+            "col": 170,
+            "file": "index.html",
+            "line": 14
+          },
+          "style": {
+            "font-size": "14px"
+          },
+          "tag": "p"
+        },
+        "label": "Use 14 px"
+      },
+      "id": "type-74b224ddc7",
+      "kind": "type",
+      "message": "This text is 15 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer.",
+      "selector": "body > div > div:nth-of-type(3) > p:nth-of-type(3)",
+      "severity": "high",
+      "source": "index.html:14:170"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (high): This text is 17 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer.\nElement: p \"Odd seventeen.\" (at index.html:16:1, selector body > p:nth-of-type(2)).\nUse a short type scale: snap each rare font size to a size the frame already uses often, or to a type token.",
+      "element": "p \"Odd seventeen.\"",
+      "fix": null,
+      "id": "type-76c80f1d83",
+      "kind": "type",
+      "message": "This text is 17 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer.",
+      "selector": "body > p:nth-of-type(2)",
+      "severity": "high",
+      "source": "index.html:16:1"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (high): This text is 19 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer.\nElement: p \"Odd nineteen.\" (at index.html:16:42, selector body > p:nth-of-type(3)).\nUse a short type scale: snap each rare font size to a size the frame already uses often, or to a type token.",
+      "element": "p \"Odd nineteen.\"",
+      "fix": null,
+      "id": "type-0151da2dbb",
+      "kind": "type",
+      "message": "This text is 19 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer.",
+      "selector": "body > p:nth-of-type(3)",
+      "severity": "high",
+      "source": "index.html:16:42"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (high): This text is 21 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer.\nElement: p \"Odd twenty one.\" (at index.html:16:82, selector body > p:nth-of-type(4)).\nUse a short type scale: snap each rare font size to a size the frame already uses often, or to a type token.",
+      "element": "p \"Odd twenty one.\"",
+      "fix": null,
+      "id": "type-978b1cc48b",
+      "kind": "type",
+      "message": "This text is 21 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer.",
+      "selector": "body > p:nth-of-type(4)",
+      "severity": "high",
+      "source": "index.html:16:82"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (high): This text is 23 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer.\nElement: p \"Odd twenty three.\" (at index.html:16:124, selector body > p:nth-of-type(5)).\nUse a short type scale: snap each rare font size to a size the frame already uses often, or to a type token.",
+      "element": "p \"Odd twenty three.\"",
+      "fix": {
+        "edit": {
+          "selector": "body > p:nth-of-type(5)",
+          "source": {
+            "col": 124,
+            "file": "index.html",
+            "line": 16
+          },
+          "style": {
+            "font-size": "24px"
+          },
+          "tag": "p"
+        },
+        "label": "Use 24 px"
+      },
+      "id": "type-72a93c249a",
+      "kind": "type",
+      "message": "This text is 23 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer.",
+      "selector": "body > p:nth-of-type(5)",
+      "severity": "high",
+      "source": "index.html:16:124"
+    }
+  ],
+  "frame": {
+    "height": 900,
+    "width": 1440
+  },
+  "notes": [
+    "This project has no design tokens, so only Tailwind arbitrary values such as p-[6px] count as off-token."
+  ],
+  "projectId": "G6gqcW-1rQ",
+  "ranAt": 1794630987452,
+  "versionId": "2a673911c1115ccb222d790d307d5a926e96f628"
+}
+
+[mcp] ok, 86 ms, git spawns: not counted (server side)
+{
+  "counts": {
+    "high": 8,
+    "low": 8,
+    "medium": 0
+  },
+  "directionId": "main",
+  "findings": [
+    {
+      "ask": "Review finding in frame 1440x900, off-token values (low): The class w-[1100px] is a raw value, not a project token.\nElement: p \"Every plan includes unlimited projects, shared libraries, ve\" (at index.html:10:1, selector body > p:nth-of-type(1)).\nUse the nearest design token or theme step, or add a token if the value is needed.",
+      "element": "p \"Every plan includes unlimited projects, shared libraries, ve\"",
+      "fix": {
+        "edit": {
+          "selector": "body > p:nth-of-type(1)",
+          "source": {
+            "col": 1,
+            "file": "index.html",
+            "line": 10
+          },
+          "style": {
+            "width": "1100px"
+          },
+          "tag": "p"
+        },
+        "label": "Use the theme scale"
+      },
+      "id": "off-token-b01ff37497",
+      "kind": "off-token",
+      "message": "The class w-[1100px] is a raw value, not a project token.",
+      "selector": "body > p:nth-of-type(1)",
+      "severity": "low",
+      "source": "index.html:10:1"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, off-token values (low): The class text-[13px] is a raw value, not a project token.\nElement: p \"Billed monthly and you can cancel at any time.\" (at index.html:12:183, selector body > div > div:nth-of-type(1) > p:nth-of-type(3)).\nUse the nearest design token or theme step, or add a token if the value is needed.",
+      "element": "p \"Billed monthly and you can cancel at any time.\"",
+      "fix": null,
+      "id": "off-token-f8cee8e69f",
+      "kind": "off-token",
+      "message": "The class text-[13px] is a raw value, not a project token.",
+      "selector": "body > div > div:nth-of-type(1) > p:nth-of-type(3)",
+      "severity": "low",
+      "source": "index.html:12:183"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, off-token values (low): The class text-[13px] is a raw value, not a project token.\nElement: p \"Billed yearly with a discount for each seat.\" (at index.html:13:171, selector body > div > div:nth-of-type(2) > p:nth-of-type(3)).\nUse the nearest design token or theme step, or add a token if the value is needed.",
+      "element": "p \"Billed yearly with a discount for each seat.\"",
+      "fix": null,
+      "id": "off-token-11370d9ce5",
+      "kind": "off-token",
+      "message": "The class text-[13px] is a raw value, not a project token.",
+      "selector": "body > div > div:nth-of-type(2) > p:nth-of-type(3)",
+      "severity": "low",
+      "source": "index.html:13:171"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, off-token values (low): The class text-[15px] is a raw value, not a project token.\nElement: p \"Talk to us for a custom contract.\" (at index.html:14:170, selector body > div > div:nth-of-type(3) > p:nth-of-type(3)).\nUse the nearest design token or theme step, or add a token if the value is needed.",
+      "element": "p \"Talk to us for a custom contract.\"",
+      "fix": null,
+      "id": "off-token-90449a49be",
+      "kind": "off-token",
+      "message": "The class text-[15px] is a raw value, not a project token.",
+      "selector": "body > div > div:nth-of-type(3) > p:nth-of-type(3)",
+      "severity": "low",
+      "source": "index.html:14:170"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, off-token values (low): The class text-[17px] is a raw value, not a project token.\nElement: p \"Odd seventeen.\" (at index.html:16:1, selector body > p:nth-of-type(2)).\nUse the nearest design token or theme step, or add a token if the value is needed.",
+      "element": "p \"Odd seventeen.\"",
+      "fix": null,
+      "id": "off-token-7f016ac6b4",
+      "kind": "off-token",
+      "message": "The class text-[17px] is a raw value, not a project token.",
+      "selector": "body > p:nth-of-type(2)",
+      "severity": "low",
+      "source": "index.html:16:1"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, off-token values (low): The class text-[19px] is a raw value, not a project token.\nElement: p \"Odd nineteen.\" (at index.html:16:42, selector body > p:nth-of-type(3)).\nUse the nearest design token or theme step, or add a token if the value is needed.",
+      "element": "p \"Odd nineteen.\"",
+      "fix": null,
+      "id": "off-token-2324e139c3",
+      "kind": "off-token",
+      "message": "The class text-[19px] is a raw value, not a project token.",
+      "selector": "body > p:nth-of-type(3)",
+      "severity": "low",
+      "source": "index.html:16:42"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, off-token values (low): The class text-[21px] is a raw value, not a project token.\nElement: p \"Odd twenty one.\" (at index.html:16:82, selector body > p:nth-of-type(4)).\nUse the nearest design token or theme step, or add a token if the value is needed.",
+      "element": "p \"Odd twenty one.\"",
+      "fix": null,
+      "id": "off-token-a501ca9d5d",
+      "kind": "off-token",
+      "message": "The class text-[21px] is a raw value, not a project token.",
+      "selector": "body > p:nth-of-type(4)",
+      "severity": "low",
+      "source": "index.html:16:82"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, off-token values (low): The class text-[23px] is a raw value, not a project token.\nElement: p \"Odd twenty three.\" (at index.html:16:124, selector body > p:nth-of-type(5)).\nUse the nearest design token or theme step, or add a token if the value is needed.",
+      "element": "p \"Odd twenty three.\"",
+      "fix": null,
+      "id": "off-token-4e5853bf9b",
+      "kind": "off-token",
+      "message": "The class text-[23px] is a raw value, not a project token.",
+      "selector": "body > p:nth-of-type(5)",
+      "severity": "low",
+      "source": "index.html:16:124"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (high): This body text is 13 px. Use 14 px or more for text people read. This text is 13 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer.\nElement: p \"Billed monthly and you can cancel at any time.\" (at index.html:12:183, selector body > div > div:nth-of-type(1) > p:nth-of-type(3)).\nSet body text at 14 px or more. Keep smaller sizes for labels, captions and badges. Use a short type scale: snap each rare font size to a size the frame already uses often, or to a type token.",
+      "element": "p \"Billed monthly and you can cancel at any time.\"",
+      "fix": {
+        "edit": {
+          "selector": "body > div > div:nth-of-type(1) > p:nth-of-type(3)",
+          "source": {
+            "col": 183,
+            "file": "index.html",
+            "line": 12
+          },
+          "style": {
+            "font-size": "14px"
+          },
+          "tag": "p"
+        },
+        "label": "Use 14 px"
+      },
+      "id": "type-c42803fc50",
+      "kind": "type",
+      "message": "This body text is 13 px. Use 14 px or more for text people read. This text is 13 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer.",
+      "selector": "body > div > div:nth-of-type(1) > p:nth-of-type(3)",
+      "severity": "high",
+      "source": "index.html:12:183"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (high): This body text is 13 px. Use 14 px or more for text people read. This text is 13 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer.\nElement: p \"Billed yearly with a discount for each seat.\" (at index.html:13:171, selector body > div > div:nth-of-type(2) > p:nth-of-type(3)).\nSet body text at 14 px or more. Keep smaller sizes for labels, captions and badges. Use a short type scale: snap each rare font size to a size the frame already uses often, or to a type token.",
+      "element": "p \"Billed yearly with a discount for each seat.\"",
+      "fix": {
+        "edit": {
+          "selector": "body > div > div:nth-of-type(2) > p:nth-of-type(3)",
+          "source": {
+            "col": 171,
+            "file": "index.html",
+            "line": 13
+          },
+          "style": {
+            "font-size": "14px"
+          },
+          "tag": "p"
+        },
+        "label": "Use 14 px"
+      },
+      "id": "type-8f20421072",
+      "kind": "type",
+      "message": "This body text is 13 px. Use 14 px or more for text people read. This text is 13 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer.",
+      "selector": "body > div > div:nth-of-type(2) > p:nth-of-type(3)",
+      "severity": "high",
+      "source": "index.html:13:171"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (high): This text is 16 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer. Lines in this text are about 114 characters long. Keep them at 85 characters or fewer.\nElement: p \"Every plan includes unlimited projects, shared libraries, ve\" (at index.html:10:1, selector body > p:nth-of-type(1)).\nUse a short type scale: snap each rare font size to a size the frame already uses often, or to a type token. Keep body lines at about 45 to 75 characters, for example with max-width: 65ch or max-w-prose.",
+      "element": "p \"Every plan includes unlimited projects, shared libraries, ve\"",
+      "fix": {
+        "edit": {
+          "classes": {
+            "add": [
+              "max-w-prose"
+            ],
+            "remove": []
+          },
+          "selector": "body > p:nth-of-type(1)",
+          "source": {
+            "col": 1,
+            "file": "index.html",
+            "line": 10
+          },
+          "style": {
+            "font-size": "14px"
+          },
+          "tag": "p"
+        },
+        "label": "Use 14 px; Limit line length"
+      },
+      "id": "type-d315038106",
+      "kind": "type",
+      "message": "This text is 16 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer. Lines in this text are about 114 characters long. Keep them at 85 characters or fewer.",
+      "selector": "body > p:nth-of-type(1)",
+      "severity": "high",
+      "source": "index.html:10:1"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (high): This text is 15 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer.\nElement: p \"Talk to us for a custom contract.\" (at index.html:14:170, selector body > div > div:nth-of-type(3) > p:nth-of-type(3)).\nUse a short type scale: snap each rare font size to a size the frame already uses often, or to a type token.",
+      "element": "p \"Talk to us for a custom contract.\"",
+      "fix": {
+        "edit": {
+          "selector": "body > div > div:nth-of-type(3) > p:nth-of-type(3)",
+          "source": {
+            "col": 170,
+            "file": "index.html",
+            "line": 14
+          },
+          "style": {
+            "font-size": "14px"
+          },
+          "tag": "p"
+        },
+        "label": "Use 14 px"
+      },
+      "id": "type-74b224ddc7",
+      "kind": "type",
+      "message": "This text is 15 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer.",
+      "selector": "body > div > div:nth-of-type(3) > p:nth-of-type(3)",
+      "severity": "high",
+      "source": "index.html:14:170"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (high): This text is 17 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer.\nElement: p \"Odd seventeen.\" (at index.html:16:1, selector body > p:nth-of-type(2)).\nUse a short type scale: snap each rare font size to a size the frame already uses often, or to a type token.",
+      "element": "p \"Odd seventeen.\"",
+      "fix": null,
+      "id": "type-76c80f1d83",
+      "kind": "type",
+      "message": "This text is 17 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer.",
+      "selector": "body > p:nth-of-type(2)",
+      "severity": "high",
+      "source": "index.html:16:1"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (high): This text is 19 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer.\nElement: p \"Odd nineteen.\" (at index.html:16:42, selector body > p:nth-of-type(3)).\nUse a short type scale: snap each rare font size to a size the frame already uses often, or to a type token.",
+      "element": "p \"Odd nineteen.\"",
+      "fix": null,
+      "id": "type-0151da2dbb",
+      "kind": "type",
+      "message": "This text is 19 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer.",
+      "selector": "body > p:nth-of-type(3)",
+      "severity": "high",
+      "source": "index.html:16:42"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (high): This text is 21 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer.\nElement: p \"Odd twenty one.\" (at index.html:16:82, selector body > p:nth-of-type(4)).\nUse a short type scale: snap each rare font size to a size the frame already uses often, or to a type token.",
+      "element": "p \"Odd twenty one.\"",
+      "fix": null,
+      "id": "type-978b1cc48b",
+      "kind": "type",
+      "message": "This text is 21 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer.",
+      "selector": "body > p:nth-of-type(4)",
+      "severity": "high",
+      "source": "index.html:16:82"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (high): This text is 23 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer.\nElement: p \"Odd twenty three.\" (at index.html:16:124, selector body > p:nth-of-type(5)).\nUse a short type scale: snap each rare font size to a size the frame already uses often, or to a type token.",
+      "element": "p \"Odd twenty three.\"",
+      "fix": {
+        "edit": {
+          "selector": "body > p:nth-of-type(5)",
+          "source": {
+            "col": 124,
+            "file": "index.html",
+            "line": 16
+          },
+          "style": {
+            "font-size": "24px"
+          },
+          "tag": "p"
+        },
+        "label": "Use 24 px"
+      },
+      "id": "type-72a93c249a",
+      "kind": "type",
+      "message": "This text is 23 px, 1 of 10 font sizes on this frame (48 px x1, 24 px x3, 23 px x1, 21 px x1, 19 px x1, 17 px x1, 16 px x1, 15 px x1, 14 px x6, 13 px x2). Use 7 sizes or fewer.",
+      "selector": "body > p:nth-of-type(5)",
+      "severity": "high",
+      "source": "index.html:16:124"
+    }
+  ],
+  "frame": {
+    "height": 900,
+    "width": 1440
+  },
+  "notes": [
+    "This project has no design tokens, so only Tailwind arbitrary values such as p-[6px] count as off-token."
+  ],
+  "projectId": "G6gqcW-1rQ",
+  "ranAt": 1794630987542,
+  "versionId": "2a673911c1115ccb222d790d307d5a926e96f628"
+}
+
+[agent] skipped: agent binding is off (legacy-agent)
+
+diff http -> mcp:
+-   "ranAt": 1794630987452,
++   "ranAt": 1794630987542,
+
+answered approval cards: none
+
+call-action: fail, 2 surfaces ran, 1 diffs, 0 failed surfaces, 0 error results
+
+fix: compare the outputs above, then run call-action again with the id direct-edit.runReview and the same input

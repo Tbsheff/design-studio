@@ -286,3 +286,20 @@ None. No pick changes a prompt or the run loop. Total: 0 runs.
 Dropped from the list: math in number fields, selection colors, text wrap and truncate, spacing handles, hide and lock (the code exists, see Findings).
 
 Sources: [Figma forum: preview font families on the canvas with the arrow keys](https://forum.figma.com/t/launched-preview-font-families-on-page-when-cycling-through-with-the-arrow-keys/46227/59), [Figma forum: font picker](https://forum.figma.com/archive-21/launched-font-picker-14332/index2.html), [Fable: canvas font previews](https://fable.app/releases/canvas-font-previews), [Figma forum: bring back the send to back and bring to front shortcuts](https://forum.figma.com/share-your-feedback-26/bring-back-the-send-to-back-and-bring-to-front-shortcuts-46289), [Figma forum: changing bring forward and bring to front hotkeys](https://forum.figma.com/ask-the-community-7/changing-bring-forward-bring-to-front-hotkeys-47717), [Skillademia: Figma shortcuts](https://www.skillademia.com/shortcuts/figma-shortcuts/).
+
+## Results
+
+Merged into main in this order: polish-40, tall-frames, align-check, z-ends, font-pick. There was 1 conflict, in `use-stacking-keys.ts`, between z-ends and the polish-40 batch write. The fix puts every write of one key press into one `writeZOrder` call. Forward and backward give 1 version for any selection. Front and back give 1 version for 1 layer. With many layers selected, front and back give 1 version per layer, so the layers keep their order. No app check was done on this fix.
+
+- **polish-40:** The first-version hold now also covers writes outside `/d/`, and the action runner uses the same rule. The first Swap, `apply_kit_drift` and `set_stacking` on an app that was attached just before now pass on all 3 surfaces. `call-action.ts` now undoes each write and ignores version ids. `stacking.set` takes `others`. The check-actions text scan went from 560 hits to 557.
+- **tall-frames:** Frames can be up to 8,000 px tall, and the width limit stays 4,000 px. Frame shots now reach the full frame height. Export and review still stop at 4,000 px.
+- **align-check:** The Review panel has a new "Alignment and gaps" group. It finds near-miss edges and uneven gaps, and a Fix gives 1 version. The check takes 19 to 27 ms on a page with 400 elements.
+- **z-ends:** Mod+Shift+] brings a layer to front and Mod+Shift+[ sends it to back, from the shell, the frame, the Layers panel and the menu.
+- **font-pick:** The inspector Font field opens a font list with a filter. Up and Down show a preview, Enter saves 1 version, and Escape reverts. The tool name is `list_font`, because `list_fonts` fails `studio/derived-tool-name`.
+
+Open (Tyler decides):
+- `check:scripts` still fails at check-actions (S11, E1, O12, E16).
+- These MCP snapshots differ, and none was edited: the `canvas.json` height maximum (4000 to 8000), `review_frame` in `direct-edit-component.json`, and `set_forced_state`. The cause of the `set_forced_state` diff is not proven.
+- Cmd+Z by OS keyboard is a manual check.
+
+Checks: gen, tsc, lint and lint:gate pass (59,586 diagnostics, baseline 89,733). ui passes, clip finds 0, pack and the reinstall pass, and :4570 gives 200. Idle CPU is 0.02 CPU-s over 60 s. check-bundle B1 is 274,703 B (delta 0). Nothing was pushed.

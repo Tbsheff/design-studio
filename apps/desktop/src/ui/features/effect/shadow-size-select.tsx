@@ -1,16 +1,20 @@
 import { UiSelect } from "@design-studio/ui";
 import type { UiSelectOption } from "@design-studio/ui";
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import type { ShadowSize } from "./deps.js";
-import type { ShadowSizePick } from "./effect-model.js";
+import { toItemSize, toKindSizes } from "./effect-model.js";
+import type { ShadowSizePick, ShadowSizes } from "./effect-model.js";
+import type { EffectItem } from "./effect-types.js";
+
+import styles from "./effect.module.css";
 
 interface ShadowSizeSelectProps {
   readonly disabled: boolean;
-  readonly sizes: readonly ShadowSize[];
-  readonly value: ShadowSize | null;
+  readonly item: EffectItem;
+  readonly sizes: ShadowSizes;
   readonly onPick: (pick: ShadowSizePick) => void;
 }
 
@@ -34,22 +38,35 @@ const toSizeOptions = (
 
 const ShadowSizeSelect = ({
   disabled,
+  item,
   sizes,
-  value,
   onPick,
-}: ShadowSizeSelectProps): ReactElement => {
-  const options = useMemo(() => toSizeOptions(sizes), [sizes]);
+}: ShadowSizeSelectProps): ReactElement | null => {
+  const kindSizes = useMemo(() => toKindSizes(item, sizes), [item, sizes]);
+  const options = useMemo(() => toSizeOptions(kindSizes), [kindSizes]);
+  const sizeId = useId();
+
+  if (kindSizes.length === 0) {
+    return null;
+  }
 
   return (
-    <span data-tip={copy.shadowSize.tip}>
+    <div
+      className={`ins-field select ${styles.wide}`}
+      data-tip={copy.shadowSize.tip}
+    >
+      <label className={styles.label} htmlFor={sizeId}>
+        {copy.shadowSize.label}
+      </label>
       <UiSelect
         aria-label={copy.shadowSize.label}
         disabled={disabled}
+        id={sizeId}
         options={options}
-        value={value ?? "custom"}
+        value={toItemSize(item) ?? "custom"}
         onChange={onPick}
       />
-    </span>
+    </div>
   );
 };
 

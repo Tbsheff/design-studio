@@ -3,17 +3,12 @@ import type { ReactElement } from "react";
 
 import type { ShaderPreset } from "./deps.js";
 import { EffectField } from "./effect-field.js";
-import {
-  toFieldViews,
-  toItemSize,
-  toKindSizes,
-  toToggled,
-  toWithField,
-} from "./effect-model.js";
+import { toFieldViews, toToggled, toWithField } from "./effect-model.js";
 import type { FieldSpec, ShadowSizes } from "./effect-model.js";
 import { EffectPresetSelect } from "./effect-preset-select.js";
 import { EffectRowHead } from "./effect-row-head.js";
 import type { EffectItem } from "./effect-types.js";
+import { ShadowSizeSelect } from "./shadow-size-select.js";
 import { useRowMoves, useSizePick } from "./use-effect-handlers.js";
 
 import styles from "./effect.module.css";
@@ -61,11 +56,11 @@ const EffectRow = ({
     [index, item, onChange]
   );
 
-  const { handleDown, handleUp } = useRowMoves(index, onMove);
-
-  const handleRemove = useCallback((): void => {
-    onRemove(index);
-  }, [index, onRemove]);
+  const { handleDown, handleRemove, handleUp } = useRowMoves(
+    index,
+    onMove,
+    onRemove
+  );
 
   const handleSize = useSizePick({ index, item, onChange, onRemove });
 
@@ -79,13 +74,16 @@ const EffectRow = ({
         kind={item.kind}
         onDown={handleDown}
         onRemove={handleRemove}
-        onSize={handleSize}
         onToggle={handleToggle}
         onUp={handleUp}
-        size={toItemSize(item)}
-        sizes={toKindSizes(item, sizes)}
       />
       <div className={styles.fields}>
+        <ShadowSizeSelect
+          disabled={disabled}
+          item={item}
+          sizes={sizes}
+          onPick={handleSize}
+        />
         {item.kind === "shader" && (
           <EffectPresetSelect
             disabled={disabled}

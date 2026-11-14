@@ -49,13 +49,19 @@ const useSizePick = ({
 
 interface RowMoves {
   readonly handleDown: () => void;
+  readonly handleRemove: () => void;
   readonly handleUp: () => void;
 }
 
 const useRowMoves = (
   index: number,
-  onMove: (index: number, step: number) => void
+  onMove: (index: number, step: number) => void,
+  onRemove: (index: number) => void
 ): RowMoves => {
+  const handleRemove = useCallback((): void => {
+    onRemove(index);
+  }, [index, onRemove]);
+
   const handleUp = useCallback((): void => {
     onMove(index, -1);
   }, [index, onMove]);
@@ -64,7 +70,7 @@ const useRowMoves = (
     onMove(index, 1);
   }, [index, onMove]);
 
-  return { handleDown, handleUp };
+  return { handleDown, handleRemove, handleUp };
 };
 
 const useEffectHandlers = (effects: Effects): EffectHandlers => {

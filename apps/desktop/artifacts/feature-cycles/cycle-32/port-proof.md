@@ -37,6 +37,9 @@ No model (mock driver, `cycle-32/port-proof/mock-runs.txt`):
 - **Before the hold:** the same run on a fresh app got no values pass. The debug line was `This direction has no saved version yet`.
 - **Fresh session** (`session-proof.txt`): two Move to app runs on one app log `resume: null` and 2 new session ids. The stored id changes each time. A chat run after them resumes the stored id.
 - **Agent `apply_port`:** `[port-apply]` with only `routePath` returns `applied` with 8 items, and no `run_in_progress` or approval refusal. The studio check after it starts at 95.
+- **`start_port` over MCP** (`mcp-start-port.txt`, final code). The test used a fresh app with no saved version, the `[port-bash]` tag and an answered approval card. Results: a new session (`resume: null`), Bash-only tools, values pass 65 -> 95.
+- **SDK layer** (`sdk-apply-schema.txt`): in a port run, `apply_port` is in the allowed tool set. Its SDK schema has only `routePath`, and a `callTool` with `{routePath}` reaches the caller.
+- **Subfolder app:** `git diff-tree --relative` run from `apps/web` in a scratch repo returns `app/x/page.jsx`. So the route file compare also works when the app is a subfolder of its repo.
 - **`call-action.ts port.apply`** (`call-action-apply.txt`): HTTP 65 -> 95 with 8 writes. MCP ran second, so it had nothing left to write (95 -> 95). The agent route stops at the confirm gate, because a script has no approval prompt. All three are as in cycle 31.
 
 Real model (local sign-in, Sonnet 5.5, 2 runs, `real-runs.txt`). The task cap was 2 runs, so there was no main run. The main baseline is the cycle-31 main run: 69 first, 1 loop, 99 final, $0.150.
@@ -65,6 +68,8 @@ Real model (local sign-in, Sonnet 5.5, 2 runs, `real-runs.txt`). The task cap wa
   - Run 1 found the base version bug. The fix has only the no-model proof.
   - In run 2 the agent wrote nothing and did not call `apply_port`.
   - The next real run needs a fresh app copy and the merged code. To test `apply_port`, the prompt must ask for it, for example as a queued user message.
+- Run 2 reused the app copy and data folder of run 1 on purpose: app files reset, then `keep`. This tests that the stored session is not resumed. It departs from the spec's one-copy-per-run rule.
+- `port.start` now waits for one `git add -A` tree snapshot of the app. On a fresh app it can also wait up to 20 s for the first version, then fail with Conflict, the same as the edit routes.
 - `port-start.ts` is at 499 lines (limit 500).
 - The snapshot still writes loose git objects into the app repo (runner-up 5).
 - The Bash `sed -i` failure on macOS is a model habit, not a studio fault. The studio could tell the agent to use `Edit`; not done.

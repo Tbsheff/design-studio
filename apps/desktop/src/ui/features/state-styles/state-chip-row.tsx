@@ -4,7 +4,7 @@ import { copy } from "./copy.js";
 import type { PreviewPort, SaveStatus, SelectionContext } from "./deps.js";
 import { StateChip } from "./state-chip.js";
 import { StateNote } from "./state-note.js";
-import { hasDot } from "./state-styles-model.js";
+import { hasDot, isGroupOff } from "./state-styles-model.js";
 import type { ChipId } from "./state-styles-model.js";
 import { useStateStyles } from "./use-state-styles.js";
 
@@ -46,6 +46,7 @@ const StateChipRow = (props: StateChipRowProps): ReactElement => {
             hasStyles={hasDot(chip, state.styled)}
             isDisabled={state.isOff && chip !== "default"}
             isOn={state.active === chip}
+            isUnavailable={isGroupOff(chip, state.info)}
             key={chip}
             onPick={state.handlePick}
           />

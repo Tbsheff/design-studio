@@ -1,4 +1,6 @@
 import {
+  isDataStateStyle,
+  isGroupStateName,
   parseVariant,
   toDataStateVariant,
   toStyleStateName,
@@ -26,34 +28,65 @@ const CHIPS: readonly ChipId[] = [
 
 const DATA_CHIPS: readonly ChipId[] = ["open", "checked", "selected"];
 
+const GROUP_HOVER_CHIPS: readonly ChipId[] = ["group-hover"];
+
+const GROUP_DATA_CHIPS: readonly ChipId[] = ["group-open", "group-checked"];
+
 const START_TAG = /^<[^>]*>/u;
 
 const DATA_STATE_ATTR = /\sdata-state\s*=/u;
 
-const DATA_STATE_CLASS = "data-[state=";
+const DATA_STATE_CLASS = /(?:^|[\s"':])data-\[state=/u;
 
-const BASE: ParsedVariant = { breakpoint: null, dark: false, states: [] };
+const BASE: ParsedVariant = {
+  breakpoint: null,
+  dark: false,
+  group: null,
+  states: [],
+};
 
 const hasDataStateTag = (outerHTML: string): boolean => {
   const start = START_TAG.exec(outerHTML)?.[0] ?? "";
 
-  return DATA_STATE_ATTR.test(start) || start.includes(DATA_STATE_CLASS);
+  return DATA_STATE_ATTR.test(start) || DATA_STATE_CLASS.test(start);
 };
 
 const hasDataStateStyles = (info: StateListResult | null): boolean =>
   info !== null &&
-  info.layer.overrides.some((entry) => entry.prefix.includes(DATA_STATE_CLASS));
+  info.layer.overrides.some((entry) => isDataStateStyle(entry.state));
+
+const hasGroupDataStyles = (info: StateListResult): boolean =>
+  info.layer.overrides.some(
+    (entry) => entry.state === "group-open" || entry.state === "group-checked"
+  );
+
+const toGroupChips = (info: StateListResult | null): readonly ChipId[] => {
+  if (info === null || info.layer.mode !== "classes") {
+    return [];
+  }
+
+  if (info.group?.hasDataState === true || hasGroupDataStyles(info)) {
+    return [...GROUP_HOVER_CHIPS, ...GROUP_DATA_CHIPS];
+  }
+
+  return GROUP_HOVER_CHIPS;
+};
 
 const chipsFor = (
   outerHTML: string,
   info: StateListResult | null
 ): readonly ChipId[] => {
+  let chips = CHIPS;
+
   if (hasDataStateTag(outerHTML) || hasDataStateStyles(info)) {
-    return [...CHIPS, ...DATA_CHIPS];
+    chips = [...CHIPS, ...DATA_CHIPS];
   }
 
-  return CHIPS;
+  return [...chips, ...toGroupChips(info)];
 };
+
+const isGroupOff = (chip: ChipId, info: StateListResult | null): boolean =>
+  isGroupStateName(chip) && info?.group === null;
 
 const stateOf = (prefix: string): ChipId | null => {
   const parsed = parseVariant(prefix) ?? BASE;
@@ -89,7 +122,7 @@ const stateWire = (chip: ChipId): StyleState | null => {
 const isSelectedItem = (info: StateListResult | null): boolean =>
   info !== null &&
   info.layer.overrides.some((entry) =>
-    entry.prefix.includes(toDataStateVariant("selected-item"))
+    entry.prefix.split(":").includes(toDataStateVariant("selected-item"))
   );
 
 const partOf = (
@@ -111,16 +144,17 @@ const prefixFor = (
   const { breakpoint } = parseVariant(current) ?? BASE;
 
   if (chip === "default") {
-    return variantPrefix({ breakpoint, dark: false, states: [] });
+    return variantPrefix({ breakpoint, dark: false, group: null, states: [] });
   }
 
   if (chip === "dark") {
-    return variantPrefix({ breakpoint, dark: true, states: [] });
+    return variantPrefix({ breakpoint, dark: true, group: null, states: [] });
   }
 
   return variantPrefix({
     breakpoint,
     dark: false,
+    group: info?.group?.name ?? null,
     states: [partOf(chip, info)],
   });
 };
@@ -170,6 +204,7 @@ const isTypingTarget = (target: EventTarget | null): boolean => {
 export {
   chipsFor,
   hasDot,
+  isGroupOff,
   isTypingTarget,
   prefixFor,
   roundOf,

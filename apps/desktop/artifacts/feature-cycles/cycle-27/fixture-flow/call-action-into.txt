@@ -1,0 +1,163 @@
+call-action project.createPrototype on http://127.0.0.1:47810. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 3973 ms, git spawns: not counted (server side)
+{
+  "fixtureOffer": null,
+  "folder": "/Volumes/DevProjects/code/ds-wt/fixture-flow-projects/prototypes/clinic-next/redesign-patients",
+  "project": {
+    "appProjectId": "D78uT3IbVN",
+    "createdAt": 1794645253324,
+    "directions": [
+      {
+        "branch": "d/main",
+        "createdAt": 1794645253324,
+        "headVersionId": "33545d0f782991a3383fbf9e86b23d164ba6738d",
+        "id": "main",
+        "name": "Main",
+        "parentVersionId": null,
+        "sessionId": "mock-main-p8_BemWvrbA6z7OK35KEP",
+        "sessionResetReason": null,
+        "workTree": "/Volumes/DevProjects/code/ds-wt/fixture-flow-projects/prototypes/clinic-next/redesign-patients"
+      }
+    ],
+    "entry": "index.html",
+    "id": "FZkpjHQYni",
+    "imported": {
+      "created": true,
+      "sourcePath": "/Volumes/DevProjects/code/ds-wt/fixture-flow-projects/prototypes/clinic-next/redesign-patients"
+    },
+    "kind": "html",
+    "name": "Redesign /patients",
+    "settings": {
+      "allowBash": true,
+      "allowInstall": true,
+      "autoApprove": true,
+      "defaultLevel": "prototype",
+      "disabledSkills": [],
+      "maxTurns": 40,
+      "model": "claude-sonnet-5-5"
+    },
+    "settingsVersion": 2,
+    "thumbnail": {
+      "at": 1794645315491,
+      "versionId": "33545d0f782991a3383fbf9e86b23d164ba6738d"
+    },
+    "updatedAt": 1794645313443
+  },
+  "runId": null,
+  "tokensFile": null
+}
+
+[mcp] ok, 3603 ms, git spawns: not counted (server side)
+{
+  "fixtureOffer": null,
+  "folder": "/Volumes/DevProjects/code/ds-wt/fixture-flow-projects/prototypes/clinic-next/redesign-patients",
+  "project": {
+    "appProjectId": "D78uT3IbVN",
+    "createdAt": 1794645253324,
+    "directions": [
+      {
+        "branch": "d/main",
+        "createdAt": 1794645253324,
+        "headVersionId": "99bac86a11b35f237798a2559a5b840efb27f410",
+        "id": "main",
+        "name": "Main",
+        "parentVersionId": null,
+        "sessionId": "mock-main-p8_BemWvrbA6z7OK35KEP",
+        "sessionResetReason": null,
+        "workTree": "/Volumes/DevProjects/code/ds-wt/fixture-flow-projects/prototypes/clinic-next/redesign-patients"
+      }
+    ],
+    "entry": "index.html",
+    "id": "FZkpjHQYni",
+    "imported": {
+      "created": true,
+      "sourcePath": "/Volumes/DevProjects/code/ds-wt/fixture-flow-projects/prototypes/clinic-next/redesign-patients"
+    },
+    "kind": "html",
+    "name": "Redesign /patients",
+    "settings": {
+      "allowBash": true,
+      "allowInstall": true,
+      "autoApprove": true,
+      "defaultLevel": "prototype",
+      "disabledSkills": [],
+      "maxTurns": 40,
+      "model": "claude-sonnet-5-5"
+    },
+    "settingsVersion": 2,
+    "thumbnail": {
+      "at": 1794645315491,
+      "versionId": "33545d0f782991a3383fbf9e86b23d164ba6738d"
+    },
+    "updatedAt": 1794645335575
+  },
+  "runId": null,
+  "tokensFile": null
+}
+
+[agent] ok, 3304 ms, git spawns: not counted (server side)
+{
+  "fixtureOffer": null,
+  "folder": "/Volumes/DevProjects/code/ds-wt/fixture-flow-projects/prototypes/clinic-next/redesign-patients",
+  "project": {
+    "appProjectId": "D78uT3IbVN",
+    "createdAt": 1794645253324,
+    "directions": [
+      {
+        "branch": "d/main",
+        "createdAt": 1794645253324,
+        "headVersionId": "726fc68bca0a53b794a8c67d77c111da96b90f28",
+        "id": "main",
+        "name": "Main",
+        "parentVersionId": null,
+        "sessionId": "mock-main-p8_BemWvrbA6z7OK35KEP",
+        "sessionResetReason": null,
+        "workTree": "/Volumes/DevProjects/code/ds-wt/fixture-flow-projects/prototypes/clinic-next/redesign-patients"
+      }
+    ],
+    "entry": "index.html",
+    "id": "FZkpjHQYni",
+    "imported": {
+      "created": true,
+      "sourcePath": "/Volumes/DevProjects/code/ds-wt/fixture-flow-projects/prototypes/clinic-next/redesign-patients"
+    },
+    "kind": "html",
+    "name": "Redesign /patients",
+    "settings": {
+      "allowBash": true,
+      "allowInstall": true,
+      "autoApprove": true,
+      "defaultLevel": "prototype",
+      "disabledSkills": [],
+      "maxTurns": 40,
+      "model": "claude-sonnet-5-5"
+    },
+    "settingsVersion": 2,
+    "thumbnail": {
+      "at": 1794645315491,
+      "versionId": "33545d0f782991a3383fbf9e86b23d164ba6738d"
+    },
+    "updatedAt": 1794645339217
+  },
+  "runId": null,
+  "tokensFile": null
+}
+
+diff http -> mcp:
+-         "headVersionId": "33545d0f782991a3383fbf9e86b23d164ba6738d",
++         "headVersionId": "99bac86a11b35f237798a2559a5b840efb27f410",
+-     "updatedAt": 1794645313443
++     "updatedAt": 1794645335575
+
+diff http -> agent:
+-         "headVersionId": "33545d0f782991a3383fbf9e86b23d164ba6738d",
++         "headVersionId": "726fc68bca0a53b794a8c67d77c111da96b90f28",
+-     "updatedAt": 1794645313443
++     "updatedAt": 1794645339217
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 0 error results
+
+fix: compare the outputs above, then run call-action again with the id project.createPrototype and the same input

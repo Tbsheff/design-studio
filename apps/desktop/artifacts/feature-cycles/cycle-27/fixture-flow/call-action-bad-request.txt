@@ -1,0 +1,49 @@
+call-action project.createPrototype on http://127.0.0.1:47810. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] error, 5 ms, git spawns: not counted (server side)
+{
+  "_tag": "BadRequest",
+  "code": null,
+  "error": "BadRequest",
+  "message": "Clinic Next is not a route copy of this app. Pass the id of a prototype that create_prototype_project made from this app, or leave intoProjectId out."
+}
+
+[mcp] error, 7 ms, git spawns: not counted (server side)
+"Clinic Next is not a route copy of this app. Pass the id of a prototype that create_prototype_project made from this app, or leave intoProjectId out."
+
+[agent] error, 2 ms, git spawns: not counted (server side)
+"Clinic Next is not a route copy of this app. Pass the id of a prototype that create_prototype_project made from this app, or leave intoProjectId out."
+
+diff http -> mcp:
+- {
++ "Clinic Next is not a route copy of this app. Pass the id of a prototype that create_prototype_project made from this app, or leave intoProjectId out."
+-   "_tag": "BadRequest",
++ 
+-   "code": null,
++ 
+-   "error": "BadRequest",
++ 
+-   "message": "Clinic Next is not a route copy of this app. Pass the id of a prototype that create_prototype_project made from this app, or leave intoProjectId out."
++ 
+- }
++ 
+
+diff http -> agent:
+- {
++ "Clinic Next is not a route copy of this app. Pass the id of a prototype that create_prototype_project made from this app, or leave intoProjectId out."
+-   "_tag": "BadRequest",
++ 
+-   "code": null,
++ 
+-   "error": "BadRequest",
++ 
+-   "message": "Clinic Next is not a route copy of this app. Pass the id of a prototype that create_prototype_project made from this app, or leave intoProjectId out."
++ 
+- }
++ 
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 3 error results
+
+fix: compare the outputs above, then run call-action again with the id project.createPrototype and the same input

@@ -25,21 +25,19 @@ const toEdgeTargets = (
 
   const pseudo = `:${toEdgePseudo(state)}`;
 
-  return Array.from(parent.children).filter(
+  return [...parent.children].filter(
     (child) => child.tagName === element.tagName && child.matches(pseudo)
   );
 };
 
 const clearEdgeMarks = (): void => {
-  for (const marked of Array.from(
-    document.querySelectorAll(`[${EDGE_ATTR}]`)
-  )) {
+  for (const marked of document.querySelectorAll(`[${EDGE_ATTR}]`)) {
     marked.removeAttribute(EDGE_ATTR);
   }
 };
 
 const toEdgeStyle = (): HTMLStyleElement => {
-  const existing = document.getElementById(EDGE_STYLE_ID);
+  const existing = document.querySelector(`#${EDGE_STYLE_ID}`);
 
   if (existing instanceof HTMLStyleElement) {
     return existing;
@@ -58,7 +56,7 @@ const showEdge = (element: Element | null, states: readonly string[]): void => {
   const state = toEdgeState(states);
 
   if (element === null || state === null) {
-    document.getElementById(EDGE_STYLE_ID)?.remove();
+    document.querySelector(`#${EDGE_STYLE_ID}`)?.remove();
 
     return;
   }

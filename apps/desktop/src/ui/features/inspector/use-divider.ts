@@ -15,13 +15,19 @@ import { api, errorText } from "../../api.js";
 import { call } from "../../platform/http.js";
 import type { StyleValues } from "./css-value-model.js";
 import {
+  toAppliedClasses,
   toAxisFor,
   toAxisSwap,
   toDivider,
   toDividerPaint,
   toDividerWidth,
 } from "./divider-model.js";
-import type { Divider, DividerAxis, DividerPaint } from "./divider-model.js";
+import type {
+  Divider,
+  DividerAxis,
+  DividerClassSwap,
+  DividerPaint,
+} from "./divider-model.js";
 import { createEditRequest, toEditTarget } from "./edit-request-model.js";
 import type { ElementClasses } from "./element-classes-model.js";
 import type { DirectEdit } from "./use-direct-edit.js";
@@ -33,6 +39,7 @@ interface DividerChange {
 }
 
 interface DividerView {
+  readonly absorbClasses: (change: DividerClassSwap) => void;
   readonly divider: Divider | null;
   readonly error: string | null;
   readonly isEditable: boolean;
@@ -42,7 +49,13 @@ interface DividerView {
   readonly setWidth: (width: number) => void;
 }
 
+interface WrittenClasses {
+  readonly base: readonly string[] | null;
+  readonly classes: readonly string[];
+}
+
 interface DividerScope {
+  readonly absorbClasses: (change: DividerClassSwap) => void;
   readonly edit: DirectEdit;
   readonly selection: SelectionContext | null;
   readonly setError: (message: string | null) => void;
@@ -99,7 +112,7 @@ const toTarget = (selection: SelectionContext | null): DividerTarget | null => {
 const useDividerWrite = (
   scope: DividerScope
 ): ((change: DividerChange) => void) => {
-  const { edit, selection, setError, startWrite } = scope;
+  const { absorbClasses, edit, selection, setError, startWrite } = scope;
   const { directionId, projectId } = edit.scope;
 
   return useCallback(
@@ -119,42 +132,73 @@ const useDividerWrite = (
             width: toDividerWidth(change.width),
           };
 
-          await call(spacingRoutes.setDividerSpacing, {
+          const result = await call(spacingRoutes.setDividerSpacing, {
             directionId,
             divider,
             projectId,
             target,
           });
-          edit.reselect();
+
+          absorbClasses(result.classes);
         } catch (error) {
           setError(errorText(error));
         }
       });
     },
-    [directionId, edit, projectId, selection, setError, startWrite]
+    [absorbClasses, directionId, projectId, selection, setError, startWrite]
   );
+};
+
+const toEffectiveClasses = (
+  loaded: readonly string[] | null,
+  written: WrittenClasses | null
+): readonly string[] | null => {
+  if (written !== null && written.base === loaded) {
+    return written.classes;
+  }
+
+  return loaded;
 };
 
 const toWidthOf = (divider: Divider | null): number => divider?.width ?? 1;
 
-const useDivider = (
-  edit: DirectEdit,
-  classes: ElementClasses | null,
-  selection: SelectionContext | null
-): DividerView => {
-  const tailwind = toTailwindClasses(classes);
-  const divider = useMemo(() => toDivider(tailwind), [tailwind]);
-  const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+interface WrittenView {
+  readonly absorbClasses: (change: DividerClassSwap) => void;
+  readonly tailwind: readonly string[] | null;
+}
 
-  const startWrite = useCallback(
-    (run: () => Promise<void>) => startTransition(run),
-    []
+const useWrittenClasses = (classes: ElementClasses | null): WrittenView => {
+  const loaded = toTailwindClasses(classes);
+  const [written, setWritten] = useState<WrittenClasses | null>(null);
+  const tailwind = toEffectiveClasses(loaded, written);
+
+  const absorbClasses = useCallback(
+    (change: DividerClassSwap) => {
+      setWritten((previous) => ({
+        base: loaded,
+        classes: toAppliedClasses(
+          toEffectiveClasses(loaded, previous) ?? [],
+          change
+        ),
+      }));
+    },
+    [loaded, setWritten]
   );
 
-  const write = useDividerWrite({ edit, selection, setError, startWrite });
-  const axis = toAxisFor(edit.values["flex-direction"]);
+  return { absorbClasses, tailwind };
+};
 
+interface DividerSetters {
+  readonly setColor: (paint: DividerPaint) => void;
+  readonly setLines: (isOn: boolean) => void;
+  readonly setWidth: (width: number) => void;
+}
+
+const useDividerSetters = (
+  write: (change: DividerChange) => void,
+  axis: DividerAxis,
+  divider: Divider | null
+): DividerSetters => {
   const setLines = useCallback(
     (isOn: boolean) => {
       if (isOn) {
@@ -167,25 +211,61 @@ const useDivider = (
   );
 
   const setWidth = useCallback(
-    (nextWidth: number) =>
-      write({ axis: divider?.axis ?? axis, paint: null, width: nextWidth }),
+    (nextWidth: number) => {
+      write({ axis: divider?.axis ?? axis, paint: null, width: nextWidth });
+    },
     [axis, divider, write]
   );
 
   const setColor = useCallback(
-    (nextPaint: DividerPaint) =>
+    (nextPaint: DividerPaint) => {
       write({
         axis: divider?.axis ?? axis,
         paint: nextPaint,
         width: toWidthOf(divider),
-      }),
+      });
+    },
     [axis, divider, write]
+  );
+
+  return { setColor, setLines, setWidth };
+};
+
+const useDivider = (
+  edit: DirectEdit,
+  classes: ElementClasses | null,
+  selection: SelectionContext | null
+): DividerView => {
+  const { absorbClasses, tailwind } = useWrittenClasses(classes);
+  const divider = useMemo(() => toDivider(tailwind), [tailwind]);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const startWrite = useCallback((run: () => Promise<void>) => {
+    startTransition(run);
+  }, []);
+
+  const write = useDividerWrite({
+    absorbClasses,
+    edit,
+    selection,
+    setError,
+    startWrite,
+  });
+
+  const axis = toAxisFor(edit.values["flex-direction"]);
+
+  const { setColor, setLines, setWidth } = useDividerSetters(
+    write,
+    axis,
+    divider
   );
 
   const isEditable = tailwind !== null && !(divider?.isReverse ?? false);
 
   return useMemo(
     () => ({
+      absorbClasses,
       divider,
       error,
       isEditable,
@@ -194,7 +274,16 @@ const useDivider = (
       setLines,
       setWidth,
     }),
-    [divider, error, isEditable, isPending, setColor, setLines, setWidth]
+    [
+      absorbClasses,
+      divider,
+      error,
+      isEditable,
+      isPending,
+      setColor,
+      setLines,
+      setWidth,
+    ]
   );
 };
 
@@ -244,8 +333,9 @@ const toSwapWrite = (
   edit: DirectEdit,
   selection: SelectionContext,
   patch: Partial<StyleValues>,
-  divider: Divider | null
+  view: DividerView
 ): (() => Promise<void>) | null => {
+  const { divider } = view;
   const next = patch["flex-direction"] ?? null;
   const { directionId, projectId } = edit.scope;
 
@@ -268,7 +358,7 @@ const toSwapWrite = (
   return async () => {
     await api.directEdit(projectId, directionId, { ...base, classes: swap });
     edit.absorb(patch);
-    edit.reselect();
+    view.absorbClasses(swap);
   };
 };
 
@@ -287,7 +377,7 @@ const useDividerEdit = (
     }
 
     const preview = (patch: Partial<StyleValues>): void => {
-      const run = toSwapWrite(edit, selection, patch, divider);
+      const run = toSwapWrite(edit, selection, patch, view);
 
       if (run === null) {
         edit.preview(patch);
@@ -311,7 +401,7 @@ const useDividerEdit = (
     };
 
     return { ...edit, commit, preview };
-  }, [divider, edit, selection]);
+  }, [divider, edit, selection, view]);
 };
 
 export {

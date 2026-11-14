@@ -205,6 +205,18 @@ type DividerWidth = (typeof DIVIDER_WIDTHS)[number];
 const toDividerWidth = (width: number): DividerWidth =>
   DIVIDER_WIDTHS.find((entry) => entry === width) ?? 1;
 
+const toAppliedClasses = (
+  classes: readonly string[],
+  change: DividerClassSwap
+): readonly string[] => {
+  const removed = new Set(change.remove);
+  const kept = classes.filter((token) => !removed.has(token));
+
+  const have = new Set(kept);
+
+  return [...kept, ...change.add.filter((token) => !have.has(token))];
+};
+
 const toSwatchColor = (divider: Divider): string => {
   if (divider.color === null) {
     return "currentColor";
@@ -222,6 +234,7 @@ export {
   LINES,
   WIDTHS,
   toAxisFor,
+  toAppliedClasses,
   toAxisSwap,
   toDivider,
   toDividerPaint,
@@ -230,4 +243,10 @@ export {
   toSwatchColor,
 };
 
-export type { Divider, DividerAxis, DividerPaint, GapMenuMode };
+export type {
+  Divider,
+  DividerAxis,
+  DividerClassSwap,
+  DividerPaint,
+  GapMenuMode,
+};

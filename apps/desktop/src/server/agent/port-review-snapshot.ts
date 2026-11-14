@@ -18,6 +18,8 @@ const ADD_TIMEOUT_MS = 60_000;
 
 const ADDED = "A";
 
+const START_TAG = /<port-start\b[^>]*\btree="(?<tree>[\da-f]+)"/u;
+
 const toGitDir = async (workTree: string): Promise<string | null> => {
   const found = await userGit(workTree, ["rev-parse", "--absolute-git-dir"], {
     allowFail: true,
@@ -199,6 +201,86 @@ const restoreRouteSnapshot = async (
   }
 };
 
-export { createRouteSnapshot, restoreRouteSnapshot };
+const toStartTag = async (workTree: string): Promise<string> => {
+  const snapshot = await createRouteSnapshot(workTree);
+
+  if (snapshot === null) {
+    return "";
+  }
+
+  return ["\n\n<", `port-start tree="${snapshot.tree}" />`].join("");
+};
+
+const toStartSnapshot = (
+  prompt: string,
+  workTree: string
+): RouteSnapshot | null => {
+  const tree = START_TAG.exec(prompt)?.groups?.["tree"] ?? null;
+
+  if (tree === null) {
+    return null;
+  }
+
+  return { tree, workTree };
+};
+
+const listChangedFiles = async (
+  snapshot: RouteSnapshot,
+  tree: string
+): Promise<string[] | null> => {
+  const found = await userGit(
+    snapshot.workTree,
+    [
+      "diff-tree",
+      "-r",
+      "-z",
+      "--no-renames",
+      "--name-only",
+      "--relative",
+      snapshot.tree,
+      tree,
+    ],
+    { allowFail: true }
+  );
+
+  if (found.code !== 0) {
+    return null;
+  }
+
+  return found.stdout.split("\0").filter((file) => file !== "");
+};
+
+const hasRouteChange = async (
+  snapshot: RouteSnapshot,
+  files: readonly string[]
+): Promise<boolean> => {
+  try {
+    const gitDir = await toGitDir(snapshot.workTree);
+
+    if (gitDir === null) {
+      return false;
+    }
+
+    const now = await createTree(snapshot.workTree, gitDir);
+
+    if (now === null) {
+      return false;
+    }
+
+    const changed = new Set(await listChangedFiles(snapshot, now));
+
+    return files.some((file) => changed.has(file));
+  } catch {
+    return false;
+  }
+};
+
+export {
+  createRouteSnapshot,
+  hasRouteChange,
+  restoreRouteSnapshot,
+  toStartSnapshot,
+  toStartTag,
+};
 
 export type { RouteSnapshot };

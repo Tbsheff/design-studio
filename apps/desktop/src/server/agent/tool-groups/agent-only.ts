@@ -2,7 +2,6 @@ import type { McpSdkServerConfigWithInstance } from "@anthropic-ai/claude-agent-
 
 import { buildAgentTools } from "../../agent-tools/registry.js";
 import type { AgentTool } from "../../agent-tools/registry.js";
-import { runActionCaller } from "../../mcp/registry.js";
 import {
   HELP_INPUT,
   SCREENSHOT_TOOL,
@@ -25,6 +24,7 @@ import type {
 import { toDesignSystemTools } from "./design-system.js";
 import { toDirectEditComponentTools } from "./direct-edit-component.js";
 import { toDirectEditElementTools } from "./direct-edit-element.js";
+import { toPortRunCaller, toPortRunTool } from "./port-apply-call.js";
 
 const toAgentOnlyTools = (
   deps: StudioToolDeps,
@@ -121,7 +121,9 @@ const createStudioMcpServer = async (
     ...toDirectEditElementTools(deps, tool),
     ...toDirectEditComponentTools(deps, tool),
     ...toDesignSystemTools(deps, tool),
-    ...buildAgentTools(runActionCaller(deps), tool),
+    ...buildAgentTools(toPortRunCaller(deps), tool).map((entry) =>
+      toPortRunTool(deps, entry)
+    ),
   ];
 
   return createSdkMcpServer({

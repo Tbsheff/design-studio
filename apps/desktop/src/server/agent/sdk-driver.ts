@@ -87,7 +87,7 @@ import {
   type StopReason,
 } from "./polish-loop.js";
 import { runPortReview } from "./port-review-pass.js";
-import { toPortReviewGaps, toPortChecked } from "./port-review.js";
+import { toPortGaps, toPortChecked } from "./port-review.js";
 import { buildSystemPrompt } from "./prompt.js";
 import { toReviewGaps, toReviewNote } from "./prototype-review.js";
 import { lockReadOnly } from "./read-only-lock.js";
@@ -1385,7 +1385,7 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
   ): Promise<{ outcome: DriverOutcome; record: PortReviewRecord | null }> {
     const gaps = skipsReview(input, total)
       ? null
-      : toPortReviewGaps(input.ctx, segment.setup.run.log?.toolOrder ?? []);
+      : await toPortGaps(input.ctx, segment.setup.run.log?.toolOrder ?? []);
     if (!gaps || !options.runtime || total.status !== "completed")
       return { outcome: total, record: null };
     let merged = total;

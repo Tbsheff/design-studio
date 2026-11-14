@@ -1,22 +1,33 @@
+import { writeFile } from "node:fs/promises";
+import path from "node:path";
+
+import { applyPort } from "@design-studio/actions/port/apply";
 import { PORT_TASK } from "@design-studio/contracts/port";
 
 import type {
   AgentRunContext,
   PreviewService,
 } from "../../shared/server-ports.js";
+import type { AgentResult } from "../agent-tools/registry.js";
 import type { StudioRuntime } from "../platform/studio-runtime/index.js";
 import type { DriverInput, DriverOutcome } from "./lifecycle.js";
 import { toAssetMap, toAssetNotes } from "./port-assets.js";
 import type { AssetLine } from "./port-assets.js";
 import { runPortReview } from "./port-review-pass.js";
 import {
+  toPortCheckRef,
   toPortChecked,
-  toPortReviewGaps,
+  toPortGaps,
   toRouteFiles,
 } from "./port-review.js";
-import type { PortContinue, PortReviewGaps } from "./port-review.js";
+import type {
+  PortContinue,
+  PortReview,
+  PortReviewGaps,
+} from "./port-review.js";
 import { toRouteFileNow, toRouteUpdateNotes } from "./port-route-update.js";
 import type { RouteFileText } from "./port-route-update.js";
+import { toPortRunCaller } from "./tool-groups/port-apply-call.js";
 
 const PORT_THROW_TAG = "[port-throw]";
 
@@ -25,6 +36,18 @@ const PORT_LOW_TAG = "[port-low]";
 const PORT_KEEP_TAG = "[port-keep]";
 
 const PORT_WORSE_TAG = "[port-worse]";
+
+const PORT_BASH_TAG = "[port-bash]";
+
+const PORT_APPLY_TAG = "[port-apply]";
+
+const APPLY_TOOL_NAME = "mcp__studio__apply_port";
+
+const APPLY_TOOL_ID = "mock_port_apply";
+
+const RESULT_TEXT_MAX = 600;
+
+const SUMMARY_TEXT_MAX = 120;
 
 const MAIN_CLASS = 'main className="';
 
@@ -47,6 +70,11 @@ const HEADING_FALLBACK = "Moved page";
 const JSX_UNSAFE = /[{}<>]/gu;
 
 interface MockPortSession {
+  readonly fakeTool: (
+    name: string,
+    input: Readonly<Record<string, string>>,
+    summary: string
+  ) => Promise<void>;
   readonly say: (text: string) => Promise<void>;
   readonly writeFileAsTool: (
     toolName: "Write" | "Edit",
@@ -226,6 +254,27 @@ const toRouteText = (prompt: string): string => {
   return toFaithfulRoute(prompt);
 };
 
+const setRoute = async (
+  session: MockPortSession,
+  input: DriverInput,
+  file: string
+): Promise<void> => {
+  const { prompt } = input.ctx.request;
+
+  if (!prompt.includes(PORT_BASH_TAG)) {
+    await session.writeFileAsTool("Write", file, toRouteText(prompt));
+
+    return;
+  }
+
+  const command = `cat > ${file} <<'EOF'`;
+  await writeFile(
+    path.join(input.ctx.direction.workTree, file),
+    `${toRouteText(prompt)}\n`
+  );
+  await session.fakeTool("Bash", { command }, `Bash ${command}`);
+};
+
 const runMockPort = async (
   session: MockPortSession,
   input: DriverInput
@@ -238,7 +287,7 @@ const runMockPort = async (
   }
 
   await session.say(`Writing the route \`${file}\`.`);
-  await session.writeFileAsTool("Write", file, toRouteText(prompt));
+  await setRoute(session, input, file);
 
   const finalText = `Moved the prototype into \`${file}\`.`;
   await session.say(finalText);
@@ -282,12 +331,20 @@ const toFixContinue =
     return true;
   };
 
-const toMockPortRun = (
+const toToolOrder = (prompt: string): string[] => {
+  if (prompt.includes(PORT_BASH_TAG)) {
+    return ["Bash"];
+  }
+
+  return ["Write"];
+};
+
+const toMockPortRun = async (
   input: DriverInput,
   deps: MockPortDeps
-): MockPortRun | null => {
+): Promise<MockPortRun | null> => {
   const { prompt } = input.ctx.request;
-  const gaps = toPortReviewGaps(input.ctx, ["Write"]);
+  const gaps = await toPortGaps(input.ctx, toToolOrder(prompt));
   const file = toRouteFile(prompt);
 
   if (gaps === null || file === null) {
@@ -322,29 +379,87 @@ const toAssetNoted = async (
   };
 };
 
+const toResultText = (result: AgentResult): string =>
+  result.content
+    .flatMap((block) => {
+      if (block.type === "text") {
+        return [block.text];
+      }
+
+      return [];
+    })
+    .join("\n")
+    .slice(0, RESULT_TEXT_MAX);
+
+const applyAsAgent = async (
+  input: DriverInput,
+  deps: MockPortDeps
+): Promise<string> => {
+  const { prompt } = input.ctx.request;
+  const routePath = toPortCheckRef(prompt)?.routePath ?? null;
+
+  const call = toPortRunCaller({
+    actionAsk: null,
+    ctx: input.ctx,
+    runtime: deps.runtime,
+  });
+
+  if (!prompt.includes(PORT_APPLY_TAG) || routePath === null || call === null) {
+    return "";
+  }
+
+  const args = { routePath };
+  input.sink.toolStarted(APPLY_TOOL_ID, APPLY_TOOL_NAME, args);
+  const result = await call(applyPort, args);
+  const text = toResultText(result);
+  input.sink.toolFinished(
+    APPLY_TOOL_ID,
+    result.isError === true,
+    `apply_port ${text.slice(0, SUMMARY_TEXT_MAX)}`
+  );
+
+  return `Mock agent apply_port({ routePath: "${routePath}" }): ${text}`;
+};
+
+const runAppliedReview = async (
+  input: DriverInput,
+  session: MockPortSession,
+  deps: MockPortDeps,
+  run: MockPortRun
+): Promise<readonly [string, PortReview]> => {
+  const applied = await applyAsAgent(input, deps);
+
+  return [
+    applied,
+    await runPortReview({
+      continueWith: toFixContinue(input, session, run.file),
+      gaps: run.gaps,
+      preview: run.preview,
+      runtime: run.runtime,
+    }),
+  ];
+};
+
 const applyMockReview = async (
   input: DriverInput,
   session: MockPortSession,
   deps: MockPortDeps,
   outcome: DriverOutcome
 ): Promise<DriverOutcome> => {
-  const run = toMockPortRun(input, deps);
+  const run = await toMockPortRun(input, deps);
 
   if (outcome.status !== "completed" || run === null) {
     return outcome;
   }
 
-  const review = await runPortReview({
-    continueWith: toFixContinue(input, session, run.file),
-    gaps: run.gaps,
-    preview: run.preview,
-    runtime: run.runtime,
-  });
+  const [applied, review] = await runAppliedReview(input, session, deps, run);
 
   return {
     ...outcome,
     finalCheck: toPortChecked(outcome.finalCheck, review.record),
-    finalText: `${outcome.finalText}\n\n${review.note}`,
+    finalText: [outcome.finalText, applied, review.note]
+      .filter((part) => part !== "")
+      .join("\n\n"),
   };
 };
 

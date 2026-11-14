@@ -17,6 +17,7 @@ import type { StudioRuntime } from "../platform/studio-runtime/index.js";
 import { isLeanRun } from "./lean-run.js";
 import { EDIT_TOOL_NAMES } from "./permissions.js";
 import type { PortMatchRead, RouteRender } from "./port-review-read.js";
+import { hasRouteChange, toStartSnapshot } from "./port-review-snapshot.js";
 import { toRouteFileNow } from "./port-route-update.js";
 import type { ImagePart } from "./user-message.js";
 
@@ -128,18 +129,11 @@ const isPortRun = (ctx: PortReviewContext): boolean =>
   ctx.request.mode === "edit" &&
   !isLeanRun(ctx.request);
 
-const toPortReviewGaps = (
-  ctx: PortReviewContext,
-  toolOrder: readonly string[]
-): PortReviewGaps | null => {
+const toCheckGaps = (ctx: PortReviewContext): PortReviewGaps | null => {
   const checkRef = toPortCheckRef(ctx.request.prompt);
   const base = ctx.previewUrl;
 
-  if (!isPortRun(ctx) || !hasEdit(toolOrder)) {
-    return null;
-  }
-
-  if (base === null || checkRef === null) {
+  if (!isPortRun(ctx) || base === null || checkRef === null) {
     return null;
   }
 
@@ -151,6 +145,25 @@ const toPortReviewGaps = (
     url: toRouteUrl(base, checkRef.routePath),
     workTree: ctx.direction.workTree,
   };
+};
+
+const toPortGaps = async (
+  ctx: PortReviewContext,
+  toolOrder: readonly string[]
+): Promise<PortReviewGaps | null> => {
+  const gaps = toCheckGaps(ctx);
+
+  if (gaps === null || hasEdit(toolOrder)) {
+    return gaps;
+  }
+
+  const start = toStartSnapshot(ctx.request.prompt, gaps.workTree);
+
+  if (start === null || !(await hasRouteChange(start, gaps.files))) {
+    return null;
+  }
+
+  return gaps;
 };
 
 const toLowAreaNames = (match: PortMatchRead): string[] =>
@@ -376,7 +389,7 @@ export {
   toHidText,
   toPortCheckRef,
   toPortChecked,
-  toPortReviewGaps,
+  toPortGaps,
   toRecord,
   toRouteFiles,
 };

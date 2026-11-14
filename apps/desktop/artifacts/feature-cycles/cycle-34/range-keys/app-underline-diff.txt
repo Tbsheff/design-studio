@@ -1,0 +1,18 @@
+diff --git a/app/page.jsx b/app/page.jsx
+index 5c3f70c..13b468c 100644
+--- a/app/page.jsx
++++ b/app/page.jsx
+@@ -2,7 +2,7 @@ export default function Home() {
+   return (
+     <main className="p-6">
+       <h1 className="text-2xl font-semibold mb-4">Range keys app</h1>
+-      <p id="t1" className="text-lg text-slate-700">Underline one word here.</p>
++      <p id="t1" className="text-lg text-slate-700">Underline <span className="underline">one</span> word here.</p>
+     </main>
+   );
+ }
+EDITING SPAN sel=one
+SELWORD true SPAN
+BODY /api/projects/N0medUpBHP/d/main/apply-range-text {"className":null,"end":3,"href":null,"isRemove":true,"layer":{"column":63,"file":"app/page.jsx","line":5},"start":0,"style":"underline","text":"one"}
+RESP POST /api/projects/N0medUpBHP/d/main/apply-range-text 200 
+SRC app-removed <p id="t1" className="text-lg text-slate-700">Underline one word here.</p>

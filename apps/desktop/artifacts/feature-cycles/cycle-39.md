@@ -281,3 +281,20 @@ Picks 2, 3 and 4 need none. Total: 5 runs.
 Dropped from the list: Figma variables JSON import and export (the code exists, see Findings).
 
 Sources: [mean.ceo: Claude Design news November 2026](https://blog.mean.ceo/claude-design-news-november-2026/), [Claude Design](https://claude.com/design), [Claude Design stays on brand](https://claude.com/resources/articles/claude-design-stays-on-brand-for-daily-work), [PureAI: Anthropic overhauls Claude Design](https://pureai.com/articles/2026/06/17/anthropic-overhauls-claude-design.aspx), [Figma forum: bring forward shortcut change](https://forum.figma.com/share-your-feedback-26/problem-bring-forward-shortrcut-cmd-alt-up-down-rotates-the-object-46254), [Figma forum: changing bring forward hotkeys](https://forum.figma.com/ask-the-community-7/changing-bring-forward-bring-to-front-hotkeys-47717), [Noble Desktop: Figma Mac shortcuts](https://www.nobledesktop.com/shortcuts/figma/mac).
+
+## Results
+
+Merged into main in this order: polish-39, port-dark, kit-swap, kit-skel, z-keys. There was 1 conflict, in the `kit-drift.list` description. I joined the two texts into one (558 chars).
+
+- **polish-39:** The toast now says "Copied style of h2". The dark check now stops CSS transitions before axe runs: main missed 2 items on all 5 checks, and the branch found 2 each time. Photo text is now checked in dark. A range apply in an app with no frame works again (fix in `scope.ts`). The Cmd+Z check by OS keyboard did not run, because the screen was locked 3 times. Tyler must check it by hand.
+- **port-dark:** Each Move to app route now has a dark check, and dark items start the fix loop. This adds about 1 s per route. Only mock runs proved the fix loop, and no run proved the update path.
+- **kit-swap:** Hand-styled TSX cards and badges now get ids, and `apply_kit_drift` swaps them. `next build` passes and undo works.
+- **kit-skel:** Hand-made loading blocks become `<Skeleton>` through `list_kit_drift` and `apply_kit_drift`.
+- **z-keys:** Mod+] brings a layer forward and Mod+[ sends it backward, through `set_stacking`. The layout does not move. A selection of many layers takes 1 Cmd+Z per layer.
+
+Open:
+- The first `apply_kit_drift` on an app that was attached just before fails with "no saved version yet". This bug is already on main.
+- `call-action.ts` does not reset state between surfaces for write actions.
+- `check:scripts` fails on server files that the z-keys pick did not change.
+
+Checks: gen, tsc, lint and lint:gate pass (59,623 diagnostics, baseline 89,733). ui passes, clip finds 0, pack and the reinstall pass, and :4570 gives 200. Idle CPU is 0.02 CPU-s over 60 s. check-bundle B1 is 274,703 B (delta 0). Nothing was pushed.

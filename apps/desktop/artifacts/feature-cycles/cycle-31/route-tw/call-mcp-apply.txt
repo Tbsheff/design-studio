@@ -1,0 +1,192 @@
+{
+  "isError": false,
+  "ms": 4306,
+  "output": {
+    "applied": [
+      {
+        "app": "896px",
+        "file": "app/patients/page.jsx",
+        "property": "width",
+        "prototype": "880px",
+        "selector": "main.mx-auto",
+        "text": "Patients Name Ward",
+        "written": "max-w-220 (was max-w-4xl)"
+      },
+      {
+        "app": "8px",
+        "file": "app/patients/page.jsx",
+        "property": "margin-bottom",
+        "prototype": "24px",
+        "selector": "main.mx-auto > h1.mb-2",
+        "text": "Patients",
+        "written": "mb-6 (was mb-2)"
+      },
+      {
+        "app": "30px",
+        "file": "app/patients/page.jsx",
+        "property": "font-size",
+        "prototype": "32px",
+        "selector": "main.mx-auto > h1.mb-2",
+        "text": "Patients",
+        "written": "text-[32px] (was text-3xl)"
+      },
+      {
+        "app": "36px",
+        "file": "app/patients/page.jsx",
+        "property": "line-height",
+        "prototype": "normal (38px)",
+        "selector": "main.mx-auto > h1.mb-2",
+        "text": "Patients",
+        "written": "leading-[normal]"
+      },
+      {
+        "app": "16px",
+        "file": "app/patients/patient-list.jsx",
+        "property": "font-size",
+        "prototype": "15px",
+        "selector": "main.mx-auto > div.overflow-hidden > table.w-full",
+        "text": "Name Ward",
+        "written": "text-[15px] (was text-base)"
+      },
+      {
+        "app": "20px",
+        "file": "app/patients/patient-list.jsx",
+        "property": "line-height",
+        "prototype": "normal (18px)",
+        "selector": "main.mx-auto > div.overflow-hidden > table.w-full",
+        "text": "Name Ward",
+        "written": "leading-[normal] (was leading-tight)"
+      },
+      {
+        "app": "16px",
+        "file": "app/patients/patient-list.jsx",
+        "property": "line-height",
+        "prototype": "normal (14px)",
+        "selector": "thead > tr > th.border-b:nth-of-type(1)",
+        "text": "Name",
+        "written": "leading-[normal]"
+      },
+      {
+        "app": "16px",
+        "file": "app/patients/patient-list.jsx",
+        "property": "line-height",
+        "prototype": "normal (14px)",
+        "selector": "thead > tr > th.border-b:nth-of-type(2)",
+        "text": "Ward",
+        "written": "leading-[normal]"
+      }
+    ],
+    "scoreAfter": 95,
+    "scoreBefore": 65,
+    "skipped": [
+      {
+        "app": "24px",
+        "property": "line-height",
+        "prototype": "normal (19px)",
+        "reason": "inherited",
+        "selector": "main.mx-auto",
+        "text": "Patients Name Ward"
+      },
+      {
+        "app": "832px",
+        "property": "width",
+        "prototype": "816px",
+        "reason": "follows-parent",
+        "selector": "main.mx-auto > h1.mb-2",
+        "text": "Patients"
+      },
+      {
+        "app": "24px",
+        "property": "line-height",
+        "prototype": "normal (19px)",
+        "reason": "inherited",
+        "selector": "main.mx-auto > div.overflow-hidden",
+        "text": "Name Ward"
+      },
+      {
+        "app": "832px",
+        "property": "width",
+        "prototype": "816px",
+        "reason": "follows-parent",
+        "selector": "main.mx-auto > div.overflow-hidden",
+        "text": "Name Ward"
+      },
+      {
+        "app": "830px",
+        "property": "width",
+        "prototype": "814px",
+        "reason": "follows-parent",
+        "selector": "main.mx-auto > div.overflow-hidden > table.w-full",
+        "text": "Name Ward"
+      },
+      {
+        "app": "16px",
+        "property": "font-size",
+        "prototype": "15px",
+        "reason": "inherited",
+        "selector": "div.overflow-hidden > table.w-full > thead",
+        "text": "Name Ward"
+      },
+      {
+        "app": "20px",
+        "property": "line-height",
+        "prototype": "normal (18px)",
+        "reason": "inherited",
+        "selector": "div.overflow-hidden > table.w-full > thead",
+        "text": "Name Ward"
+      },
+      {
+        "app": "830px",
+        "property": "width",
+        "prototype": "814px",
+        "reason": "follows-parent",
+        "selector": "div.overflow-hidden > table.w-full > thead",
+        "text": "Name Ward"
+      },
+      {
+        "app": "16px",
+        "property": "font-size",
+        "prototype": "15px",
+        "reason": "inherited",
+        "selector": "table.w-full > thead > tr",
+        "text": "Name Ward"
+      },
+      {
+        "app": "20px",
+        "property": "line-height",
+        "prototype": "normal (18px)",
+        "reason": "inherited",
+        "selector": "table.w-full > thead > tr",
+        "text": "Name Ward"
+      },
+      {
+        "app": "830px",
+        "property": "width",
+        "prototype": "814px",
+        "reason": "follows-parent",
+        "selector": "table.w-full > thead > tr",
+        "text": "Name Ward"
+      },
+      {
+        "app": "444px",
+        "property": "width",
+        "prototype": "425px",
+        "reason": "follows-parent",
+        "selector": "thead > tr > th.border-b:nth-of-type(1)",
+        "text": "Name"
+      },
+      {
+        "app": "386px",
+        "property": "width",
+        "prototype": "389px",
+        "reason": "follows-parent",
+        "selector": "thead > tr > th.border-b:nth-of-type(2)",
+        "text": "Ward"
+      }
+    ],
+    "versionId": "pending-e7496e7a0cd8545f"
+  },
+  "spawns": null,
+  "surface": "mcp"
+}
+answered approval cards: vkKjau5yd3-d

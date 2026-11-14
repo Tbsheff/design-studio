@@ -1,0 +1,965 @@
+call-action port.apply on http://127.0.0.1:7410. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 4431 ms, git spawns: not counted (server side)
+{
+  "applied": [
+    {
+      "app": "896px",
+      "file": "app/patients/page.jsx",
+      "property": "width",
+      "prototype": "880px",
+      "selector": "main.mx-auto",
+      "text": "Patients Name Ward",
+      "written": "max-w-220 (was max-w-4xl)"
+    },
+    {
+      "app": "8px",
+      "file": "app/patients/page.jsx",
+      "property": "margin-bottom",
+      "prototype": "24px",
+      "selector": "main.mx-auto > h1.mb-2",
+      "text": "Patients",
+      "written": "mb-6 (was mb-2)"
+    },
+    {
+      "app": "30px",
+      "file": "app/patients/page.jsx",
+      "property": "font-size",
+      "prototype": "32px",
+      "selector": "main.mx-auto > h1.mb-2",
+      "text": "Patients",
+      "written": "text-[32px] (was text-3xl)"
+    },
+    {
+      "app": "36px",
+      "file": "app/patients/page.jsx",
+      "property": "line-height",
+      "prototype": "normal (38px)",
+      "selector": "main.mx-auto > h1.mb-2",
+      "text": "Patients",
+      "written": "leading-[normal]"
+    },
+    {
+      "app": "16px",
+      "file": "app/patients/patient-list.jsx",
+      "property": "font-size",
+      "prototype": "15px",
+      "selector": "main.mx-auto > div.overflow-hidden > table.w-full",
+      "text": "Name Ward",
+      "written": "text-[15px] (was text-base)"
+    },
+    {
+      "app": "20px",
+      "file": "app/patients/patient-list.jsx",
+      "property": "line-height",
+      "prototype": "normal (18px)",
+      "selector": "main.mx-auto > div.overflow-hidden > table.w-full",
+      "text": "Name Ward",
+      "written": "leading-[normal] (was leading-tight)"
+    },
+    {
+      "app": "16px",
+      "file": "app/patients/patient-list.jsx",
+      "property": "line-height",
+      "prototype": "normal (14px)",
+      "selector": "thead > tr > th.border-b:nth-of-type(1)",
+      "text": "Name",
+      "written": "leading-[normal]"
+    },
+    {
+      "app": "16px",
+      "file": "app/patients/patient-list.jsx",
+      "property": "line-height",
+      "prototype": "normal (14px)",
+      "selector": "thead > tr > th.border-b:nth-of-type(2)",
+      "text": "Ward",
+      "written": "leading-[normal]"
+    }
+  ],
+  "scoreAfter": 95,
+  "scoreBefore": 65,
+  "skipped": [
+    {
+      "app": "24px",
+      "property": "line-height",
+      "prototype": "normal (19px)",
+      "reason": "inherited",
+      "selector": "main.mx-auto",
+      "text": "Patients Name Ward"
+    },
+    {
+      "app": "832px",
+      "property": "width",
+      "prototype": "816px",
+      "reason": "follows-parent",
+      "selector": "main.mx-auto > h1.mb-2",
+      "text": "Patients"
+    },
+    {
+      "app": "24px",
+      "property": "line-height",
+      "prototype": "normal (19px)",
+      "reason": "inherited",
+      "selector": "main.mx-auto > div.overflow-hidden",
+      "text": "Name Ward"
+    },
+    {
+      "app": "832px",
+      "property": "width",
+      "prototype": "816px",
+      "reason": "follows-parent",
+      "selector": "main.mx-auto > div.overflow-hidden",
+      "text": "Name Ward"
+    },
+    {
+      "app": "830px",
+      "property": "width",
+      "prototype": "814px",
+      "reason": "follows-parent",
+      "selector": "main.mx-auto > div.overflow-hidden > table.w-full",
+      "text": "Name Ward"
+    },
+    {
+      "app": "16px",
+      "property": "font-size",
+      "prototype": "15px",
+      "reason": "inherited",
+      "selector": "div.overflow-hidden > table.w-full > thead",
+      "text": "Name Ward"
+    },
+    {
+      "app": "20px",
+      "property": "line-height",
+      "prototype": "normal (18px)",
+      "reason": "inherited",
+      "selector": "div.overflow-hidden > table.w-full > thead",
+      "text": "Name Ward"
+    },
+    {
+      "app": "830px",
+      "property": "width",
+      "prototype": "814px",
+      "reason": "follows-parent",
+      "selector": "div.overflow-hidden > table.w-full > thead",
+      "text": "Name Ward"
+    },
+    {
+      "app": "16px",
+      "property": "font-size",
+      "prototype": "15px",
+      "reason": "inherited",
+      "selector": "table.w-full > thead > tr",
+      "text": "Name Ward"
+    },
+    {
+      "app": "20px",
+      "property": "line-height",
+      "prototype": "normal (18px)",
+      "reason": "inherited",
+      "selector": "table.w-full > thead > tr",
+      "text": "Name Ward"
+    },
+    {
+      "app": "830px",
+      "property": "width",
+      "prototype": "814px",
+      "reason": "follows-parent",
+      "selector": "table.w-full > thead > tr",
+      "text": "Name Ward"
+    },
+    {
+      "app": "444px",
+      "property": "width",
+      "prototype": "425px",
+      "reason": "follows-parent",
+      "selector": "thead > tr > th.border-b:nth-of-type(1)",
+      "text": "Name"
+    },
+    {
+      "app": "386px",
+      "property": "width",
+      "prototype": "389px",
+      "reason": "follows-parent",
+      "selector": "thead > tr > th.border-b:nth-of-type(2)",
+      "text": "Ward"
+    }
+  ],
+  "versionId": "pending-ab05776b8e22d713"
+}
+
+[mcp] ok, 1956 ms, git spawns: not counted (server side)
+{
+  "applied": [],
+  "scoreAfter": 95,
+  "scoreBefore": 95,
+  "skipped": [
+    {
+      "app": "24px",
+      "property": "line-height",
+      "prototype": "normal (19px)",
+      "reason": "inherited",
+      "selector": "main.mx-auto",
+      "text": "Patients Name Ward"
+    },
+    {
+      "app": "24px",
+      "property": "line-height",
+      "prototype": "normal (19px)",
+      "reason": "inherited",
+      "selector": "main.mx-auto > div.overflow-hidden",
+      "text": "Name Ward"
+    }
+  ],
+  "versionId": null
+}
+
+[agent] error, 1143 ms, git spawns: not counted (server side)
+"This action needs the user to allow it in Design Studio, and this caller has no approval prompt. Ask the user to do it in Design Studio."
+
+diff http -> mcp:
+-   "applied": [
++   "applied": [],
+-     {
++   "scoreAfter": 95,
+-       "app": "896px",
++   "scoreBefore": 95,
+-       "file": "app/patients/page.jsx",
++   "skipped": [
+-       "property": "width",
++     {
+-       "prototype": "880px",
++       "app": "24px",
+-       "selector": "main.mx-auto",
++       "property": "line-height",
+-       "text": "Patients Name Ward",
++       "prototype": "normal (19px)",
+-       "written": "max-w-220 (was max-w-4xl)"
++       "reason": "inherited",
+-     },
++       "selector": "main.mx-auto",
+-     {
++       "text": "Patients Name Ward"
+-       "app": "8px",
++     },
+-       "file": "app/patients/page.jsx",
++     {
+-       "property": "margin-bottom",
++       "app": "24px",
+-       "prototype": "24px",
++       "property": "line-height",
+-       "selector": "main.mx-auto > h1.mb-2",
++       "prototype": "normal (19px)",
+-       "text": "Patients",
++       "reason": "inherited",
+-       "written": "mb-6 (was mb-2)"
++       "selector": "main.mx-auto > div.overflow-hidden",
+-     },
++       "text": "Name Ward"
+-     {
++     }
+-       "app": "30px",
++   ],
+-       "file": "app/patients/page.jsx",
++   "versionId": null
+-       "property": "font-size",
++ }
+-       "prototype": "32px",
++ 
+-       "selector": "main.mx-auto > h1.mb-2",
++ 
+-       "text": "Patients",
++ 
+-       "written": "text-[32px] (was text-3xl)"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "36px",
++ 
+-       "file": "app/patients/page.jsx",
++ 
+-       "property": "line-height",
++ 
+-       "prototype": "normal (38px)",
++ 
+-       "selector": "main.mx-auto > h1.mb-2",
++ 
+-       "text": "Patients",
++ 
+-       "written": "leading-[normal]"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "16px",
++ 
+-       "file": "app/patients/patient-list.jsx",
++ 
+-       "property": "font-size",
++ 
+-       "prototype": "15px",
++ 
+-       "selector": "main.mx-auto > div.overflow-hidden > table.w-full",
++ 
+-       "text": "Name Ward",
++ 
+-       "written": "text-[15px] (was text-base)"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "20px",
++ 
+-       "file": "app/patients/patient-list.jsx",
++ 
+-       "property": "line-height",
++ 
+-       "prototype": "normal (18px)",
++ 
+-       "selector": "main.mx-auto > div.overflow-hidden > table.w-full",
++ 
+-       "text": "Name Ward",
++ 
+-       "written": "leading-[normal] (was leading-tight)"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "16px",
++ 
+-       "file": "app/patients/patient-list.jsx",
++ 
+-       "property": "line-height",
++ 
+-       "prototype": "normal (14px)",
++ 
+-       "selector": "thead > tr > th.border-b:nth-of-type(1)",
++ 
+-       "text": "Name",
++ 
+-       "written": "leading-[normal]"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "16px",
++ 
+-       "file": "app/patients/patient-list.jsx",
++ 
+-       "property": "line-height",
++ 
+-       "prototype": "normal (14px)",
++ 
+-       "selector": "thead > tr > th.border-b:nth-of-type(2)",
++ 
+-       "text": "Ward",
++ 
+-       "written": "leading-[normal]"
++ 
+-     }
++ 
+-   ],
++ 
+-   "scoreAfter": 95,
++ 
+-   "scoreBefore": 65,
++ 
+-   "skipped": [
++ 
+-     {
++ 
+-       "app": "24px",
++ 
+-       "property": "line-height",
++ 
+-       "prototype": "normal (19px)",
++ 
+-       "reason": "inherited",
++ 
+-       "selector": "main.mx-auto",
++ 
+-       "text": "Patients Name Ward"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "832px",
++ 
+-       "property": "width",
++ 
+-       "prototype": "816px",
++ 
+-       "reason": "follows-parent",
++ 
+-       "selector": "main.mx-auto > h1.mb-2",
++ 
+-       "text": "Patients"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "24px",
++ 
+-       "property": "line-height",
++ 
+-       "prototype": "normal (19px)",
++ 
+-       "reason": "inherited",
++ 
+-       "selector": "main.mx-auto > div.overflow-hidden",
++ 
+-       "text": "Name Ward"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "832px",
++ 
+-       "property": "width",
++ 
+-       "prototype": "816px",
++ 
+-       "reason": "follows-parent",
++ 
+-       "selector": "main.mx-auto > div.overflow-hidden",
++ 
+-       "text": "Name Ward"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "830px",
++ 
+-       "property": "width",
++ 
+-       "prototype": "814px",
++ 
+-       "reason": "follows-parent",
++ 
+-       "selector": "main.mx-auto > div.overflow-hidden > table.w-full",
++ 
+-       "text": "Name Ward"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "16px",
++ 
+-       "property": "font-size",
++ 
+-       "prototype": "15px",
++ 
+-       "reason": "inherited",
++ 
+-       "selector": "div.overflow-hidden > table.w-full > thead",
++ 
+-       "text": "Name Ward"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "20px",
++ 
+-       "property": "line-height",
++ 
+-       "prototype": "normal (18px)",
++ 
+-       "reason": "inherited",
++ 
+-       "selector": "div.overflow-hidden > table.w-full > thead",
++ 
+-       "text": "Name Ward"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "830px",
++ 
+-       "property": "width",
++ 
+-       "prototype": "814px",
++ 
+-       "reason": "follows-parent",
++ 
+-       "selector": "div.overflow-hidden > table.w-full > thead",
++ 
+-       "text": "Name Ward"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "16px",
++ 
+-       "property": "font-size",
++ 
+-       "prototype": "15px",
++ 
+-       "reason": "inherited",
++ 
+-       "selector": "table.w-full > thead > tr",
++ 
+-       "text": "Name Ward"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "20px",
++ 
+-       "property": "line-height",
++ 
+-       "prototype": "normal (18px)",
++ 
+-       "reason": "inherited",
++ 
+-       "selector": "table.w-full > thead > tr",
++ 
+-       "text": "Name Ward"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "830px",
++ 
+-       "property": "width",
++ 
+-       "prototype": "814px",
++ 
+-       "reason": "follows-parent",
++ 
+-       "selector": "table.w-full > thead > tr",
++ 
+-       "text": "Name Ward"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "444px",
++ 
+-       "property": "width",
++ 
+-       "prototype": "425px",
++ 
+-       "reason": "follows-parent",
++ 
+-       "selector": "thead > tr > th.border-b:nth-of-type(1)",
++ 
+-       "text": "Name"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "386px",
++ 
+-       "property": "width",
++ 
+-       "prototype": "389px",
++ 
+-       "reason": "follows-parent",
++ 
+-       "selector": "thead > tr > th.border-b:nth-of-type(2)",
++ 
+-       "text": "Ward"
++ 
+-     }
++ 
+-   ],
++ 
+-   "versionId": "pending-ab05776b8e22d713"
++ 
+- }
++ 
+
+diff http -> agent:
+- {
++ "This action needs the user to allow it in Design Studio, and this caller has no approval prompt. Ask the user to do it in Design Studio."
+-   "applied": [
++ 
+-     {
++ 
+-       "app": "896px",
++ 
+-       "file": "app/patients/page.jsx",
++ 
+-       "property": "width",
++ 
+-       "prototype": "880px",
++ 
+-       "selector": "main.mx-auto",
++ 
+-       "text": "Patients Name Ward",
++ 
+-       "written": "max-w-220 (was max-w-4xl)"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "8px",
++ 
+-       "file": "app/patients/page.jsx",
++ 
+-       "property": "margin-bottom",
++ 
+-       "prototype": "24px",
++ 
+-       "selector": "main.mx-auto > h1.mb-2",
++ 
+-       "text": "Patients",
++ 
+-       "written": "mb-6 (was mb-2)"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "30px",
++ 
+-       "file": "app/patients/page.jsx",
++ 
+-       "property": "font-size",
++ 
+-       "prototype": "32px",
++ 
+-       "selector": "main.mx-auto > h1.mb-2",
++ 
+-       "text": "Patients",
++ 
+-       "written": "text-[32px] (was text-3xl)"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "36px",
++ 
+-       "file": "app/patients/page.jsx",
++ 
+-       "property": "line-height",
++ 
+-       "prototype": "normal (38px)",
++ 
+-       "selector": "main.mx-auto > h1.mb-2",
++ 
+-       "text": "Patients",
++ 
+-       "written": "leading-[normal]"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "16px",
++ 
+-       "file": "app/patients/patient-list.jsx",
++ 
+-       "property": "font-size",
++ 
+-       "prototype": "15px",
++ 
+-       "selector": "main.mx-auto > div.overflow-hidden > table.w-full",
++ 
+-       "text": "Name Ward",
++ 
+-       "written": "text-[15px] (was text-base)"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "20px",
++ 
+-       "file": "app/patients/patient-list.jsx",
++ 
+-       "property": "line-height",
++ 
+-       "prototype": "normal (18px)",
++ 
+-       "selector": "main.mx-auto > div.overflow-hidden > table.w-full",
++ 
+-       "text": "Name Ward",
++ 
+-       "written": "leading-[normal] (was leading-tight)"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "16px",
++ 
+-       "file": "app/patients/patient-list.jsx",
++ 
+-       "property": "line-height",
++ 
+-       "prototype": "normal (14px)",
++ 
+-       "selector": "thead > tr > th.border-b:nth-of-type(1)",
++ 
+-       "text": "Name",
++ 
+-       "written": "leading-[normal]"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "16px",
++ 
+-       "file": "app/patients/patient-list.jsx",
++ 
+-       "property": "line-height",
++ 
+-       "prototype": "normal (14px)",
++ 
+-       "selector": "thead > tr > th.border-b:nth-of-type(2)",
++ 
+-       "text": "Ward",
++ 
+-       "written": "leading-[normal]"
++ 
+-     }
++ 
+-   ],
++ 
+-   "scoreAfter": 95,
++ 
+-   "scoreBefore": 65,
++ 
+-   "skipped": [
++ 
+-     {
++ 
+-       "app": "24px",
++ 
+-       "property": "line-height",
++ 
+-       "prototype": "normal (19px)",
++ 
+-       "reason": "inherited",
++ 
+-       "selector": "main.mx-auto",
++ 
+-       "text": "Patients Name Ward"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "832px",
++ 
+-       "property": "width",
++ 
+-       "prototype": "816px",
++ 
+-       "reason": "follows-parent",
++ 
+-       "selector": "main.mx-auto > h1.mb-2",
++ 
+-       "text": "Patients"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "24px",
++ 
+-       "property": "line-height",
++ 
+-       "prototype": "normal (19px)",
++ 
+-       "reason": "inherited",
++ 
+-       "selector": "main.mx-auto > div.overflow-hidden",
++ 
+-       "text": "Name Ward"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "832px",
++ 
+-       "property": "width",
++ 
+-       "prototype": "816px",
++ 
+-       "reason": "follows-parent",
++ 
+-       "selector": "main.mx-auto > div.overflow-hidden",
++ 
+-       "text": "Name Ward"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "830px",
++ 
+-       "property": "width",
++ 
+-       "prototype": "814px",
++ 
+-       "reason": "follows-parent",
++ 
+-       "selector": "main.mx-auto > div.overflow-hidden > table.w-full",
++ 
+-       "text": "Name Ward"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "16px",
++ 
+-       "property": "font-size",
++ 
+-       "prototype": "15px",
++ 
+-       "reason": "inherited",
++ 
+-       "selector": "div.overflow-hidden > table.w-full > thead",
++ 
+-       "text": "Name Ward"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "20px",
++ 
+-       "property": "line-height",
++ 
+-       "prototype": "normal (18px)",
++ 
+-       "reason": "inherited",
++ 
+-       "selector": "div.overflow-hidden > table.w-full > thead",
++ 
+-       "text": "Name Ward"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "830px",
++ 
+-       "property": "width",
++ 
+-       "prototype": "814px",
++ 
+-       "reason": "follows-parent",
++ 
+-       "selector": "div.overflow-hidden > table.w-full > thead",
++ 
+-       "text": "Name Ward"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "16px",
++ 
+-       "property": "font-size",
++ 
+-       "prototype": "15px",
++ 
+-       "reason": "inherited",
++ 
+-       "selector": "table.w-full > thead > tr",
++ 
+-       "text": "Name Ward"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "20px",
++ 
+-       "property": "line-height",
++ 
+-       "prototype": "normal (18px)",
++ 
+-       "reason": "inherited",
++ 
+-       "selector": "table.w-full > thead > tr",
++ 
+-       "text": "Name Ward"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "830px",
++ 
+-       "property": "width",
++ 
+-       "prototype": "814px",
++ 
+-       "reason": "follows-parent",
++ 
+-       "selector": "table.w-full > thead > tr",
++ 
+-       "text": "Name Ward"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "444px",
++ 
+-       "property": "width",
++ 
+-       "prototype": "425px",
++ 
+-       "reason": "follows-parent",
++ 
+-       "selector": "thead > tr > th.border-b:nth-of-type(1)",
++ 
+-       "text": "Name"
++ 
+-     },
++ 
+-     {
++ 
+-       "app": "386px",
++ 
+-       "property": "width",
++ 
+-       "prototype": "389px",
++ 
+-       "reason": "follows-parent",
++ 
+-       "selector": "thead > tr > th.border-b:nth-of-type(2)",
++ 
+-       "text": "Ward"
++ 
+-     }
++ 
+-   ],
++ 
+-   "versionId": "pending-ab05776b8e22d713"
++ 
+- }
++ 
+
+answered approval cards: _a8CQ0_2Q_qB
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 1 error results
+
+fix: compare the outputs above, then run call-action again with the id port.apply and the same input

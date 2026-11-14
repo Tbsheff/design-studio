@@ -1,0 +1,135 @@
+call-action direct-edit.runReview on http://127.0.0.1:47930. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 500 ms, git spawns: not counted (server side)
+{
+  "counts": {
+    "high": 0,
+    "low": 1,
+    "medium": 1
+  },
+  "directionId": "main",
+  "findings": [
+    {
+      "ask": "Review finding in frame 1440x900, hover and focus (medium): This control has no hover style. No stylesheet rule styles it under :hover and it has no hover: class.\nElement: button \"Get started\" (at index.html:11:3, selector #cta).\nAdd a :hover rule (or a hover: class) that changes the fill, color or underline, so the pointer shows the control reacts.",
+      "element": "button \"Get started\"",
+      "fix": {
+        "edit": {
+          "classes": {
+            "add": [
+              "hover:bg-blue-700"
+            ],
+            "remove": []
+          },
+          "selector": "#cta",
+          "source": {
+            "col": 3,
+            "file": "index.html",
+            "line": 11
+          },
+          "tag": "button"
+        },
+        "label": "Add hover:bg-blue-700"
+      },
+      "id": "interaction-0000d65421",
+      "kind": "interaction",
+      "message": "This control has no hover style. No stylesheet rule styles it under :hover and it has no hover: class.",
+      "selector": "#cta",
+      "severity": "medium",
+      "source": "index.html:11:3"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, hover and focus (low): This text link has no hover style. No stylesheet rule styles it under :hover and it has no hover: class.\nElement: a \"terms\" (at index.html:10:28, selector body > p > a).\nAdd a :hover rule (or a hover: class) that changes the fill, color or underline, so the pointer shows the control reacts.",
+      "element": "a \"terms\"",
+      "fix": null,
+      "id": "interaction-1144f0b621",
+      "kind": "interaction",
+      "message": "This text link has no hover style. No stylesheet rule styles it under :hover and it has no hover: class.",
+      "selector": "body > p > a",
+      "severity": "low",
+      "source": "index.html:10:28"
+    }
+  ],
+  "frame": {
+    "height": 900,
+    "width": 1440
+  },
+  "notes": [
+    "This project has no design tokens yet, so Review skips the off-token check."
+  ],
+  "projectId": "SgQ8IvotV1",
+  "ranAt": 1794635149006,
+  "versionId": "4f34857b1d2d10fbd598d0532204e72204a60ee3"
+}
+
+[mcp] ok, 329 ms, git spawns: not counted (server side)
+{
+  "counts": {
+    "high": 0,
+    "low": 1,
+    "medium": 1
+  },
+  "directionId": "main",
+  "findings": [
+    {
+      "ask": "Review finding in frame 1440x900, hover and focus (medium): This control has no hover style. No stylesheet rule styles it under :hover and it has no hover: class.\nElement: button \"Get started\" (at index.html:11:3, selector #cta).\nAdd a :hover rule (or a hover: class) that changes the fill, color or underline, so the pointer shows the control reacts.",
+      "element": "button \"Get started\"",
+      "fix": {
+        "edit": {
+          "classes": {
+            "add": [
+              "hover:bg-blue-700"
+            ],
+            "remove": []
+          },
+          "selector": "#cta",
+          "source": {
+            "col": 3,
+            "file": "index.html",
+            "line": 11
+          },
+          "tag": "button"
+        },
+        "label": "Add hover:bg-blue-700"
+      },
+      "id": "interaction-0000d65421",
+      "kind": "interaction",
+      "message": "This control has no hover style. No stylesheet rule styles it under :hover and it has no hover: class.",
+      "selector": "#cta",
+      "severity": "medium",
+      "source": "index.html:11:3"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, hover and focus (low): This text link has no hover style. No stylesheet rule styles it under :hover and it has no hover: class.\nElement: a \"terms\" (at index.html:10:28, selector body > p > a).\nAdd a :hover rule (or a hover: class) that changes the fill, color or underline, so the pointer shows the control reacts.",
+      "element": "a \"terms\"",
+      "fix": null,
+      "id": "interaction-1144f0b621",
+      "kind": "interaction",
+      "message": "This text link has no hover style. No stylesheet rule styles it under :hover and it has no hover: class.",
+      "selector": "body > p > a",
+      "severity": "low",
+      "source": "index.html:10:28"
+    }
+  ],
+  "frame": {
+    "height": 900,
+    "width": 1440
+  },
+  "notes": [
+    "This project has no design tokens yet, so Review skips the off-token check."
+  ],
+  "projectId": "SgQ8IvotV1",
+  "ranAt": 1794635149339,
+  "versionId": "4f34857b1d2d10fbd598d0532204e72204a60ee3"
+}
+
+[agent] skipped: agent binding is off (legacy-agent)
+
+diff http -> mcp:
+-   "ranAt": 1794635149006,
++   "ranAt": 1794635149339,
+
+answered approval cards: none
+
+call-action: fail, 2 surfaces ran, 1 diffs, 0 failed surfaces, 0 error results
+
+fix: compare the outputs above, then run call-action again with the id direct-edit.runReview and the same input

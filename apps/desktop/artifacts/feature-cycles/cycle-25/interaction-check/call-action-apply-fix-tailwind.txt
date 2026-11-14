@@ -1,0 +1,139 @@
+call-action direct-edit.applyReviewFix on http://127.0.0.1:47930. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 5 ms, git spawns: not counted (server side)
+{
+  "applied": [
+    "interaction-0000d65421"
+  ],
+  "files": [
+    "index.html"
+  ],
+  "skipped": [],
+  "version": {
+    "changedFiles": [
+      "index.html"
+    ],
+    "createdAt": 1794635160903,
+    "directionId": "main",
+    "id": "pending-4bdfda73a16b0b72",
+    "meta": {
+      "kind": "manual",
+      "prompt": "Direct edit of index.html:11:3: add class hover:bg-blue-700; add class hover:bg-blue-700"
+    },
+    "parentId": "4f34857b1d2d10fbd598d0532204e72204a60ee3",
+    "title": "Edit button: classes"
+  }
+}
+
+[mcp] ok, 52 ms, git spawns: not counted (server side)
+{
+  "applied": [
+    "interaction-0000d65421"
+  ],
+  "files": [
+    "index.html"
+  ],
+  "skipped": [],
+  "version": {
+    "changedFiles": [
+      "index.html"
+    ],
+    "createdAt": 1794635058444,
+    "directionId": "main",
+    "id": "4f34857b1d2d10fbd598d0532204e72204a60ee3",
+    "meta": {
+      "directionId": "main",
+      "kind": "manual",
+      "prompt": "Undo of \"Edit button: classes\" (index.html)"
+    },
+    "parentId": "d1b06f6d011c9591b6e96a667144141750c06342",
+    "title": "Undo: Edit button: classes"
+  }
+}
+
+[agent] ok, 320 ms, git spawns: not counted (server side)
+{
+  "applied": [],
+  "files": [],
+  "skipped": [
+    {
+      "id": "interaction-0000d65421",
+      "reason": "This finding is gone from the latest review. Run the review again."
+    }
+  ],
+  "version": null
+}
+
+diff http -> mcp:
+-     "createdAt": 1794635160903,
++     "createdAt": 1794635058444,
+-     "id": "pending-4bdfda73a16b0b72",
++     "id": "4f34857b1d2d10fbd598d0532204e72204a60ee3",
+-       "kind": "manual",
++       "directionId": "main",
+-       "prompt": "Direct edit of index.html:11:3: add class hover:bg-blue-700; add class hover:bg-blue-700"
++       "kind": "manual",
+-     },
++       "prompt": "Undo of \"Edit button: classes\" (index.html)"
+-     "parentId": "4f34857b1d2d10fbd598d0532204e72204a60ee3",
++     },
+-     "title": "Edit button: classes"
++     "parentId": "d1b06f6d011c9591b6e96a667144141750c06342",
+-   }
++     "title": "Undo: Edit button: classes"
+- }
++   }
+- 
++ }
+
+diff http -> agent:
+-   "applied": [
++   "applied": [],
+-     "interaction-0000d65421"
++   "files": [],
+-   ],
++   "skipped": [
+-   "files": [
++     {
+-     "index.html"
++       "id": "interaction-0000d65421",
+-   ],
++       "reason": "This finding is gone from the latest review. Run the review again."
+-   "skipped": [],
++     }
+-   "version": {
++   ],
+-     "changedFiles": [
++   "version": null
+-       "index.html"
++ }
+-     ],
++ 
+-     "createdAt": 1794635160903,
++ 
+-     "directionId": "main",
++ 
+-     "id": "pending-4bdfda73a16b0b72",
++ 
+-     "meta": {
++ 
+-       "kind": "manual",
++ 
+-       "prompt": "Direct edit of index.html:11:3: add class hover:bg-blue-700; add class hover:bg-blue-700"
++ 
+-     },
++ 
+-     "parentId": "4f34857b1d2d10fbd598d0532204e72204a60ee3",
++ 
+-     "title": "Edit button: classes"
++ 
+-   }
++ 
+- }
++ 
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 0 error results
+
+fix: compare the outputs above, then run call-action again with the id direct-edit.applyReviewFix and the same input

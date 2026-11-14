@@ -43,11 +43,18 @@ import {
   type Draft,
 } from "./checks.js";
 import {
+  toInteractionHits,
   toTypeHits,
+  type InteractionHit,
+  type InteractionProbeResult,
   type TypeHit,
   type TypeProbeResult,
 } from "./engine/index.js";
 import { verifyFixes } from "./fixes.js";
+import {
+  toInteractionDrafts,
+  toInteractionExpression,
+} from "./interaction-drafts.js";
 import { reviewProbeExpression, type ProbeResult } from "./probe.js";
 import { markShared, pageOwnDir } from "./shared-files.js";
 import { toTypeDrafts, toTypeSteps } from "./type-drafts.js";
@@ -72,6 +79,7 @@ interface PageFacts {
   probe: ProbeResult;
   type: TypeProbeResult;
   typeHits: TypeHit[];
+  interactionHits: InteractionHit[];
 }
 
 async function ownAxe(
@@ -114,10 +122,13 @@ async function readPage(
       ? pickRules((await page.axe()) as AxeViolation[], REVIEW_AXE_RULES)
       : await ownAxe(page, context);
 
-  const [layout, type] = await Promise.all([
+  const [layout, type, interaction] = await Promise.all([
     page.evaluate<LayoutProbeResult>(layoutProbeExpression(LAYOUT_CAP)),
     page.evaluate<TypeProbeResult>(toTypeProbeExpression(TYPE_CAP)),
+    page.evaluate<InteractionProbeResult>(toInteractionExpression()),
   ]);
+
+  const interactionHits = toInteractionHits(interaction);
 
   const typeHits = toTypeHits({
     facts: type,
@@ -131,6 +142,7 @@ async function readPage(
         .flatMap((violation) => violation.nodes.map(axeSelector))
         .filter((selector): selector is string => selector !== null),
       ...typeHits.map((hit) => hit.selector),
+      ...interactionHits.map((hit) => hit.selector),
     ]),
   ];
 
@@ -145,6 +157,7 @@ async function readPage(
     probe,
     type,
     typeHits,
+    interactionHits,
   };
 }
 
@@ -345,6 +358,12 @@ export async function runReview(
         ...toTypeDrafts({
           elements: read.probe.elements,
           hits: read.typeHits,
+          isApp: Boolean(project.app),
+          isTailwind: read.type.isTailwind,
+        }),
+        ...toInteractionDrafts({
+          elements: read.probe.elements,
+          hits: read.interactionHits,
           isApp: Boolean(project.app),
           isTailwind: read.type.isTailwind,
         }),

@@ -15,7 +15,7 @@ const POINTER_STATES = [
   "disabled",
 ] as const;
 
-export const PSEUDO_STATES = [...POINTER_STATES, ...DATA_STATE_NAMES] as const;
+export const PSEUDO_STATES = [...DATA_STATE_NAMES, ...POINTER_STATES] as const;
 
 export type PseudoState = (typeof PSEUDO_STATES)[number];
 

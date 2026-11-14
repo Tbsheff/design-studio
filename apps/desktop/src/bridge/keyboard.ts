@@ -16,6 +16,7 @@ import {
 import { queryElement, selectorFor } from "./element-info.js";
 import { nudgeBaseOf } from "./free-move.js";
 import { isLayer, moveSelection } from "./layers.js";
+import { forwardTextKey } from "./text-key-forward.js";
 
 type KeyForwarders = Record<
   | "forwardNudgeKey"
@@ -388,6 +389,7 @@ const installKeyboard = (
 
   const onKeyDown = (event: KeyboardEvent): void => {
     if (
+      forwardTextKey(context, event) ||
       textEditor.onKeyDown(event) ||
       cancelMarquee(event) ||
       clearOnEscape(event)

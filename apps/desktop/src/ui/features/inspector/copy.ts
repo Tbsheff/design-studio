@@ -446,6 +446,13 @@ const sizeKeysCopy = {
     "This layer has no single source location, so the size keys cannot change it. Ask the agent in Chat.",
 };
 
+const textKeysCopy = {
+  noSource:
+    "This text layer has no single source location, so the text keys cannot change it. Ask the agent in Chat.",
+  noText:
+    "Select a text layer first. The text keys change only layers that hold text.",
+};
+
 export {
   borderSideCopy,
   copy,
@@ -455,5 +462,6 @@ export {
   sizeKeysCopy,
   spaceStackCopy,
   strokePositionCopy,
+  textKeysCopy,
   textListCopy,
 };

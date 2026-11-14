@@ -1,5 +1,13 @@
 import type { SelectionContext } from "@design-studio/contracts";
 
+import {
+  PX_UNIT,
+  toGroupAnchor,
+  toPlaceStyle,
+  toPx,
+  toSnapped,
+} from "./group-resize-anchor-model.js";
+import type { GroupAnchor } from "./group-resize-anchor-model.js";
 import { toPixels } from "./resize-handles-model.js";
 
 type GroupEdge = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
@@ -28,7 +36,7 @@ interface GroupFactor {
   readonly scaleY: number;
 }
 
-interface GroupLayer {
+interface GroupLayer extends GroupAnchor {
   readonly height: number;
   readonly isAbsolute: boolean;
   readonly isHeightFixed: boolean;
@@ -43,7 +51,7 @@ interface GroupLayer {
   readonly width: number;
 }
 
-type GroupKey = "height" | "left" | "top" | "width";
+type GroupKey = "bottom" | "height" | "left" | "right" | "top" | "width";
 
 type GroupStyle = Readonly<Partial<Record<GroupKey, string>>>;
 
@@ -87,8 +95,6 @@ const SCALE_STEP_PX = 4;
 const MIN_SCALE = 0.05;
 
 const MIN_DRAG_PX = 2;
-
-const PX_UNIT = "px";
 
 const MOVED_POSITIONS: ReadonlySet<string> = new Set(["absolute", "fixed"]);
 
@@ -218,22 +224,6 @@ const isGroupDrag = (delta: GroupDelta): boolean =>
 const isScaled = (factor: GroupFactor): boolean =>
   factor.scaleX !== 1 || factor.scaleY !== 1;
 
-const toPx = (value: string | undefined): number | null => {
-  const text = value?.trim() ?? "";
-
-  if (!text.endsWith(PX_UNIT)) {
-    return null;
-  }
-
-  const amount = Number(text.slice(0, -PX_UNIT.length));
-
-  if (!Number.isFinite(amount)) {
-    return null;
-  }
-
-  return amount;
-};
-
 const toSnapStep = (
   classes: readonly string[] | null,
   side: keyof typeof SCALE_CLASSES
@@ -291,17 +281,8 @@ const toGroupLayer = (
     snapWidth: toSnapStep(classes, "width"),
     top: top ?? 0,
     width: toPixels(styles.width, rect.width),
+    ...toGroupAnchor(target, classes),
   };
-};
-
-const toSnapped = (value: number, step: number): number => {
-  const snapped = Math.round(value / step) * step;
-
-  if (Object.is(snapped, -0)) {
-    return 0;
-  }
-
-  return snapped;
 };
 
 const toSizeValue = (
@@ -316,25 +297,6 @@ const toSizeValue = (
   const next = Math.max(1, toSnapped(size * scale, step));
 
   if (next === Math.round(size)) {
-    return null;
-  }
-
-  return `${next}${PX_UNIT}`;
-};
-
-const toMoveValue = (
-  place: { readonly at: number; readonly start: number },
-  scale: { readonly origin: number; readonly value: number },
-  step: number
-): string | null => {
-  if (scale.value === 1) {
-    return null;
-  }
-
-  const moved = scale.origin + (place.at - scale.origin) * scale.value;
-  const next = toSnapped(place.start + moved - place.at, step);
-
-  if (next === place.start) {
     return null;
   }
 
@@ -364,43 +326,20 @@ const toSizeStyle = (layer: GroupLayer, factor: GroupFactor): GroupStyle => {
   return { ...toEntry("width", width), ...toEntry("height", height) };
 };
 
-const toPivot = (start: number, size: number, isSized: boolean): number => {
-  if (isSized) {
-    return start;
-  }
+const toGroupStyle = (layer: GroupLayer, factor: GroupFactor): GroupStyle => {
+  const size = toSizeStyle(layer, factor);
 
-  return start + size / 2;
+  return { ...size, ...toPlaceStyle(layer, factor, size) };
 };
 
-const toPlaceStyle = (layer: GroupLayer, factor: GroupFactor): GroupStyle => {
-  if (!layer.isAbsolute) {
-    return {};
-  }
-
-  const atX = toPivot(layer.rect.x, layer.rect.width, layer.isWidthFixed);
-  const atY = toPivot(layer.rect.y, layer.rect.height, layer.isHeightFixed);
-
-  const left = toMoveValue(
-    { at: atX, start: layer.left },
-    { origin: factor.originX, value: factor.scaleX },
-    layer.snapLeft
-  );
-
-  const top = toMoveValue(
-    { at: atY, start: layer.top },
-    { origin: factor.originY, value: factor.scaleY },
-    layer.snapTop
-  );
-
-  return { ...toEntry("left", left), ...toEntry("top", top) };
-};
-
-const toGroupStyle = (layer: GroupLayer, factor: GroupFactor): GroupStyle => ({
-  ...toSizeStyle(layer, factor),
-  ...toPlaceStyle(layer, factor),
-});
-
-const GROUP_KEYS: readonly GroupKey[] = ["height", "left", "top", "width"];
+const GROUP_KEYS: readonly GroupKey[] = [
+  "bottom",
+  "height",
+  "left",
+  "right",
+  "top",
+  "width",
+];
 
 const toStyleKeys = (style: GroupStyle): readonly GroupKey[] =>
   GROUP_KEYS.filter((key) => Object.hasOwn(style, key));

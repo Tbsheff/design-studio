@@ -94,9 +94,14 @@ const createModeHandlers = (
   context: BridgeContext
 ): Pick<
   MessageHandlers,
-  "clear" | "move-cancel" | "request-rects" | "set-mode" | "share-pointer"
+  | "clear"
+  | "move-cancel"
+  | "move-shift"
+  | "request-rects"
+  | "set-mode"
+  | "share-pointer"
 > => {
-  const { state, rects, freeMove, sharePointer } = context;
+  const { state, rects, freeMove, repeatShift, sharePointer } = context;
 
   return {
     clear: () => {
@@ -106,6 +111,9 @@ const createModeHandlers = (
     "move-cancel": () => {
       holdTextSelection(false);
       void freeMove.cancel();
+    },
+    "move-shift": (message) => {
+      repeatShift(message.isShiftHeld);
     },
     "request-rects": (message) => {
       const selectors = listOf(message.selectors).filter(isString);

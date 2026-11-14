@@ -11,6 +11,7 @@ import type { LayerIndex } from "./layers.js";
 import type { createLivePreview, createPreviewStyles } from "./live-preview.js";
 import type { LockSet } from "./locks.js";
 import type { createMarquee } from "./marquee.js";
+import type { ShiftRepeat } from "./move-axis.js";
 import type { OpenSteps } from "./open-steps.js";
 import type { createOptimistic } from "./optimistic.js";
 import type { OutlineView } from "./outline-view.js";
@@ -82,6 +83,7 @@ type BridgeCore = {
 type BridgeContext = {
   marquee: ReturnType<typeof createMarquee>;
   freeMove: ReturnType<typeof createFreeMove>;
+  repeatShift: ShiftRepeat;
   block: (event: Event) => void;
 } & BridgeCore;
 

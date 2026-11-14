@@ -10,6 +10,7 @@ import {
 import { frameSnapStore, snapLineStore } from "./frame-snap-store.js";
 import { snapToGuides, toGuideMarks } from "./ruler-guide-model.js";
 import { snapOff, snapRect } from "./snap-model.js";
+import type { SnapKind } from "./snap-model.js";
 
 const DRAG_THRESHOLD = 3;
 
@@ -48,6 +49,33 @@ interface DragProgress {
   world: Point;
 }
 
+interface DragPointer {
+  readonly clientX: number;
+  readonly clientY: number;
+  readonly ctrlKey: boolean;
+  readonly metaKey: boolean;
+  readonly shiftKey: boolean;
+}
+
+interface LockedDelta {
+  readonly delta: Point;
+  readonly kinds: { readonly x: SnapKind; readonly y: SnapKind };
+}
+
+const FREE_KINDS = { x: "move", y: "move" } as const;
+
+const toLockedDelta = (delta: Point, isShiftHeld: boolean): LockedDelta => {
+  if (!isShiftHeld) {
+    return { delta, kinds: FREE_KINDS };
+  }
+
+  if (Math.abs(delta.x) >= Math.abs(delta.y)) {
+    return { delta: { x: delta.x, y: 0 }, kinds: { x: "move", y: null } };
+  }
+
+  return { delta: { x: 0, y: delta.y }, kinds: { x: null, y: "move" } };
+};
+
 const toPointer = (
   target: HTMLElement,
   clientX: number,
@@ -74,10 +102,11 @@ const toSnapShift = (
 const snapMove = (
   state: DragState,
   candidates: Box[],
-  delta: Point,
+  locked: LockedDelta,
   isOff: boolean
 ): Point => {
   const lines = snapLineStore.get();
+  const { delta, kinds } = locked;
 
   if (isOff || (candidates.length === 0 && lines.length === 0)) {
     frameSnapStore.set(null);
@@ -95,8 +124,8 @@ const snapMove = (
       x: frame.x + delta.x,
       y: frame.y + delta.y,
     },
-    x: "move",
-    y: "move",
+    x: kinds.x,
+    y: kinds.y,
     zoom: state.zoom,
   });
 
@@ -111,7 +140,7 @@ const snapMove = (
   const shiftX = snapped.rect.x - frame.x;
   const shiftY = snapped.rect.y - frame.y;
 
-  const marks = toGuideMarks(snapped.rect, lines, { x: "move", y: "move" });
+  const marks = toGuideMarks(snapped.rect, lines, kinds);
 
   frameSnapStore.set({
     guides: [...snapped.guides, ...marks],
@@ -265,7 +294,7 @@ interface DragSession {
   readonly state: DragState;
 }
 
-const moveFrameDrag = (session: DragSession, event: PointerEvent): void => {
+const moveFrameDrag = (session: DragSession, event: DragPointer): void => {
   const { host, origin, progress, state } = session;
   const dx = event.clientX - origin.start.x;
   const dy = event.clientY - origin.start.y;
@@ -282,7 +311,7 @@ const moveFrameDrag = (session: DragSession, event: PointerEvent): void => {
   progress.world = snapMove(
     state,
     origin.candidates,
-    { x: dx / state.zoom, y: dy / state.zoom },
+    toLockedDelta({ x: dx / state.zoom, y: dy / state.zoom }, event.shiftKey),
     snapOff(event)
   );
   placeDrag(
@@ -292,6 +321,14 @@ const moveFrameDrag = (session: DragSession, event: PointerEvent): void => {
     progress.world.y * state.zoom
   );
 };
+
+const toPointerFields = (pointer: DragPointer): DragPointer => ({
+  clientX: pointer.clientX,
+  clientY: pointer.clientY,
+  ctrlKey: pointer.ctrlKey,
+  metaKey: pointer.metaKey,
+  shiftKey: pointer.shiftKey,
+});
 
 const startFrameDrag = (
   host: DragHost,
@@ -305,6 +342,7 @@ const startFrameDrag = (
   const abort = new AbortController();
   const { signal } = abort;
   const progress: DragProgress = { isMoved: false, world: { x: 0, y: 0 } };
+  let last: DragPointer | null = null;
 
   const origin = {
     candidates: toCandidates(host, frame),
@@ -330,11 +368,24 @@ const startFrameDrag = (
     "pointermove",
     (moveEvent) => {
       if (moveEvent instanceof PointerEvent) {
+        last = moveEvent;
         moveFrameDrag({ host, origin, progress, state }, moveEvent);
       }
     },
     { signal }
   );
+
+  const onShift = (keyEvent: KeyboardEvent): void => {
+    if (keyEvent.key !== "Shift" || last === null || keyEvent.repeat) {
+      return;
+    }
+
+    last = { ...toPointerFields(last), shiftKey: keyEvent.type === "keydown" };
+    moveFrameDrag({ host, origin, progress, state }, last);
+  };
+
+  globalThis.addEventListener("keydown", onShift, { signal });
+  globalThis.addEventListener("keyup", onShift, { signal });
   target.addEventListener("pointerup", end, { signal });
   target.addEventListener("pointercancel", end, { signal });
 };

@@ -14,9 +14,13 @@ import {
 import { createFreeMove } from "./free-move.js";
 import { dropElement, insideTarget } from "./insert-target.js";
 import { createMarquee } from "./marquee.js";
+import { createShiftRepeat } from "./move-axis.js";
 import { APP_MODE } from "./session.js";
 
-type PointerTools = Pick<BridgeContext, "block" | "freeMove" | "marquee">;
+type PointerTools = Pick<
+  BridgeContext,
+  "block" | "freeMove" | "marquee" | "repeatShift"
+>;
 
 const createPointerTools = (core: BridgeCore): PointerTools => {
   const { state, post, textEditor, locks } = core;
@@ -79,7 +83,9 @@ const createPointerTools = (core: BridgeCore): PointerTools => {
     selectorFor,
   });
 
-  return { block, freeMove, marquee };
+  const repeatShift = createShiftRepeat((event) => freeMove.move(event));
+
+  return { block, freeMove, marquee, repeatShift };
 };
 
 const hasFiles = (event: DragEvent): boolean =>

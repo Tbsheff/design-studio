@@ -91,7 +91,20 @@ const createEnd =
 const createKey =
   (context: MoveContext, end: MoveController["end"]): MoveController["onKey"] =>
   (event: KeyboardEvent): void => {
-    if (event.key !== "Escape" || !context.session.current) {
+    if (!context.session.current) {
+      return;
+    }
+
+    if (event.key === "Shift" && !event.repeat) {
+      context.live.current.post({
+        isShiftHeld: event.type === "keydown",
+        type: "move-shift",
+      });
+
+      return;
+    }
+
+    if (event.key !== "Escape" || event.type !== "keydown") {
       return;
     }
 

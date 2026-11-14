@@ -11,6 +11,7 @@ import type {
 import { authoredBox, authoredMargins } from "./authored.js";
 import { tryDom } from "./dom-input.js";
 import { isLayer } from "./layers.js";
+import { toLockedDrag } from "./move-axis.js";
 
 type Rect = SelectionContext["rect"];
 type FlowAxis = "x" | "y" | "grid";
@@ -379,8 +380,7 @@ function dragOf(d: Drag, s: Session, event: PointerEvent): Picked {
     : null;
   return {
     drag: {
-      dx: event.clientX - d.x,
-      dy: event.clientY - d.y,
+      ...toLockedDrag(event.clientX - d.x, event.clientY - d.y, event.shiftKey),
       alt: event.altKey,
       free: event.metaKey || event.ctrlKey,
       insert,

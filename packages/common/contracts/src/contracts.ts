@@ -1523,6 +1523,7 @@ export interface FreeMoveDrag {
   alt: boolean;
   free: boolean;
   insert: FreeMoveInsert | null;
+  lock: "x" | "y" | null;
   note?: string;
 }
 
@@ -1919,6 +1920,7 @@ export type ParentToBridge =
       selector: string;
     }
   | { ns: "studio"; token: string; type: "move-cancel" }
+  | { ns: "studio"; token: string; type: "move-shift"; isShiftHeld: boolean }
   | { ns: "studio"; token: string; type: "nudge"; dx: number; dy: number }
   | { ns: "studio"; token: string; type: "share-pointer"; on: boolean }
   | {

@@ -1,0 +1,172 @@
+call-action project.createPrototype on http://127.0.0.1:5370. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 4720 ms, git spawns: not counted (server side)
+{
+  "fixtureOffer": null,
+  "folder": "route-auto-data/projects/prototypes/am-next/am-visits",
+  "project": {
+    "appProjectId": "400YdT43ZA",
+    "createdAt": 1794672820477,
+    "directions": [
+      {
+        "branch": "d/main",
+        "createdAt": 1794672820477,
+        "headVersionId": "ff95f0079b7f4e3d66d5c020a4b1a5248bf7acd6",
+        "id": "main",
+        "name": "Main",
+        "parentVersionId": null,
+        "sessionId": null,
+        "workTree": "route-auto-data/projects/prototypes/am-next/am-visits"
+      }
+    ],
+    "entry": "index.html",
+    "id": "MQnS64OoS1",
+    "imported": {
+      "created": true,
+      "sourcePath": "route-auto-data/projects/prototypes/am-next/am-visits"
+    },
+    "kind": "html",
+    "name": "am visits",
+    "settings": {
+      "allowBash": true,
+      "allowInstall": true,
+      "autoApprove": true,
+      "defaultLevel": "prototype",
+      "disabledSkills": [],
+      "maxTurns": 40,
+      "model": "claude-sonnet-5-5"
+    },
+    "settingsVersion": 2,
+    "updatedAt": 1794672820578
+  },
+  "runId": null,
+  "tokensFile": null
+}
+
+[mcp] ok, 3641 ms, git spawns: not counted (server side)
+{
+  "fixtureOffer": null,
+  "folder": "route-auto-data/projects/prototypes/am-next/am-visits-2",
+  "project": {
+    "appProjectId": "400YdT43ZA",
+    "createdAt": 1794672824283,
+    "directions": [
+      {
+        "branch": "d/main",
+        "createdAt": 1794672824283,
+        "headVersionId": "f2d77963c87b377f7885e2a87fe0696ff01c9971",
+        "id": "main",
+        "name": "Main",
+        "parentVersionId": null,
+        "sessionId": null,
+        "workTree": "route-auto-data/projects/prototypes/am-next/am-visits-2"
+      }
+    ],
+    "entry": "index.html",
+    "id": "fP1tpIaeAF",
+    "imported": {
+      "created": true,
+      "sourcePath": "route-auto-data/projects/prototypes/am-next/am-visits-2"
+    },
+    "kind": "html",
+    "name": "am visits",
+    "settings": {
+      "allowBash": true,
+      "allowInstall": true,
+      "autoApprove": true,
+      "defaultLevel": "prototype",
+      "disabledSkills": [],
+      "maxTurns": 40,
+      "model": "claude-sonnet-5-5"
+    },
+    "settingsVersion": 2,
+    "updatedAt": 1794672824352
+  },
+  "runId": null,
+  "tokensFile": null
+}
+
+[agent] ok, 3462 ms, git spawns: not counted (server side)
+{
+  "fixtureOffer": null,
+  "folder": "route-auto-data/projects/prototypes/am-next/am-visits-3",
+  "project": {
+    "appProjectId": "400YdT43ZA",
+    "createdAt": 1794672827831,
+    "directions": [
+      {
+        "branch": "d/main",
+        "createdAt": 1794672827831,
+        "headVersionId": "dc54e5fe0a94c65e65da24259a63967c8cdfee0a",
+        "id": "main",
+        "name": "Main",
+        "parentVersionId": null,
+        "sessionId": null,
+        "workTree": "route-auto-data/projects/prototypes/am-next/am-visits-3"
+      }
+    ],
+    "entry": "index.html",
+    "id": "OWPvwdQV74",
+    "imported": {
+      "created": true,
+      "sourcePath": "route-auto-data/projects/prototypes/am-next/am-visits-3"
+    },
+    "kind": "html",
+    "name": "am visits",
+    "settings": {
+      "allowBash": true,
+      "allowInstall": true,
+      "autoApprove": true,
+      "defaultLevel": "prototype",
+      "disabledSkills": [],
+      "maxTurns": 40,
+      "model": "claude-sonnet-5-5"
+    },
+    "settingsVersion": 2,
+    "updatedAt": 1794672827908
+  },
+  "runId": null,
+  "tokensFile": null
+}
+
+diff http -> mcp:
+-   "folder": "route-auto-data/projects/prototypes/am-next/am-visits",
++   "folder": "route-auto-data/projects/prototypes/am-next/am-visits-2",
+-     "createdAt": 1794672820477,
++     "createdAt": 1794672824283,
+-         "createdAt": 1794672820477,
++         "createdAt": 1794672824283,
+-         "headVersionId": "ff95f0079b7f4e3d66d5c020a4b1a5248bf7acd6",
++         "headVersionId": "f2d77963c87b377f7885e2a87fe0696ff01c9971",
+-         "workTree": "route-auto-data/projects/prototypes/am-next/am-visits"
++         "workTree": "route-auto-data/projects/prototypes/am-next/am-visits-2"
+-     "id": "MQnS64OoS1",
++     "id": "fP1tpIaeAF",
+-       "sourcePath": "route-auto-data/projects/prototypes/am-next/am-visits"
++       "sourcePath": "route-auto-data/projects/prototypes/am-next/am-visits-2"
+-     "updatedAt": 1794672820578
++     "updatedAt": 1794672824352
+
+diff http -> agent:
+-   "folder": "route-auto-data/projects/prototypes/am-next/am-visits",
++   "folder": "route-auto-data/projects/prototypes/am-next/am-visits-3",
+-     "createdAt": 1794672820477,
++     "createdAt": 1794672827831,
+-         "createdAt": 1794672820477,
++         "createdAt": 1794672827831,
+-         "headVersionId": "ff95f0079b7f4e3d66d5c020a4b1a5248bf7acd6",
++         "headVersionId": "dc54e5fe0a94c65e65da24259a63967c8cdfee0a",
+-         "workTree": "route-auto-data/projects/prototypes/am-next/am-visits"
++         "workTree": "route-auto-data/projects/prototypes/am-next/am-visits-3"
+-     "id": "MQnS64OoS1",
++     "id": "OWPvwdQV74",
+-       "sourcePath": "route-auto-data/projects/prototypes/am-next/am-visits"
++       "sourcePath": "route-auto-data/projects/prototypes/am-next/am-visits-3"
+-     "updatedAt": 1794672820578
++     "updatedAt": 1794672827908
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 0 error results
+
+fix: compare the outputs above, then run call-action again with the id project.createPrototype and the same input

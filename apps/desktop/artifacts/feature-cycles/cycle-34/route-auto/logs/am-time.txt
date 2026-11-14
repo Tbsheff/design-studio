@@ -1,0 +1,4 @@
+main nodes 1503 margin-left auto 0 median ms 169.0
+branch nodes 1503 margin-left auto 601 median ms 152.6
+main nodes 1503 margin-left auto 0 median ms 153.0
+branch nodes 1503 margin-left auto 601 median ms 159.5

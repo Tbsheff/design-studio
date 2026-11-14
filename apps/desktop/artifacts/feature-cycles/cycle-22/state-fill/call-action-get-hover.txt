@@ -1,0 +1,59 @@
+call-action fill.get on http://127.0.0.1:5470. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 14 ms, git spawns: not counted (server side)
+{
+  "blend": [],
+  "classes": [
+    "hover:bg-[#0f172a]"
+  ],
+  "css": null,
+  "file": "index.html",
+  "fill": {
+    "paint": {
+      "color": "#0f172a",
+      "token": null
+    },
+    "type": "solid"
+  },
+  "mode": "classes"
+}
+
+[mcp] ok, 12 ms, git spawns: not counted (server side)
+{
+  "blend": [],
+  "classes": [
+    "hover:bg-[#0f172a]"
+  ],
+  "css": null,
+  "file": "index.html",
+  "fill": {
+    "paint": {
+      "color": "#0f172a",
+      "token": null
+    },
+    "type": "solid"
+  },
+  "mode": "classes"
+}
+
+[agent] ok, 6 ms, git spawns: not counted (server side)
+{
+  "blend": [],
+  "classes": [
+    "hover:bg-[#0f172a]"
+  ],
+  "css": null,
+  "file": "index.html",
+  "fill": {
+    "paint": {
+      "color": "#0f172a",
+      "token": null
+    },
+    "type": "solid"
+  },
+  "mode": "classes"
+}
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

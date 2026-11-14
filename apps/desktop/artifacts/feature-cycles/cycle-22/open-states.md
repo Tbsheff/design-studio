@@ -48,5 +48,10 @@ Branch `fix/state-fill`. Fixes the Fill Apply bug in "Left out".
 - UI (mock agent, Tailwind page, dark and light): Hover wrote `hover:bg-[#2563eb]`, Cmd+Z removed it, Open wrote `data-[state=open]:bg-[#e2e8f0]`. Base `bg-white` did not change. The Fill field shows the state fill after Apply. Shots in `state-fill/`.
 - MCP `set_fill`: Tailwind `hover:` wrote `hover:bg-[#0f172a]`. CSS `hover:` and `data-[state=open]:` wrote state rules, and `.trigger` kept `background: white` (`mcp-css.txt`, `mcp-tw.txt`).
 - `call-action.ts fill.set` with `md:data-[state=open]:` and a linear gradient wrote `md:data-[state=open]:bg-linear-90` with prefixed `from` and `to` stops. MCP and the agent answered "already has this fill" because the action is not idempotent.
-- `pnpm run typecheck`, `pnpm run lint:gate` and `pnpm run build:ui` pass.
-- Left out: `fill.get` on a CSS page reads only the base fill, not the state rule. The Effect section (shadow, blur) writes through stylesheet effect classes and takes no state; it needs its own design. The `set_fill` and `get_fill` input diffs in `artifacts/mcp-snapshots` wait for approval at merge.
+- MCP `set_fill` on the CSS page with a linear gradient and `hover:` wrote `.sv-xxxxxx:hover { background-image: linear-gradient(...) }` (`mcp-css-gradient.txt`).
+- `call-action.ts fill.get` with `hover:`: pass, 3 surfaces, 0 diffs (`call-action-get-hover.txt`).
+- `pnpm run typecheck`, `pnpm run typecheck:tsrs`, `pnpm run lint:gate` and `pnpm run build:ui` pass.
+- Audit of other inspector writers:
+  - Take state: direct edit fields (text color and the rest), grid, motion, stacking, fill.
+  - Ignore state: Effect (shadow, blur) writes stylesheet effect classes. Layer style apply and text style apply write a saved style to the base. The Border Inside/Outside switch (`use-stroke-position.ts`) builds its class request with variant `""`. Each needs prefixed explicit classes, not a one-field change, so each is left for a later pick.
+- Left out: `fill.get` on a CSS page reads only the base fill, not the state rule. The `set_fill` and `get_fill` input diffs in `artifacts/mcp-snapshots` wait for approval at merge.

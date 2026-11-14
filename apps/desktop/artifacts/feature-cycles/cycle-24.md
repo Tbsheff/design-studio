@@ -258,3 +258,11 @@ All 5 can run at once. Merge 1 (type-rhythm: review only, no overlap; gen-routes
 10. Clickable share link for app route prototypes (journey 15); today app projects get PNG snapshots; high effort.
 
 Sources: [Claude Design](https://claude.com/design), [Claude Design overhaul (June 2026)](https://pureai.com/articles/2026/06/17/anthropic-overhauls-claude-design.aspx), [Claude Design news, November 2026](https://blog.mean.ceo/claude-design-news-november-2026/), [Figma Make two-way GitHub integration](https://venturebeat.com/technology/are-designers-the-new-swes-figma-makes-new-two-way-github-integration-turns-designs-into-live-production-code-with-built-in-governance), [mcp.directory 2026 comparison](https://mcp.directory/blog/claude-design-vs-stitch-vs-v0-vs-lovable-vs-figma-make-2026).
+
+## Results
+
+- Merged with no conflicts, in order: type-rhythm, shadow-scale, edge-states, rotate-handle, polish-24. Then fix/real-run-bugs (the 6 bugs from the first real-model runs in `artifacts/real-runs/report.md`). Main at 82c8de004.
+- Real-run fixes: run 1 context 96k to 20k tokens; after 2 runs 39% of 200k, not 76%. CSS-only edits now count in change spotlight. State-run drafts sit on their own frame, edit drafts are never blank, the draft bar shows the real size, top banners no longer overlap. First draft 9.3 s to 7.7 s.
+- Checks: gen-routes --check pass, typecheck 0 errors, lint:gate pass (59604, baseline 89733), build:ui pass, check:clip 0 findings (before the fix merge), desktop:pack pass.
+- Installed app: :4570 returns 200. Server idle CPU 0.00 CPU-s/min over 60 s.
+- Open: type rhythm's final check runs only for attached apps, so HTML prototypes get type findings only when the agent calls review_frame. Multi-select flip not done. The context meter assumes 200k while the SDK reports 1M. Each run still adds about 26k tokens. First draft still 7.7 s (target 5 s). Pressing Enter in an effect number field can write twice. MCP snapshots not refreshed (user decision).

@@ -1,0 +1,185 @@
+call-action kit-drift.list on http://127.0.0.1:6140. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 12 ms, git spawns: not counted (server side)
+{
+  "items": [
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [
+        "rounded-full",
+        "px-2",
+        "py-0.5",
+        "text-xs",
+        "font-medium"
+      ],
+      "file": "index.html",
+      "id": "17116fcb28fdfa0b",
+      "keptClasses": [
+        "bg-blue-100",
+        "text-blue-800"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/badge.tsx",
+        "name": "Badge"
+      },
+      "line": 11,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": "default",
+      "tag": "badge",
+      "variant": "default"
+    },
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [
+        "rounded-full",
+        "px-2",
+        "py-0.5",
+        "text-xs"
+      ],
+      "file": "index.html",
+      "id": "1711b2d428fefc0c",
+      "keptClasses": [
+        "bg-gray-100",
+        "text-gray-700"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/badge.tsx",
+        "name": "Badge"
+      },
+      "line": 12,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": "secondary",
+      "tag": "badge",
+      "variant": "secondary"
+    }
+  ],
+  "next": null
+}
+
+[mcp] ok, 11 ms, git spawns: not counted (server side)
+{
+  "items": [
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [
+        "rounded-full",
+        "px-2",
+        "py-0.5",
+        "text-xs",
+        "font-medium"
+      ],
+      "file": "index.html",
+      "id": "17116fcb28fdfa0b",
+      "keptClasses": [
+        "bg-blue-100",
+        "text-blue-800"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/badge.tsx",
+        "name": "Badge"
+      },
+      "line": 11,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": "default",
+      "tag": "badge",
+      "variant": "default"
+    },
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [
+        "rounded-full",
+        "px-2",
+        "py-0.5",
+        "text-xs"
+      ],
+      "file": "index.html",
+      "id": "1711b2d428fefc0c",
+      "keptClasses": [
+        "bg-gray-100",
+        "text-gray-700"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/badge.tsx",
+        "name": "Badge"
+      },
+      "line": 12,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": "secondary",
+      "tag": "badge",
+      "variant": "secondary"
+    }
+  ],
+  "next": null
+}
+
+[agent] ok, 4 ms, git spawns: not counted (server side)
+{
+  "items": [
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [
+        "rounded-full",
+        "px-2",
+        "py-0.5",
+        "text-xs",
+        "font-medium"
+      ],
+      "file": "index.html",
+      "id": "17116fcb28fdfa0b",
+      "keptClasses": [
+        "bg-blue-100",
+        "text-blue-800"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/badge.tsx",
+        "name": "Badge"
+      },
+      "line": 11,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": "default",
+      "tag": "badge",
+      "variant": "default"
+    },
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [
+        "rounded-full",
+        "px-2",
+        "py-0.5",
+        "text-xs"
+      ],
+      "file": "index.html",
+      "id": "1711b2d428fefc0c",
+      "keptClasses": [
+        "bg-gray-100",
+        "text-gray-700"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/badge.tsx",
+        "name": "Badge"
+      },
+      "line": 12,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": "secondary",
+      "tag": "badge",
+      "variant": "secondary"
+    }
+  ],
+  "next": null
+}
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

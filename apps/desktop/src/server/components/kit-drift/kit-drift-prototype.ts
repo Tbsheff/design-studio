@@ -11,6 +11,11 @@ import { listPageFiles } from "./source-files.js";
 const COMPONENTS_FILE = "design-system/components.md";
 const MAIN_DIRECTION = "main";
 const PAGE_PATTERN = /\.html?$/u;
+const LINK_PATTERN = /<link\b[^>]*>/giu;
+const STYLESHEET_PATTERN = /\brel\s*=\s*["']?stylesheet\b/iu;
+const HREF_PATTERN = /\bhref\s*=\s*["']?(?<href>[^"'\s>]+)/iu;
+const REMOTE_PATTERN = /^(?:[a-z]+:|\/\/)/iu;
+const MAX_SHEETS = 8;
 
 const isKitPrototype = (project: Project): boolean =>
   (project.appProjectId ?? "") !== "" && !project.app;
@@ -36,6 +41,58 @@ const toPagePath = (workTree: string, page: string): string => {
   }
 
   return absolute;
+};
+
+const toSheetPath = (
+  workTree: string,
+  absolute: string,
+  href: string
+): string => {
+  const clean = href.split(/[?#]/u)[0] ?? "";
+
+  if (clean.startsWith("/")) {
+    return path.join(workTree, clean);
+  }
+
+  return path.resolve(path.dirname(absolute), clean);
+};
+
+const listSheetPaths = (
+  workTree: string,
+  absolute: string,
+  html: string
+): string[] => {
+  const found: string[] = [];
+
+  for (const match of html.matchAll(LINK_PATTERN)) {
+    const href = HREF_PATTERN.exec(match[0])?.groups?.href ?? "";
+    const isLocal = href !== "" && !REMOTE_PATTERN.test(href);
+    const sheet = toSheetPath(workTree, absolute, href);
+
+    if (
+      STYLESHEET_PATTERN.test(match[0]) &&
+      isLocal &&
+      sheet.startsWith(workTree + path.sep)
+    ) {
+      found.push(sheet);
+    }
+  }
+
+  return found.slice(0, MAX_SHEETS);
+};
+
+const getPageCss = async (
+  workTree: string,
+  absolute: string,
+  html: string
+): Promise<string> => {
+  const sheets = await Promise.all(
+    listSheetPaths(workTree, absolute, html).map(
+      async (sheet) => (await getText(sheet)) ?? ""
+    )
+  );
+
+  return sheets.join("\n");
 };
 
 const listTargets = async (
@@ -107,6 +164,7 @@ const listPrototypeDrift = async (
       }
 
       return toMarkupDrift({
+        css: await getPageCss(workTree, absolute, html ?? ""),
         file: toRelative(workTree, absolute),
         html: html ?? "",
         recipes,

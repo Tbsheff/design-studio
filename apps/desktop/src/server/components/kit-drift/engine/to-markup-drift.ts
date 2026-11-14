@@ -1,9 +1,12 @@
 import { toClassTokens } from "./class-names.js";
+import { toCardDrift } from "./to-card-drift.js";
+import type { CardFind } from "./to-card-drift.js";
 import { toDriftId } from "./to-drift-id.js";
 import type { PackRecipe } from "./to-pack-recipes.js";
 import type { DriftConfidence, DriftTag, KitComponent } from "./types.js";
 
 interface MarkupInput {
+  readonly css: string;
   readonly file: string;
   readonly html: string;
   readonly recipes: readonly PackRecipe[];
@@ -17,6 +20,7 @@ interface MarkupDrift {
   readonly id: string;
   readonly keptClasses: readonly string[];
   readonly line: number;
+  readonly parts: readonly PackRecipe[];
   readonly recipe: PackRecipe;
   readonly suggestedSize: string | null;
   readonly suggestedVariant: string | null;
@@ -71,6 +75,7 @@ const TEXT_INPUT_TYPES: ReadonlySet<string> = new Set([
 const COMPONENT_NAMES: Readonly<Record<DriftTag, ReadonlySet<string>>> = {
   "a-as-button": new Set(["Button"]),
   button: new Set(["Button"]),
+  card: new Set(["Card"]),
   input: new Set(["Input"]),
   label: new Set(["Label"]),
   select: new Set(["NativeSelect", "Select"]),
@@ -224,6 +229,7 @@ const toElementDrift = (
   const { file } = input;
   const id = toDriftId(file, line, column);
   const keptClasses = tokens.filter((token) => !covered.has(token));
+  const parts: readonly PackRecipe[] = [];
   const suggestedSize = toDefaultOf(recipe.component, SIZE_PROP);
   const suggestedVariant = toDefaultOf(recipe.component, VARIANT_PROP);
 
@@ -236,6 +242,7 @@ const toElementDrift = (
       id,
       keptClasses,
       line,
+      parts,
       recipe,
       suggestedSize,
       suggestedVariant,
@@ -244,8 +251,45 @@ const toElementDrift = (
   ];
 };
 
+const toCardItem = (input: MarkupInput, find: CardFind): MarkupDrift => {
+  const covered = toRecipeClasses(find.recipe.component);
+  const { column, line } = toPlace(input.html, find.offset);
+  const { file } = input;
+  const { parts, recipe, tokens } = find;
+  const confidence: DriftConfidence = "medium";
+  const droppedClasses = tokens.filter((token) => covered.has(token));
+  const id = toDriftId(file, line, column);
+  const keptClasses = tokens.filter((token) => !covered.has(token));
+  const suggestedSize = null;
+  const suggestedVariant = null;
+  const tag: DriftTag = "card";
+
+  return {
+    column,
+    confidence,
+    droppedClasses,
+    file,
+    id,
+    keptClasses,
+    line,
+    parts,
+    recipe,
+    suggestedSize,
+    suggestedVariant,
+    tag,
+  };
+};
+
+const toOrder = (left: MarkupDrift, right: MarkupDrift): number =>
+  left.line - right.line || left.column - right.column;
+
 const toMarkupDrift = (input: MarkupInput): MarkupDrift[] =>
-  listElements(input.html).flatMap((element) => toElementDrift(input, element));
+  [
+    ...listElements(input.html).flatMap((element) =>
+      toElementDrift(input, element)
+    ),
+    ...toCardDrift(input).map((find) => toCardItem(input, find)),
+  ].toSorted(toOrder);
 
 export { toMarkupDrift };
 

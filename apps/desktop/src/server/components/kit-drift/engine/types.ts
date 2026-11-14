@@ -1,6 +1,7 @@
 type DriftTag =
   | "a-as-button"
   | "button"
+  | "card"
   | "input"
   | "label"
   | "select"

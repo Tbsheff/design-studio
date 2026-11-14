@@ -36,6 +36,7 @@ const TEXT_INPUT_TYPES: ReadonlySet<string> = new Set([
 const COMPONENT_OF: Readonly<Record<DriftTag, string>> = {
   "a-as-button": "Button",
   button: "Button",
+  card: "Card",
   input: "Input",
   label: "Label",
   select: "NativeSelect",

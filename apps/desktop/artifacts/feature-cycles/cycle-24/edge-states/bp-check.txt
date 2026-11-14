@@ -1,0 +1,20 @@
+git status --short lines before: 14
+first: 42 uses in 29 files
+last: 98 uses in 78 files
+odd: 4 uses in 1 files
+even: 5 uses in 4 files
+total: 149 uses in 97 files
+top forms:
+  54 last:border-b-0
+  20 first:pt-0
+  18 last:pb-0
+  8 last:border-0
+  6 last:border-r-0
+  3 first:mt-0
+  3 even:bg-muted/40
+  3 last:mb-0
+  3 first:start
+  2 last:border-b
+  2 first:ml-0
+  2 first:end
+git status --short lines after: 14

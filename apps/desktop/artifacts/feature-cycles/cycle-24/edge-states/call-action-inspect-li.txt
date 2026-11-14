@@ -1,0 +1,95 @@
+call-action state-style.inspect on http://127.0.0.1:47610. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 14 ms, git spawns: not counted (server side)
+{
+  "edge": "siblings",
+  "forced": [],
+  "group": null,
+  "layer": {
+    "file": "index.html",
+    "mode": "classes",
+    "overrides": [],
+    "reason": null
+  },
+  "states": [
+    "hover",
+    "focus-visible",
+    "active",
+    "disabled",
+    "dark",
+    "open",
+    "checked",
+    "selected",
+    "group-hover",
+    "group-open",
+    "group-checked",
+    "first",
+    "last",
+    "odd",
+    "even"
+  ]
+}
+
+[mcp] ok, 13 ms, git spawns: not counted (server side)
+{
+  "edge": "siblings",
+  "forced": [],
+  "group": null,
+  "layer": {
+    "file": "index.html",
+    "mode": "classes",
+    "overrides": [],
+    "reason": null
+  },
+  "states": [
+    "hover",
+    "focus-visible",
+    "active",
+    "disabled",
+    "dark",
+    "open",
+    "checked",
+    "selected",
+    "group-hover",
+    "group-open",
+    "group-checked",
+    "first",
+    "last",
+    "odd",
+    "even"
+  ]
+}
+
+[agent] ok, 6 ms, git spawns: not counted (server side)
+{
+  "edge": "siblings",
+  "forced": [],
+  "group": null,
+  "layer": {
+    "file": "index.html",
+    "mode": "classes",
+    "overrides": [],
+    "reason": null
+  },
+  "states": [
+    "hover",
+    "focus-visible",
+    "active",
+    "disabled",
+    "dark",
+    "open",
+    "checked",
+    "selected",
+    "group-hover",
+    "group-open",
+    "group-checked",
+    "first",
+    "last",
+    "odd",
+    "even"
+  ]
+}
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

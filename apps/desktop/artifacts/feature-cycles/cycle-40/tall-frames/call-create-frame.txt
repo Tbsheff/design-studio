@@ -1,0 +1,77 @@
+call-action canvas.createFrame on http://127.0.0.1:7480. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 4 ms, git spawns: not counted (server side)
+{
+  "frames": 4,
+  "placed": [
+    {
+      "direction": "main",
+      "height": 7000,
+      "id": "f4",
+      "label": "Tall",
+      "page": "index.html",
+      "width": 1440,
+      "x": 4560,
+      "y": 0
+    }
+  ],
+  "warnings": []
+}
+
+[mcp] ok, 8 ms, git spawns: not counted (server side)
+{
+  "frames": 5,
+  "placed": [
+    {
+      "direction": "main",
+      "height": 7000,
+      "id": "f5",
+      "label": "Tall",
+      "page": "index.html",
+      "width": 1440,
+      "x": 6080,
+      "y": 0
+    }
+  ],
+  "warnings": []
+}
+
+[agent] ok, 3 ms, git spawns: not counted (server side)
+{
+  "frames": 6,
+  "placed": [
+    {
+      "direction": "main",
+      "height": 7000,
+      "id": "f6",
+      "label": "Tall",
+      "page": "index.html",
+      "width": 1440,
+      "x": 7600,
+      "y": 0
+    }
+  ],
+  "warnings": []
+}
+
+diff http -> mcp:
+-   "frames": 4,
++   "frames": 5,
+-       "id": "f4",
++       "id": "f5",
+-       "x": 4560,
++       "x": 6080,
+
+diff http -> agent:
+-   "frames": 4,
++   "frames": 6,
+-       "id": "f4",
++       "id": "f6",
+-       "x": 4560,
++       "x": 7600,
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 0 error results
+
+fix: compare the outputs above, then run call-action again with the id canvas.createFrame and the same input

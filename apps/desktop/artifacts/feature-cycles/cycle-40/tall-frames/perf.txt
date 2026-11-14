@@ -1,0 +1,6 @@
+H=4000 {"heapMB":10.2,"rssMB":916,"procs":8,"nodes":733,"layoutMs":0,"styleMs":0,"frameAvgMs":16.9,"frameP95Ms":16.7,"frames":[["f1","art SUB "load":138,"fcp":152 "load":13,"fcp":44 "load":11,"fcp":32 "load":11,"fcp":52 
+H=7500 {"heapMB":10.2,"rssMB":912,"procs":8,"nodes":733,"layoutMs":0,"styleMs":0,"frameAvgMs":16.7,"frameP95Ms":16.7,"frames":[["f1","art SUB "load":122,"fcp":136 "load":14,"fcp":48 "load":11,"fcp":32 "load":12,"fcp":52 
+H=4000 {"heapMB":10.2,"rssMB":910,"procs":8,"nodes":733,"layoutMs":0,"styleMs":0,"frameAvgMs":16.7,"frameP95Ms":16.8,"frames":[["f1","art SUB "load":129,"fcp":140 "load":14,"fcp":36 "load":12,"fcp":40 "load":10,"fcp":40 
+H=7500 {"heapMB":10.3,"rssMB":914,"procs":8,"nodes":733,"layoutMs":0,"styleMs":0,"frameAvgMs":16.7,"frameP95Ms":16.8,"frames":[["f1","art SUB "load":144,"fcp":160 "load":14,"fcp":48 "load":12,"fcp":32 "load":11,"fcp":52 
+H=4000 {"heapMB":10.3,"rssMB":910,"procs":8,"nodes":733,"layoutMs":0,"styleMs":0,"frameAvgMs":16.7,"frameP95Ms":16.8,"frames":[["f1","art SUB "load":132,"fcp":148 "load":11,"fcp":56 "load":9,"fcp":40 "load":9,"fcp":32 
+H=7500 {"heapMB":10.2,"rssMB":914,"procs":8,"nodes":733,"layoutMs":0,"styleMs":0,"frameAvgMs":16.7,"frameP95Ms":16.8,"frames":[["f1","art SUB "load":115,"fcp":128 "load":11,"fcp":36 "load":11,"fcp":56 "load":10,"fcp":44 

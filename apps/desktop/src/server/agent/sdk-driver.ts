@@ -48,6 +48,7 @@ import {
   studioAppReview,
   withReference,
 } from "./final-check.js";
+import { createFlowFrames } from "./flow-frames.js";
 import { toGateLists } from "./focus-gate.js";
 import {
   createIntegrationNoteHook,
@@ -353,6 +354,7 @@ function prepareMessage(
           appTokens:
             input.ctx.project.kind === "react" &&
             Boolean(input.ctx.designSystem?.source),
+          isHtmlPages: input.ctx.project.kind === "html",
         }
       );
   const sent = resume
@@ -441,10 +443,6 @@ async function attachFinalCheck(
 }
 
 const APP_REVIEW_PASSES = 3;
-
-function roomForFixLoop(outcome: DriverOutcome): boolean {
-  return outcome.status === "completed";
-}
 
 let sdkQueryPromise: Promise<QueryFn> | null = null;
 
@@ -1354,7 +1352,7 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
     [text, images, pass]: [string, UserMessageParts["images"], number]
   ): Promise<DriverOutcome | null> {
     const sessionId = segment.sessionId;
-    if (!sessionId || !roomForFixLoop(total) || input.signal.aborted)
+    if (!sessionId || total.status !== "completed" || input.signal.aborted)
       return null;
     input.sink.sent({
       text,
@@ -1551,6 +1549,7 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
         : checked
     );
     const ported = await continuePort(input, segment, reviewed.outcome);
+    await createFlowFrames(input, segment, ported.outcome);
     const referenced = await continueReference(
       input,
       segment,

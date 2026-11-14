@@ -33,6 +33,7 @@ export interface RunLevelContext {
   appTokens?: boolean;
   isNewPage?: boolean;
   isImageSearchOn?: boolean;
+  isHtmlPages?: boolean;
 }
 
 const PLAN_STEP = `Call \`TodoWrite\` first with your plan: 3 to 6 short todos (brief, build each screen, checks, fixes). The user sees this list. Call TodoWrite again to mark todos completed as you go: at least once after the build, once after the checks and once before your final reply, when every todo must be completed or removed. The studio also marks a todo done when the file or screen it names is written and its render_check passes, so name the file or screen in each build todo.`;
@@ -47,7 +48,11 @@ const DRAFT_PLAN_STEP = `Then call \`TodoWrite\` with your plan: one completed t
 
 const DRAFT_SKILL_STEP = `Call the Skill tool for each fitting skill in the <recommended-skills> block, after your first draft and before the fix round. Apply what they say in the fix round.`;
 
-const FLOW_STEP = `Flows: when the request has 2 or more screens or steps (a booking flow, onboarding, checkout), make one page per step, never one long file that switches views with script. In HTML that is one self-contained file per step (\`index.html\` for the first step, then for example \`detail.html\`, \`checkout.html\`, \`done.html\`); in React or an app, one route per step. Link the steps with real links or buttons so each page works alone. Then call \`mcp__studio__canvas_list\` and \`mcp__studio__canvas_place\` to give each step its own labelled frame in flow order (each one rightOf the step before it), so the canvas shows every step.`;
+const FLOW_PAGES = `Flows: when the request has 2 or more screens or steps (a booking flow, onboarding, checkout), make one page per step, never one long file that switches views with script. In HTML that is one self-contained file per step (\`index.html\` for the first step, then for example \`detail.html\`, \`checkout.html\`, \`done.html\`); in React or an app, one route per step. Link the steps with real links or buttons so each page works alone.`;
+
+const FLOW_STEP = `${FLOW_PAGES} Then call \`mcp__studio__canvas_list\` and \`mcp__studio__canvas_place\` to give each step its own labelled frame in flow order (each one rightOf the step before it), so the canvas shows every step.`;
+
+const HTML_FLOW_STEP = `${FLOW_PAGES} Do not call canvas_list or canvas_place for the new pages: after the run the studio gives each linked page its own labelled frame in flow order.`;
 
 const FLOW_CHECK = `When render_check lists more than one screen (each view of a page, each step frame, each changed route), also take a desktop and a mobile screenshot of each with screen=<number>; for a flow, \`mcp__studio__review_frame\` on a step frame gives element-level fixes.`;
 
@@ -69,6 +74,14 @@ function isApp(context: RunLevelContext): boolean {
   return context.app === true || context.appTokens === true;
 }
 
+const toFlowStep = (context: RunLevelContext): string => {
+  if (context.isHtmlPages === true && !isApp(context)) {
+    return HTML_FLOW_STEP;
+  }
+
+  return FLOW_STEP;
+};
+
 function finishStep(context: RunLevelContext): string {
   return isApp(context) ? APP_REVIEW_STEP : TWEAKS_STEP;
 }
@@ -85,10 +98,10 @@ function toNumberedSteps(steps: readonly string[]): string {
   return steps.map((step, index) => `${index}. ${step}`).join("\n");
 }
 
-function toDraftSteps(): readonly string[] {
+function toDraftSteps(context: RunLevelContext): readonly string[] {
   return [
     DRAFT_BRIEF_STEP,
-    `${DRAFT_WRITE_STEP} ${FLOW_STEP}`,
+    `${DRAFT_WRITE_STEP} ${toFlowStep(context)}`,
     DRAFT_PLAN_STEP,
     DRAFT_SKILL_STEP,
   ];
@@ -96,20 +109,20 @@ function toDraftSteps(): readonly string[] {
 
 function toPrototypeStart(context: RunLevelContext): readonly string[] {
   if (isDraftFirst(context)) {
-    return toDraftSteps();
+    return toDraftSteps(context);
   }
 
   return [
     PLAN_STEP,
     "Call the Skill tool for each fitting skill in the <recommended-skills> block, before you write any file.",
     BRIEF_STEP,
-    `Write the design. ${FLOW_STEP}`,
+    `Write the design. ${toFlowStep(context)}`,
   ];
 }
 
 function toPolishStart(context: RunLevelContext): readonly string[] {
   if (isDraftFirst(context)) {
-    return toDraftSteps();
+    return toDraftSteps(context);
   }
 
   return [
@@ -123,7 +136,7 @@ function wireframeEdit(context: RunLevelContext): string {
 - Plan: call \`TodoWrite\` first with 2 to 4 todos, and mark each one completed when it is done.
 - Look: grayscale only (white, black and grays). Use the system font stack (system-ui, sans-serif). No Google Fonts, no design-system tokens or token stylesheet, no brand color, no shadows or gradients. For this run this overrides the design-system, DESIGN.md and font rules above.
 - Content: real section structure, real headings, real labels, real button text and realistic sample values. No images, illustrations, icons or decorative SVG; use a plain gray box with a short label where an image would go. No img slots and no apply_image_search in this run.
-- ${FLOW_STEP}${appLine(context)}
+- ${toFlowStep(context)}${appLine(context)}
 - Skills: do NOT call the Skill tool in this run.
 - Taste: apply only the <taste> rules in the layout and behavior areas. Ignore the others in this run.
 - Checks: call \`mcp__studio__render_check\` once after you write. Fix only errors (console or page errors, page-level sideways scroll, \`clipped\` or \`past-viewport\` layout errors) and a high \`nav-mobile\` finding (keep the nav links reachable at mobile: wrap them or add a menu button). If you fixed something, run render_check once more. No screenshots, no design_review.

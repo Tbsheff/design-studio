@@ -14,6 +14,7 @@ import {
   isStrokePosition,
   toCenterPatch,
   toChangedStyle,
+  toKeptPlacePatch,
   toNoOutline,
   toPositionPatch,
   toRingColorClass,
@@ -28,6 +29,7 @@ import type {
   RingStroke,
   StrokePosition,
 } from "./stroke-position-model.js";
+import { useEditVariant } from "./use-edit-variant.js";
 
 interface StrokePositionControls {
   readonly error: string | null;
@@ -80,7 +82,8 @@ const toOutlineEdit = (
 
 const toClassRequest = (
   selection: SelectionContext | null,
-  write: ClassWrite
+  write: ClassWrite,
+  variant: string
 ): DirectEditRequest | null => {
   const source = selection?.source;
 
@@ -88,13 +91,17 @@ const toClassRequest = (
     return null;
   }
 
-  const base = createEditRequest(selection, write.style, null, "") ?? {
+  const base = createEditRequest(selection, write.style, null, variant) ?? {
     selector: selection.selector,
     source,
     ...toEditTarget(selection),
   };
 
-  return { ...base, classes: write.classes };
+  if (variant === "") {
+    return { ...base, classes: write.classes };
+  }
+
+  return { ...base, classes: write.classes, variant };
 };
 
 const useClassWrite = (
@@ -103,10 +110,11 @@ const useClassWrite = (
   setMessage: (message: string | null) => void
 ): ((write: ClassWrite) => void) => {
   const { directionId, projectId } = edit.scope;
+  const variant = useEditVariant();
 
   return useCallback(
     (write: ClassWrite) => {
-      const request = toClassRequest(selection, write);
+      const request = toClassRequest(selection, write, variant);
 
       if (!request || !directionId) {
         return;
@@ -123,7 +131,7 @@ const useClassWrite = (
         }
       });
     },
-    [directionId, edit, projectId, selection, setMessage]
+    [directionId, edit, projectId, selection, setMessage, variant]
   );
 };
 
@@ -133,29 +141,63 @@ interface RingWrites {
 }
 
 const useRingWrites = (
-  writeClasses: (write: ClassWrite) => void
+  writeClasses: (write: ClassWrite) => void,
+  variant: string
 ): RingWrites => {
   const handleRingWidth = useCallback(
     (width: number) => {
       writeClasses({
-        classes: { add: [toRingWidthClass(width)], remove: [] },
+        classes: { add: [`${variant}${toRingWidthClass(width)}`], remove: [] },
         style: {},
       });
     },
-    [writeClasses]
+    [variant, writeClasses]
   );
 
   const handleRingColor = useCallback(
     (color: string) => {
       writeClasses({
-        classes: { add: [toRingColorClass(color)], remove: [] },
+        classes: { add: [`${variant}${toRingColorClass(color)}`], remove: [] },
         style: {},
       });
     },
-    [writeClasses]
+    [variant, writeClasses]
   );
 
   return { handleRingColor, handleRingWidth };
+};
+
+interface PickState {
+  readonly edit: DirectEdit;
+  readonly isTailwind: boolean;
+  readonly position: StrokePosition;
+  readonly ring: RingStroke | null;
+  readonly writeClasses: (write: ClassWrite) => void;
+}
+
+const applyPositionPick = (state: PickState, next: string): void => {
+  const { edit, isTailwind, position, ring, writeClasses } = state;
+
+  if (!isStrokePosition(next) || next === position) {
+    return;
+  }
+
+  const look = toStrokeLook(position, edit.values, ring, edit.dirty);
+  const patch = toPositionPatch(next, look, isTailwind);
+
+  if (ring) {
+    writeClasses({
+      classes: toRingRemoval(ring),
+      style: toChangedStyle(patch, edit.values),
+    });
+
+    return;
+  }
+
+  edit.previewForced(
+    toKeptPlacePatch(patch, edit.values, { next, position, width: look.width })
+  );
+  edit.commit();
 };
 
 const useStrokePosition = (
@@ -167,10 +209,11 @@ const useStrokePosition = (
   const tailwind = toTailwindClasses(classes);
   const styles = selection?.styles ?? NO_STYLES;
   const outerHTML = selection?.outerHTML ?? "";
+  const variant = useEditVariant();
 
   const ring = useMemo(
-    () => toRingStroke(outerHTML, styles),
-    [outerHTML, styles]
+    () => toRingStroke(outerHTML, styles, variant),
+    [outerHTML, styles, variant]
   );
 
   const position = toStrokePosition(edit.values, ring);
@@ -183,26 +226,11 @@ const useStrokePosition = (
   );
 
   const handlePositionPick = useCallback(
-    (next: string) => {
-      if (!isStrokePosition(next) || next === position) {
-        return;
-      }
-
-      const look = toStrokeLook(position, edit.values, ring, edit.dirty);
-      const patch = toPositionPatch(next, look, isTailwind);
-
-      if (ring) {
-        writeClasses({
-          classes: toRingRemoval(ring),
-          style: toChangedStyle(patch, edit.values),
-        });
-
-        return;
-      }
-
-      edit.previewForced(patch);
-      edit.commit();
-    },
+    (next: string) =>
+      applyPositionPick(
+        { edit, isTailwind, position, ring, writeClasses },
+        next
+      ),
     [edit, isTailwind, position, ring, writeClasses]
   );
 
@@ -217,7 +245,10 @@ const useStrokePosition = (
     edit.commit();
   }, [edit, isTailwind, ring, writeClasses]);
 
-  const { handleRingColor, handleRingWidth } = useRingWrites(writeClasses);
+  const { handleRingColor, handleRingWidth } = useRingWrites(
+    writeClasses,
+    variant
+  );
 
   const hasStroke = ring !== null || hasOutline(edit.values);
 

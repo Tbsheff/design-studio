@@ -28,6 +28,12 @@ interface StrokeLook {
   readonly width: number;
 }
 
+interface StrokeMove {
+  readonly next: StrokePosition;
+  readonly position: StrokePosition;
+  readonly width: number;
+}
+
 interface ClassChange {
   readonly add: string[];
   readonly remove: string[];
@@ -40,6 +46,18 @@ const HALF = 2;
 const RING_SHADOW_PX_RE = /calc\( ?(?<width>[\d.]+)px/u;
 
 const RING_STEPS: ReadonlySet<string> = new Set(["0", "1", "2", "4", "8"]);
+
+const RING_CLASS_RE =
+  /^(?:inset-)?ring(?:-(?<size>\d+)|-\[(?<arbitrary>[\d.]+)px\])?$/u;
+
+const RING_DEFAULT_WIDTH = 1;
+
+const PADDING_PROPS = [
+  "padding-top",
+  "padding-right",
+  "padding-bottom",
+  "padding-left",
+] as const satisfies readonly DirectStyleProperty[];
 
 const BORDER_LOOK = [
   "border-width",
@@ -95,28 +113,115 @@ const toClassNames = (outerHTML: string): readonly string[] =>
     .split(/\s+/u)
     .filter(Boolean);
 
-const isRingClass = (name: string): boolean =>
-  !name.includes(":") &&
-  (name.startsWith("ring-") || name === "ring") &&
-  !name.startsWith("ring-offset");
+const toBaseName = (name: string, variant: string): string | null => {
+  if (variant === NO_VALUE) {
+    if (name.includes(":")) {
+      return null;
+    }
+
+    return name;
+  }
+
+  if (!name.startsWith(variant) || name.slice(variant.length).includes(":")) {
+    return null;
+  }
+
+  return name.slice(variant.length);
+};
+
+const isRingBase = (base: string): boolean =>
+  (base.startsWith("ring-") ||
+    base === "ring" ||
+    base.startsWith("inset-ring")) &&
+  !base.startsWith("ring-offset");
+
+const toClassRingWidth = (bases: readonly string[]): number => {
+  for (const base of bases) {
+    const groups = RING_CLASS_RE.exec(base)?.groups;
+
+    if (groups) {
+      return Number(groups.size ?? groups.arbitrary ?? RING_DEFAULT_WIDTH);
+    }
+  }
+
+  return 0;
+};
 
 const toRingStroke = (
   outerHTML: string,
-  styles: Readonly<Record<string, string>>
+  styles: Readonly<Record<string, string>>,
+  variant: string
 ): RingStroke | null => {
+  const names = toClassNames(outerHTML).filter((name) => {
+    const base = toBaseName(name, variant);
+
+    return base !== null && isRingBase(base);
+  });
+
+  const bases = names.map((name) => name.slice(variant.length));
   const shadow = (styles["--tw-ring-shadow"] ?? NO_VALUE).trim();
-  const width = Number(RING_SHADOW_PX_RE.exec(shadow)?.groups?.width ?? 0);
+  let width = Number(RING_SHADOW_PX_RE.exec(shadow)?.groups?.width ?? 0);
+
+  if (variant !== NO_VALUE || width <= 0) {
+    width = toClassRingWidth(bases) || width;
+  }
 
   if (width <= 0) {
     return null;
   }
 
   return {
-    classes: toClassNames(outerHTML).filter((name) => isRingClass(name)),
+    classes: names,
     color: styles["--tw-ring-color"]?.trim() ?? NO_VALUE,
-    isInset: shadow.startsWith("inset"),
+    isInset:
+      shadow.startsWith("inset") ||
+      bases.some(
+        (base) => base.startsWith("inset-ring") || base === "ring-inset"
+      ),
     width,
   };
+};
+
+const toPaddingPatch = (
+  values: StyleValues,
+  delta: number
+): Partial<StyleValues> =>
+  Object.fromEntries(
+    PADDING_PROPS.map((prop) => [
+      prop,
+      toWidthText(Math.max(toPx(values[prop]) + delta, 0)),
+    ])
+  );
+
+const toPaddingDelta = (
+  position: StrokePosition,
+  next: StrokePosition,
+  width: number
+): number => {
+  if (position === "inside" && next !== "inside") {
+    return width;
+  }
+
+  if (position !== "inside" && next === "inside") {
+    return -width;
+  }
+
+  return 0;
+};
+
+const toKeptPlacePatch = (
+  patch: Partial<StyleValues>,
+  values: StyleValues,
+  move: StrokeMove
+): Partial<StyleValues> => {
+  const width = Math.max(move.width, 1);
+  const delta = toPaddingDelta(move.position, move.next, width);
+
+  if (delta === 0) {
+    return patch;
+  }
+
+  return { ...patch, ...toPaddingPatch(values, delta) };
 };
 
 const hasOutline = (values: StyleValues): boolean => {
@@ -320,6 +425,7 @@ export {
   isStrokePosition,
   toCenterPatch,
   toChangedStyle,
+  toKeptPlacePatch,
   toNoOutline,
   toPositionPatch,
   toPositionTip,
@@ -334,4 +440,4 @@ export {
   toStrokePositionOptions,
 };
 
-export type { ClassChange, RingStroke, StrokeLook, StrokePosition };
+export type { ClassChange, RingStroke, StrokeLook, StrokeMove, StrokePosition };

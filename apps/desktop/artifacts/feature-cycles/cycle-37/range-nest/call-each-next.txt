@@ -1,0 +1,7 @@
+[http] isError=false {"file":"app/page.tsx","versionId":"pending-*"}
+[http] source:         Read <Link href="/terms"><strong>the </strong></Link><strong>terms</strong> before you book.<br />Classes start at <strong>7 am</strong>.
+[mcp] isError=false {"file":"app/page.tsx","versionId":"pending-*"}
+[mcp] source:         Read <Link href="/terms"><strong>the </strong></Link><strong>terms</strong> before you book.<br />Classes start at <strong>7 am</strong>.
+[agent] isError=false {"file":"app/page.tsx","versionId":"pending-*"}
+[agent] source:         Read <Link href="/terms"><strong>the </strong></Link><strong>terms</strong> before you book.<br />Classes start at <strong>7 am</strong>.
+same source on all 3 surfaces: true

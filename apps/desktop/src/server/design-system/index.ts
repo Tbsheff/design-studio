@@ -41,7 +41,11 @@ export {
   updateThemeTokens,
 } from "./theme-tokens.js";
 
-export type { ThemeTokenBase, ThemeTokensWritten } from "./theme-tokens.js";
+export type {
+  ThemePackFonts,
+  ThemeTokenBase,
+  ThemeTokensWritten,
+} from "./theme-tokens.js";
 
 export {
   toMissingTokenText,

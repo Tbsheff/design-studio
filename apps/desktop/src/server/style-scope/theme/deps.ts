@@ -30,7 +30,10 @@ export {
   NotFoundError,
 } from "../../platform/errors/index.js";
 
-export type { ThemeTokenBase } from "../../design-system/index.js";
+export type {
+  ThemePackFonts,
+  ThemeTokenBase,
+} from "../../design-system/index.js";
 
 export type { DirectionIds, DirectionRun } from "../../direct-edit/index.js";
 

@@ -15,6 +15,7 @@ import {
 import type {
   DirectionIds,
   KnownFailure,
+  ThemePackFonts,
   ThemeTokenBase,
   TokenChange,
 } from "./deps.js";
@@ -31,7 +32,11 @@ import type {
 } from "./theme-model.js";
 import { getSavedThemes, setSavedThemes } from "./theme-saved.js";
 import { toSeedOf } from "./theme-seed.js";
-import { createStarterVersion, isStarterProject } from "./theme-starter.js";
+import {
+  createStarterVersion,
+  isStarterProject,
+  toFamilyName,
+} from "./theme-starter.js";
 
 interface CreateThemeCommand extends DirectionIds {
   readonly brief: string | null;
@@ -64,6 +69,31 @@ const toTokenChange = (change: ThemeChange): TokenChange => {
     darkValue: change.darkValue,
     path: change.path,
     value: change.value,
+  };
+};
+
+const toRoleFamily = (
+  theme: StoredTheme,
+  role: "body" | "display"
+): string | null => {
+  const change = theme.changes.find((item) => item.role === role) ?? null;
+
+  if (change === null) {
+    return null;
+  }
+
+  return toFamilyName(change.value);
+};
+
+const toPackFonts = (theme: StoredTheme): ThemePackFonts | null => {
+  if (theme.tokenFile !== TOKENS_FILE) {
+    return null;
+  }
+
+  return {
+    body: toRoleFamily(theme, "body"),
+    display: toRoleFamily(theme, "display"),
+    googleFontsUrl: theme.fontLink,
   };
 };
 
@@ -246,12 +276,10 @@ const runThemeApply = Effect.fn("ThemeRun.apply")(function* run(
   const written = yield* runDirectionWrite(
     command,
     ({ direction, project, runtime }) =>
-      updateThemeTokens(
-        runtime.editDeps,
-        project,
-        direction,
-        found.changes.map((change) => toTokenChange(change))
-      ),
+      updateThemeTokens(runtime.editDeps, project, direction, {
+        changes: found.changes.map((change) => toTokenChange(change)),
+        fonts: toPackFonts(found),
+      }),
     toDirectEditStatusFailure
   );
 

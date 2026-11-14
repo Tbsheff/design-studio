@@ -4,6 +4,7 @@ import { PORT_LEVEL_LABEL } from "@design-studio/contracts/port";
 
 import type { PortAssetCopy } from "./port-assets.js";
 import { toAssetsTag } from "./port-assets.js";
+import type { FlowRouteBlock } from "./port-flow-update.js";
 import type { PortLookPage } from "./port-look.js";
 import { portFlowText, portPlanText } from "./port-plan.js";
 import type { PortPlanInput } from "./port-plan.js";
@@ -15,6 +16,12 @@ interface StartableTarget {
 }
 
 type StartableInput = PortPlanInput & { readonly target: StartableTarget };
+
+interface FlowPromptUpdate {
+  readonly assets: PortAssetCopy;
+  readonly blocks: readonly FlowRouteBlock[];
+  readonly lead: string;
+}
 
 const SOURCE_TEXT_MAX = 24_000;
 
@@ -83,11 +90,44 @@ const toPagePrompt = (
   ].join("\n\n");
 };
 
+const toFlowHead = (
+  input: StartableInput,
+  flow: PortFlowPlan,
+  blocks: readonly FlowRouteBlock[]
+): string => {
+  const updated = new Set(blocks.map((block) => block.path));
+  const count = flow.pages.length;
+
+  const fresh = flow.pages.flatMap((page) => {
+    if (updated.has(page.path)) {
+      return [];
+    }
+
+    return [`\`${page.routeFile ?? page.route}\``];
+  });
+
+  const kept = blocks.map((block) => `\`${block.file}\``).join(", ");
+
+  const parts = [
+    `${PORT_LEVEL_LABEL}: move the ${count} prototype pages of a flow from the project "${input.source.project.name}" into this app as ${count} routes under ${flow.base}.`,
+  ];
+
+  if (blocks.length > 0) {
+    parts.push(`Update these existing route files in place: ${kept}.`);
+  }
+
+  if (fresh.length > 0) {
+    parts.push(`Write these new route files: ${fresh.join(", ")}.`);
+  }
+
+  return parts.join(" ");
+};
+
 const toFlowPrompt = (
   input: StartableInput,
   flow: PortFlowPlan,
   sources: readonly PortLookPage[],
-  assets: PortAssetCopy
+  update: FlowPromptUpdate
 ): string => {
   const max = Math.min(
     SOURCE_TEXT_MAX,
@@ -103,6 +143,13 @@ const toFlowPrompt = (
         attribute,
         portPlanText(page.plan, sources[index]?.look ?? null)
       ),
+      ...update.blocks.flatMap((block) => {
+        if (block.path !== page.path) {
+          return [];
+        }
+
+        return [block.text];
+      }),
       toTagged(
         "prototype-source",
         attribute,
@@ -111,21 +158,20 @@ const toFlowPrompt = (
     ].join("\n\n");
   });
 
-  const files = flow.pages
-    .map((page) => `\`${page.routeFile ?? page.route}\``)
-    .join(", ");
-
   return [
-    `${PORT_LEVEL_LABEL}: move the ${flow.pages.length} prototype pages of a flow from the project "${input.source.project.name}" into this app as ${flow.pages.length} routes under ${flow.base}. Write these route files: ${files}.`,
+    toFlowHead(input, flow, update.blocks),
     toTagged("port-flow", "", portFlowText(flow)),
-    toAssetsTag(assets),
+    update.lead,
+    toAssetsTag(update.assets),
     ...pages,
     toCheckLine(
       input,
       flow.pages[0]?.path ?? input.source.path,
       flow.pages[0]?.route ?? input.target.route
     ),
-  ].join("\n\n");
+  ]
+    .filter((part) => part !== "")
+    .join("\n\n");
 };
 
 export { toFlowPrompt, toPagePrompt };

@@ -149,8 +149,9 @@ export {
   createPreToolUseGuard,
 } from "./permissions.js";
 
+export { toFlowUpdatePlan } from "./port-flow-update.js";
+
 export {
-  buildFlowPlan,
   buildPortPlan,
   portFlowText,
   portPlanText,

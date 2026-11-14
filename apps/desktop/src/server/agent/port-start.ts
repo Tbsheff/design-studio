@@ -9,22 +9,19 @@ import {
   PORT_FLOW_MAX_PAGES,
   PORT_TASK,
 } from "@design-studio/contracts/port";
-import type {
-  PortFlowPlan,
-  PortStartResult,
-} from "@design-studio/contracts/port";
+import type { PortStartResult } from "@design-studio/contracts/port";
 
 import { BadRequestError, ConflictError } from "../platform/errors/index.js";
 import type { PortRunCall } from "../run-log/index.js";
 import { applyPortAssets, deletePortAssets } from "./port-assets.js";
 import type { PortAssetCopy } from "./port-assets.js";
-import { listPortLooks, toPortLookPage } from "./port-look.js";
 import {
-  buildFlowPlan,
-  buildPortPlan,
-  readSourcePage,
-  sourcePagePath,
-} from "./port-plan.js";
+  toFlowUpdatePlan,
+  listFlowRouteBlocks,
+  toFlowUpdateLead,
+} from "./port-flow-update.js";
+import { listPortLooks, toPortLookPage } from "./port-look.js";
+import { buildPortPlan, readSourcePage, sourcePagePath } from "./port-plan.js";
 import type { PortPlanInput } from "./port-plan.js";
 import { toStartTag } from "./port-review-snapshot.js";
 import { toRouteUpdate, toUpdatedPrompt } from "./port-route-update.js";
@@ -170,18 +167,6 @@ const toStartableInput = (
   };
 };
 
-const toTakenText = (flow: PortFlowPlan): string => {
-  const taken: string[] = [];
-
-  for (const page of flow.pages) {
-    if (page.routeExists) {
-      taken.push([page.route, " (", page.routeFile ?? "", ")"].join(""));
-    }
-  }
-
-  return taken.join(", ");
-};
-
 const toRunLevel = (project: Project): RunLevel => {
   if (project.settings.defaultLevel === "wireframe") {
     return "prototype";
@@ -261,25 +246,20 @@ const startFlowRun = async (
   input: StartableInput,
   paths: string[] | null
 ): Promise<PortStartResult> => {
-  const flow = await buildFlowPlan({ ...input, paths });
+  const flow = await toFlowUpdatePlan({ ...input, paths });
 
   if (flow.pages.length === 0) {
     throw new BadRequestError("Pick at least one page to move.");
   }
 
-  const taken = toTakenText(flow);
-
-  if (taken !== "") {
-    throw new ConflictError(
-      `The app already has ${taken}. Pick a new base path.`
-    );
-  }
-
-  const htmls = await Promise.all(
-    flow.pages.map((page) =>
-      readSourcePage(input.source.direction.workTree, page.path)
-    )
-  );
+  const [htmls, blocks] = await Promise.all([
+    Promise.all(
+      flow.pages.map((page) =>
+        readSourcePage(input.source.direction.workTree, page.path)
+      )
+    ),
+    listFlowRouteBlocks(input, flow),
+  ]);
 
   const pages = flow.pages.map((page, index) => ({
     html: htmls[index] ?? "",
@@ -295,7 +275,11 @@ const startFlowRun = async (
     deps,
     input,
     assets,
-    toFlowPrompt(input, flow, sources, assets)
+    toFlowPrompt(input, flow, sources, {
+      assets,
+      blocks,
+      lead: toFlowUpdateLead(blocks),
+    })
   );
 
   return toStartResult(

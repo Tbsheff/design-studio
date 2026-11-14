@@ -47,6 +47,16 @@ export type { Principal } from "./principal.js";
 
 export { ProjectAccess } from "./project-access.js";
 
+export {
+  isFirstVersionDone,
+  isFirstVersionFailed,
+  isFirstVersionRunning,
+  startFirstVersion,
+  toFirstVersionEstimateMs,
+  toFirstVersionState,
+  toFirstVersionWaitText,
+} from "./first-version-jobs.js";
+
 export { StudioInfo } from "./studio-info.js";
 
 export { toVersionPage } from "./version-page.js";

@@ -2,6 +2,7 @@ import type { AnyAction } from "@design-studio/actions/_core/action";
 import type { ApprovalCard } from "@design-studio/actions/_core/approval-card";
 import type { StudioError } from "@design-studio/actions/_core/errors/all";
 import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
+import type { Conflict } from "@design-studio/actions/_core/errors/conflict";
 import type { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import { Effect, Schema } from "effect";
 
@@ -87,6 +88,39 @@ const checkScope = (
     yield* access.visible(input.projectId);
   });
 
+const DIRECTION_PATH = "/d/:directionId/";
+
+const SOURCE_READS: ReadonlySet<string> = new Set([
+  "direct-edit.getTree",
+  "version.list",
+]);
+
+const isSourceWrite = (action: AnyAction): boolean =>
+  action.http.path.includes(DIRECTION_PATH) ||
+  action.invalidates.some((id) => SOURCE_READS.has(id));
+
+const isProjectWrite = (action: AnyAction): boolean =>
+  action.access !== "read" &&
+  action.scope === "project" &&
+  action.needs === "project.update";
+
+const isHeldWrite = (action: AnyAction, input: Decoded): boolean =>
+  isProjectWrite(action) && "directionId" in input && isSourceWrite(action);
+
+const toReadyWait = (
+  action: AnyAction,
+  input: Decoded
+): Effect.Effect<void, Conflict, ProjectAccess> =>
+  Effect.gen(function* ready() {
+    if (!isHeldWrite(action, input) || !input.projectId) {
+      return;
+    }
+
+    const access = yield* ProjectAccess;
+
+    yield* access.ready(input.projectId);
+  });
+
 const announceDone = (
   action: AnyAction,
   input: Decoded
@@ -142,6 +176,7 @@ const makeRunner = <Action extends AnyAction>(
 
       yield* authorizer.require(action.needs);
       yield* checkScope(action, input);
+      yield* toReadyWait(action, input);
 
       if (preview !== null) {
         const card = yield* preview(input);

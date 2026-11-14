@@ -1,4 +1,4 @@
-import { firstVersionBlock, startFirstVersion } from "../app/first-version.js";
+import { firstVersionBlock } from "../app/first-version.js";
 import {
   PENDING_VERSION,
   savedVersionId,
@@ -12,6 +12,7 @@ import {
 } from "../events/index.js";
 import { withCallOrigin } from "../platform/call-origin/index.js";
 import { isKnownError } from "../platform/errors/index.js";
+import { startFirstVersion } from "../store/index.js";
 import type { ActivityDraft } from "./activity.js";
 import { EditError } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";

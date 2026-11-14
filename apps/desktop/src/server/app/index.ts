@@ -41,14 +41,8 @@ export type { DoctorInput, DoctorProbe, SkipFlag } from "./doctor.js";
 
 export {
   attachReadiness,
-  estimateFirstVersionMs,
   toFirstPrototypeVersionText,
   firstVersionBlock,
-  firstVersionState,
-  firstVersionWaitText,
-  isFirstVersionRunning,
-  startFirstVersion,
-  waitForFirstVersion,
 } from "./first-version.js";
 
 export type { AttachResponse } from "./first-version.js";

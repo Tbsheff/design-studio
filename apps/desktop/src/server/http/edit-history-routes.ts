@@ -9,7 +9,6 @@ import type {
 } from "@design-studio/contracts";
 import type { Context, Hono } from "hono";
 
-import { firstVersionWaitText } from "../app/first-version.js";
 import {
   elementClassInfo,
   findTextSource,
@@ -26,6 +25,7 @@ import {
   type DirectEditDeps,
 } from "../direct-edit/index.js";
 import { BadRequestError } from "../platform/errors/index.js";
+import { toFirstVersionWaitText } from "../store/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import { bindVersionReadRuntime } from "../store/version-read-core.js";
 
@@ -90,7 +90,7 @@ export function registerEditHistoryRoutes(
           count: 0,
           dirty: false,
           blocked: project.app
-            ? firstVersionWaitText(project.id)
+            ? toFirstVersionWaitText(project.id)
             : "This direction has no saved version yet.",
         };
       const span = editDeps.versions.sessionSince

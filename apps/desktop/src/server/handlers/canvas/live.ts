@@ -8,6 +8,7 @@ import {
   LinkedFrameWriter,
   LinkStore,
   LinkWriter,
+  PageFramesWriter,
   StateCheckStore,
 } from "../../canvas/index.js";
 import { FlowVideoStore, FlowVideoWriter } from "../../export/index.js";
@@ -23,6 +24,7 @@ const CanvasLive = Layer.mergeAll(
   LinkStore.layer,
   LinkWriter.layer,
   McpReadStore.layer,
+  PageFramesWriter.layer,
   StateCheckStore.layer,
   FlowVideoStore.layer,
   FlowVideoWriter.layer

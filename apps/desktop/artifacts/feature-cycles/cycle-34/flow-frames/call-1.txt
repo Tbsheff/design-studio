@@ -1,0 +1,96 @@
+call-action canvas.createPageFrames on http://127.0.0.1:5840. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 83 ms, git spawns: not counted (server side)
+{
+  "frames": [
+    {
+      "id": "f2",
+      "label": "Plan picker",
+      "page": "plans.html"
+    },
+    {
+      "id": "f3",
+      "label": "Confirmation",
+      "page": "done.html"
+    }
+  ],
+  "startFrame": "f1"
+}
+
+[mcp] ok, 12 ms, git spawns: not counted (server side)
+{
+  "frames": [],
+  "startFrame": "f1"
+}
+
+[agent] ok, 4 ms, git spawns: not counted (server side)
+{
+  "frames": [],
+  "startFrame": "f1"
+}
+
+diff http -> mcp:
+-   "frames": [
++   "frames": [],
+-     {
++   "startFrame": "f1"
+-       "id": "f2",
++ }
+-       "label": "Plan picker",
++ 
+-       "page": "plans.html"
++ 
+-     },
++ 
+-     {
++ 
+-       "id": "f3",
++ 
+-       "label": "Confirmation",
++ 
+-       "page": "done.html"
++ 
+-     }
++ 
+-   ],
++ 
+-   "startFrame": "f1"
++ 
+- }
++ 
+
+diff http -> agent:
+-   "frames": [
++   "frames": [],
+-     {
++   "startFrame": "f1"
+-       "id": "f2",
++ }
+-       "label": "Plan picker",
++ 
+-       "page": "plans.html"
++ 
+-     },
++ 
+-     {
++ 
+-       "id": "f3",
++ 
+-       "label": "Confirmation",
++ 
+-       "page": "done.html"
++ 
+-     }
++ 
+-   ],
++ 
+-   "startFrame": "f1"
++ 
+- }
++ 
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 0 error results
+
+fix: compare the outputs above, then run call-action again with the id canvas.createPageFrames and the same input

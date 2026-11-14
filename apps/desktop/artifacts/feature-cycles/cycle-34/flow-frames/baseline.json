@@ -1,0 +1,32 @@
+{
+  "branch": "main d274c9cff",
+  "prompt": "A 3-screen sign-up flow for a yoga studio app: welcome, plan picker, confirmation. Each step links to the next.",
+  "model": "claude-sonnet-5-5 (default)",
+  "runWallS": 107,
+  "runDurationMs": 97145,
+  "modelMs": 76149,
+  "toolMs": 32419,
+  "costUsd": 0.35,
+  "usageEvents": 18,
+  "toolCalls": 28,
+  "canvasCalls": {
+    "canvas_list": 1,
+    "canvas_place": 3,
+    "windowS": [31.2, 37.9],
+    "extraInWindow": ["ToolSearch", "TodoWrite", "studio_help", "Skill"]
+  },
+  "canvas": "3 frames f1 '1 Welcome', f2 '2 Plans', f3 '3 Confirmation', gap 80, one row, no overlap",
+  "studioScreenCheck": "studio took 6 images, one fix loop ran",
+  "share": {
+    "createdWithApi": true,
+    "lan": false,
+    "url": "127.0.0.1 only",
+    "phoneTapThrough": "Begin -> Choose your plan, Continue -> Welcome to Still Point",
+    "tapMs": 9349
+  },
+  "manualFixes": [],
+  "issues": [
+    "share viewer title shows '3 3 Confirmation' because the model put the step number in the label",
+    "share link opens only on this computer (lan off)"
+  ]
+}

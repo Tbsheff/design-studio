@@ -1,0 +1,15 @@
+main model claude-sonnet-5-5 cost 0.22197459999999997 ms 89405
+ tools ['Write', 'ToolSearch', 'TodoWrite', 'render_check', 'screenshot', 'screenshot', 'Skill', 'Bash', 'Bash', 'design_review', 'Bash', 'define_tweaks', 'render_check', 'TodoWrite', 'Bash', 'render_check', 'Edit', 'render_check']
+    photo hits 0 {"type": "run.tool.finished", "toolUseId": "toolu_01DqBdvjjVuHe3az1JGMSQWn", "isError": false, "summary": "mcp__studio__render_check", "durationMs": 4910, "runId": "Zye6Y08pS59ktPvtv5L3K", "projectId"
+    photo hits 0 {"type": "run.tool.finished", "toolUseId": "toolu_016vKRpiQLSdrQMtVgqGQZUK", "isError": false, "summary": "mcp__studio__render_check", "durationMs": 4108, "runId": "Zye6Y08pS59ktPvtv5L3K", "projectId"
+    photo hits 0 {"type": "run.tool.finished", "toolUseId": "toolu_01Bt2vkUAnfn4hZhMmbt7SAB", "isError": false, "summary": "mcp__studio__render_check", "durationMs": 4050, "runId": "Zye6Y08pS59ktPvtv5L3K", "projectId"
+    photo hits 0 {"type": "run.tool.finished", "toolUseId": "toolu_01YGGbkg2n6nfCbbqrbWNPqz", "isError": false, "summary": "mcp__studio__render_check", "durationMs": 4862, "runId": "Zye6Y08pS59ktPvtv5L3K", "projectId"
+branch model claude-sonnet-5-5 cost 0.29664690000000005 ms 95337
+ tools ['Write', 'ToolSearch', 'TodoWrite', 'render_check', 'screenshot', 'screenshot', 'Edit', 'Edit', 'Edit', 'Edit', 'Edit', 'define_tweaks', 'render_check', 'design_review', 'Edit', 'Edit', 'Edit', 'Edit', 'render_check', 'Edit', 'Edit', 'Edit', 'Edit', 'Edit', 'Edit', 'Edit', 'render_check', 'Edit', 'render_check']
+    photo hits 0 {"type": "run.tool.finished", "toolUseId": "toolu_01Jrv3uAq5so2v2vyhvJKq8J", "isError": false, "summary": "mcp__studio__render_check", "durationMs": 5672, "runId": "xI4iXw6qEJuOs4IQv6RoU", "projectId"
+    photo hits 0 {"type": "run.tool.finished", "toolUseId": "toolu_01JPnDXswYLHxiYRnuwnB7tm", "isError": false, "summary": "mcp__studio__render_check", "durationMs": 4924, "runId": "xI4iXw6qEJuOs4IQv6RoU", "projectId"
+    photo hits 0 {"type": "run.tool.finished", "toolUseId": "toolu_01VFBhPxFsGH9URSfBg94gtp", "isError": false, "summary": "mcp__studio__render_check", "durationMs": 3209, "runId": "xI4iXw6qEJuOs4IQv6RoU", "projectId"
+    photo hits 0 {"type": "run.tool.finished", "toolUseId": "toolu_0148viyhejn9vBJ2p8XJRS46", "isError": false, "summary": "mcp__studio__render_check", "durationMs": 3177, "runId": "xI4iXw6qEJuOs4IQv6RoU", "projectId"
+    photo hits 0 {"type": "run.tool.finished", "toolUseId": "toolu_019FU87hygYa9uHPeCU8ACmC", "isError": false, "summary": "mcp__studio__render_check", "durationMs": 5218, "runId": "xI4iXw6qEJuOs4IQv6RoU", "projectId"
+wall 111 s
+wall 105 s

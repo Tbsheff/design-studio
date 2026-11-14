@@ -221,3 +221,4 @@ Sources: [mcp.directory 2026 comparison](https://mcp.directory/blog/claude-desig
 - open-states found that Fill Apply in a style state (Hover, Open, Checked, Selected) wrote the base `bg-*`. fix/state-fill adds `variant` to `fill.set` and `fill.get` (default base, same tool names), checked in the app and over MCP.
 - Checks: gen-routes --check pass, typecheck 0 errors, lint:gate pass (59617, baseline 89733), build:ui pass, check:clip 0 findings, desktop:pack pass.
 - Open: Effect, saved layer and text styles, and the Border Inside/Outside switch still ignore the picked state. A layer with both space-y and space-x converts one axis. Switching stroke away from Inside moves content 2px. group-data-* and has-data-* not read. MCP snapshots for edit_element, batch_edit, set_state_style, list_state_styles, set_forced_state, set_fill and get_fill not refreshed (user decision).
+- Installed app: :4570 returns 200. Server idle CPU 0.00 CPU-s/min over 60 s.

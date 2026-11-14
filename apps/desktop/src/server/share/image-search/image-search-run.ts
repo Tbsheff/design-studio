@@ -98,6 +98,7 @@ const runImagePlace = (
 
 interface ApplyImageSearchCommand extends DirectionIds {
   readonly path: string;
+  readonly slots: readonly string[] | null;
 }
 
 const runPhotoFill = (
@@ -109,7 +110,7 @@ const runPhotoFill = (
       await toPhotoFill(
         runtime.editDeps,
         { direction, project, workTree: direction.workTree },
-        command.path
+        { path: command.path, slots: command.slots }
       ),
     toImageSearchFailure
   );

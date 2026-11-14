@@ -5,7 +5,6 @@ import { creditLine, planCredit } from "./credit.js";
 import type { CreditEdit } from "./credit.js";
 import {
   assertCanEdit,
-  isOwnAgentRun,
   publishVersion,
   resolveSource,
   runFileLockGuard,
@@ -22,10 +21,20 @@ import type {
   Version,
   VersionMeta,
 } from "./deps.js";
-import { requireImageSearch } from "./gate.js";
+import { isImageSearchOn } from "./gate.js";
+import {
+  applyPhotoArt,
+  isRunDraft,
+  toArtAssetFiles,
+  toArtFreeStyle,
+  toArtPlan,
+  toWriteArtAssets,
+} from "./photo-art.js";
+import type { PhotoArtPlan } from "./photo-art.js";
 import { toPicks } from "./photo-pick.js";
 import type { PhotoFillScope, PhotoPage, PhotoPick } from "./photo-pick.js";
 import {
+  ART_ATTR,
   PHOTO_ATTR,
   isHtmlPage,
   isTypescriptPage,
@@ -64,14 +73,20 @@ interface PhotoEdits {
 }
 
 interface PhotoFillPlan {
+  readonly art: PhotoArtPlan;
   readonly misses: readonly PhotoSlot[];
   readonly picks: readonly PhotoPick[];
 }
 
 interface SlotEdit {
   readonly changes: AttrChanges;
-  readonly isFill: boolean;
+  readonly isLabelFree: boolean;
   readonly slot: PhotoSlot;
+}
+
+interface PhotoFillRequest {
+  readonly path: string;
+  readonly slots: readonly string[] | null;
 }
 
 type SetAttrs = (
@@ -99,7 +114,7 @@ const toFilledSelector = (pick: PhotoPick): string => {
 };
 
 const toBackgroundStyle = (slot: PhotoSlot, src: string): string => {
-  const own = (slot.style ?? "").trim().replace(TRAILING_SEMI, "");
+  const own = toArtFreeStyle(slot.style).replace(TRAILING_SEMI, "");
   const added = `background-image: url(${src}); ${BACKGROUND_STYLE}`;
 
   if (own === "") {
@@ -114,6 +129,7 @@ const toPickChanges = (pick: PhotoPick): AttrChanges => {
 
   if (!slot.isImg) {
     return {
+      [ART_ATTR]: null,
       [MISSED_ATTR]: null,
       [PHOTO_ATTR]: null,
       style: toBackgroundStyle(slot, pick.asset.src),
@@ -121,6 +137,7 @@ const toPickChanges = (pick: PhotoPick): AttrChanges => {
   }
 
   return {
+    [ART_ATTR]: null,
     [MISSED_ATTR]: null,
     [PHOTO_ATTR]: null,
     alt: slot.alt ?? slot.query,
@@ -139,35 +156,42 @@ const toAttrSetter = (relative: string): SetAttrs => {
     setJsxAttrs(code, position, isTypescript, changes);
 };
 
-const toSlotEdits = (plan: PhotoFillPlan): readonly SlotEdit[] => [
+const toSlotEdits = (
+  plan: PhotoFillPlan,
+  isHtml: boolean
+): readonly SlotEdit[] => [
   ...plan.picks.map((pick) => ({
     changes: toPickChanges(pick),
-    isFill: true,
+    isLabelFree: isHtml && !pick.slot.isImg,
     slot: pick.slot,
   })),
-  ...plan.misses.map((slot) => ({
-    changes: { [MISSED_ATTR]: slot.query } satisfies AttrChanges,
-    isFill: false,
-    slot,
-  })),
+  ...plan.misses.map((slot) => {
+    const art = plan.art.changes.get(slot) ?? null;
+
+    return {
+      changes: { ...art, [MISSED_ATTR]: slot.query } satisfies AttrChanges,
+      isLabelFree: art !== null && !slot.isImg,
+      slot,
+    };
+  }),
 ];
 
 const toFilledSource = (page: PhotoPage, plan: PhotoFillPlan): string => {
   const setAttrs = toAttrSetter(page.relative);
 
-  const ordered = toSlotEdits(plan).toSorted(
+  const isHtml = isHtmlPage(page.relative);
+
+  const ordered = toSlotEdits(plan, isHtml).toSorted(
     (left, right) =>
       right.slot.line - left.slot.line || right.slot.col - left.slot.col
   );
 
   let code = page.source;
 
-  const isHtml = isHtmlPage(page.relative);
-
   for (const edit of ordered) {
     const position = { col: edit.slot.col, line: edit.slot.line };
 
-    if (isHtml && edit.isFill && !edit.slot.isImg) {
+    if (edit.isLabelFree) {
       code = toLabelFree(code, position);
     }
 
@@ -245,21 +269,22 @@ const toWriteCredit = async (credit: CreditEdit | null): Promise<void> => {
 const toWriteFill = async (
   page: PhotoPage,
   edits: PhotoEdits,
-  picks: readonly PhotoPick[]
+  plan: PhotoFillPlan
 ): Promise<void> => {
-  await Promise.all(picks.map((pick) => toWriteAsset(pick)));
+  await Promise.all(plan.picks.map((pick) => toWriteAsset(pick)));
+  await toWriteArtAssets(plan.art);
   await writeAtomic(page.file, edits.code);
   await toWriteCredit(edits.credit);
 };
 
-const isRunDraft = (scope: PhotoFillScope): boolean =>
-  scope.direction.headVersionId === null &&
-  isOwnAgentRun(scope.project.id, scope.direction.id);
-
 const toRecordHistory = (
   deps: DirectEditDeps,
   scope: PhotoFillScope,
-  change: { readonly edits: PhotoEdits; readonly page: PhotoPage },
+  change: {
+    readonly art: PhotoArtPlan;
+    readonly edits: PhotoEdits;
+    readonly page: PhotoPage;
+  },
   version: Version
 ): void => {
   const { edits, page } = change;
@@ -289,6 +314,7 @@ const toRecordHistory = (
         relative: page.relative,
       },
       ...credits,
+      ...toArtAssetFiles(change.art),
     ],
     label: version.title,
     projectId: scope.project.id,
@@ -320,7 +346,7 @@ const toCommitFill = async (
   const edits = { code: toFilledSource(page, plan), credit };
 
   if (isRunDraft(scope)) {
-    await toWriteFill(page, edits, picks);
+    await toWriteFill(page, edits, plan);
 
     return null;
   }
@@ -331,6 +357,7 @@ const toCommitFill = async (
     page.relative,
     ...picks.map((pick) => pick.asset.relative),
     ...[credit?.relative ?? ""].filter(Boolean),
+    ...toArtAssetFiles(plan.art).map((asset) => asset.relative),
   ];
 
   const meta: VersionMeta = {
@@ -342,11 +369,11 @@ const toCommitFill = async (
 
   await runFileLockGuard(project.id, direction.id, files);
   await savesSettled(project.id);
-  await toWriteFill(page, edits, picks);
+  await toWriteFill(page, edits, plan);
 
   const version = saveDeferred(deps, project, direction, files, title, meta);
 
-  toRecordHistory(deps, scope, { edits, page }, version);
+  toRecordHistory(deps, scope, { art: plan.art, edits, page }, version);
   await publishVersion(deps, project, direction, version);
 
   return version;
@@ -378,20 +405,51 @@ const toFillable = (
   return slots.filter((slot) => slot.isImg);
 };
 
+const toArtNote = (count: number, relative: string): string => {
+  if (count === 0) {
+    return `Image search is off. ${relative} has no plain ${PHOTO_ATTR} slot, so nothing changed.`;
+  }
+
+  return `Image search is off. The studio painted ${count} art slots.`;
+};
+
+const toArtFill = async (
+  deps: DirectEditDeps,
+  scope: PhotoFillScope,
+  page: PhotoPage
+): Promise<PhotoFillResult> => {
+  const done = await applyPhotoArt(deps, scope, [page]);
+
+  return {
+    filled: [],
+    missed: [],
+    note: toArtNote(done.count, page.relative),
+    versionId: done.versionId,
+  };
+};
+
 const toPhotoFill = async (
   deps: DirectEditDeps,
   scope: PhotoFillScope,
-  pagePath: string
+  request: PhotoFillRequest
 ): Promise<PhotoFillResult> => {
-  requireImageSearch(scope.project);
-
   if (!isRunDraft(scope)) {
     assertCanEdit(deps, scope.project, scope.direction);
   }
 
-  const page = await toReadPage(scope.workTree, pagePath);
+  const page = await toReadPage(scope.workTree, request.path);
+
+  if (!isImageSearchOn(scope.project)) {
+    return await toArtFill(deps, scope, page);
+  }
+
+  const reopen = new Set(request.slots);
   const slots = toPhotoSlots(page.source);
-  const skipped = slots.filter((slot) => isMarkedMiss(page.source, slot));
+
+  const skipped = slots.filter(
+    (slot) => isMarkedMiss(page.source, slot) && !reopen.has(slot.query)
+  );
+
   const skippedSet = new Set(skipped);
   const open = slots.filter((slot) => !skippedSet.has(slot));
 
@@ -408,7 +466,13 @@ const toPhotoFill = async (
   const picks = await toPicks(scope, page, fillable);
   const picked = new Set(picks.map((pick) => pick.slot));
   const misses = fillable.filter((slot) => !picked.has(slot));
-  const version = await toCommitFill(deps, scope, page, { misses, picks });
+  const art = await toArtPlan(scope, page, misses);
+
+  const version = await toCommitFill(deps, scope, page, {
+    art,
+    misses,
+    picks,
+  });
 
   return {
     filled: picks.map((pick) => ({
@@ -424,4 +488,4 @@ const toPhotoFill = async (
 
 export { toPhotoFill };
 
-export type { PhotoFillResult, PhotoFillScope };
+export type { PhotoFillRequest, PhotoFillResult, PhotoFillScope };

@@ -45,7 +45,11 @@ export type {
   StyleSample,
 } from "./page-import/index.js";
 
-export { ImageSearchStore, ImageSearchWriter } from "./image-search/index.js";
+export {
+  ImageSearchStore,
+  ImageSearchWriter,
+  applyRunPhotoArt,
+} from "./image-search/index.js";
 
 export type {
   ImageSearchStoreApi,

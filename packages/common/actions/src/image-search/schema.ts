@@ -30,6 +30,8 @@ const HTML_MAX = 4000;
 
 const PAGE_PATH_MAX = 500;
 
+const SLOTS_MAX = 50;
+
 const ImageSearchProjectFields = {
   projectId: ProjectIdSchema.annotate({
     description:
@@ -190,6 +192,14 @@ const ImageSearchApplyFields = {
     description:
       'The page file, relative to the project folder, for example "index.html".',
   }),
+  slots: Schema.NullOr(
+    Schema.Array(ImageSearchQuerySchema).check(Schema.isMaxLength(SLOTS_MAX))
+  )
+    .annotate({
+      description:
+        "The data-photo words of missed slots to search again. A slot with data-photo-missed is skipped unless its words are in this list. Default null.",
+    })
+    .pipe(Schema.withDecodingDefaultKey(Effect.succeed(null))),
 } as const;
 
 const PhotoSlotMissSchema = Schema.Struct({

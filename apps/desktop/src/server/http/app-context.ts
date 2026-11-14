@@ -47,10 +47,7 @@ import {
   invalidateTokenSource,
   invalidateTokenSourceOnChange,
 } from "../design-system/token-preview.js";
-import {
-  createEditHistory,
-  recordRunInHistory,
-} from "../direct-edit/commit/index.js";
+import { createEditHistory } from "../direct-edit/commit/index.js";
 import type { EditHistory } from "../direct-edit/commit/index.js";
 import { onPlannedEdit, toEditEvent } from "../events/index.js";
 import type { EventBus } from "../events/index.js";
@@ -77,6 +74,7 @@ import { readMentionFiles } from "./mentions.js";
 import { createFolderPicker } from "./pick-folder.js";
 import type { FolderPicker } from "./pick-folder.js";
 import { rulesLoader } from "./rules-routes.js";
+import { applyRunFollowUp } from "./run-follow-up.js";
 import { toRunRepoContext } from "./run-repo-context.js";
 import type { StreamTracker } from "./stream-routes.js";
 import { unavailableThumbnails } from "./unavailable-thumbnails.js";
@@ -460,26 +458,11 @@ const createAppContext = (deps: AppDeps) => {
     });
 
     runProjectIndex.set(handle.runId, project.id);
-    void handle.done
-      .then((summary) =>
-        summary.versionId
-          ? recordRunInHistory(
-              editHistory,
-              versions,
-              project,
-              direction,
-              summary.versionId
-            )
-          : undefined
-      )
-      .catch(() => editHistory.clear(project.id, direction.id));
-
-    if (!request.task && !request.variation) {
-      void handle.done.then(
-        () => continueWithNext(project.id, direction.id, request, handle),
-        () => undefined
-      );
-    }
+    void applyRunFollowUp(
+      { editDeps, editHistory, projects, versions },
+      { direction, handle, project, request },
+      () => continueWithNext(project.id, direction.id, request, handle)
+    );
     return handle.runId;
   };
 

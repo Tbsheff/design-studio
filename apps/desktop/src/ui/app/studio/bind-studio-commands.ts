@@ -58,6 +58,12 @@ const fillPhotosOf = (ctx: StudioCtx): CommandActions["onFillPhotos"] => {
         projectId: project.id,
       });
 
+      if (result.note !== null) {
+        ui.setActionError(result.note);
+
+        return;
+      }
+
       if (result.filled.length === 0) {
         ui.setActionError(toFillMessage(result.missed));
       }

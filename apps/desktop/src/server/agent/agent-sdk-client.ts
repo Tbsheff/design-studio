@@ -1,5 +1,6 @@
 import { Context, Effect, Layer } from "effect";
 
+import { toCountedDriver } from "./counted-driver.js";
 import type { RunDriver } from "./lifecycle.js";
 import type { createMockDriver } from "./mock.js";
 import { createSdkDriver } from "./sdk-driver.js";
@@ -35,7 +36,9 @@ class AgentSdkClient extends Context.Service<
       createDriver: Effect.fn("AgentSdkClient.createDriver")(function* run(
         options: SdkDriverOptions
       ) {
-        return yield* Effect.sync(() => createSdkDriver(options));
+        return yield* Effect.sync(() =>
+          toCountedDriver(createSdkDriver(options))
+        );
       }),
     })
   );
@@ -50,7 +53,7 @@ class AgentSdkClient extends Context.Service<
           () => import("./mock.js")
         );
 
-        return createMockDriver(toMockOptions(options));
+        return toCountedDriver(createMockDriver(toMockOptions(options)));
       }),
     })
   );

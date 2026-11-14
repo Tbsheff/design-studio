@@ -1056,6 +1056,12 @@
   font-weight: var(--w-regular);
 }
 
+.run-change .diff-new {
+  flex: none;
+  color: var(--text-3);
+  font-weight: var(--w-regular);
+}
+
 .run-no-changes {
   margin: 0;
   color: var(--text-3);

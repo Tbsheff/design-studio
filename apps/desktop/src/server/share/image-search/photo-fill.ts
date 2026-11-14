@@ -22,7 +22,6 @@ import type {
   Version,
   VersionMeta,
 } from "./deps.js";
-import { ImageSearchError } from "./errors.js";
 import { requireImageSearch } from "./gate.js";
 import { toPicks } from "./photo-pick.js";
 import type { PhotoFillScope, PhotoPage, PhotoPick } from "./photo-pick.js";
@@ -48,6 +47,7 @@ interface PhotoSlotMiss {
 interface PhotoFillResult {
   readonly filled: readonly PhotoSlotFill[];
   readonly missed: readonly PhotoSlotMiss[];
+  readonly note: string | null;
   readonly versionId: string | null;
 }
 
@@ -65,6 +65,84 @@ type SetAttrs = (
 const BACKGROUND_STYLE = "background-size: cover; background-position: center";
 
 const TRAILING_SEMI = /;\s*$/u;
+
+const TAG_NAME = /^<(?<tag>[A-Za-z][\w-]*)/u;
+
+const TAG_NAME_MAX = 64;
+
+const LABEL_TAG =
+  /^<(?<label>span|small|p|strong|em|b|i)\b[^<>]*>[^<]*<\/\k<label>>$/u;
+
+const toOffset = (
+  code: string,
+  position: { readonly col: number; readonly line: number }
+): number => {
+  const lines = code.split("\n").slice(0, position.line - 1);
+
+  return (
+    lines.reduce((sum, line) => sum + line.length + 1, 0) + position.col - 1
+  );
+};
+
+const toQuote = (quote: string, char: string): string => {
+  if (quote !== "") {
+    if (char === quote) {
+      return "";
+    }
+
+    return quote;
+  }
+
+  if (char === '"' || char === "'") {
+    return char;
+  }
+
+  return "";
+};
+
+const toTagEnd = (code: string, from: number): number => {
+  let quote = "";
+
+  for (let index = from; index < code.length; index += 1) {
+    const char = code.charAt(index);
+
+    if (quote === "" && char === ">") {
+      return index + 1;
+    }
+
+    quote = toQuote(quote, char);
+  }
+
+  return -1;
+};
+
+const toLabelFree = (
+  code: string,
+  position: { readonly col: number; readonly line: number }
+): string => {
+  const offset = toOffset(code, position);
+  const head = code.slice(offset, offset + TAG_NAME_MAX);
+  const tag = TAG_NAME.exec(head)?.groups?.tag ?? "";
+
+  const start = toTagEnd(code, offset);
+
+  if (tag === "" || start === -1) {
+    return code;
+  }
+
+  const end = code.indexOf(`</${tag}>`, start);
+  const inner = code.slice(start, Math.max(end, start));
+
+  if (end === -1 || inner.trim() === "") {
+    return code;
+  }
+
+  if (inner.includes("<") && !LABEL_TAG.test(inner.trim())) {
+    return code;
+  }
+
+  return `${code.slice(0, start)}${code.slice(end)}`;
+};
 
 const toSlotSelector = (slot: PhotoSlot): string => {
   const words = slot.query.replaceAll('"', String.raw`\"`);
@@ -132,8 +210,14 @@ const toFilledSource = (
 
   let code = page.source;
 
+  const isHtml = isHtmlPage(page.relative);
+
   for (const pick of ordered) {
     const position = { col: pick.slot.col, line: pick.slot.line };
+
+    if (isHtml && !pick.slot.isImg) {
+      code = toLabelFree(code, position);
+    }
 
     code = setAttrs(code, position, toPickChanges(pick));
   }
@@ -334,9 +418,12 @@ const toPhotoFill = async (
   const slots = toPhotoSlots(page.source);
 
   if (slots.length === 0) {
-    throw new ImageSearchError(
-      `${page.relative} has no photo slots. Write each slot as an img or element with ${PHOTO_ATTR}="<2 to 6 search words>".`
-    );
+    return {
+      filled: [],
+      missed: [],
+      note: `${page.relative} has no ${PHOTO_ATTR} slot left, so nothing changed and no search ran. Do not call apply_image_search again on this page. To add a photo, write an img or element with ${PHOTO_ATTR}="<2 to 6 search words>".`,
+      versionId: null,
+    };
   }
 
   const picks = await toPicks(scope, page, toFillable(page, slots));
@@ -349,6 +436,7 @@ const toPhotoFill = async (
       selector: toFilledSelector(pick),
     })),
     missed: toMissed(slots, picks),
+    note: null,
     versionId: version?.id ?? null,
   };
 };

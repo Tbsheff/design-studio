@@ -206,6 +206,7 @@ const PhotoSlotFillSchema = Schema.Struct({
 const PhotoFillSchema = Schema.Struct({
   filled: Schema.Array(PhotoSlotFillSchema),
   missed: Schema.Array(PhotoSlotMissSchema),
+  note: Schema.NullOr(Schema.String),
   versionId: Schema.NullOr(Schema.String),
 });
 

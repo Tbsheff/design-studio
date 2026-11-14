@@ -1,0 +1,29 @@
+call-action image-search.apply on http://127.0.0.1:49310. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 3 ms, git spawns: not counted (server side)
+{
+  "filled": [],
+  "missed": [],
+  "note": "index.html has no data-photo slot left, so nothing changed and no search ran. Do not call apply_image_search again on this page. To add a photo, write an img or element with data-photo=\"<2 to 6 search words>\".",
+  "versionId": null
+}
+
+[mcp] ok, 10 ms, git spawns: not counted (server side)
+{
+  "filled": [],
+  "missed": [],
+  "note": "index.html has no data-photo slot left, so nothing changed and no search ran. Do not call apply_image_search again on this page. To add a photo, write an img or element with data-photo=\"<2 to 6 search words>\".",
+  "versionId": null
+}
+
+[agent] ok, 2 ms, git spawns: not counted (server side)
+{
+  "filled": [],
+  "missed": [],
+  "note": "index.html has no data-photo slot left, so nothing changed and no search ran. Do not call apply_image_search again on this page. To add a photo, write an img or element with data-photo=\"<2 to 6 search words>\".",
+  "versionId": null
+}
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

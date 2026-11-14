@@ -41,6 +41,7 @@ const STYLE_KEYS = [
   "text-shadow",
   "transform",
   "scale",
+  "translate",
   "opacity",
   "border-width",
   "border-top-width",

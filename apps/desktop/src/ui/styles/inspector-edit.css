@@ -1290,5 +1290,7 @@ dialog.code-edit {
   flex: 1 1 0;
   min-width: 0;
   height: 24px;
-  padding: 0 2px;
+  padding: 0 1px;
+  font-size: 10.5px;
+  letter-spacing: -0.01em;
 }

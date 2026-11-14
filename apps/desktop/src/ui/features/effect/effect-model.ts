@@ -1,11 +1,20 @@
 import { EFFECT_KINDS, EFFECT_RANGES } from "./deps.js";
-import type { EffectKind } from "./deps.js";
-import type { EffectItem } from "./effect-types.js";
+import type { EffectKind, ShadowSize } from "./deps.js";
+import type { EffectInfo, EffectItem } from "./effect-types.js";
 
 type ShadowItem = Extract<
   EffectItem,
   { readonly kind: "drop-shadow" | "inner-shadow" }
 >;
+
+type ShadowSizePick = ShadowSize | "custom" | "none";
+
+const DROP_KIND: ShadowItem["kind"] = "drop-shadow";
+
+const INNER_KIND: ShadowItem["kind"] = "inner-shadow";
+
+const isShadowItem = (item: EffectItem): item is ShadowItem =>
+  item.kind === DROP_KIND || item.kind === INNER_KIND;
 
 type FieldKey =
   | "blur"
@@ -27,6 +36,11 @@ interface FieldSpec {
   readonly maximum: number;
   readonly minimum: number;
   readonly step: number;
+}
+
+interface ShadowSizes {
+  readonly drop: readonly ShadowSize[];
+  readonly inner: readonly ShadowSize[];
 }
 
 interface FieldView {
@@ -129,11 +143,12 @@ const toNewShadow = (picked: ShadowItem["kind"]): ShadowItem => ({
   kind: picked,
   offsetX: EFFECT_RANGES.shadowOffsetX.fallback,
   offsetY: EFFECT_RANGES.shadowOffsetY.fallback,
+  size: null,
   spread: EFFECT_RANGES.shadowSpread.fallback,
 });
 
 const toNewEffect = (picked: EffectKind): EffectItem => {
-  if (picked === "drop-shadow" || picked === "inner-shadow") {
+  if (picked === DROP_KIND || picked === INNER_KIND) {
     return toNewShadow(picked);
   }
 
@@ -193,7 +208,7 @@ const toView = (spec: FieldSpec, value: number | undefined): FieldView => ({
 });
 
 const toFieldViews = (item: EffectItem): FieldView[] => {
-  if (item.kind === "drop-shadow" || item.kind === "inner-shadow") {
+  if (isShadowItem(item)) {
     return [
       toView(OFFSET_X, item.offsetX),
       toView(OFFSET_Y, item.offsetY),
@@ -241,7 +256,54 @@ const toWithField = (
   item: EffectItem,
   spec: FieldSpec,
   value: number
-): EffectItem => ({ ...item, [spec.key]: toClamped(spec, value) });
+): EffectItem => {
+  if (isShadowItem(item)) {
+    return { ...item, [spec.key]: toClamped(spec, value), size: null };
+  }
+
+  return { ...item, [spec.key]: toClamped(spec, value) };
+};
+
+const toKindSizes = (
+  item: EffectItem,
+  sizes: ShadowSizes
+): readonly ShadowSize[] => {
+  if (item.kind === DROP_KIND) {
+    return sizes.drop;
+  }
+
+  if (item.kind === INNER_KIND) {
+    return sizes.inner;
+  }
+
+  return [];
+};
+
+const NO_SIZES: ShadowSizes = { drop: [], inner: [] };
+
+const toShadowSizes = (info: EffectInfo | null): ShadowSizes => {
+  if (info === null) {
+    return NO_SIZES;
+  }
+
+  return { drop: info.shadowSizes, inner: info.innerShadowSizes };
+};
+
+const toItemSize = (item: EffectItem): ShadowSize | null => {
+  if (isShadowItem(item)) {
+    return item.size ?? null;
+  }
+
+  return null;
+};
+
+const toSized = (item: EffectItem, size: ShadowSize): EffectItem => {
+  if (isShadowItem(item)) {
+    return { ...item, size };
+  }
+
+  return item;
+};
 
 const toToggled = (item: EffectItem): EffectItem => ({
   ...item,
@@ -299,14 +361,18 @@ const toKindList = (): readonly EffectKind[] => EFFECT_KINDS;
 
 export {
   toFieldViews,
+  toItemSize,
   toKindList,
+  toKindSizes,
   toMoved,
   toNewEffect,
   toRemoved,
   toReplaced,
   toRowKeys,
+  toShadowSizes,
+  toSized,
   toToggled,
   toWithField,
 };
 
-export type { FieldKey, FieldSpec, FieldView };
+export type { FieldKey, FieldSpec, FieldView, ShadowSizePick, ShadowSizes };

@@ -42,6 +42,21 @@ const copy = {
   saveStyle: "Save style",
   saveTip:
     "Save the stack as a named style. Layers that use the style change when you save it again",
+  shadowSize: {
+    custom: "Custom",
+    label: "Size",
+    none: "None",
+    sizes: {
+      "2xl": "2XL",
+      "2xs": "2XS",
+      lg: "LG",
+      md: "MD",
+      sm: "SM",
+      xl: "XL",
+      xs: "XS",
+    },
+    tip: "Pick a size from the shadow scale of the project. Edit a number for a custom shadow",
+  },
   style: "Style",
   styleName: "Style name",
   styleNone: "No style",

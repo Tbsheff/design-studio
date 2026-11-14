@@ -4,10 +4,12 @@ import type { ReactElement } from "react";
 import type { ShaderPreset } from "./deps.js";
 import { EffectField } from "./effect-field.js";
 import { toFieldViews, toToggled, toWithField } from "./effect-model.js";
-import type { FieldSpec } from "./effect-model.js";
+import type { FieldSpec, ShadowSizes } from "./effect-model.js";
 import { EffectPresetSelect } from "./effect-preset-select.js";
 import { EffectRowHead } from "./effect-row-head.js";
 import type { EffectItem } from "./effect-types.js";
+import { ShadowSizeSelect } from "./shadow-size-select.js";
+import { useRowMoves, useSizePick } from "./use-effect-handlers.js";
 
 import styles from "./effect.module.css";
 
@@ -20,6 +22,7 @@ interface EffectRowProps {
   readonly onChange: (index: number, item: EffectItem) => void;
   readonly onMove: (index: number, step: number) => void;
   readonly onRemove: (index: number) => void;
+  readonly sizes: ShadowSizes;
 }
 
 const EffectRow = ({
@@ -31,6 +34,7 @@ const EffectRow = ({
   onChange,
   onMove,
   onRemove,
+  sizes,
 }: EffectRowProps): ReactElement => {
   const handleToggle = useCallback((): void => {
     onChange(index, toToggled(item));
@@ -52,17 +56,13 @@ const EffectRow = ({
     [index, item, onChange]
   );
 
-  const handleUp = useCallback((): void => {
-    onMove(index, -1);
-  }, [index, onMove]);
+  const { handleDown, handleRemove, handleUp } = useRowMoves(
+    index,
+    onMove,
+    onRemove
+  );
 
-  const handleDown = useCallback((): void => {
-    onMove(index, 1);
-  }, [index, onMove]);
-
-  const handleRemove = useCallback((): void => {
-    onRemove(index);
-  }, [index, onRemove]);
+  const handleSize = useSizePick({ index, item, onChange, onRemove });
 
   return (
     <li className={styles.row} data-off={item.isEnabled === false}>
@@ -78,6 +78,12 @@ const EffectRow = ({
         onUp={handleUp}
       />
       <div className={styles.fields}>
+        <ShadowSizeSelect
+          disabled={disabled}
+          item={item}
+          sizes={sizes}
+          onPick={handleSize}
+        />
         {item.kind === "shader" && (
           <EffectPresetSelect
             disabled={disabled}

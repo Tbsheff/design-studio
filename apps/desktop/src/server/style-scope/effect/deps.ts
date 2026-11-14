@@ -12,6 +12,10 @@ export {
 
 export { parseClass } from "../../direct-edit/engine/index.js";
 
+export { tailwindThemeFor } from "../../direct-edit/tailwind/index.js";
+
+export { loadAppTokens } from "../../design-system/index.js";
+
 export { normalizeVariant } from "../../../shared/variants.js";
 
 export type { DirectEditDeps, WrittenFile } from "../../direct-edit/index.js";

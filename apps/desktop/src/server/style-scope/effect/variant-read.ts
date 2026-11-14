@@ -1,26 +1,16 @@
-import { parseClass, resolveSource } from "./deps.js";
-import type { EffectInfo } from "./deps.js";
-import { fromVariantDeclarations, fromVariantToken } from "./engine/index.js";
-import type { EffectDeclaration } from "./engine/index.js";
+import { readFile } from "node:fs/promises";
+
+import { resolveSource } from "./deps.js";
+import type { EffectInfo, EffectItem } from "./deps.js";
+import { fromVariantDeclarations } from "./engine/index.js";
+import type { EffectDeclaration, ShadowScale } from "./engine/index.js";
 import type { EffectScope, EffectTarget } from "./set-plan.js";
+import { toClassEffects, toSizeFields } from "./shadow-read.js";
+import { getShadowScale } from "./shadow-site.js";
 import { toVariantSite } from "./variant-plan.js";
 import type { VariantSite } from "./variant-plan.js";
 
 const DECLARATION_GAP = ": ";
-
-const toClassDeclarations = (
-  classes: readonly string[],
-  variant: string
-): EffectDeclaration[] =>
-  classes.flatMap((token) => {
-    const parsed = parseClass(token);
-
-    if (parsed.variants !== variant) {
-      return [];
-    }
-
-    return fromVariantToken(token.slice(parsed.variants.length)) ?? [];
-  });
 
 const toCssDeclarations = (set: readonly string[]): EffectDeclaration[] =>
   set.flatMap((entry) => {
@@ -38,16 +28,17 @@ const toCssDeclarations = (set: readonly string[]): EffectDeclaration[] =>
     ];
   });
 
-const toSiteDeclarations = (
+const toSiteEffects = (
   site: VariantSite,
-  variant: string
-): EffectDeclaration[] => {
+  variant: string,
+  scale: ShadowScale
+): EffectItem[] => {
   if (site.classes !== null) {
-    return toClassDeclarations(site.classes, variant);
+    return toClassEffects(site.classes, variant, scale, false);
   }
 
   if (site.mode === "css") {
-    return toCssDeclarations(site.set);
+    return fromVariantDeclarations(toCssDeclarations(site.set), scale);
   }
 
   return [];
@@ -65,14 +56,20 @@ const inspectVariantEffects = async (
     resolveSource(scope.workTree, loc.file),
   ]);
 
+  const scale = await getShadowScale(scope, {
+    relative: resolved.relative,
+    text: await readFile(resolved.file, "utf-8"),
+  });
+
   return {
     className: null,
-    effects: fromVariantDeclarations(toSiteDeclarations(site, variant)),
+    effects: toSiteEffects(site, variant, scale),
     file: resolved.relative,
     reason: site.reason,
     sheet: null,
     style: null,
     styleName: null,
+    ...toSizeFields(scale),
   };
 };
 

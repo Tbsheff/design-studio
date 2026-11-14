@@ -1,14 +1,18 @@
+import { readFile } from "node:fs/promises";
+
 import {
   elementClassInfo,
   normalizeVariant,
   parseClass,
   parseDirectEditRequest,
   planDirectEdit,
+  resolveSource,
 } from "./deps.js";
 import type { EffectItem } from "./deps.js";
-import type { VariantStyle } from "./engine/index.js";
+import type { ShadowScale, VariantStyle } from "./engine/index.js";
 import {
   isEffectBase,
+  toScaledEffects,
   toVariantStyle,
   toVariantTokens,
 } from "./engine/index.js";
@@ -20,6 +24,7 @@ import type {
   EffectSetRequest,
   EffectTarget,
 } from "./set-plan.js";
+import { getShadowScale } from "./shadow-site.js";
 
 interface VariantSite {
   readonly classes: readonly string[] | null;
@@ -83,9 +88,10 @@ const toCheckedEffects = (request: EffectSetRequest): readonly EffectItem[] => {
 const toClassEdit = (
   classes: readonly string[],
   effects: readonly EffectItem[],
-  variant: string
+  variant: string,
+  scale: ShadowScale
 ): VariantEdit => {
-  const wanted = toVariantTokens(effects, variant);
+  const wanted = toVariantTokens(effects, variant, scale);
   const wantedSet = new Set(wanted);
   const present = new Set(classes);
 
@@ -94,7 +100,7 @@ const toClassEdit = (
 
     return (
       parsed.variants === variant &&
-      isEffectBase(token.slice(parsed.variants.length)) &&
+      isEffectBase(token.slice(parsed.variants.length), scale) &&
       !wantedSet.has(token)
     );
   });
@@ -160,14 +166,15 @@ const toVariantSite = async (
 const toVariantEdit = (
   site: VariantSite,
   effects: readonly EffectItem[],
-  variant: string
+  variant: string,
+  scale: ShadowScale
 ): VariantEdit => {
   if (site.classes !== null) {
-    return toClassEdit(site.classes, effects, variant);
+    return toClassEdit(site.classes, effects, variant, scale);
   }
 
   if (site.mode === "css") {
-    return toStyleEdit(effects, site.set);
+    return toStyleEdit(toScaledEffects(effects, scale), site.set);
   }
 
   throw new EffectError(
@@ -215,8 +222,17 @@ const toVariantEffectPlan = async (
 ): Promise<EffectSetPlan> => {
   const effects = toCheckedEffects(request);
 
-  const site = await toVariantSite(scope, request.target, variant);
-  const edit = toVariantEdit(site, effects, variant);
+  const [site, resolved] = await Promise.all([
+    toVariantSite(scope, request.target, variant),
+    resolveSource(scope.workTree, request.target.source.file),
+  ]);
+
+  const scale = await getShadowScale(scope, {
+    relative: resolved.relative,
+    text: await readFile(resolved.file, "utf-8"),
+  });
+
+  const edit = toVariantEdit(site, effects, variant, scale);
 
   const planned = await planDirectEdit(
     scope.workTree,

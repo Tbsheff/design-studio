@@ -1,7 +1,7 @@
 import path from "node:path";
 
 import type { EffectItem, WrittenFile } from "./deps.js";
-import { hasShader, toLayerClass } from "./engine/index.js";
+import { hasShader, toLayerClass, toScaledEffects } from "./engine/index.js";
 import { EffectError } from "./errors.js";
 import { getReferenceCount } from "./references.js";
 import { toShaderRuntimePlan } from "./runtime-plan.js";
@@ -18,6 +18,8 @@ import type {
   EffectSetPlan,
   EffectSetRequest,
 } from "./set-plan.js";
+import { toMergedChange, toShadowPlan } from "./shadow-plan.js";
+import { getShadowSite } from "./shadow-site.js";
 import {
   toClassedCode,
   toLinkedCode,
@@ -165,17 +167,31 @@ const toEffectSetPlan = async (
   const { rules, sheet, site } = inputs;
   const current = toCurrent(site.tokens, rules);
   const style = toNextStyle(request, current, rules);
-  const effects = toLayerEffects(request, current);
+
+  const shadowSite = await getShadowSite(scope, request.target.source, {
+    relative: site.relative,
+    text: site.code,
+  });
+
+  const effects = toScaledEffects(
+    toLayerEffects(request, current),
+    shadowSite.scale
+  );
+
+  const shadow = toShadowPlan(shadowSite, effects, request.effects !== null);
   let layerClass: string | null = null;
 
-  if (effects.length > 0) {
-    layerClass = toLayerClass(effects);
+  if (shadow.layerEffects.length > 0) {
+    layerClass = toLayerClass(shadow.layerEffects);
   }
 
-  const change = toClassChange(site.tokens, [
-    { next: layerClass, old: current.anon?.className ?? null },
-    { next: style?.className ?? null, old: current.named?.className ?? null },
-  ]);
+  const change = toMergedChange(
+    toClassChange(site.tokens, [
+      { next: layerClass, old: current.anon?.className ?? null },
+      { next: style?.className ?? null, old: current.named?.className ?? null },
+    ]),
+    shadow.change
+  );
 
   const classed = await toClassedCode(scope, request.target, change, site.code);
 
@@ -186,7 +202,7 @@ const toEffectSetPlan = async (
   );
 
   const nextSheet = toPrunedSheet(
-    toSheetWithLayer(sheet, rules, effects, layerClass),
+    toSheetWithLayer(sheet, rules, shadow.layerEffects, layerClass),
     current.anon,
     refs
   );

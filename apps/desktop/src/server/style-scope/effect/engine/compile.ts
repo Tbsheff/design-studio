@@ -71,6 +71,10 @@ const toShadowText = (item: ShadowItem): string => {
     inset = "inset ";
   }
 
+  if (item.size !== null) {
+    return `var(--${inset.replace(" ", "-")}shadow-${item.size})`;
+  }
+
   return `${inset}${toPx(item.offsetX)} ${toPx(item.offsetY)} ${toPx(item.blur)} ${toPx(item.spread)} ${item.color}`;
 };
 
@@ -227,6 +231,6 @@ const toEffectDeclarations = (
 const hasShader = (effects: readonly EffectItem[]): boolean =>
   effects.some((item) => item.kind === "shader" && item.isEnabled);
 
-export { hasShader, toEffectDeclarations };
+export { hasShader, toEffectDeclarations, toShadowText };
 
 export type { EffectDeclaration };

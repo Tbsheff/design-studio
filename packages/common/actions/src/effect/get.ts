@@ -28,7 +28,7 @@ const getEffect = defineAction({
   },
   confirm: "none",
   description:
-    "Read every effect on one layer: its own stack and the named effect style it uses. Read only. Each effect has a kind, an enabled flag and typed values. variant reads the shadows and blurs for one state or breakpoint prefix, such as hover: or data-[state=open]:. The limit caps how many effects return.",
+    "Read every effect on one layer: its own stack and the named effect style it uses. Read only. Each effect has a kind, an enabled flag and typed values. A shadow has size, the scale name such as md, or null for custom numbers. shadowSizes and innerShadowSizes list the sizes that the project scale has. variant reads the shadows and blurs for one state or breakpoint prefix, such as hover: or data-[state=open]:. The limit caps how many effects return.",
   errors: [BadRequest, Conflict, NotFound],
   http: {
     method: "GET",

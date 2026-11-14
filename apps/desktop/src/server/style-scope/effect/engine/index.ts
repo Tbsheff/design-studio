@@ -11,6 +11,16 @@ export {
   toSheetWithoutRule,
 } from "./sheet-rules.js";
 
+export {
+  EMPTY_SCALE,
+  fromShadowClass,
+  isShadowClass,
+  isShadowItem,
+  toScaledEffects,
+  toShadowScale,
+  toSizes,
+} from "./shadow-scale.js";
+
 export { toEffectTokens, toOpeningTag } from "./tag-scan.js";
 
 export {
@@ -24,6 +34,8 @@ export {
 export type { EffectDeclaration } from "./compile.js";
 
 export type { RawRule, RulePayload } from "./sheet-rules.js";
+
+export type { ShadowScale } from "./shadow-scale.js";
 
 export type { TagLoc } from "./tag-scan.js";
 

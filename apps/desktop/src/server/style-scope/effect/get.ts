@@ -1,9 +1,11 @@
 import { EFFECT_CLASS_PREFIX } from "@design-studio/contracts/layer-effect";
 
 import type { EffectInfo, EffectItem, EffectStyle } from "./deps.js";
-import { toEffectDeclarations } from "./engine/index.js";
+import { toEffectDeclarations, toScaledEffects } from "./engine/index.js";
 import { toCurrent } from "./set-plan.js";
 import type { EffectScope } from "./set-plan.js";
+import { toClassEffects, toSizeFields } from "./shadow-read.js";
+import { getShadowSite } from "./shadow-site.js";
 import { getSheet, toSheetRules } from "./sheet.js";
 import type { SheetRule } from "./sheet.js";
 import { getEffectSite } from "./site.js";
@@ -39,15 +41,28 @@ const inspectEffects = async (
     getSheet(scope.workTree),
   ]);
 
+  const shadow = await getShadowSite(scope, source, {
+    relative: site.relative,
+    text: site.code,
+  });
+
+  const sizes = toSizeFields(shadow.scale);
+  let classShadows: EffectItem[] = [];
+
+  if (shadow.classes !== null) {
+    classShadows = toClassEffects(shadow.classes, "", shadow.scale, true);
+  }
+
   if (sheet === null) {
     return {
       className: null,
-      effects: [],
+      effects: classShadows,
       file: site.relative,
       reason: null,
       sheet: null,
       style: null,
       styleName: null,
+      ...sizes,
     };
   }
 
@@ -60,12 +75,16 @@ const inspectEffects = async (
 
   return {
     className: current.anon?.className ?? null,
-    effects: current.anon?.effects ?? [],
+    effects: [
+      ...classShadows,
+      ...toScaledEffects(current.anon?.effects ?? [], shadow.scale),
+    ],
     file: site.relative,
     reason: null,
     sheet: sheet.relative,
     style: named,
     styleName: named?.name ?? null,
+    ...sizes,
   };
 };
 

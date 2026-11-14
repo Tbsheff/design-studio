@@ -154,13 +154,25 @@ const toFileName = (path: string): string => path.split("/").at(-1) ?? path;
 const toKilobytes = (bytes: number): string =>
   String(Math.max(1, Math.round(bytes / KILOBYTE)));
 
+const isUnderKilobyte = (bytes: number): boolean => bytes < KILOBYTE;
+
+const toDraftBytes = (draft: RunDraftWire): number => {
+  if (draft.html === null) {
+    return draft.bytes;
+  }
+
+  return toByteCount(draft.html);
+};
+
 export {
   isHtmlPath,
   isLandedDraft,
+  isUnderKilobyte,
   toBasedHtml,
   toEditLayerHtml,
   toFrontSrc,
   toClosedHtml,
+  toDraftBytes,
   toDraftWrite,
   toFileName,
   toKilobytes,

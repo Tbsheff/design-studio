@@ -1688,6 +1688,10 @@ dialog.canvas-menu {
   background: none;
 }
 
+.draft-layer[data-ready="false"] {
+  background: none;
+}
+
 .draft-layer[data-landed="true"] {
   opacity: 0;
 }

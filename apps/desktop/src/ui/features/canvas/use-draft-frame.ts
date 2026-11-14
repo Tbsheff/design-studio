@@ -87,6 +87,7 @@ interface DraftSlots {
   readonly front: number;
   readonly handleFirstLoad: () => void;
   readonly handleSecondLoad: () => void;
+  readonly isReady: boolean;
 }
 
 const toDocsWith = (
@@ -104,20 +105,35 @@ const toDocsWith = (
 const useDraftSlots = (html: string | null): DraftSlots => {
   const [docs, setDocs] = useState<DraftDocs>([null, null]);
   const [front, setFront] = useState(0);
-  const [seen, setSeen] = useState<string | null>(null);
+  const [loading, setLoading] = useState<number | null>(null);
+  const back = 1 - front;
 
-  if (html !== seen) {
-    setSeen(html);
-
-    if (html !== null) {
-      setDocs(toDocsWith(docs, 1 - front, html));
+  if (html !== null && loading === null && html !== docs[front]) {
+    if (html === docs[back]) {
+      setFront(back);
+    } else {
+      setDocs(toDocsWith(docs, back, html));
+      setLoading(back);
     }
   }
 
-  const handleFirstLoad = useCallback(() => setFront(0), []);
-  const handleSecondLoad = useCallback(() => setFront(1), []);
+  const handleFirstLoad = useCallback(() => {
+    setFront(0);
+    setLoading(null);
+  }, []);
 
-  return { docs, front, handleFirstLoad, handleSecondLoad };
+  const handleSecondLoad = useCallback(() => {
+    setFront(1);
+    setLoading(null);
+  }, []);
+
+  return {
+    docs,
+    front,
+    handleFirstLoad,
+    handleSecondLoad,
+    isReady: docs[front] !== null,
+  };
 };
 
 interface DraftEditInput {
@@ -128,7 +144,13 @@ interface DraftEditInput {
 
 interface DraftEdit {
   readonly draft: RunDraftWire | null;
+  readonly frameId: string | null;
   readonly isLanded: boolean;
+}
+
+interface RunningRun {
+  readonly frameId: string | null;
+  readonly id: string;
 }
 
 interface DraftFetch {
@@ -140,7 +162,8 @@ interface DraftFetch {
 interface DraftFeed {
   readonly draft: RunDraftWire | null;
   readonly readDraft: (runId: string) => Promise<void>;
-  readonly startDraft: (runId: string) => void;
+  readonly startDraft: (runId: string, frameId: string | null) => void;
+  readonly targetFrameId: string | null;
   readonly toRunId: () => string | null;
 }
 
@@ -166,10 +189,10 @@ const toListInput = (
   return { ...input, direction: directionId };
 };
 
-const toRunningRunId = async (
+const toRunningRun = async (
   projectId: string,
   directionId: string | null
-): Promise<string | null> => {
+): Promise<RunningRun | null> => {
   const page = await call(routes.listRun, toListInput(projectId, directionId));
 
   const [latest = null] = page.items;
@@ -178,7 +201,7 @@ const toRunningRunId = async (
     return null;
   }
 
-  return latest.id;
+  return { frameId: latest.request.canvas?.frameId ?? null, id: latest.id };
 };
 
 const toDraftOrNull = async (
@@ -212,6 +235,7 @@ const runDraftReads = async (
 
 const useDraftFeed = (projectId: string): DraftFeed => {
   const [draft, setDraft] = useState<RunDraftWire | null>(null);
+  const [targetFrameId, setTargetFrameId] = useState<string | null>(null);
 
   const state = useRef<DraftFetch>({
     isBusy: false,
@@ -238,14 +262,18 @@ const useDraftFeed = (projectId: string): DraftFeed => {
     [projectId]
   );
 
-  const startDraft = useCallback((runId: string): void => {
-    state.current.runId = runId;
-    setDraft(null);
-  }, []);
+  const startDraft = useCallback(
+    (runId: string, frameId: string | null): void => {
+      state.current.runId = runId;
+      setDraft(null);
+      setTargetFrameId(frameId);
+    },
+    []
+  );
 
   const toRunId = useCallback((): string | null => state.current.runId, []);
 
-  return { draft, readDraft, startDraft, toRunId };
+  return { draft, readDraft, startDraft, targetFrameId, toRunId };
 };
 
 const useDoneToken = (
@@ -266,21 +294,19 @@ const useDoneToken = (
   return doneToken;
 };
 
-const useLateDraft = (
-  feed: DraftFeed,
-  projectId: string,
-  directionId: string | null
-): void => {
-  const { readDraft } = feed;
+const useLateDraft = (feed: DraftFeed, input: DraftEditInput): void => {
+  const { readDraft, startDraft } = feed;
+  const { directionId, projectId } = input;
 
   useEffect(() => {
     let isLive = true;
 
     const readLate = async (): Promise<void> => {
-      const runId = await toRunningRunId(projectId, directionId);
+      const running = await toRunningRun(projectId, directionId);
 
-      if (isLive && runId !== null) {
-        await readDraft(runId);
+      if (isLive && running !== null) {
+        startDraft(running.id, running.frameId);
+        await readDraft(running.id);
       }
     };
 
@@ -289,7 +315,7 @@ const useLateDraft = (
     return (): void => {
       isLive = false;
     };
-  }, [projectId, directionId, readDraft]);
+  }, [projectId, directionId, readDraft, startDraft]);
 };
 
 const useDraftEdit = (input: DraftEditInput): DraftEdit => {
@@ -314,7 +340,7 @@ const useDraftEdit = (input: DraftEditInput): DraftEdit => {
     if (event.type === "run.started") {
       clearLand();
       setIsRunOver(false);
-      feed.startDraft(event.runId);
+      feed.startDraft(event.runId, event.request.canvas?.frameId ?? null);
     }
 
     if (event.type === "run.write.delta") {
@@ -337,7 +363,7 @@ const useDraftEdit = (input: DraftEditInput): DraftEdit => {
     }
   });
 
-  useLateDraft(feed, input.projectId, input.directionId);
+  useLateDraft(feed, input);
 
   useEffect(
     () => (): void => {
@@ -350,6 +376,7 @@ const useDraftEdit = (input: DraftEditInput): DraftEdit => {
 
   return {
     draft: feed.draft,
+    frameId: feed.targetFrameId,
     isLanded: isLandedDraft({
       doneToken: landToken,
       frontToken: input.frontToken ?? "",

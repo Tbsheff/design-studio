@@ -266,7 +266,7 @@ const toAppFiles = async (
   return files;
 };
 
-const toPatternOf = (value: string): string => {
+const toCleanPattern = (value: string): string => {
   const clean = toTrimSlashes(value.trim().replace(/^\.\//u, ""));
 
   if (path.isAbsolute(value) || clean.split(/[/\\]/u).includes("..")) {
@@ -275,11 +275,38 @@ const toPatternOf = (value: string): string => {
     );
   }
 
-  if (/[*?[{]/u.test(clean)) {
+  return clean;
+};
+
+const isGlobPattern = (clean: string): boolean => /[*?[{]/u.test(clean);
+
+const toPatternOf = (value: string): string => {
+  const clean = toCleanPattern(value);
+
+  if (isGlobPattern(clean)) {
     return clean;
   }
 
   return `${clean}/**/*`;
+};
+
+const toExactFiles = async (
+  target: SearchTarget,
+  value: string
+): Promise<ScopeFile[]> => {
+  const clean = toCleanPattern(value);
+
+  if (isGlobPattern(clean) || !SCAN_FILE.test(clean) || isSkippedPath(clean)) {
+    return [];
+  }
+
+  const absolute = path.join(target.direction.workTree, clean);
+
+  if (!(await isFile(absolute))) {
+    return [];
+  }
+
+  return [{ absolute, frame: null, relative: toPosix(clean) }];
 };
 
 const isExcluded = (name: string): boolean =>
@@ -289,6 +316,12 @@ const toGlobFiles = async (
   target: SearchTarget,
   value: string
 ): Promise<ScopeFile[]> => {
+  const exact = await toExactFiles(target, value);
+
+  if (exact.length > 0) {
+    return exact;
+  }
+
   const root = target.direction.workTree;
   const files: ScopeFile[] = [];
   const matches = glob(toPatternOf(value), { cwd: root, exclude: isExcluded });

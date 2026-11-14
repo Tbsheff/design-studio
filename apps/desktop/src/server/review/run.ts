@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 
 import type {
+  CompiledTokenEntry,
   Direction,
   LayoutFinding,
   Project,
@@ -41,12 +42,20 @@ import {
   type AxeViolation,
   type Draft,
 } from "./checks.js";
+import {
+  toTypeHits,
+  type TypeHit,
+  type TypeProbeResult,
+} from "./engine/index.js";
 import { verifyFixes } from "./fixes.js";
 import { reviewProbeExpression, type ProbeResult } from "./probe.js";
 import { markShared, pageOwnDir } from "./shared-files.js";
+import { toTypeDrafts, toTypeSteps } from "./type-drafts.js";
+import { toTypeProbeExpression } from "./type-probe.js";
 
 const LAYOUT_CAP = 12;
 const TOKEN_CAP = 60;
+const TYPE_CAP = 800;
 
 const SEVERITY_RANK: Record<ReviewSeverity, number> = {
   high: 0,
@@ -61,6 +70,8 @@ interface PageFacts {
   violations: AxeViolation[];
   layout: LayoutFinding[];
   probe: ProbeResult;
+  type: TypeProbeResult;
+  typeHits: TypeHit[];
 }
 
 async function ownAxe(
@@ -77,7 +88,8 @@ async function ownAxe(
 async function readPage(
   page: RenderPage,
   app: boolean,
-  within: string | undefined
+  within: string | undefined,
+  entries: CompiledTokenEntry[]
 ): Promise<PageFacts> {
   await waitForPage(page);
 
@@ -102,23 +114,38 @@ async function readPage(
       ? pickRules((await page.axe()) as AxeViolation[], REVIEW_AXE_RULES)
       : await ownAxe(page, context);
 
-  const layout = await page.evaluate<LayoutProbeResult>(
-    layoutProbeExpression(LAYOUT_CAP)
-  );
+  const [layout, type] = await Promise.all([
+    page.evaluate<LayoutProbeResult>(layoutProbeExpression(LAYOUT_CAP)),
+    page.evaluate<TypeProbeResult>(toTypeProbeExpression(TYPE_CAP)),
+  ]);
+
+  const typeHits = toTypeHits({
+    facts: type,
+    spaceSteps: toTypeSteps(entries, "space"),
+    textSteps: toTypeSteps(entries, "text"),
+  });
 
   const selectors = [
-    ...new Set(
-      violations
+    ...new Set([
+      ...violations
         .flatMap((violation) => violation.nodes.map(axeSelector))
-        .filter((selector): selector is string => selector !== null)
-    ),
+        .filter((selector): selector is string => selector !== null),
+      ...typeHits.map((hit) => hit.selector),
+    ]),
   ];
 
   const probe = await page.evaluate<ProbeResult>(
     reviewProbeExpression({ selectors, app, scanRules: true, cap: TOKEN_CAP })
   );
 
-  return { matched, violations, layout: layout.findings, probe };
+  return {
+    matched,
+    violations,
+    layout: layout.findings,
+    probe,
+    type,
+    typeHits,
+  };
 }
 
 async function insideRoot(
@@ -296,7 +323,12 @@ export async function runReview(
     url,
     { width: frame.width, height: frame.height },
     async (page) => {
-      const read = await readPage(page, Boolean(project.app), frame.selector);
+      const read = await readPage(
+        page,
+        Boolean(project.app),
+        frame.selector,
+        entries
+      );
       const rules = target.rules ?? [];
       const ruleHits = await probeRules(page, rules, Boolean(project.app));
 
@@ -310,6 +342,12 @@ export async function runReview(
           TOKEN_CAP
         ),
         ...layoutDrafts(read.layout),
+        ...toTypeDrafts({
+          elements: read.probe.elements,
+          hits: read.typeHits,
+          isApp: Boolean(project.app),
+          isTailwind: read.type.isTailwind,
+        }),
       ];
 
       const found = [

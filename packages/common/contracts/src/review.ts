@@ -8,6 +8,7 @@ export const REVIEW_KINDS = [
   "off-token",
   "clipped",
   "rule",
+  "type",
 ] as const;
 
 export type ReviewKind = (typeof REVIEW_KINDS)[number];
@@ -22,6 +23,7 @@ export const REVIEW_KIND_LABEL: Record<ReviewKind, string> = {
   "off-token": "Off-token values",
   rule: "Design rules",
   "tap-target": "Tap target size",
+  type: "Type and spacing",
 };
 
 export const REVIEW_FIX_MAX = 50;

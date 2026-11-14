@@ -1,3 +1,4 @@
+import type { CanvasGuide } from "@design-studio/contracts/canvas-file";
 import type { CanvasLayoutGrid } from "@design-studio/contracts/layout-grid";
 
 interface LayoutBox {
@@ -38,6 +39,7 @@ interface TargetFrame {
   width: number;
   height: number;
   layoutGrid?: CanvasLayoutGrid | null;
+  guides?: readonly CanvasGuide[] | null;
 }
 
 interface RunTarget extends TargetFrame {

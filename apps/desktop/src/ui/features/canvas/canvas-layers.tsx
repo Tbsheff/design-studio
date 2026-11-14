@@ -17,10 +17,13 @@ import type { LayerTree } from "../versions-layers-tokens/layers-tree.js";
 import type { LayerEdits } from "../versions-layers-tokens/use-layer-edits.js";
 import type { PreviewMenuItem } from "./preview-menu.js";
 import type { HoverBox } from "./preview-rect-model.js";
+import { toSelectedNodes } from "./preview-selection-model.js";
+import type { NodeMap } from "./preview-selection-model.js";
 
 interface TreeFrames {
   tree: LayerTree | null;
   selectedNode: number | null;
+  selectedNodes: NodeMap;
   hoverNode: (id: number | null) => void;
   selectNode: (id: number, additive: boolean) => void;
   hover: LiveStore<HoverBox | null>;
@@ -90,6 +93,9 @@ const CanvasLayersPanel = ({
     selectedNode2 = frames.selectedNode;
   }
 
+  const nodes = frames.selectedNodes;
+  const selectedNodes = toSelectedNodes(selection, nodes, selectedNode2);
+
   const handleToggleLocked = edits.setNodeLocked;
   const handleHover = frames.hoverNode;
 
@@ -110,6 +116,7 @@ const CanvasLayersPanel = ({
       frameName={frameName}
       isEmpty={isEmpty}
       selectedNode={selectedNode2}
+      selectedNodes={selectedNodes}
       onHover={handleHover}
       hoveredNode={hoveredNode}
       onSelect={handleSelect}

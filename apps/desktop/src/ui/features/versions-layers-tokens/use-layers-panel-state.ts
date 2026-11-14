@@ -4,6 +4,7 @@ import type { PointerEvent, RefObject } from "react";
 
 import type { DragHandlers } from "./layer-drag-model.js";
 import type { LayerRowCallbacks } from "./layer-row-callbacks-model.js";
+import { toShownNodes } from "./layer-row-model.js";
 import { toLayersScope } from "./layers-open-state-model.js";
 import type { LayerTree } from "./layers-tree.js";
 import { useLatest } from "./use-latest.js";
@@ -31,6 +32,7 @@ interface PanelEdits extends LayerKeyEdits {
 
 interface PanelStateInput {
   readonly confirmed: number | null;
+  readonly confirmedNodes: ReadonlySet<number>;
   readonly edits: PanelEdits | null;
   readonly frameName: string;
   readonly isMac: boolean;
@@ -50,6 +52,7 @@ interface PanelTree extends Omit<CollapsedApi, "collapsed"> {
   readonly scope: string;
   readonly select: (id: number, isAdditive: boolean) => void;
   readonly selectedNode: number | null;
+  readonly selectedNodes: ReadonlySet<number>;
 }
 
 interface PointerHandlers {
@@ -73,6 +76,7 @@ interface PanelState extends PointerHandlers {
   readonly rowsRef: RefObject<HTMLDivElement | null>;
   readonly search: LayerSearchApi;
   readonly selectedNode: number | null;
+  readonly selectedNodes: ReadonlySet<number>;
 }
 
 const toPointerHandlers = (list: LayerListState): PointerHandlers => ({
@@ -88,6 +92,13 @@ const usePanelTree = (input: PanelStateInput): PanelTree => {
   const latestSelect = useLatest(input.onSelect);
   const pending = usePendingSelect(confirmed, latestSelect);
   const { select, shown: selectedNode } = pending;
+  const { confirmedNodes } = input;
+
+  const selectedNodes = useMemo(
+    () => toShownNodes(confirmedNodes, pending.pending, selectedNode),
+    [confirmedNodes, pending.pending, selectedNode]
+  );
+
   const scope = toLayersScope(frameName);
   const collapse = useLayerCollapse(nodes, selectedNode, scope);
   const { collapsed } = collapse;
@@ -111,6 +122,7 @@ const usePanelTree = (input: PanelStateInput): PanelTree => {
     search,
     select,
     selectedNode,
+    selectedNodes,
   };
 };
 
@@ -118,10 +130,8 @@ const usePanelState = (input: PanelStateInput): PanelState => {
   const { edits, isMac, onHover, onToggleLocked } = input;
   const treeState = usePanelTree(input);
   const { collapsed, dimmed, keys, nodes, rows, scope, search } = treeState;
-  const { select } = treeState;
   const { dismiss: onEscape, focus: onFind } = search;
-
-  const { selectedNode, toggle } = treeState;
+  const { select, selectedNode, selectedNodes, toggle } = treeState;
   const listRef = useRef<HTMLDivElement>(null);
   const rowsRef = useRef<HTMLDivElement>(null);
   const onDrop = edits?.onDrop ?? null;
@@ -139,7 +149,7 @@ const usePanelState = (input: PanelStateInput): PanelState => {
   const onRename = edits?.onRename ?? null;
   const onSelect = select;
   const rename = useLayerRename({ keys, listRef, onRename, onSelect, rows });
-  const rowMenu = useRowMenu(Boolean(edits?.menuItems), selectedNode, select);
+  const rowMenu = useRowMenu(Boolean(edits?.menuItems), selectedNodes, select);
   const { selectedIndex } = list;
   const { setEditing: onStartEdit } = rename;
 
@@ -192,6 +202,7 @@ const usePanelState = (input: PanelStateInput): PanelState => {
     rowsRef,
     search,
     selectedNode,
+    selectedNodes,
   };
 };
 

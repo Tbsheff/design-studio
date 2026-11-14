@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { PENDING_MS } from "./layers-constants.js";
 
 interface PendingSelectApi {
+  readonly pending: number | null;
   readonly select: (id: number, isAdditive: boolean) => void;
   readonly shown: number | null;
 }
@@ -42,7 +43,7 @@ const usePendingSelect = (
     [onSelect]
   );
 
-  return { select, shown: pending ?? selectedNode };
+  return { pending, select, shown: pending ?? selectedNode };
 };
 
 export { usePendingSelect };

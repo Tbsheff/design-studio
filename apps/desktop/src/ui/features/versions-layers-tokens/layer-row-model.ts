@@ -56,6 +56,22 @@ const toAriaExpanded = (
   }
 };
 
+const toShownNodes = (
+  confirmed: ReadonlySet<number>,
+  pending: number | null,
+  shown: number | null
+): ReadonlySet<number> => {
+  if (pending !== null) {
+    return new Set([pending]);
+  }
+
+  if (shown === null || confirmed.has(shown)) {
+    return confirmed;
+  }
+
+  return new Set([...confirmed, shown]);
+};
+
 const toActiveDescendant = (
   selectedIndex: number,
   selectedNode: number | null
@@ -80,4 +96,5 @@ export {
   toRowClass,
   toRowIndent,
   toRowText,
+  toShownNodes,
 };

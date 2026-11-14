@@ -1435,7 +1435,7 @@ export type BridgeToParent =
       selections: SelectionContext[];
       additive: boolean;
       at: number;
-      node?: number;
+      nodes?: number[];
     }
   | {
       ns: "studio";

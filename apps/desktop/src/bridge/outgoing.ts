@@ -182,12 +182,12 @@ const postSelectManyOf = async (
   post({
     additive,
     at: performance.timeOrigin + performance.now(),
+    nodes: live.map((element) => layers.idOf(element)),
     selections: live.map((element) => ({
       ...selectionFor(element),
       path: ancestorPath(element),
     })),
     type: "select-many",
-    ...(last && { node: layers.idOf(last) }),
   });
 };
 

@@ -1,0 +1,38 @@
+# Cycle 37 pick 2: port-kit
+
+The Move to app check now reads the route files that the port wrote. It flags raw markup that the app kit covers, and hand-made cards and badges. A high find is a gap, so the fix loop runs.
+
+## What changed
+
+- `agent/port-review-kit.ts` (new): picks the route's own page file and its folder files from the port prompt, scans them, writes the fix lines (max 6, then a count line) and the run note `Kit: N raw elements found, M left.`
+- `agent/port-review.ts`: `PortCheck` has a `kit` field; `isFixNeeded` and `toFixLines` call the kit lines. `PortReviewGaps` carries the app `project`. 474 lines.
+- `agent/port-review-pass.ts` (no pick owns it): `inspectRoute` runs the kit scan next to the match and render checks; `runPortReview` scans all route files before and after the review for the note. Single-page and flow ports share it; `port-review-routes.ts` is not changed. `isLower` does not undo a fix loop that cut the high kit finds when the score fell by 2 or less, so keep-best does not throw away a kit swap.
+- `components/kit-drift/kit-drift-port.ts` (new): `listDriftIn` with `getKitInventory`, plus the card and badge finds, with the import path from `getImportPath`.
+- `components/kit-drift/engine/to-tsx-card-drift.ts` (new, pure): JSX `div`, `section`, `article`, `li` with the 4 card signals; `span`, `div` with the pill signals and short text. Card and Badge finds stay out of `toDriftMatches`.
+- `engine/to-card-drift.ts` exports `toTokenSignals`, `SIGNAL_COUNT`. `engine/to-badge-drift.ts` exports `isPillStyled` (the pill signals live there, not in `to-badge-variant.ts`). `engine/index.ts` exports the new engine.
+- `kit-inventory.ts`: `listLookEntries` finds `Card` and `Badge` apart from `KIT_NAMES`, so `list_kit_drift` output does not change.
+- `scan-elements.ts`: `listTaggedElements` takes a tag set; `listRawElements` calls it with the old set.
+- `components/kit-drift/index.ts`: exports `listPortKitFinds`.
+
+No action, schema, tool text or generated file changed.
+
+## Checks
+
+- No model (`ds-wt/pk-loop-check.mts` on `ds-wt/pk-loop`): a ported `app/crew/page.tsx` with a raw `<button>`, a card `div` and a badge `span` gives 3 kit lines and a fix prompt (`port-kit/pk-loop-raw.txt`). After the swap to `Button`, `Card`, `Badge`: 0 lines, no fix, note `Kit: 3 raw elements found, 0 left.` (`port-kit/pk-loop-kit.txt`).
+- `call-action.ts kit-drift.list` on `pk-next` (with a raw sample page): main and branch give the same item, same id. 3 surfaces, 0 diffs.
+- Mock port of the crew flow (2 routes): the run note ends with `Kit: 0 raw elements found.`
+- Score check, no model: the run 1 `/crew` page with Card, Badge and Button swapped back to raw markup scores 93 in `inspect_port`, and the kit page scores 96 (2 tries each). The raw page gives 3 kit lines.
+- Real-model run 1 (Sonnet, fresh data folder, `ds-wt/pk-next`: Next 16, Tailwind 4, shadcn-style Button, Card, Badge, Input): 57 s, $0.26. Both route files import `Button`, `Card` and `Badge`. Scores /crew 96, /crew/member 82. Note `Kit: 0 raw elements found.` `next build` passes.
+- Real-model run 2 (after the `isLower` change, fresh data folder): 48 s, $0.23. Both route files import `Button`, `Card` and `Badge`. Scores /crew 78 (top left 77), /crew/member 94; the fix loop lowered the score and was undone. Note `Kit: 0 raw elements found.` `next build` passes.
+- Result: 4 of 5 real-run pass points hold (kit imports, note, build, run 1 scores). Run 2 /crew is 78, under 80, from layout spacing, not kit use. The model used the kit in both runs, so no real run showed finds going to 0 left; only the no-model script shows that path.
+- Screenshots: `port-kit/run-note-dark.png`, `port-kit/run-note-light.png`.
+- `pnpm run typecheck`: pass. `pnpm run lint:gate`: pass (59,624, baseline 89,733). `pnpm run build:ui`: pass.
+
+## Left out
+
+- No real run made raw markup, so the find-and-swap path has no real-model proof.
+- Merge note for flow-fast (pick 4): `isLowerSet` in `port-review-routes.ts` still compares scores only, so in a flow a kit swap that costs 1 or 2 points is undone. Add the same kit-trade rule there (`toHighKitCount` is exported from `port-review-kit.ts`).
+- Medium finds (for example a raw button whose classes differ from the kit variants) are listed but do not start the fix loop, as the spec says.
+- The flow fix prompt head still says the routes "fail to render or score under 80"; a route with only kit gaps is listed under it. That text is in `port-review-routes.ts` (pick 4).
+- `.claude/goal/roadmap.md` is still missing in the worktree, so Appendix A is not updated.
+- Fixture `pk-next` got Tailwind 4.2.2 by a copy of the packages from the Bonaparte store (read only), not by an install.

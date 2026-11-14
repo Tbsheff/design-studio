@@ -4,7 +4,7 @@ import type {
   PortFirstShift,
   PortMasked,
 } from "@design-studio/actions/port/schema";
-import type { FinalCheck } from "@design-studio/contracts";
+import type { FinalCheck, Project } from "@design-studio/contracts";
 import { PORT_TASK } from "@design-studio/contracts/port";
 import type { PortReviewRecord } from "@design-studio/contracts/port";
 
@@ -13,9 +13,11 @@ import type {
   AgentRunContext,
   PreviewService,
 } from "../../shared/server-ports.js";
+import type { PortKitFind } from "../components/kit-drift/index.js";
 import type { StudioRuntime } from "../platform/studio-runtime/index.js";
 import { isLeanRun } from "./lean-run.js";
 import { EDIT_TOOL_NAMES } from "./permissions.js";
+import { hasKitGap, toKitLines } from "./port-review-kit.js";
 import type { PortMatchRead, RouteRender } from "./port-review-read.js";
 import { hasRouteChange, toStartSnapshot } from "./port-review-snapshot.js";
 import { toRouteFileNow } from "./port-route-update.js";
@@ -52,11 +54,13 @@ interface PortRouteGaps {
 interface PortReviewGaps extends PortRouteGaps {
   readonly appDirectionId: string;
   readonly files: readonly string[];
+  readonly project: Project;
   readonly routes: readonly PortRouteGaps[];
   readonly workTree: string;
 }
 
 interface PortCheck {
+  readonly kit: readonly PortKitFind[] | null;
   readonly match: PortMatchRead;
   readonly render: RouteRender;
 }
@@ -80,7 +84,7 @@ interface PortReview {
 
 type PortReviewContext = Pick<
   AgentRunContext,
-  "direction" | "previewUrl" | "request"
+  "direction" | "previewUrl" | "project" | "request"
 >;
 
 const toAttribute = (attributes: string, key: string): string => {
@@ -190,6 +194,7 @@ const toCheckGaps = (ctx: PortReviewContext): PortReviewGaps | null => {
     appDirectionId: ctx.direction.id,
     files: toRouteFiles(prompt),
     isUpdate: routeGaps[0]?.isUpdate ?? false,
+    project: ctx.project,
     ref: first,
     routes: routeGaps,
     url: toRouteUrl(base, first.routePath),
@@ -224,7 +229,7 @@ const isLowMatch = (match: PortMatchRead): boolean =>
   (match.score < REFERENCE_LOW_SCORE || match.areas.length > 0);
 
 const isFixNeeded = (check: PortCheck): boolean =>
-  !check.render.isRendered || isLowMatch(check.match);
+  !check.render.isRendered || isLowMatch(check.match) || hasKitGap(check.kit);
 
 const toRenderText = (render: RouteRender): string => {
   if (render.isRendered) {
@@ -389,6 +394,7 @@ const toFixLines = (gaps: PortRouteGaps, check: PortCheck): string[] => [
   ...toShiftLines(check.match.firstShift),
   ...toMaskedLines(check.match),
   ...toAreaLines(check.match),
+  ...toKitLines(check.kit),
 ];
 
 const toContinueText = (lines: readonly string[]): string =>

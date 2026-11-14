@@ -381,6 +381,6 @@ const toCardDrift = (input: CardInput): CardFind[] => {
   return document.childNodes.flatMap((node) => listCardsIn(context, node));
 };
 
-export { toCardDrift };
+export { SIGNAL_COUNT, toCardDrift, toTokenSignals };
 
-export type { CardFind, CardInput };
+export type { CardFind, CardInput, CardSignal };

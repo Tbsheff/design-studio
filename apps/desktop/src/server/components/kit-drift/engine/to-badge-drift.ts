@@ -382,6 +382,6 @@ const toBadgeDrift = (input: BadgeInput): BadgeFind[] => {
   return document.childNodes.flatMap((node) => listBadgesIn(context, node));
 };
 
-export { toBadgeDrift };
+export { isPillStyled, toBadgeDrift };
 
-export type { BadgeFind, BadgeInput };
+export type { BadgeFind, BadgeInput, BadgeLook };

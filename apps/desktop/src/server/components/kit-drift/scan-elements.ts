@@ -112,15 +112,21 @@ const toClosingName = (
   return null;
 };
 
+interface ScanScope {
+  readonly source: TsSourceFile;
+  readonly tags: ReadonlySet<string>;
+}
+
 const toElement = (
   ts: Ts,
-  source: TsSourceFile,
+  scope: ScanScope,
   node: TsJsxElement | TsJsxSelfClosingElement
 ): RawElement | null => {
+  const { source } = scope;
   const opening = toOpening(ts, node);
   const { tagName } = opening;
 
-  if (!ts.isIdentifier(tagName) || !SCANNED_TAGS.has(tagName.text)) {
+  if (!ts.isIdentifier(tagName) || !scope.tags.has(tagName.text)) {
     return null;
   }
 
@@ -155,7 +161,12 @@ const toElement = (
   };
 };
 
-const listRawElements = (ts: Ts, file: string, code: string): RawElement[] => {
+const listTaggedElements = (
+  ts: Ts,
+  file: string,
+  code: string,
+  tags: ReadonlySet<string>
+): RawElement[] => {
   let kind = ts.ScriptKind.TSX;
 
   if (file.endsWith(".jsx")) {
@@ -174,7 +185,7 @@ const listRawElements = (ts: Ts, file: string, code: string): RawElement[] => {
 
   const visit = (node: TsNode): void => {
     if (ts.isJsxElement(node) || ts.isJsxSelfClosingElement(node)) {
-      const element = toElement(ts, source, node);
+      const element = toElement(ts, { source, tags }, node);
 
       if (element !== null) {
         found.push(element);
@@ -189,4 +200,7 @@ const listRawElements = (ts: Ts, file: string, code: string): RawElement[] => {
   return found;
 };
 
-export { listRawElements };
+const listRawElements = (ts: Ts, file: string, code: string): RawElement[] =>
+  listTaggedElements(ts, file, code, SCANNED_TAGS);
+
+export { listRawElements, listTaggedElements };

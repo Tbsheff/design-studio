@@ -4,6 +4,11 @@ import { Result, Schema } from "effect";
 
 import { runAgentTool, runConfirmedAgentTool } from "../mcp/index.js";
 import { toDecoder } from "../platform/decode/index.js";
+import {
+  inspectRouteKit,
+  toHighKitCount,
+  toKitNote,
+} from "./port-review-kit.js";
 import { inspectPortMatch, inspectRouteRender } from "./port-review-read.js";
 import type { InspectCall } from "./port-review-read.js";
 import { runRoutesReview } from "./port-review-routes.js";
@@ -57,6 +62,8 @@ const WRITTEN_SHOWN = 5;
 
 const WAS_MARK = " (was ";
 
+const KIT_DROP_MAX = 2;
+
 const decodeApplied = toDecoder(
   Schema.fromJsonString(PortAppliedSchema),
   "ignore"
@@ -66,18 +73,29 @@ const inspectRoute = async (input: PortReviewInput): Promise<PortCheck> => {
   const inspect: InspectCall = (name, body) =>
     runAgentTool(input.runtime, name, body);
 
-  const [match, render] = await Promise.all([
+  const [match, render, kit] = await Promise.all([
     inspectPortMatch(inspect, input.gaps.ref),
     inspectRouteRender(input.preview, input.gaps.url, input.gaps.files),
+    inspectRouteKit({
+      files: input.gaps.files,
+      project: input.gaps.project,
+      routePath: input.gaps.ref.routePath,
+      workTree: input.gaps.workTree,
+    }),
   ]);
 
-  return { match, render };
+  return { kit, match, render };
 };
+
+const isKitTrade = (before: PortCheck, after: PortCheck): boolean =>
+  toHighKitCount(after.kit) < toHighKitCount(before.kit) &&
+  (before.match.score ?? 0) - (after.match.score ?? 0) <= KIT_DROP_MAX;
 
 const isLower = (before: PortCheck, after: PortCheck): boolean =>
   before.match.score !== null &&
   after.match.score !== null &&
-  after.match.score < before.match.score;
+  after.match.score < before.match.score &&
+  !isKitTrade(before, after);
 
 const isRaised = (before: PortCheck, after: PortCheck): boolean =>
   before.match.score !== null &&
@@ -350,12 +368,45 @@ const runPageReview = async (input: PortReviewInput): Promise<PortReview> => {
   return toReview({ ...loops, first: firstCheck, pass });
 };
 
-const runPortReview = (input: PortReviewInput): Promise<PortReview> => {
+const runReview = (input: PortReviewInput): Promise<PortReview> => {
   if (input.gaps.routes.length > 1) {
     return runRoutesReview(input, { inspectRoute, runValuesFirst });
   }
 
   return runPageReview(input);
+};
+
+const inspectAllKit = async (
+  input: PortReviewInput
+): Promise<number | null> => {
+  const finds = await inspectRouteKit({
+    files: input.gaps.files,
+    project: input.gaps.project,
+    routePath: null,
+    workTree: input.gaps.workTree,
+  });
+
+  return finds?.length ?? null;
+};
+
+const toKitReview = async (
+  input: PortReviewInput,
+  review: PortReview,
+  found: number | null
+): Promise<PortReview> => {
+  if (found === null) {
+    return review;
+  }
+
+  const left = await inspectAllKit(input);
+
+  return { ...review, note: `${review.note}${toKitNote({ found, left })}` };
+};
+
+const runPortReview = async (input: PortReviewInput): Promise<PortReview> => {
+  const found = await inspectAllKit(input);
+
+  return toKitReview(input, await runReview(input), found);
 };
 
 export { runPortReview };

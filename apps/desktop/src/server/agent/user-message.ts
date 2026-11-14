@@ -1,6 +1,5 @@
 import { readFile } from "node:fs/promises";
 
-import type { SDKUserMessage } from "@anthropic-ai/claude-agent-sdk";
 import type {
   Attachment,
   ProjectKind,
@@ -27,6 +26,7 @@ import { toFocusLines } from "./focus-block.js";
 import { toFrameContextText } from "./guide-text.js";
 import { toImageListLines } from "./image-list.js";
 import { layoutLines } from "./layout-region.js";
+import { isNewPageRun } from "./new-page.js";
 import type { RunTarget, TargetFrame } from "./run-target.js";
 import { toSelectedElementsEnd, toStylesText } from "./selected-elements.js";
 import { toParentLines } from "./selection-parent.js";
@@ -49,6 +49,7 @@ export interface ImagePart {
 export interface UserMessageParts {
   text: string;
   images: ImagePart[];
+  isNewPage?: boolean;
 }
 
 function trim(value: string, max: number): string {
@@ -462,38 +463,10 @@ export async function buildUserMessageParts(
   const imageList = await toImageListLines(ctx.attachments);
   return {
     images: await loadImages(ctx.attachments),
+    isNewPage: await isNewPageRun(ctx),
     text: [buildUserText(ctx), ...imageList].join("\n\n"),
   };
 }
 
-export function toSdkPrompt(
-  parts: UserMessageParts
-): string | AsyncIterable<SDKUserMessage> {
-  if (parts.images.length === 0) {
-    return parts.text;
-  }
-  const message: SDKUserMessage = {
-    message: {
-      content: [
-        ...parts.images.map((image) => ({
-          type: "image" as const,
-          source: {
-            type: "base64" as const,
-            media_type: image.mime,
-            data: image.data,
-          },
-        })),
-        { type: "text" as const, text: parts.text },
-      ],
-      role: "user",
-    },
-    parent_tool_use_id: null,
-    type: "user",
-  };
-
-  return (async function* single() {
-    yield message;
-  })();
-}
-
 export { toMockSelectionReply } from "./selected-elements.js";
+export { toSdkPrompt } from "./sdk-prompt.js";

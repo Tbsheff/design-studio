@@ -113,6 +113,13 @@ export function recommendSkills(
 export const LOAD_ORDER =
   "Before you write any file, call the Skill tool for each of these that fits the request.";
 
+export const DRAFT_LOAD_ORDER =
+  "After your first draft, before the fix round, call the Skill tool for each of these that fits the request.";
+
+export function toDraftLoadOrder(text: string): string {
+  return text.replace(LOAD_ORDER, DRAFT_LOAD_ORDER);
+}
+
 export function recommendedSkillsBlock(ids: readonly string[]): string {
   if (ids.length === 0) {
     return "";

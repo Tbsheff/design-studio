@@ -172,6 +172,7 @@ interface EditStepResult {
 
 interface EditHistory extends EditRecorder {
   mark: () => number;
+  dropSince: (projectId: string, directionId: string, since: number) => void;
   dropUnsaved: (projectId: string, since: number) => Promise<number>;
   state: (projectId: string, directionId: string) => EditHistoryState;
   list?: (

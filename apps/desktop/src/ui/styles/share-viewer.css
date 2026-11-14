@@ -296,6 +296,26 @@ dialog.present-layer {
   box-shadow: var(--shadow-md);
 }
 
+.share-canvas-toggle.is-bar {
+  top: calc(6px + env(safe-area-inset-top));
+  right: var(--s-2);
+  bottom: auto;
+  left: auto;
+  transform: none;
+  height: 32px;
+  padding: 0 var(--s-3);
+  border-color: var(--line);
+  box-shadow: none;
+}
+
+.share-viewer.is-bar-canvas .play-bar {
+  padding-right: 136px;
+}
+
+.share-viewer.is-bar-canvas .play-bar > :last-child {
+  display: none;
+}
+
 .share-empty {
   margin: 96px auto;
   max-width: 360px;

@@ -39,6 +39,8 @@ export {
 
 export { withPagePath } from "../../project-source/index.js";
 
+export { normalizeVariant } from "../../../shared/variants.js";
+
 export {
   DIRECT_STYLE_PROPERTIES,
   SOURCE_LOC_ATTR,

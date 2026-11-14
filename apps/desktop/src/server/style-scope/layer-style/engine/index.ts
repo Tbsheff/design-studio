@@ -6,6 +6,7 @@ export {
   toOrderedGroups,
   toReadProperties,
   toStyleGroups,
+  toVariantClassPlan,
 } from "./to-style-groups.js";
 
 export { toAutoLayout } from "./to-auto-layout.js";

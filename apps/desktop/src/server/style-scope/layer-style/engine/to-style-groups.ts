@@ -15,6 +15,11 @@ import type {
   StyleDeclaration,
 } from "./groups.js";
 
+interface VariantPlanScope {
+  readonly theme: TailwindTheme | null;
+  readonly variant: string;
+}
+
 const toGroupOf = (
   token: string,
   theme: TailwindTheme | null
@@ -62,6 +67,34 @@ const toPickedClasses = (
 
     return group !== null && wanted.has(group);
   });
+};
+
+const toVariantClassPlan = (
+  source: readonly string[],
+  target: readonly string[],
+  groups: readonly LayerStyleGroup[],
+  scope: VariantPlanScope
+): ClassPlan => {
+  const { theme, variant } = scope;
+
+  const wanted = toPickedClasses(source, groups, theme).flatMap((token) => {
+    if (parseClass(token).variants !== "") {
+      return [];
+    }
+
+    return [`${variant}${token}`];
+  });
+
+  const wantedSet = new Set(wanted);
+  const targetSet = new Set(target);
+
+  const remove = toPickedClasses(target, groups, theme).filter(
+    (token) => parseClass(token).variants === variant && !wantedSet.has(token)
+  );
+
+  const add = [...wantedSet].filter((token) => !targetSet.has(token));
+
+  return { add, remove };
 };
 
 const toClassPlan = (
@@ -122,4 +155,5 @@ export {
   toOrderedGroups,
   toReadProperties,
   toStyleGroups,
+  toVariantClassPlan,
 };

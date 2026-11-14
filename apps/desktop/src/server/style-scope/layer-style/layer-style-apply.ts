@@ -3,6 +3,7 @@ import type { LayerStyleChangeSchema } from "@design-studio/actions/layer-style/
 import {
   DIRECT_STYLE_PROPERTIES,
   applyDirectEditBatch,
+  normalizeVariant,
   parseDirectEditRequest,
 } from "./deps.js";
 import type { DirectEditRequest, DirectionRun } from "./deps.js";
@@ -11,6 +12,7 @@ import {
   toDeclarationPlan,
   toOrderedGroups,
   toReadProperties,
+  toVariantClassPlan,
 } from "./engine/index.js";
 import type { LayerStyleGroup, StyleDeclaration } from "./engine/index.js";
 import { LayerStyleError } from "./errors.js";
@@ -25,6 +27,12 @@ interface ApplyRequest {
   readonly groups: readonly LayerStyleGroup[];
   readonly sourceLayerId: string;
   readonly targetLayerIds: readonly string[];
+  readonly variant: string;
+}
+
+interface ApplyScope {
+  readonly groups: readonly LayerStyleGroup[];
+  readonly variant: string;
 }
 
 interface Candidate {
@@ -86,27 +94,40 @@ const toSkipReason = (
 
 const toRequest = (
   layer: ResolvedLayer,
-  change: Pick<DirectEditRequest, "classes" | "style">
+  change: Pick<DirectEditRequest, "classes" | "style">,
+  variant: string
 ): DirectEditRequest | null => {
   if (layer.source === null) {
     return null;
   }
 
-  return parseDirectEditRequest({
-    ...change,
-    selector: layer.selector,
-    source: layer.source,
-  });
+  const base = { ...change, selector: layer.selector, source: layer.source };
+
+  if (variant === "") {
+    return parseDirectEditRequest(base);
+  }
+
+  return parseDirectEditRequest({ ...base, variant });
+};
+
+const toStyleBase = (
+  source: Candidate,
+  target: Candidate,
+  variant: string
+): readonly StyleDeclaration[] => {
+  if (variant === "") {
+    return toDeclarationPlan(source.layer.styles, target.layer.styles);
+  }
+
+  return source.layer.styles;
 };
 
 const toStyleChange = (
   source: Candidate,
-  target: Candidate
+  target: Candidate,
+  variant: string
 ): DirectEditRequest | null => {
-  const plan = toDeclarationPlan(
-    source.layer.styles,
-    target.layer.styles
-  ).filter(
+  const plan = toStyleBase(source, target, variant).filter(
     (entry: StyleDeclaration) =>
       STYLE_PROPERTIES.has(entry.property) &&
       entry.value.length <= VALUE_LIMIT &&
@@ -121,20 +142,37 @@ const toStyleChange = (
     plan.map((entry) => [entry.property, entry.value])
   );
 
-  return toRequest(target.layer, { style });
+  return toRequest(target.layer, { style }, variant);
+};
+
+const toPlanOf = (
+  source: Candidate,
+  target: Candidate,
+  scope: ApplyScope
+): ReturnType<typeof toClassPlan> => {
+  if (scope.variant === "") {
+    return toClassPlan(
+      source.site.classes,
+      target.site.classes,
+      scope.groups,
+      target.site.theme
+    );
+  }
+
+  return toVariantClassPlan(
+    source.site.classes,
+    target.site.classes,
+    scope.groups,
+    { theme: target.site.theme, variant: scope.variant }
+  );
 };
 
 const toClassChange = (
   source: Candidate,
   target: Candidate,
-  groups: readonly LayerStyleGroup[]
+  scope: ApplyScope
 ): DirectEditRequest | null => {
-  const plan = toClassPlan(
-    source.site.classes,
-    target.site.classes,
-    groups,
-    target.site.theme
-  );
+  const plan = toPlanOf(source, target, scope);
 
   if (plan.add.length === 0 && plan.remove.length === 0) {
     return null;
@@ -146,27 +184,29 @@ const toClassChange = (
     );
   }
 
-  return toRequest(target.layer, {
-    classes: { add: [...plan.add], remove: [...plan.remove] },
-  });
+  return toRequest(
+    target.layer,
+    { classes: { add: [...plan.add], remove: [...plan.remove] } },
+    scope.variant
+  );
 };
 
 const toChosenEdit = (
   source: Candidate,
   target: Candidate,
-  groups: readonly LayerStyleGroup[]
+  scope: ApplyScope
 ): DirectEditRequest | null => {
   if (target.site.isTailwind) {
-    return toClassChange(source, target, groups);
+    return toClassChange(source, target, scope);
   }
 
-  return toStyleChange(source, target);
+  return toStyleChange(source, target, scope.variant);
 };
 
 const toPlanned = (
   source: Candidate,
   target: Candidate,
-  groups: readonly LayerStyleGroup[]
+  scope: ApplyScope
 ): Planned => {
   const id = target.layer.layerId;
   const reason = toSkipReason(target, source);
@@ -176,7 +216,7 @@ const toPlanned = (
   }
 
   try {
-    const edit = toChosenEdit(source, target, groups);
+    const edit = toChosenEdit(source, target, scope);
 
     if (edit === null) {
       return { edit: null, layerId: id, reason: SAME_STYLE };
@@ -213,11 +253,24 @@ const toTargetIds = (request: ApplyRequest): string[] =>
     (layerId) => layerId !== request.sourceLayerId
   );
 
+const toVariantOf = (raw: string): string => {
+  const variant = normalizeVariant(raw);
+
+  if (variant === null) {
+    throw new LayerStyleError(
+      `The variant ${raw} is not a known state or breakpoint. Use a prefix such as hover:, md: or data-[state=open]:.`
+    );
+  }
+
+  return variant;
+};
+
 const applyLayerStyleBatch = async (
   run: DirectionRun,
   request: ApplyRequest
 ): Promise<LayerStyleChange> => {
   const groups = toOrderedGroups(request.groups);
+  const applyScope = { groups, variant: toVariantOf(request.variant) };
   const ids = [request.sourceLayerId, ...toTargetIds(request)];
 
   const scope = {
@@ -238,7 +291,10 @@ const applyLayerStyleBatch = async (
     throw new LayerStyleError(NO_SOURCE);
   }
 
-  const planned = targets.map((target) => toPlanned(source, target, groups));
+  const planned = targets.map((target) =>
+    toPlanned(source, target, applyScope)
+  );
+
   const edits = planned.flatMap((entry) => entry.edit ?? []);
 
   const skipped = planned.flatMap((entry) => {

@@ -18,6 +18,7 @@ const handle = Effect.fn("layer-style.apply")(function* run(
     projectId: input.projectId,
     sourceLayerId: input.sourceLayerId,
     targetLayerIds: input.targetLayerIds,
+    variant: input.variant,
   });
 }) satisfies Handle<typeof applyLayerStyle>;
 

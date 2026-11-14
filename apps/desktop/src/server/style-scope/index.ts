@@ -1,4 +1,4 @@
-export { ThemeStore, ThemeWriter } from "./theme/index.js";
+export { ThemeStore, ThemeWriter, createStarterLook } from "./theme/index.js";
 
 export type {
   ApplyThemeCommand,
@@ -6,6 +6,8 @@ export type {
   ImportThemeCommand,
   ListThemeCommand,
   SetThemeCommand,
+  StarterLook,
+  StarterLookCommand,
   ThemePage,
   ThemeStoreApi,
   ThemeWriterApi,

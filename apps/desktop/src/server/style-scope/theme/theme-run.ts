@@ -29,6 +29,7 @@ import type {
 } from "./theme-model.js";
 import { getSavedThemes, setSavedThemes } from "./theme-saved.js";
 import { toSeedOf } from "./theme-seed.js";
+import { createStarterVersion, isStarterProject } from "./theme-starter.js";
 
 interface CreateThemeCommand extends DirectionIds {
   readonly brief: string | null;
@@ -81,6 +82,37 @@ const getThemeBase = (
     toDirectEditStatusFailure
   );
 
+const isStarterNeeded = (
+  ids: DirectionIds
+): Effect.Effect<boolean, KnownFailure> =>
+  runDirectionRead(
+    ids,
+    async ({ direction, project }): Promise<boolean> =>
+      isStarterProject(project) &&
+      (await getThemeTokenBase(project, direction)) === null,
+    toDirectEditStatusFailure
+  );
+
+const createStarterBase = Effect.fn("ThemeRun.createStarterBase")(function* run(
+  command: CreateThemeCommand
+) {
+  if (!(yield* isStarterNeeded(command))) {
+    return;
+  }
+
+  yield* runDirectionWrite(
+    command,
+    ({ direction, project, runtime }): Promise<boolean> =>
+      createStarterVersion(
+        runtime.editDeps,
+        project,
+        direction,
+        command.brief ?? project.name
+      ),
+    toDirectEditStatusFailure
+  );
+});
+
 const inspectDirection = (
   ids: DirectionIds
 ): Effect.Effect<void, KnownFailure> =>
@@ -89,6 +121,7 @@ const inspectDirection = (
 const runThemeCreate = Effect.fn("ThemeRun.create")(function* run(
   command: CreateThemeCommand
 ) {
+  yield* createStarterBase(command);
   const base = yield* getThemeBase(command);
   const saved = yield* getSavedThemes(command);
   const source = toThemeSource(base);

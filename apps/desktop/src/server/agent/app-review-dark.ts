@@ -44,6 +44,14 @@ const LISTED_LINES = 6;
 
 const RATIO_STEP = 10;
 
+const STILL_EXPRESSION = `(async () => {
+    const style = document.createElement('style');
+    style.textContent = '*, *::before, *::after { transition: none !important; animation: none !important; }';
+    document.head.append(style);
+    await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
+    return true;
+  })()`;
+
 const NOT_RENDERED: AppDarkCheck = { count: null, lines: [], oldCode: 0 };
 
 const toSourceExpression = (selectors: readonly string[]): string =>
@@ -74,6 +82,8 @@ const hasAppDarkValues = async (ctx: AppDarkContext): Promise<boolean> => {
 };
 
 const listPageItems = async (page: RenderPage): Promise<AppDarkItem[]> => {
+  await page.evaluate(STILL_EXPRESSION);
+
   const misses = await listContrastMisses(page);
 
   const sources = await page.evaluate<(string | null)[]>(
@@ -90,12 +100,12 @@ const listPageItems = async (page: RenderPage): Promise<AppDarkItem[]> => {
 const listDarkItems = async (
   preview: PreviewService,
   url: string
-): Promise<AppDarkItem[]> => {
+): Promise<AppDarkItem[] | null> => {
   const dark = toSchemedPreview(preview, "dark");
   const timer = new AbortController();
 
   if (!dark.withPage) {
-    return [];
+    return null;
   }
 
   try {
@@ -103,10 +113,10 @@ const listDarkItems = async (
 
     return await Promise.race([
       render,
-      toDelay(RENDER_TIMEOUT_MS, [], { signal: timer.signal }),
+      toDelay(RENDER_TIMEOUT_MS, null, { signal: timer.signal }),
     ]);
   } catch {
-    return [];
+    return null;
   } finally {
     timer.abort();
   }
@@ -195,8 +205,14 @@ const inspectAppDark = async (
   const start = Date.now();
   const items = await listDarkItems(preview, url);
 
+  if (items === null) {
+    logInfo(`[agent] app dark check: no render of ${url}, so no dark lines`);
+
+    return NOT_RENDERED;
+  }
+
   logInfo(
-    `[agent] app dark check: rendered ${url} in ${Date.now() - start} ms`
+    `[agent] app dark check: rendered ${url} in ${Date.now() - start} ms, ${items.length} items under AA`
   );
 
   const inFiles = items.filter(

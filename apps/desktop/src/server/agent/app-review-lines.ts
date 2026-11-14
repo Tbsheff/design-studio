@@ -1,5 +1,3 @@
-import path from "node:path";
-
 import { PORT_TASK } from "@design-studio/contracts/port";
 
 import type {
@@ -76,16 +74,6 @@ const toAppLineCounts = (gaps: AppReviewGaps): AppLineCounts | null => {
   return APP_TALLY.get(ctx)?.counts.at(-1) ?? NO_COUNTS;
 };
 
-const toAppDir = (appDir: string): string => {
-  const dir = path.posix.normalize(appDir);
-
-  if (dir === ".") {
-    return "";
-  }
-
-  return dir;
-};
-
 const listChangedFiles = async (
   input: AppCheckInput
 ): Promise<ChangedFile[]> => {
@@ -97,7 +85,7 @@ const listChangedFiles = async (
 
   return await changedLinesSince(
     input.ctx.direction.workTree,
-    toAppDir(input.ctx.project.app?.appDir ?? ""),
+    input.ctx.project.app?.appDir ?? "",
     startedAt,
     input.baseFile
   );
@@ -178,7 +166,7 @@ const toDarkText = (tally: AppTally): string => {
   const last = tally.counts.at(-1) ?? NO_COUNTS;
 
   if (last.dark === null) {
-    return "Dark: not checked (no dark values or no changed lines)";
+    return "Dark: not checked (no dark values, no changed lines or no render)";
   }
 
   if (last.dark === 1) {

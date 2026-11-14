@@ -4,6 +4,8 @@ import type { ReactElement } from "react";
 import { copy } from "./copy.js";
 import { toRectStyle } from "./overlay-styles.js";
 import { ResizeHandle } from "./resize-handle.js";
+import { RotateAngleLabel } from "./rotate-angle-label.js";
+import { RotateZones } from "./rotate-zone.js";
 import { SCALE_CORNERS } from "./scale-drag-model.js";
 import { ScaleGhostBox } from "./scale-ghost-box.js";
 import { ScaleHandle } from "./scale-handle.js";
@@ -65,6 +67,7 @@ const ResizeHandles = ({
       data-testid="resize-frame"
       style={toRectStyle(rect, liveSize)}
     >
+      {!isScaling && !live && <RotateZones down={control.onRotateDown} />}
       {result.map((edge) => (
         <ResizeHandle key={edge} edge={edge} down={control.onHandleDown} />
       ))}
@@ -77,6 +80,7 @@ const ResizeHandles = ({
           />
         ))}
       {ghost && <ScaleGhostBox ghost={ghost} rect={rect} />}
+      {control.rotateLabel && <RotateAngleLabel label={control.rotateLabel} />}
       {live && (
         <span className="resize-label" data-testid="resize-label">
           {live.width}

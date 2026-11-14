@@ -339,6 +339,11 @@ const presentCopy = {
   playTip: "Play prototype. The arrow shows more ways to present",
 } as const;
 
+const rotateHandleCopy = {
+  degree: "°",
+  failed: "Could not rotate the layer",
+} as const;
+
 const rulerGuideCopy = {
   guide: "Drag to move the guide. Drag it onto the ruler to remove it.",
 } as const;
@@ -347,6 +352,7 @@ export {
   copy,
   layoutGridCopy,
   presentCopy,
+  rotateHandleCopy,
   rulerGuideCopy,
   scaleCopy,
   startCopy,

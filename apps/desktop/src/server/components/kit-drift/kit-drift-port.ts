@@ -1,20 +1,14 @@
-import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 import { loadTypeScript } from "./deps.js";
 import type { Project } from "./deps.js";
-import { LOOK_TAGS, toTsxCardDrift } from "./engine/index.js";
-import type { DriftMatch, DriftTag, TsxLookFind } from "./engine/index.js";
+import type { DriftMatch, DriftTag } from "./engine/index.js";
 import { getImportPath } from "./kit-drift-import.js";
 import type { ImportScope } from "./kit-drift-import.js";
+import { toLookInventory } from "./kit-drift-look.js";
 import { listDriftIn } from "./kit-drift-scan.js";
 import type { FileDrift } from "./kit-drift-scan.js";
-import {
-  getKitInventory,
-  isInsideKit,
-  listLookEntries,
-} from "./kit-inventory.js";
-import { listTaggedElements } from "./scan-elements.js";
+import { getKitInventory, isInsideKit } from "./kit-inventory.js";
 
 interface PortKitFind {
   readonly component: string;
@@ -36,28 +30,8 @@ interface PortKitScope {
   readonly workTree: string;
 }
 
-interface LookScope {
-  readonly hasBadge: boolean;
-  readonly hasCard: boolean;
-  readonly imports: ImportScope;
-  readonly workTree: string;
-}
-
-const LOOK_COMPONENT: Readonly<Record<TsxLookFind["tag"], string>> = {
-  badge: "Badge",
-  card: "Card",
-};
-
 const toRelative = (workTree: string, absolute: string): string =>
   path.relative(workTree, absolute).split(path.sep).join("/");
-
-const getText = async (absolute: string): Promise<string | null> => {
-  try {
-    return await readFile(absolute, "utf-8");
-  } catch {
-    return null;
-  }
-};
 
 const toFindId = (match: DriftMatch): string | null => {
   if (match.skip === null) {
@@ -99,62 +73,6 @@ const listDriftFinds = async (
   );
 };
 
-const listFileLooks = async (
-  scope: LookScope,
-  absolute: string
-): Promise<PortKitFind[]> => {
-  const code = await getText(absolute);
-
-  if (code === null) {
-    return [];
-  }
-
-  const elements = listTaggedElements(
-    scope.imports.ts,
-    absolute,
-    code,
-    LOOK_TAGS
-  );
-
-  const looks = toTsxCardDrift({
-    code,
-    elements,
-    hasBadge: scope.hasBadge,
-    hasCard: scope.hasCard,
-  });
-
-  return await Promise.all(
-    looks.map(async (look) => {
-      const component = LOOK_COMPONENT[look.tag];
-
-      return {
-        component,
-        file: toRelative(scope.workTree, absolute),
-        id: null,
-        importPath: await getImportPath(scope.imports, component, absolute),
-        isHigh: true,
-        line: look.line,
-        tag: look.tag,
-      };
-    })
-  );
-};
-
-const listLookFinds = async (
-  scope: LookScope,
-  absolutes: readonly string[]
-): Promise<PortKitFind[]> => {
-  if (!scope.hasBadge && !scope.hasCard) {
-    return [];
-  }
-
-  const found = await Promise.all(
-    absolutes.map((absolute) => listFileLooks(scope, absolute))
-  );
-
-  return found.flat();
-};
-
 const toAbsolutes = (workTree: string, files: readonly string[]): string[] =>
   [...new Set(files)].flatMap((file) => {
     const absolute = path.resolve(workTree, file);
@@ -176,10 +94,12 @@ const listKitFinds = async (
     return null;
   }
 
-  const inventory = await getKitInventory(ts, scope.project, scope.workTree);
-  const looks = listLookEntries(inventory);
+  const inventory = toLookInventory(
+    ts,
+    await getKitInventory(ts, scope.project, scope.workTree)
+  );
 
-  if (inventory.entries.size === 0 && looks.size === 0) {
+  if (inventory.entries.size === 0) {
     return null;
   }
 
@@ -187,27 +107,12 @@ const listKitFinds = async (
     (absolute) => !isInsideKit(inventory, absolute)
   );
 
-  const entries = new Map([...inventory.entries, ...looks]);
-
-  const imports: ImportScope = {
-    inventory: { ...inventory, entries },
-    project: scope.project,
-    ts,
-  };
-
+  const { project } = scope;
+  const imports: ImportScope = { inventory, project, ts };
   const drift = await listDriftIn(ts, inventory, absolutes);
+  const finds = await listDriftFinds(imports, scope.workTree, drift);
 
-  const hasBadge = looks.has("Badge");
-  const hasCard = looks.has("Card");
-  const { workTree } = scope;
-  const lookScope: LookScope = { hasBadge, hasCard, imports, workTree };
-
-  const [raw, styled] = await Promise.all([
-    listDriftFinds(imports, scope.workTree, drift),
-    listLookFinds(lookScope, absolutes),
-  ]);
-
-  return [...raw, ...styled].toSorted(
+  return finds.toSorted(
     (left, right) =>
       left.file.localeCompare(right.file) || left.line - right.line
   );

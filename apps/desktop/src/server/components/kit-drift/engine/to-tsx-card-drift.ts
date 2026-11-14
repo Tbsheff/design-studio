@@ -14,6 +14,7 @@ interface TsxLookInput {
 
 interface TsxLookFind {
   readonly column: number;
+  readonly element: RawElement;
   readonly line: number;
   readonly tag: TsxLookTag;
 }
@@ -125,7 +126,9 @@ const toTsxCardDrift = (input: TsxLookInput): TsxLookFind[] =>
       return [];
     }
 
-    return [{ column: element.column, line: element.line, tag }];
+    const { column, line } = element;
+
+    return [{ column, element, line, tag }];
   });
 
 export { LOOK_TAGS, toTsxCardDrift };

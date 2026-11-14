@@ -4,6 +4,7 @@ import type { Project } from "./deps.js";
 import type { DriftMatch, MarkupDrift } from "./engine/index.js";
 import { getImportPath } from "./kit-drift-import.js";
 import type { ImportScope } from "./kit-drift-import.js";
+import { toLookInventory } from "./kit-drift-look.js";
 import { isKitPrototype, listPrototypeDrift } from "./kit-drift-prototype.js";
 import type { RenderSource } from "./kit-drift-render.js";
 import { listDriftFiles } from "./kit-drift-scan.js";
@@ -83,6 +84,16 @@ const listLocated = (files: readonly FileDrift[]): Located[] =>
     )
     .toSorted((left, right) => toRank(left) - toRank(right));
 
+const CARD_PARTS = ["CardHeader", "CardContent"];
+
+const toParts = (match: DriftMatch): string[] => {
+  if (match.tag === "card" && match.skip === "needs-parts") {
+    return CARD_PARTS;
+  }
+
+  return [];
+};
+
 const toItem = (located: Located, importPath: string): KitDrift => {
   const { match } = located;
 
@@ -96,7 +107,7 @@ const toItem = (located: Located, importPath: string): KitDrift => {
     keptClasses: match.keptClasses,
     kitComponent: { importPath, name: match.component },
     line: match.line,
-    parts: [],
+    parts: toParts(match),
     suggestedSize: match.suggestedSize,
     suggestedVariant: match.suggestedVariant,
     tag: match.tag,
@@ -195,7 +206,10 @@ const runKitDriftList = async (
     return await listPrototypePage(project, workTree, command, render);
   }
 
-  const inventory = await getKitInventory(ts, project, workTree);
+  const inventory = toLookInventory(
+    ts,
+    await getKitInventory(ts, project, workTree)
+  );
 
   return await listKitDriftPage(ts, project, inventory, command);
 };

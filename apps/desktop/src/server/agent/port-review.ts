@@ -214,7 +214,9 @@ const toMaskedLines = (match: PortMatchRead): string[] => {
   const lines: string[] = [];
 
   if (kept.length > 0) {
-    lines.push(`- Kept app text, not scored: ${kept.join(" / ")}`);
+    lines.push(
+      `- Kept app text, not scored: ${kept.join(" / ")}. The studio hides it in the app shot, so give the elements around it the prototype spacing, as if it were not there.`
+    );
   }
 
   if (rows.length > 0) {

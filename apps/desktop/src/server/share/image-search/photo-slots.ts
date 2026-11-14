@@ -160,6 +160,13 @@ const isHtmlPage = (relative: string): boolean => /\.html?$/iu.test(relative);
 const isTypescriptPage = (relative: string): boolean =>
   /\.tsx$/iu.test(relative);
 
-export { ART_ATTR, PHOTO_ATTR, isHtmlPage, isTypescriptPage, toPhotoSlots };
+export {
+  ART_ATTR,
+  PHOTO_ATTR,
+  isHtmlPage,
+  isTypescriptPage,
+  toOrientation,
+  toPhotoSlots,
+};
 
 export type { PhotoSlot };

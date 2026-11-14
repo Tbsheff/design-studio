@@ -1,11 +1,19 @@
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 
 import { FALLBACK_COLORS } from "./engine/index.js";
 import type { PhotoArtColors } from "./engine/index.js";
 import type { PhotoPage } from "./photo-pick.js";
 
-const ROOT_BLOCK = /:root[^{]*\{(?<body>[^}]*)\}/u;
+const DARK_MEDIA = /@media \(prefers-color-scheme: ?dark\) ?\{/giu;
+
+const DARK_PREFIX = /prefers-color-scheme: ?dark/iu;
+
+const DARK_SELECTOR = /\.dark\b|\[data-theme=["']?dark["']?\]/u;
+
+const SHEET_NAME = "photo-art.css";
+
+const CSS_FILE = /\.css$/iu;
 
 const STYLE_OPEN = /<style\b/iu;
 
@@ -128,20 +136,111 @@ const toLinkedCss = async (
   return await Promise.all(hrefs.map((file) => toReadText(file)));
 };
 
-const toVariables = (sources: readonly string[]): Map<string, string> => {
-  const variables = new Map<string, string>();
+interface CssBlock {
+  readonly body: string;
+  readonly isDarkMedia: boolean;
+  readonly selector: string;
+}
+
+const toCloseIndex = (text: string, from: number): number => {
+  let depth = 1;
+
+  for (let index = from; index < text.length; index += 1) {
+    const char = text.charAt(index);
+
+    if (char === "{") {
+      depth += 1;
+    }
+
+    if (char === "}") {
+      depth -= 1;
+    }
+
+    if (depth === 0) {
+      return index;
+    }
+  }
+
+  return text.length;
+};
+
+const toFlatBlocks = (text: string, isMedia: boolean): CssBlock[] =>
+  text.split("}").flatMap((chunk) => {
+    const open = chunk.lastIndexOf("{");
+
+    if (open === -1) {
+      return [];
+    }
+
+    const prefix = chunk.slice(0, open);
+    const selector = prefix.split("{").at(-1) ?? "";
+    const isDarkPrefix = DARK_PREFIX.test(prefix);
+
+    return [
+      {
+        body: chunk.slice(open + 1),
+        isDarkMedia: isMedia || isDarkPrefix,
+        selector: selector.trim(),
+      },
+    ];
+  });
+
+const toCssBlocks = (text: string): readonly CssBlock[] => {
+  const media: CssBlock[] = [];
+  const rest: string[] = [];
+  let cursor = 0;
+
+  for (const match of text.matchAll(DARK_MEDIA)) {
+    if (match.index >= cursor) {
+      const open = match.index + match[0].length;
+      const close = toCloseIndex(text, open);
+
+      rest.push(text.slice(cursor, match.index));
+      media.push(...toFlatBlocks(text.slice(open, close), true));
+      cursor = close + 1;
+    }
+  }
+
+  rest.push(text.slice(cursor));
+
+  return [...toFlatBlocks(rest.join("\n"), false), ...media];
+};
+
+const isDarkSelector = (selector: string): boolean =>
+  DARK_SELECTOR.test(selector);
+
+const isLightBlock = (block: CssBlock): boolean =>
+  !block.isDarkMedia &&
+  block.selector.includes(":root") &&
+  !isDarkSelector(block.selector);
+
+const setDeclarations = (
+  variables: Map<string, string>,
+  body: string
+): void => {
+  for (const part of body.split(";")) {
+    const text = part.trim();
+    const colon = text.indexOf(":");
+    const name = text.slice("--".length, Math.max(colon, 0)).trim();
+    const value = text.slice(colon + 1).trim();
+
+    if (text.startsWith("--") && colon > 0 && name !== "" && value !== "") {
+      variables.set(name, value);
+    }
+  }
+};
+
+const toVariables = (
+  sources: readonly string[],
+  isPicked: (block: CssBlock) => boolean,
+  base: ReadonlyMap<string, string>
+): Map<string, string> => {
+  const variables = new Map(base);
 
   for (const source of sources) {
-    const body = ROOT_BLOCK.exec(source)?.groups?.body ?? "";
-
-    for (const part of body.split(";")) {
-      const text = part.trim();
-      const colon = text.indexOf(":");
-      const name = text.slice("--".length, Math.max(colon, 0)).trim();
-      const value = text.slice(colon + 1).trim();
-
-      if (text.startsWith("--") && colon > 0 && name !== "" && value !== "") {
-        variables.set(name, value);
+    for (const block of toCssBlocks(source)) {
+      if (isPicked(block)) {
+        setDeclarations(variables, block.body);
       }
     }
   }
@@ -193,23 +292,53 @@ const toColor = (
 
 const TOKEN_FILES = ["design-system/tokens.css", "tokens.css"];
 
-const toArtColors = async (
+const toReadNames = async (folder: string): Promise<readonly string[]> => {
+  try {
+    return await readdir(folder);
+  } catch {
+    return [];
+  }
+};
+
+const toFolderCss = async (page: PhotoPage): Promise<readonly string[]> => {
+  const folder = path.dirname(page.file);
+  const names = await toReadNames(folder);
+
+  const picked = names.filter(
+    (name) => CSS_FILE.test(name) && name !== SHEET_NAME
+  );
+
+  return await Promise.all(
+    picked.map((name) => toReadText(path.join(folder, name)))
+  );
+};
+
+const toPageCss = async (
   workTree: string,
   page: PhotoPage
-): Promise<PhotoArtColors> => {
+): Promise<readonly string[]> => {
+  if (/\.html?$/iu.test(page.relative)) {
+    return await toLinkedCss(workTree, page);
+  }
+
+  return await toFolderCss(page);
+};
+
+const toArtSources = async (
+  workTree: string,
+  page: PhotoPage
+): Promise<readonly string[]> => {
   const [tokens, linked] = await Promise.all([
     Promise.all(
       TOKEN_FILES.map((name) => toReadText(path.join(workTree, name)))
     ),
-    toLinkedCss(workTree, page),
+    toPageCss(workTree, page),
   ]);
 
-  const variables = toVariables([
-    ...tokens,
-    ...linked,
-    ...toStyleBlocks(page.source),
-  ]);
+  return [...tokens, ...linked, ...toStyleBlocks(page.source)];
+};
 
+const toColorsOf = (variables: ReadonlyMap<string, string>): PhotoArtColors => {
   const main = toColor(variables, COLOR_NAMES.primary, FALLBACK_COLORS.primary);
 
   const accent = toColor(variables, COLOR_NAMES.accent, FALLBACK_COLORS.accent);
@@ -222,4 +351,23 @@ const toArtColors = async (
   };
 };
 
-export { toArtColors };
+const toLightVariables = (sources: readonly string[]): Map<string, string> =>
+  toVariables(sources, isLightBlock, new Map());
+
+const toArtColors = async (
+  workTree: string,
+  page: PhotoPage
+): Promise<PhotoArtColors> =>
+  toColorsOf(toLightVariables(await toArtSources(workTree, page)));
+
+export {
+  SHEET_NAME,
+  isDarkSelector,
+  toArtColors,
+  toArtSources,
+  toColorsOf,
+  toLightVariables,
+  toVariables,
+};
+
+export type { CssBlock };

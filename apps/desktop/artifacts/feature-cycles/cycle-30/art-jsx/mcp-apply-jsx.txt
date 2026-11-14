@@ -1,0 +1,1 @@
+{"jsonrpc":"2.0","id":2,"result":{"content":[{"text":"{\"filled\":[],\"missed\":[],\"note\":\"Image search is off. The studio painted 1 art slot.\",\"versionId\":\"pending-2b2b26f4b80a74e1\"}","type":"text"}],"isError":false}}

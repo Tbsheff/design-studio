@@ -22,15 +22,16 @@ import type {
   VersionMeta,
 } from "./deps.js";
 import { isImageSearchOn } from "./gate.js";
+import { toSlotLabelFree } from "./photo-art-jsx.js";
 import {
-  applyPhotoArt,
-  isRunDraft,
   toArtAssetFiles,
+  toArtCode,
   toArtFreeStyle,
   toArtPlan,
   toWriteArtAssets,
-} from "./photo-art.js";
-import type { PhotoArtPlan } from "./photo-art.js";
+} from "./photo-art-plan.js";
+import type { PhotoArtPlan } from "./photo-art-plan.js";
+import { isRunDraft, toArtFill } from "./photo-art.js";
 import { toPicks } from "./photo-pick.js";
 import type { PhotoFillScope, PhotoPage, PhotoPick } from "./photo-pick.js";
 import {
@@ -45,7 +46,6 @@ import {
   MISSED_ATTR,
   isMarkedMiss,
   toIdleNote,
-  toLabelFree,
   toSkipNote,
 } from "./photo-tag.js";
 
@@ -192,13 +192,13 @@ const toFilledSource = (page: PhotoPage, plan: PhotoFillPlan): string => {
     const position = { col: edit.slot.col, line: edit.slot.line };
 
     if (edit.isLabelFree) {
-      code = toLabelFree(code, position);
+      code = toSlotLabelFree(page.relative, code, position);
     }
 
     code = setAttrs(code, position, edit.changes);
   }
 
-  return code;
+  return toArtCode(page, code, plan.art);
 };
 
 const toCredits = async (
@@ -344,6 +344,11 @@ const toCommitFill = async (
 
   const credit = await toCredits(scope.workTree, picks);
   const edits = { code: toFilledSource(page, plan), credit };
+  const isSame = edits.code === page.source && picks.length === 0;
+
+  if (isSame && toArtAssetFiles(plan.art).length === 0) {
+    return null;
+  }
 
   if (isRunDraft(scope)) {
     await toWriteFill(page, edits, plan);
@@ -405,33 +410,6 @@ const toFillable = (
   return slots.filter((slot) => slot.isImg);
 };
 
-const toArtNote = (count: number, relative: string): string => {
-  if (count === 0) {
-    return `Image search is off. ${relative} has no plain ${PHOTO_ATTR} slot, so nothing changed.`;
-  }
-
-  if (count === 1) {
-    return "Image search is off. The studio painted 1 art slot.";
-  }
-
-  return `Image search is off. The studio painted ${count} art slots.`;
-};
-
-const toArtFill = async (
-  deps: DirectEditDeps,
-  scope: PhotoFillScope,
-  page: PhotoPage
-): Promise<PhotoFillResult> => {
-  const done = await applyPhotoArt(deps, scope, [page]);
-
-  return {
-    filled: [],
-    missed: [],
-    note: toArtNote(done.count, page.relative),
-    versionId: done.versionId,
-  };
-};
-
 const toPhotoFill = async (
   deps: DirectEditDeps,
   scope: PhotoFillScope,
@@ -444,7 +422,7 @@ const toPhotoFill = async (
   const page = await toReadPage(scope.workTree, request.path);
 
   if (!isImageSearchOn(scope.project)) {
-    return await toArtFill(deps, scope, page);
+    return { filled: [], missed: [], ...(await toArtFill(deps, scope, page)) };
   }
 
   const reopen = new Set(request.slots);

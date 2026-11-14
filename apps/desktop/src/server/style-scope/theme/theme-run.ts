@@ -13,8 +13,11 @@ import {
   updateThemeTokens,
 } from "./deps.js";
 import type {
+  DirectEditDeps,
+  Direction,
   DirectionIds,
   KnownFailure,
+  Project,
   ThemePackFonts,
   ThemeTokenBase,
   TokenChange,
@@ -48,8 +51,19 @@ interface SetThemeCommand extends DirectionIds {
   readonly themeId: string | null;
 }
 
+interface ThemeEditScope {
+  readonly direction: Direction;
+  readonly project: Project;
+}
+
+type ThemeEditDeps = (
+  deps: DirectEditDeps,
+  scope: ThemeEditScope
+) => DirectEditDeps;
+
 interface ApplyThemeCommand extends DirectionIds {
   readonly themeId: string;
+  readonly toEditDeps: ThemeEditDeps | null;
 }
 
 const NO_TOKENS =
@@ -261,6 +275,18 @@ const runThemeSet = Effect.fn("ThemeRun.set")(function* run(
   return live;
 });
 
+const toApplyDeps = (
+  command: ApplyThemeCommand,
+  deps: DirectEditDeps,
+  scope: ThemeEditScope
+): DirectEditDeps => {
+  if (command.toEditDeps === null) {
+    return deps;
+  }
+
+  return command.toEditDeps(deps, scope);
+};
+
 const runThemeApply = Effect.fn("ThemeRun.apply")(function* run(
   command: ApplyThemeCommand
 ) {
@@ -276,10 +302,15 @@ const runThemeApply = Effect.fn("ThemeRun.apply")(function* run(
   const written = yield* runDirectionWrite(
     command,
     ({ direction, project, runtime }) =>
-      updateThemeTokens(runtime.editDeps, project, direction, {
-        changes: found.changes.map((change) => toTokenChange(change)),
-        fonts: toPackFonts(found),
-      }),
+      updateThemeTokens(
+        toApplyDeps(command, runtime.editDeps, { direction, project }),
+        project,
+        direction,
+        {
+          changes: found.changes.map((change) => toTokenChange(change)),
+          fonts: toPackFonts(found),
+        }
+      ),
     toDirectEditStatusFailure
   );
 

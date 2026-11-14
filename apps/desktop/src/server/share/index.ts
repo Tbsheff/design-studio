@@ -49,6 +49,7 @@ export {
   ImageSearchStore,
   ImageSearchWriter,
   applyRunPhotoArt,
+  toRepaintDeps,
 } from "./image-search/index.js";
 
 export type {

@@ -16,7 +16,8 @@ const DIVIDER_TOKEN = /^[a-zA-Z0-9._-]{1,80}$/u;
 
 const BASE_VARIANT = Effect.succeed("");
 
-const DEFAULT_WIDTH = Effect.succeed(ONE_PX);
+const DEFAULT_WIDTH: Effect.Effect<(typeof DIVIDER_WIDTHS)[number]> =
+  Effect.succeed(ONE_PX);
 
 const DividerAxisSchema = Schema.NullOr(Schema.Literals(["x", "y"]));
 

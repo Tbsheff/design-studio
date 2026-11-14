@@ -46,6 +46,9 @@ interface ShotContext {
   readonly src: ExportSource;
 }
 
+const toMaxShotHeight = (frame: ExportFrame): number =>
+  Math.max(MAX_SHOT_HEIGHT, frame.height);
+
 const toFrame = (
   query: ShotQuery,
   pick: FramePick,
@@ -122,7 +125,7 @@ const describe = (context: ShotContext, shot: Shot): string => {
   let note = "";
 
   if (shot.cropped) {
-    note = ` The page is taller; the shot stops at ${MAX_SHOT_HEIGHT} px.`;
+    note = ` The page is taller; the shot stops at ${toMaxShotHeight(context.frame)} px.`;
   }
 
   const { colorScheme } = context.query;
@@ -159,7 +162,7 @@ const shoot = async (context: ShotContext, url: string): Promise<Shot> => {
     1,
     scope,
     selectors.at(0),
-    MAX_SHOT_HEIGHT,
+    toMaxShotHeight(frame),
     query.padding ?? DEFAULT_PADDING,
     check
   );

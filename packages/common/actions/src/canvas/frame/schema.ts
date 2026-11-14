@@ -1,3 +1,8 @@
+import {
+  CANVAS_MAX_HEIGHT,
+  CANVAS_MAX_SIDE,
+  CANVAS_MIN_SIDE,
+} from "@design-studio/contracts/canvas-file";
 import { Schema } from "effect";
 
 import { DirectionIdSchema } from "../../_core/ids.js";
@@ -14,10 +19,6 @@ const FRAME_ROUTE_MAX = 300;
 
 const FRAME_GAP_MAX = 2000;
 
-const FRAME_SIDE_MIN = 200;
-
-const FRAME_SIDE_MAX = 4000;
-
 const FRAME_BATCH_MAX = 12;
 
 const POINT_SELECTOR_MAX = 400;
@@ -33,11 +34,18 @@ const FrameNameSchema = Schema.String.check(
 );
 
 const FrameSideRange = Schema.isBetween({
-  maximum: FRAME_SIDE_MAX,
-  minimum: FRAME_SIDE_MIN,
+  maximum: CANVAS_MAX_SIDE,
+  minimum: CANVAS_MIN_SIDE,
 });
 
 const FrameSideSchema = Schema.Int.check(FrameSideRange);
+
+const FrameHeightRange = Schema.isBetween({
+  maximum: CANVAS_MAX_HEIGHT,
+  minimum: CANVAS_MIN_SIDE,
+});
+
+const FrameHeightSchema = Schema.Int.check(FrameHeightRange);
 
 const FrameGapRange = Schema.isBetween({ maximum: FRAME_GAP_MAX, minimum: 0 });
 
@@ -76,7 +84,7 @@ const PlaceFrameSchema = Schema.Struct({
       description: "Space between the frames in px. Default 80.",
     })
   ),
-  height: Schema.optionalKey(FrameSideSchema),
+  height: Schema.optionalKey(FrameHeightSchema),
   hidden: Schema.optionalKey(Schema.Boolean),
   label: Schema.optionalKey(
     FrameLabelSchema.annotate({
@@ -134,7 +142,7 @@ const FrameAddFields = {
       description: "Put the new frame under this frame (id or @label).",
     })
   ),
-  height: Schema.optionalKey(FrameSideSchema),
+  height: Schema.optionalKey(FrameHeightSchema),
   label: Schema.optionalKey(
     FrameLabelSchema.annotate({
       description: 'Short frame name, for example "Empty state".',

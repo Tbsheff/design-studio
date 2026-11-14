@@ -1,3 +1,7 @@
+import {
+  CANVAS_MAX_HEIGHT,
+  CANVAS_MAX_SIDE,
+} from "@design-studio/contracts/canvas-file";
 import type { CanvasGuide } from "@design-studio/contracts/canvas-file";
 
 import { RESIZE_MIN, shownFrames } from "./canvas-frame-ops.js";
@@ -6,8 +10,6 @@ import type { FrameSnapView } from "./frame-snap-store.js";
 import type { ResizeEdge } from "./resize-edge-model.js";
 import { snapToGuides, toGuideMarks } from "./ruler-guide-model.js";
 import { snapRect } from "./snap-model.js";
-
-const MAX_SIDE = 4000;
 
 interface Size {
   readonly width: number;
@@ -35,8 +37,8 @@ interface SnapContext {
 const otherFrames = (layout: CanvasLayout, id: string): Box[] =>
   shownFrames(layout).filter((canvasFrame) => canvasFrame.id !== id);
 
-const clampSide = (value: number): number =>
-  Math.round(Math.min(MAX_SIDE, Math.max(RESIZE_MIN, value)));
+const clampSide = (value: number, max: number): number =>
+  Math.round(Math.min(max, Math.max(RESIZE_MIN, value)));
 
 const toRatioSize = (
   start: Size,
@@ -87,7 +89,10 @@ const resizedSize = (
     sized = toRatioSize(start, edge, delta, sized);
   }
 
-  return { height: clampSide(sized.height), width: clampSide(sized.width) };
+  return {
+    height: clampSide(sized.height, CANVAS_MAX_HEIGHT),
+    width: clampSide(sized.width, CANVAS_MAX_SIDE),
+  };
 };
 
 const toSnapAxis = (isLocked: boolean): "end" | null => {
@@ -138,8 +143,8 @@ const snapSize = (
 
   return {
     size: {
-      height: clampSide(res.rect.height),
-      width: clampSide(res.rect.width),
+      height: clampSide(res.rect.height, CANVAS_MAX_HEIGHT),
+      width: clampSide(res.rect.width, CANVAS_MAX_SIDE),
     },
     view,
   };

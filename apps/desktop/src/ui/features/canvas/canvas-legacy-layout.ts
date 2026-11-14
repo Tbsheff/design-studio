@@ -1,11 +1,12 @@
 import {
+  CANVAS_MAX_SIDE,
   cleanFramePath,
   isFrameId,
 } from "@design-studio/contracts/canvas-file";
 
 import { isNumber, isText } from "../../platform/json-guard.js";
 import { readStored, writeStored } from "../../platform/storage.js";
-import { MAX_FRAMES, MAX_SIDE } from "./canvas-frame-ops.js";
+import { MAX_FRAMES } from "./canvas-frame-ops.js";
 import type { CanvasFrame, CanvasLayout } from "./canvas-layout-types.js";
 
 type StoredValue =
@@ -34,7 +35,7 @@ const isSide = (value: StoredValue | undefined): value is number =>
   isNumber(value) &&
   Number.isInteger(value) &&
   value >= MIN_SIDE &&
-  value <= MAX_SIDE;
+  value <= CANVAS_MAX_SIDE;
 
 const isCoord = (value: StoredValue | undefined): value is number =>
   isNumber(value) && Number.isFinite(value) && Math.abs(value) <= MAX_COORD;

@@ -1,3 +1,7 @@
+import {
+  CANVAS_MAX_HEIGHT,
+  CANVAS_MAX_SIDE,
+} from "@design-studio/contracts/canvas-file";
 import { useCallback, useState } from "react";
 import type { ChangeEvent } from "react";
 
@@ -5,8 +9,6 @@ import { uiStore } from "../../platform/storage.js";
 import type { Viewport } from "../../platform/storage.js";
 
 const MIN_SIDE = 200;
-
-const MAX_SIDE = 4000;
 
 interface ViewportCustom {
   readonly applyCustom: () => void;
@@ -16,10 +18,10 @@ interface ViewportCustom {
   readonly onWidthChange: (event: ChangeEvent<HTMLInputElement>) => void;
 }
 
-const toSide = (raw: string, fallback: number): number => {
+const toSide = (raw: string, fallback: number, max: number): number => {
   const parsed = Math.trunc(Number(raw)) || fallback;
 
-  return Math.max(MIN_SIDE, Math.min(MAX_SIDE, parsed));
+  return Math.max(MIN_SIDE, Math.min(max, parsed));
 };
 
 const useViewportCustom = (viewport: Viewport): ViewportCustom => {
@@ -34,8 +36,8 @@ const useViewportCustom = (viewport: Viewport): ViewportCustom => {
   }
 
   const applyCustom = useCallback((): void => {
-    const nextWidth = toSide(customWidth, viewport.width);
-    const nextHeight = toSide(customHeight, viewport.height);
+    const nextWidth = toSide(customWidth, viewport.width, CANVAS_MAX_SIDE);
+    const nextHeight = toSide(customHeight, viewport.height, CANVAS_MAX_HEIGHT);
     setCustomWidth(String(nextWidth));
     setCustomHeight(String(nextHeight));
     uiStore.set({

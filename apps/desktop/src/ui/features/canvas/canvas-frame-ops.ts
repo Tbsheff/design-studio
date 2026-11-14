@@ -1,5 +1,7 @@
 import {
   CANVAS_MAX_FRAMES,
+  CANVAS_MAX_HEIGHT,
+  CANVAS_MAX_SIDE,
   cleanFramePath,
 } from "@design-studio/contracts/canvas-file";
 
@@ -25,8 +27,6 @@ const MAX_FRAMES = CANVAS_MAX_FRAMES;
 const RESIZE_MIN = 240;
 
 const ROW_GAP = FRAME_GAP * 2;
-
-const MAX_SIDE = 4000;
 
 const frameName = (frame: Pick<CanvasFrame, "width" | "height">): string => {
   const preset = FRAME_PRESETS.find(
@@ -248,8 +248,14 @@ const resizeFrame = (
   width: number,
   height: number
 ): CanvasLayout => {
-  const width2 = Math.round(Math.min(MAX_SIDE, Math.max(RESIZE_MIN, width)));
-  const height2 = Math.round(Math.min(MAX_SIDE, Math.max(RESIZE_MIN, height)));
+  const width2 = Math.round(
+    Math.min(CANVAS_MAX_SIDE, Math.max(RESIZE_MIN, width))
+  );
+
+  const height2 = Math.round(
+    Math.min(CANVAS_MAX_HEIGHT, Math.max(RESIZE_MIN, height))
+  );
+
   const frame = layout.frames.find((canvasFrame14) => canvasFrame14.id === id);
 
   if (!frame || (frame.width === width2 && frame.height === height2)) {
@@ -340,7 +346,6 @@ export {
   FRAME_GAP,
   FRAME_PRESETS,
   MAX_FRAMES,
-  MAX_SIDE,
   RESIZE_MIN,
   ROW_GAP,
   activeFrame,

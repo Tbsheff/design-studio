@@ -7,7 +7,7 @@ import {
   UNAVAILABLE,
 } from "@design-studio/actions/_core/errors/http-status-codes";
 import { PortMatchSchema } from "@design-studio/actions/port/schema";
-import type { PortArea } from "@design-studio/actions/port/schema";
+import type { PortArea, PortMasked } from "@design-studio/actions/port/schema";
 import { Result, Schema } from "effect";
 
 import type { PreviewService, RenderPage } from "../../shared/server-ports.js";
@@ -57,6 +57,7 @@ interface PortMatchRead {
   readonly areas: readonly PortArea[];
   readonly error: string | null;
   readonly images: readonly ImagePart[];
+  readonly masked: readonly PortMasked[];
   readonly score: number | null;
 }
 
@@ -97,6 +98,7 @@ const toMissedMatch = (error: string): PortMatchRead => ({
   areas: [],
   error: toShortText(error),
   images: [],
+  masked: [],
   score: null,
 });
 
@@ -153,6 +155,7 @@ const inspectPortMatch = async (
     areas: match.areas,
     error: null,
     images: await toSheetImage(match.diffPath),
+    masked: match.masked,
     score: match.score,
   };
 };

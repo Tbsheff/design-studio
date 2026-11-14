@@ -7,6 +7,8 @@ import { Result, Schema } from "effect";
 import { diffLines } from "../../shared/line-diff.js";
 import { toDecoder } from "../platform/decode/index.js";
 import { ConflictError } from "../platform/errors/index.js";
+import { listRouteFolderFiles, toStyleStackLine } from "./port-route-folder.js";
+import type { RouteFolderFile } from "./port-route-folder.js";
 
 interface RouteUpdateInput {
   readonly source: {
@@ -22,8 +24,10 @@ interface RouteUpdateInput {
 
 interface RouteUpdate {
   readonly file: string;
+  readonly folderFiles: readonly RouteFolderFile[];
   readonly now: string;
   readonly snapshot: string | null;
+  readonly styleStack: string;
 }
 
 interface RouteFileText {
@@ -43,6 +47,10 @@ const SNAPSHOT_TAG = "route-file-at-copy";
 
 const DIFF_TAG = "route-file-diff";
 
+const FOLDER_TAG = "route-folder-file";
+
+const FOLDER_HEAD_END = '">\n';
+
 const PLAN_CLOSE = "</port-plan>";
 
 const ROUTE_TEXT_MAX = 24_000;
@@ -53,6 +61,28 @@ const QUERY_CALL =
   /\b(?<name>[A-Za-z_$][\w$.]*\.(?:useQuery|useSuspenseQuery|useInfiniteQuery|query|prefetch))\s*\(/gu;
 
 const PARAM_READ = /\b(?<name>params|searchParams)\b/gu;
+
+const HOOK_CALL = /\b(?<name>use[A-Z]\w*)\s*\(/gu;
+
+const REACT_HOOKS: ReadonlySet<string> = new Set([
+  "useActionState",
+  "useCallback",
+  "useContext",
+  "useDeferredValue",
+  "useEffect",
+  "useFormStatus",
+  "useId",
+  "useImperativeHandle",
+  "useInsertionEffect",
+  "useLayoutEffect",
+  "useMemo",
+  "useOptimistic",
+  "useReducer",
+  "useRef",
+  "useState",
+  "useSyncExternalStore",
+  "useTransition",
+]);
 
 const RULE_LINES = [
   "The route file exists in the app. Update it in place. Do not make a new route.",
@@ -143,7 +173,16 @@ const toRouteUpdate = async (
     getText(snapshotFile),
   ]);
 
-  return { file, now: now ?? "", snapshot: snapshot ?? null };
+  const targetTree = input.target.direction.workTree;
+  const folderFiles = await listRouteFolderFiles(targetTree, file, now ?? "");
+
+  return {
+    file,
+    folderFiles,
+    now: now ?? "",
+    snapshot: snapshot ?? null,
+    styleStack: await toStyleStackLine(targetTree, file, folderFiles),
+  };
 };
 
 const toCut = (text: string): string => {
@@ -196,12 +235,27 @@ const toSnapshotBlock = (update: RouteUpdate): string[] => {
   return [toBlock(SNAPSHOT_TAG, update.snapshot)];
 };
 
+const toFolderBlock = (folderFile: RouteFolderFile): string =>
+  [
+    "<",
+    FOLDER_TAG,
+    ' file="',
+    folderFile.file,
+    '">\n',
+    toCut(folderFile.text),
+    "\n</",
+    FOLDER_TAG,
+    ">",
+  ].join("");
+
 const toUpdateTag = (update: RouteUpdate): string => {
   const diff = toDiffText(update);
 
   const body = [
     ...RULE_LINES,
+    update.styleStack,
     toBlock(NOW_TAG, update.now),
+    ...update.folderFiles.map((folderFile) => toFolderBlock(folderFile)),
     ...toSnapshotBlock(update),
     ...toChangedNote(diff),
   ].join("\n\n");
@@ -272,13 +326,17 @@ const toRouteFileNow = (prompt: string): RouteFileText | null => {
 const toDataReads = (text: string): Set<string> => {
   const names = new Set<string>();
 
-  for (const pattern of [AWAIT_CALL, QUERY_CALL, PARAM_READ]) {
+  for (const pattern of [AWAIT_CALL, QUERY_CALL, PARAM_READ, HOOK_CALL]) {
     for (const found of text.matchAll(pattern)) {
       names.add(found.groups?.["name"] ?? "");
     }
   }
 
   names.delete("");
+
+  for (const hook of REACT_HOOKS) {
+    names.delete(hook);
+  }
 
   return names;
 };
@@ -295,6 +353,51 @@ const toReadsText = (kept: number, total: number): string => {
   return `kept ${kept} of ${total} data reads`;
 };
 
+const toFolderFilesBefore = (prompt: string): RouteFileText[] =>
+  prompt
+    .split(`<${FOLDER_TAG} file="`)
+    .slice(1)
+    .flatMap((part) => {
+      const head = part.indexOf(FOLDER_HEAD_END);
+      const end = part.indexOf(`\n</${FOLDER_TAG}>`);
+
+      if (head === -1 || end === -1) {
+        return [];
+      }
+
+      return [
+        {
+          file: part.slice(0, head),
+          text: part.slice(head + FOLDER_HEAD_END.length, end),
+        },
+      ];
+    });
+
+interface FileReads {
+  readonly isChanged: boolean;
+  readonly kept: number;
+  readonly total: number;
+}
+
+const toFileReads = (before: string, after: string): FileReads => {
+  const reads = [...toDataReads(before)];
+  const now = toDataReads(after);
+
+  return {
+    isChanged: before !== after,
+    kept: reads.filter((name) => now.has(name)).length,
+    total: reads.length,
+  };
+};
+
+const toFileList = (names: readonly string[]): string => {
+  if (names.length <= 1) {
+    return names.join("");
+  }
+
+  return `${names.slice(0, -1).join(", ")} and ${names.at(-1) ?? ""}`;
+};
+
 const toRouteUpdateNotes = async (
   prompt: string,
   workTree: string
@@ -305,12 +408,32 @@ const toRouteUpdateNotes = async (
     return [];
   }
 
-  const after = (await getText(path.join(workTree, before.file))) ?? "";
-  const reads = [...toDataReads(before.text)];
-  const now = toDataReads(after);
-  const kept = reads.filter((name) => now.has(name)).length;
+  const files = [before, ...toFolderFilesBefore(prompt)];
 
-  return [`Updated ${before.file} (${toReadsText(kept, reads.length)}).`];
+  const afters = await Promise.all(
+    files.map(
+      async (item) => (await getText(path.join(workTree, item.file))) ?? ""
+    )
+  );
+
+  const reads = files.map((item, index) =>
+    toFileReads(item.text, afters[index] ?? "")
+  );
+
+  const kept = reads.reduce((sum, item) => sum + item.kept, 0);
+  const total = reads.reduce((sum, item) => sum + item.total, 0);
+
+  const changed = files.slice(1).flatMap((item, index) => {
+    if (reads[index + 1]?.isChanged === true) {
+      return [path.basename(item.file)];
+    }
+
+    return [];
+  });
+
+  return [
+    `Updated ${toFileList([before.file, ...changed])} (${toReadsText(kept, total)}).`,
+  ];
 };
 
 export { toRouteFileNow, toRouteUpdate, toRouteUpdateNotes, toUpdatedPrompt };

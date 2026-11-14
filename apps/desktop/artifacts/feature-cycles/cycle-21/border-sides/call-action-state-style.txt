@@ -1,0 +1,49 @@
+call-action state-style.set on http://127.0.0.1:47310. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] error, 9 ms, git spawns: not counted (server side)
+{
+  "_tag": "BadRequest",
+  "code": null,
+  "error": "BadRequest",
+  "message": "The layer already has this value in this state."
+}
+
+[mcp] error, 12 ms, git spawns: not counted (server side)
+"The layer already has this value in this state."
+
+[agent] error, 7 ms, git spawns: not counted (server side)
+"The layer already has this value in this state."
+
+diff http -> mcp:
+- {
++ "The layer already has this value in this state."
+-   "_tag": "BadRequest",
++ 
+-   "code": null,
++ 
+-   "error": "BadRequest",
++ 
+-   "message": "The layer already has this value in this state."
++ 
+- }
++ 
+
+diff http -> agent:
+- {
++ "The layer already has this value in this state."
+-   "_tag": "BadRequest",
++ 
+-   "code": null,
++ 
+-   "error": "BadRequest",
++ 
+-   "message": "The layer already has this value in this state."
++ 
+- }
++ 
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 3 error results
+
+fix: compare the outputs above, then run call-action again with the id state-style.set and the same input

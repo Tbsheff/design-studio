@@ -1,3 +1,8 @@
+import {
+  isBorderWidthProperty,
+  toBorderClassProps,
+  toBorderEdits,
+} from "./border-sides.js";
 import type {
   Classified,
   Side,
@@ -62,7 +67,6 @@ const SINGLE_PROPS: Record<string, SingleGroup> = {
   "line-height": "leading",
   "letter-spacing": "tracking",
   "text-align": "text-align",
-  "border-width": "border-width",
   "border-style": "border-style",
   "border-color": "border-color",
   display: "display",
@@ -121,6 +125,7 @@ const BOX_PROPS: Record<string, [SidedGroup, Side]> = {
 
 export function isMappedProperty(prop: string): boolean {
   return (
+    isBorderWidthProperty(prop) ||
     prop in SINGLE_PROPS ||
     prop in BOX_PROPS ||
     prop === "border-radius" ||
@@ -632,33 +637,6 @@ function opacityToken(value: string, theme: TailwindTheme): string {
   return `opacity-${arbitrary(value)}`;
 }
 
-function borderWidthToken(value: string, theme: TailwindTheme): string {
-  const px = lengthToPx(value);
-
-  if (px !== null) {
-    if (Math.abs(px - 1) < 0.01) {
-      return "border";
-    }
-
-    const whole = Math.round(px);
-
-    if (
-      Math.abs(px - whole) < 0.01 &&
-      (theme.version === 4 ? whole >= 0 : [0, 2, 4, 8].includes(whole))
-    ) {
-      return `border-${whole}`;
-    }
-  }
-
-  const variable = varName(value);
-
-  if (variable) {
-    return `border-${arbitraryVar(theme, variable, "length")}`;
-  }
-
-  return `border-${arbitrary(value)}`;
-}
-
 function normalizeShadow(value: string): string {
   return value
     .toLowerCase()
@@ -778,9 +756,6 @@ function singleToken(
     }
     case "opacity": {
       return opacityToken(value, theme);
-    }
-    case "border-width": {
-      return borderWidthToken(value, theme);
     }
     case "box-shadow": {
       return shadowToken(value, theme);
@@ -951,6 +926,12 @@ export function cssEdits(
   value: string | null,
   theme: TailwindTheme
 ): CssEdit[] | null {
+  const border = toBorderEdits(prop, value, theme);
+
+  if (border) {
+    return border;
+  }
+
   const box = BOX_PROPS[prop];
 
   if (box) {
@@ -1013,6 +994,10 @@ const SHORTHAND: Partial<Record<SidedGroup, string>> = {
 };
 
 function sidedProps(group: SidedGroup, sides: Side[]): string[] {
+  if (group === "border") {
+    return toBorderClassProps(sides);
+  }
+
   const props = sides.flatMap((side) => {
     if (group === "gap") {
       return [GAP_SIDE[side] ?? ""];

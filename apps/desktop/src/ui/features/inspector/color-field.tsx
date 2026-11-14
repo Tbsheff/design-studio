@@ -29,7 +29,7 @@ const ColorFieldView = ({
   const ui = useTokenUi();
   const value = edit.values[prop];
   const resolved = toResolvedColor(value, ui);
-  const hex = toColorHex(resolved, ui);
+  const hex = toColorHex(resolved);
   const isInheritedField = isInherited(useVariantScope(), prop);
 
   const swatchStyle = useMemo(

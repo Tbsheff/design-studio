@@ -24,15 +24,8 @@ const toResolvedColor = (value: string, ui: TokenUi | null): string => {
   return value;
 };
 
-const toColorHex = (resolved: string, ui: TokenUi | null): string | null => {
-  const direct = toHexColor(resolved);
-
-  if (direct || !ui) {
-    return direct;
-  }
-
-  return colorHex(resolved);
-};
+const toColorHex = (resolved: string): string | null =>
+  toHexColor(resolved) ?? colorHex(resolved);
 
 const toModifiedClass = (
   base: string,

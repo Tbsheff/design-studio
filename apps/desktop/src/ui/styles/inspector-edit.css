@@ -461,6 +461,23 @@
   margin: 0 0 0 2px;
 }
 
+.edit-pane .ins-grid > .ins-field.color {
+  gap: 2px;
+  padding: 0 var(--s-1);
+}
+
+.edit-pane .ins-grid > .ins-field.color > .ins-scrub {
+  display: none;
+}
+
+.edit-pane .ins-grid > .ins-field.color .ins-swatch {
+  margin: 0;
+}
+
+.edit-pane .ins-grid > .ins-field.color:not(:hover, :focus-within) .eyedrop {
+  display: none;
+}
+
 .edit-pane .ins-swatch input {
   inset: 0;
   width: 100%;

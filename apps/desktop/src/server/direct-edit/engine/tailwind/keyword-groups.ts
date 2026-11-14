@@ -14,7 +14,6 @@ const NAMES_BY_GROUP: readonly (readonly [SingleGroup, readonly string[]])[] = [
     ],
   ],
   ["bg-size", ["bg-auto", "bg-contain", "bg-cover"]],
-  ["border-width", ["border"]],
   ["case", ["capitalize", "lowercase", "normal-case", "uppercase"]],
   ["decoration", ["line-through", "no-underline", "overline", "underline"]],
   [

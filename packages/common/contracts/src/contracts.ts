@@ -1,4 +1,5 @@
 import type { AppDoctorResult } from "@design-studio/contracts/app-doctor";
+import { BORDER_STYLE_PROPERTIES } from "@design-studio/contracts/border-side-properties";
 import type { CanvasFile } from "@design-studio/contracts/canvas-file";
 import type { ElementScope } from "@design-studio/contracts/element-variants";
 import type { FrameStatesView } from "@design-studio/contracts/frame-state";
@@ -1976,10 +1977,7 @@ export const DIRECT_STYLE_PROPERTIES = [
   "margin-right",
   "margin-bottom",
   "margin-left",
-  "border-radius",
-  "border-width",
-  "border-style",
-  "border-color",
+  ...BORDER_STYLE_PROPERTIES,
   "display",
   "gap",
   "width",

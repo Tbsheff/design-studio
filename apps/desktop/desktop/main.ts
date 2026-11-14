@@ -56,12 +56,12 @@ const SETUP_MODE_ENV = "STUDIO_DESKTOP_SETUP";
 const LOGIN_PATH_FILE = "login-path.txt";
 const COMPILE_CACHE_DIR = "compile-cache";
 
-function knownPath(): string {
-  const home = process.env.HOME ?? os.homedir();
-  return mergePath(
-    knownPathDirs(home, nodeDirs(process.env, process.execPath))
-  );
-}
+const knownPath = (): string => {
+  const source = process.env;
+  const home = source.HOME ?? os.homedir();
+
+  return mergePath(knownPathDirs(home, nodeDirs(source, process.execPath)));
+};
 
 async function saveLivePath(
   file: string,
@@ -79,14 +79,13 @@ async function toServerLoginPath(boot: Boot): Promise<string[]> {
   const live = boot.startLoginShell();
   void saveLivePath(file, live);
   const saved = await readSavedLoginPath(file);
-  if (saved.length > 0) return saved;
-  const home = process.env.HOME ?? os.homedir();
-  const fast = await toFirstLaunchPath(
-    process.env,
-    home,
-    nodeDirs(process.env, process.execPath)
-  );
-  console.log(`[desktop] first launch fast PATH: ${String(fast !== null)}`);
+
+  if (saved.length > 0) {
+    return saved;
+  }
+
+  const fast = await toFirstLaunchPath(process.env, process.execPath);
+
   return fast ?? live;
 }
 
@@ -226,6 +225,7 @@ async function launchServer(
     echo: !boot.layout.packaged,
   });
   boot.markBoot("serverSpawned");
+
   onSpawned();
   writeServerPid(boot.userDataFile("server.pid"), server.pid);
   serveChild(boot.renderHost, server.child);
@@ -293,7 +293,7 @@ async function onServerExit(
   else await restartServer(boot, owner.ports);
 }
 
-function createStudioWindow(boot: Boot, url: string | null): BrowserWindow {
+const createStudioWindow = (boot: Boot, url: string | null): BrowserWindow => {
   const window = createMainWindow({
     url,
     preload: path.join(boot.ownDir, "preload.cjs"),
@@ -302,8 +302,9 @@ function createStudioWindow(boot: Boot, url: string | null): BrowserWindow {
     boot: { startedAt: boot.startedAt, marks: { ...boot.marks } },
   });
   window.once("ready-to-show", () => boot.markBoot("readyToShow"));
+
   return window;
-}
+};
 
 function openWindow(boot: Boot, current: ServerSession): BrowserWindow {
   console.log(`[desktop] window: studio ${current.url}`);
@@ -313,20 +314,21 @@ function openWindow(boot: Boot, current: ServerSession): BrowserWindow {
   return window;
 }
 
-function showEarlyWindow(
+const showEarlyWindow = (
   boot: Boot,
   window: BrowserWindow,
   current: ServerSession
-): void {
+): void => {
   if (window.isDestroyed()) {
     openWindow(boot, current);
+
     return;
   }
-  console.log(`[desktop] window: studio ${current.url} (early window)`);
+
   boot.markBoot("window");
   boot.native.trackWindow(window);
   void window.loadURL(current.url);
-}
+};
 
 function focusWindow(boot: Boot): void {
   if (!boot.state().isWindowsAllowed) return;
@@ -433,13 +435,18 @@ async function runBoot(boot: Boot): Promise<void> {
     app.exit(0);
     return;
   }
+
   const spawned = Promise.withResolvers<null>();
   const launching = launchServer(boot, prepared, () => spawned.resolve(null));
   const started = Promise.all([launching, firstRun(boot, prepared)]);
   await Promise.race([spawned.promise, started]);
+
   const early = createStudioWindow(boot, null);
+
   boot.markBoot("earlyWindow");
+
   const [current] = await started;
+
   if (boot.state().isServerStopping || boot.state().isServerStopped) return;
   await restartIfClaudeMoved(boot, prepared);
   boot.allowWindows();

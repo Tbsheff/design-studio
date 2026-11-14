@@ -1,5 +1,6 @@
 import { execFile } from "node:child_process";
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 
 import { resolveClaude } from "./claude-cli.js";
@@ -13,6 +14,7 @@ const EXTRA_KEYS = ["DESIGN_MEMORY_HOME", "ANTHROPIC_API_KEY"];
 const STUDIO_PREFIX = "STUDIO_";
 const PATH_MARK = "__STUDIO_PATH__";
 const LOGIN_SHELL_TIMEOUT_MS = 3000;
+
 const VERSION_MANAGER_DIRS = [
   ".nvm",
   ".volta",
@@ -177,17 +179,20 @@ const toPresentDirs = async (dirs: string[]): Promise<string[]> => {
 
 const toFirstLaunchPath = async (
   source: SourceEnv,
-  home: string,
-  extra: string[]
+  execPath: string
 ): Promise<string[] | null> => {
+  const home = source.HOME ?? os.homedir();
+
   if (await hasVersionManager(home)) {
     return null;
   }
 
+  const extra = nodeDirs(source, execPath);
   const known = await toPresentDirs(knownPathDirs(home, extra));
   const searchPath = mergePath((source.PATH ?? "").split(":"), known).split(
     ":"
   );
+
   const claude = resolveClaude({ env: source, home, searchPath });
 
   if (claude === null) {

@@ -19,6 +19,7 @@ import { EffectStatus } from "../effect/errors/status.js";
 import { FileLockStatus } from "../file-lock/errors/status.js";
 import { FillStatus } from "../fill/errors/status.js";
 import { FixtureStatus } from "../fixture/errors/status.js";
+import { FontStatus } from "../font/errors/status.js";
 import { GalleryStatus } from "../gallery/errors/status.js";
 import { GridStatus } from "../grid/errors/status.js";
 import { IconStatus } from "../icon/errors/status.js";
@@ -79,6 +80,7 @@ const HTTP_STATUS = {
   ...FileLockStatus,
   ...FillStatus,
   ...FixtureStatus,
+  ...FontStatus,
   ...GalleryStatus,
   ...GridStatus,
   ...IconStatus,

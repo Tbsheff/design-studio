@@ -19,6 +19,7 @@ import type { EffectError } from "../../effect/errors/index.js";
 import type { FileLockError } from "../../file-lock/errors/index.js";
 import type { FillError } from "../../fill/errors/index.js";
 import type { FixtureError } from "../../fixture/errors/index.js";
+import type { FontError } from "../../font/errors/index.js";
 import type { GalleryError } from "../../gallery/errors/index.js";
 import type { GridError } from "../../grid/errors/index.js";
 import type { IconError } from "../../icon/errors/index.js";
@@ -77,6 +78,7 @@ type StudioError =
   | FileLockError
   | FillError
   | FixtureError
+  | FontError
   | GalleryError
   | GridError
   | IconError

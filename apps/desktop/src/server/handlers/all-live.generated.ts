@@ -25,6 +25,7 @@ import { ExportLive } from "./export/live.js";
 import { FileLockLive } from "./file-lock/live.js";
 import { FillLive } from "./fill/live.js";
 import { FixtureLive } from "./fixture/live.js";
+import { FontLive } from "./font/live.js";
 import { GalleryLive } from "./gallery/live.js";
 import { GridLive } from "./grid/live.js";
 import { IconLive } from "./icon/live.js";
@@ -96,6 +97,7 @@ const ALL_LIVE = {
   fileLock: FileLockLive,
   fill: FillLive,
   fixture: FixtureLive,
+  font: FontLive,
   gallery: GalleryLive,
   grid: GridLive,
   icon: IconLive,

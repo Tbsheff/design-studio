@@ -25,6 +25,7 @@ import { ExportEntries } from "../export/handlers.js";
 import { FileLockEntries } from "../file-lock/handlers.js";
 import { FillEntries } from "../fill/handlers.js";
 import { FixtureEntries } from "../fixture/handlers.js";
+import { FontEntries } from "../font/handlers.js";
 import { GalleryEntries } from "../gallery/handlers.js";
 import { GridEntries } from "../grid/handlers.js";
 import { IconEntries } from "../icon/handlers.js";
@@ -96,6 +97,7 @@ const ALL_ENTRIES = {
   fileLock: FileLockEntries,
   fill: FillEntries,
   fixture: FixtureEntries,
+  font: FontEntries,
   gallery: GalleryEntries,
   grid: GridEntries,
   icon: IconEntries,

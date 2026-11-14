@@ -25,6 +25,7 @@ import { ExportActions } from "./export/index.js";
 import { FileLockActions } from "./file-lock/index.js";
 import { FillActions } from "./fill/index.js";
 import { FixtureActions } from "./fixture/index.js";
+import { FontActions } from "./font/index.js";
 import { GalleryActions } from "./gallery/index.js";
 import { GridActions } from "./grid/index.js";
 import { IconActions } from "./icon/index.js";
@@ -96,6 +97,7 @@ const ALL_ACTIONS = {
   fileLock: FileLockActions,
   fill: FillActions,
   fixture: FixtureActions,
+  font: FontActions,
   gallery: GalleryActions,
   grid: GridActions,
   icon: IconActions,

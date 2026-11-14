@@ -3,6 +3,7 @@ import type { ProjectKind, SelectionContext } from "@design-studio/contracts";
 import { commandBlocker, runCommand } from "../../canvas-preview-slots.js";
 import { STACKING_KEY_EVENT } from "../../domain/stacking-key-events.js";
 import type { StackingAppKey } from "../../domain/stacking-key-events.js";
+import { uiStore } from "../../platform/storage.js";
 import { copy } from "./copy.js";
 import type { PreviewMenuItem } from "./preview-menu.js";
 
@@ -81,6 +82,16 @@ const toCommandItem = (
   ...disabledBy(commandBlocker(command)),
 });
 
+const toLayersItem = (): PreviewMenuItem => ({
+  icon: "layers",
+  id: "layers",
+  keyId: "layers",
+  label: "Show in layers",
+  run: (): void => {
+    uiStore.set({ layersOpen: true });
+  },
+});
+
 const toStackingItem = (
   item: Omit<PreviewMenuItem, "run">,
   id: StackingAppKey
@@ -138,4 +149,4 @@ const toTransformMenuItems = (): PreviewMenuItem[] => [
   ),
 ];
 
-export { createItem, disabledBy, toTransformMenuItems };
+export { createItem, disabledBy, toLayersItem, toTransformMenuItems };

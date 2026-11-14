@@ -19,7 +19,6 @@ import {
 } from "../../canvas-preview-slots.js";
 import type { GenerateTabProps } from "../../canvas-preview-slots.js";
 import type { PreviewPort } from "../../platform/bridge.js";
-import { uiStore } from "../../platform/storage.js";
 import { CreateComponentDialog } from "../design-system/index.js";
 import { DevNoteSlot, useDevNoteHost } from "../dev-note/index.js";
 import {
@@ -45,6 +44,7 @@ import type { MenuAnchor } from "./layer-pick-model.js";
 import {
   createItem,
   disabledBy,
+  toLayersItem,
   toTransformMenuItems,
 } from "./preview-menu-create.js";
 import { PreviewMenu } from "./preview-menu.js";
@@ -199,13 +199,7 @@ const menuItems = (
     label: "Zoom to selection",
     run: () => options5.zoom("selection"),
   },
-  {
-    icon: "layers",
-    id: "layers",
-    keyId: "layers",
-    label: "Show in layers",
-    run: () => uiStore.set({ layersOpen: true }),
-  },
+  toLayersItem(),
   ...structureItems(options5),
   ...toTransformMenuItems(),
   ...pasteItem(options5, target),

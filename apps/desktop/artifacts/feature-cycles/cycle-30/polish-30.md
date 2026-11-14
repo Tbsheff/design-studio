@@ -18,7 +18,10 @@ Branch `feat/polish-30`. Six small open items. No new action, error or domain. T
 - **Multi type keys** (`ui/features/inspector/{edit-keys-model,use-edit-keys}.ts`). On a multi-selection, the type keys step the Tailwind scale when every selected layer's value is on the scale. The keys are `Mod+Shift+.`, `Alt+.` and `Alt+Shift+.`, for font-size and line-height. Otherwise the keys step 1 px, as before. Mixed values do nothing, as before.
 - **Page-load 404s.** Both still happened. Both are fixed.
   - **Change rings** (`ui/features/canvas/use-change-rings.ts`). Before the fix, the first run version sent `GET .../changes?from=null&to=<sha>`, and the server answered 404 "no parent version". The hook now skips a `version.created` event with no `parentId`.
-  - **State board** (`ui/features/canvas/use-state-check.ts`). Before the fix, every board asked for `runs/states/states-<section>` on load, and the server answered 404 because no sequence existed. The read now starts after this board starts a sequence, or while a run is live.
+  - **State board** (`ui/features/canvas/use-state-check.ts`). Before the fix, every board asked for `runs/states/states-<section>` on load, and the server answered 404 because no sequence existed. The read now starts only after a sequence starts:
+    - when this board's "Design missing states" succeeds;
+    - or on an `action.done` event for `run.startStates` in this project (an HTTP, MCP or agent start), through `subscribeDone` from `platform/query.ts`.
+  - **First attempt failed.** The first version also started the read while any run was live. A normal chat run then gave a 404 on the board, so that gate was removed.
 
 ## Checks
 
@@ -34,19 +37,27 @@ Branch `feat/polish-30`. Six small open items. No new action, error or domain. T
 - **Note check.** The script `kit-note-check.mts.txt` calls the real `listKitLines` and `toReviewNote`. Output: `kit-note-check.txt`.
   - It shows the 3 finds and the 2 kit lines, and 0 finds after the fix.
   - It shows the one-sentence note, the kit-only note and the review-only note.
+  - **Wording:** the spec's example is shorter ("2 review gaps and 3 controls ..."). The note keeps the per-pass review text that it had before ("pass 1: 2 finding(s) ..."), so no review detail is lost. It also adds the kit count to the same sentence.
   - A mock run does not reach this code, so the screenshots use a stored run log with that note: `kit-note-dark.png`, `kit-note-light.png`.
 - **Multi type keys in the app.** The test page has two `class="text-sm"` (14 px) headings in an HTML project. Shift-click both, then `Mod+Shift+.`.
   - Result: both are 16 px (`style="font-size: 16px"`).
   - On a single plain-CSS heading, the same key gives 15 px, as before.
   - The HTML project writes an inline style, not `text-base`.
   - Screenshot: `multi-keys-after-dark.png`.
-- **404s in the app.** A new project opened during its first run gave the 404 before the fix and no 404 after it. A state board load sends no states request. After "Design missing states", `runs/states/states-s1` answers 200, and later change rings answer 200.
+- **404s in the app.** A new project opened during its first run gave the 404 before the fix and no 404 after it. The state board was checked with the board on screen:
+  - Page load: no states request.
+  - An unrelated chat run: no states request.
+  - A sequence started by HTTP from a script: the board reads 200.
+  - "Design missing states" in the UI: the board reads 200.
+  - Later change rings: 200.
 - **Gates pass:** `pnpm run typecheck`, `pnpm run lint:gate` (59601 against baseline 89733), `pnpm run build:ui` and `gen-routes --check`.
 - **No real-model run**, as the spec says.
 
 ## Left out
 
-- **Ended states line after a reload.** After a page reload, a state board that is not running does not show the "ended" line (failed or stopped) of an earlier sequence. The UI cannot know that a sequence exists without asking, and the sequences live only in server memory.
+- **States line after a reload.** After a page reload, a board does not show the running or ended line of a sequence that started before the reload. The line comes back after the next start. The UI cannot know that a sequence exists without asking, and the sequences live only in server memory.
 - **Label recipe element.** The `Label` recipe still says `<div>`, because a Radix `LabelPrimitive.Root` is not an HTML tag. The scan matches by component name, so this has no effect on the finds.
 - **Roadmap:** `.claude/goal/roadmap.md` is not in the worktree, so no Appendix A globs were added (L6e).
 - **Files outside the owned list:** `design-system/engine/to-component-recipes.ts`, `handlers/project/create-prototype.ts` and `project-ops/route-source/{route-source-file,route-source-record,route-source-writer}.ts`. No other pick owns them.
+  - **Merge risk:** `RecordCommand` and `EntryCommand` now require `fixtureRoute`. A grep of the 4 other worktrees at report time found no new `writer.record(` or `setCopyEntry(` caller, and no edit to these files. If a later merge adds a caller, typecheck names it.
+  - **Packs change:** the recipe reader change affects the `components.md` of every app pack, Bonaparte included. For a component with a wrapper, such as shadcn `Table`, the recipe is now the inner element. The merged real run can show different "No kit match" counts.

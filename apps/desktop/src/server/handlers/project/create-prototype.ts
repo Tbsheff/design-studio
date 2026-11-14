@@ -325,7 +325,7 @@ const recordRouteSource = Effect.fn(
 )(function* run(
   target: { readonly directionId: string; readonly projectId: string },
   input: CreatePrototypeProjectInput,
-  routePath: string,
+  label: RouteLabel,
   copy: RouteCopy
 ) {
   const sources = yield* RouteSourceWriter;
@@ -338,7 +338,7 @@ const recordRouteSource = Effect.fn(
       frameId: copy.frameId,
       page: copy.page,
       projectId: target.projectId,
-      routePath,
+      routePath: label.sourceRoute,
       viewport,
     })
     .pipe(Effect.orElseSucceed(() => null));
@@ -380,7 +380,7 @@ const createRoutePrototype = Effect.fn("project.createPrototype.route")(
 
     const { copy } = outcome;
     yield* applyRouteTokens(target, created.folder, copy.page);
-    yield* recordRouteSource(target, input, routePath, copy);
+    yield* recordRouteSource(target, input, label, copy);
 
     if (copy.elements <= EMPTY_ELEMENTS_MAX) {
       return {

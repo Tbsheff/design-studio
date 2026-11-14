@@ -15,6 +15,8 @@ import {
   toRouteFiles,
 } from "./port-review.js";
 import type { PortContinue, PortReviewGaps } from "./port-review.js";
+import { toRouteFileNow, toRouteUpdateNotes } from "./port-route-update.js";
+import type { RouteFileText } from "./port-route-update.js";
 
 const PORT_THROW_TAG = "[port-throw]";
 
@@ -172,7 +174,37 @@ const THROW_ROUTE = [
 const toRouteFile = (prompt: string): string | null =>
   toRouteFiles(prompt)[0] ?? null;
 
+const toUpdatedRoute = (prompt: string, now: RouteFileText): string => {
+  const start = now.text.indexOf("export default");
+  const end = now.text.indexOf("\n  return", start);
+
+  if (start === -1 || end === -1) {
+    return toHeadingRoute(toHeading(prompt));
+  }
+
+  return [
+    now.text.slice(0, end),
+    "  return (",
+    toTagText([
+      "    ",
+      "<",
+      'main style={{ fontFamily: "system-ui", padding: 48 }}>',
+    ]),
+    toTagText(["      ", "<", "h1>", toHeading(prompt), HEADING_CLOSE]),
+    toTagText(["    ", "<", "/main>"]),
+    "  );",
+    "}",
+    "",
+  ].join("\n");
+};
+
 const toRouteText = (prompt: string): string => {
+  const now = toRouteFileNow(prompt);
+
+  if (now !== null) {
+    return toUpdatedRoute(prompt, now);
+  }
+
   if (prompt.includes(PORT_THROW_TAG)) {
     return THROW_ROUTE;
   }
@@ -204,6 +236,14 @@ const runMockPort = async (
   return finalText;
 };
 
+const toFixedRoute = (prompt: string): string => {
+  if (toRouteFileNow(prompt) !== null) {
+    return toRouteText(prompt);
+  }
+
+  return toFaithfulRoute(prompt);
+};
+
 const toFixContinue =
   (input: DriverInput, session: MockPortSession, file: string): PortContinue =>
   async (fixText) => {
@@ -219,7 +259,7 @@ const toFixContinue =
     await session.writeFileAsTool(
       "Write",
       file,
-      toFaithfulRoute(input.ctx.request.prompt)
+      toFixedRoute(input.ctx.request.prompt)
     );
     await session.say("Mock fix loop: rewrote the route so it renders.");
 
@@ -245,11 +285,16 @@ const toMockPortRun = (
   return { file, gaps, preview: deps.preview, runtime: deps.runtime };
 };
 
-const toAssetNoted = (
+const toAssetNoted = async (
   input: DriverInput,
   outcome: DriverOutcome
-): DriverOutcome => {
-  const notes = toAssetNotes(input.ctx.request.prompt);
+): Promise<DriverOutcome> => {
+  const { prompt } = input.ctx.request;
+
+  const notes = [
+    ...(await toRouteUpdateNotes(prompt, input.ctx.direction.workTree)),
+    ...toAssetNotes(prompt),
+  ];
 
   if (notes.length === 0) {
     return outcome;

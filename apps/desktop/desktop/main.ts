@@ -100,11 +100,12 @@ async function prepare(boot: Boot): Promise<Prepared | null> {
     explicit: Boolean(fromEnv),
   });
   if ("quit" in choice) {
-    if (choice.quit)
+    if (choice.quit) {
       dialog.showErrorBox(
         "Design Studio cannot use this data folder",
         choice.quit
       );
+    }
     return null;
   }
   const git = await chooseGit(

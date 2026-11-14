@@ -1,26 +1,31 @@
 import type { Starter } from "@design-studio/contracts";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 
 import { api } from "../../api.js";
+import { createLiveStore, useLive } from "../../platform/live-store.js";
 
 const MAX_STARTERS = 4;
 
-const useStarters = (): Starter[] => {
-  const [starters, setStarters] = useState<Starter[]>([]);
-  useEffect(() => {
-    const load = async (): Promise<void> => {
-      try {
-        const list = await api.starters();
-        setStarters(list.slice(0, MAX_STARTERS));
-      } catch {
-        setStarters([]);
-      }
-    };
+const starterStore = createLiveStore<Starter[] | null>(null);
 
-    load();
+const runStarterRead = async (): Promise<void> => {
+  try {
+    starterStore.set(await api.starters());
+  } catch {
+    starterStore.set(null);
+  }
+};
+
+const useStarters = (): Starter[] => {
+  const list = useLive(starterStore);
+
+  useEffect(() => {
+    if (starterStore.get() === null) {
+      runStarterRead();
+    }
   }, []);
 
-  return starters;
+  return useMemo(() => (list ?? []).slice(0, MAX_STARTERS), [list]);
 };
 
 export { useStarters };

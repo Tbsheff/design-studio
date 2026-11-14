@@ -47,7 +47,13 @@ const FLARE = 0.05;
 
 const RGBA = 4;
 
-const PHOTO_REASONS = ["bgImage", "bgGradient", "bgOverlap", "imgNode"];
+const PHOTO_REASONS = [
+  "bgImage",
+  "bgGradient",
+  "bgOverlap",
+  "imgNode",
+  "pseudoContent",
+];
 
 const MARK = "data-studio-pt";
 
@@ -113,7 +119,7 @@ const toScanExpression = (): string => `(async () => {
     const check = [...node.any, ...node.all, ...node.none].find((entry) => entry.data && entry.data.messageKey);
     const reason = check ? check.data.messageKey : 'none';
     reasons.push(reason);
-    if (!wanted.includes(reason) || nodes.length >= ${NODE_CAP}) continue;
+    if (!wanted.includes(reason)) continue;
     if (!node.target.every((part) => typeof part === 'string')) continue;
     const selector = node.target.join(' ');
     let element = null;
@@ -129,7 +135,8 @@ const toScanExpression = (): string => `(async () => {
     const y = Math.max(0, box.top + window.scrollY);
     nodes.push({ selector, html: node.html, impact: node.impact || rule.impact || null, color: toRgb(style.color), fontSize: parseFloat(style.fontSize) || 16, fontWeight: Number(style.fontWeight) || 400, clip: { x, y, width: Math.min(box.width, document.documentElement.scrollWidth - x), height: box.height } });
   }
-  return { reasons, nodes };
+  nodes.sort((first, second) => second.fontSize - first.fontSize);
+  return { reasons, nodes: nodes.slice(0, ${NODE_CAP}) };
 })()`;
 
 const toHideExpression = (selector: string): string => `(async () => {

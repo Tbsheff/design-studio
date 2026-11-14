@@ -52,6 +52,7 @@ const SYSTEM_FONTS: readonly Font[] = [
 ].map(([name = "", value = ""]) => ({
   className: null,
   family: name,
+  preview: value,
   source: "system",
   stack: value,
   token: null,
@@ -164,6 +165,7 @@ const toRow = (
     return {
       className: null,
       family: named.family,
+      preview: toFallback(named.family),
       source: named.source,
       stack: toFallback(named.family),
       token: null,
@@ -173,6 +175,7 @@ const toRow = (
   return {
     className: toClassName(token.name, hasTailwind),
     family: named.family,
+    preview: token.value,
     source: named.source,
     stack: `var(${token.name})`,
     token: token.name,

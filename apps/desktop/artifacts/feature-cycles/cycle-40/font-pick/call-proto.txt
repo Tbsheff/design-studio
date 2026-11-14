@@ -1,11 +1,12 @@
 call-action font.list on http://127.0.0.1:6970. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
 
-[http] ok, 7 ms, git spawns: not counted (server side)
+[http] ok, 3 ms, git spawns: not counted (server side)
 {
   "items": [
     {
       "className": null,
       "family": "Fraunces",
+      "preview": "'Fraunces', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif",
       "source": "pack",
       "stack": "var(--font-display)",
       "token": "--font-display"
@@ -13,6 +14,7 @@ call-action font.list on http://127.0.0.1:6970. The agent path runs in the studi
     {
       "className": null,
       "family": "Source Sans 3",
+      "preview": "'Source Sans 3', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
       "source": "pack",
       "stack": "var(--font-body)",
       "token": "--font-body"
@@ -20,6 +22,7 @@ call-action font.list on http://127.0.0.1:6970. The agent path runs in the studi
     {
       "className": null,
       "family": "JetBrains Mono",
+      "preview": "'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace",
       "source": "pack",
       "stack": "var(--font-mono)",
       "token": "--font-mono"
@@ -27,6 +30,7 @@ call-action font.list on http://127.0.0.1:6970. The agent path runs in the studi
     {
       "className": null,
       "family": "DM Sans",
+      "preview": "'DM Sans', ui-sans-serif, system-ui, sans-serif",
       "source": "google-link",
       "stack": "'DM Sans', ui-sans-serif, system-ui, sans-serif",
       "token": null
@@ -34,6 +38,7 @@ call-action font.list on http://127.0.0.1:6970. The agent path runs in the studi
     {
       "className": null,
       "family": "system-ui",
+      "preview": "system-ui, sans-serif",
       "source": "system",
       "stack": "system-ui, sans-serif",
       "token": null
@@ -41,6 +46,7 @@ call-action font.list on http://127.0.0.1:6970. The agent path runs in the studi
     {
       "className": null,
       "family": "ui-serif",
+      "preview": "ui-serif, Georgia, serif",
       "source": "system",
       "stack": "ui-serif, Georgia, serif",
       "token": null
@@ -48,6 +54,7 @@ call-action font.list on http://127.0.0.1:6970. The agent path runs in the studi
     {
       "className": null,
       "family": "ui-monospace",
+      "preview": "ui-monospace, monospace",
       "source": "system",
       "stack": "ui-monospace, monospace",
       "token": null
@@ -55,6 +62,7 @@ call-action font.list on http://127.0.0.1:6970. The agent path runs in the studi
     {
       "className": null,
       "family": "Georgia",
+      "preview": "Georgia, serif",
       "source": "system",
       "stack": "Georgia, serif",
       "token": null
@@ -62,6 +70,7 @@ call-action font.list on http://127.0.0.1:6970. The agent path runs in the studi
     {
       "className": null,
       "family": "Arial",
+      "preview": "Arial, sans-serif",
       "source": "system",
       "stack": "Arial, sans-serif",
       "token": null
@@ -70,12 +79,13 @@ call-action font.list on http://127.0.0.1:6970. The agent path runs in the studi
   "next": null
 }
 
-[mcp] ok, 6 ms, git spawns: not counted (server side)
+[mcp] ok, 5 ms, git spawns: not counted (server side)
 {
   "items": [
     {
       "className": null,
       "family": "Fraunces",
+      "preview": "'Fraunces', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif",
       "source": "pack",
       "stack": "var(--font-display)",
       "token": "--font-display"
@@ -83,6 +93,7 @@ call-action font.list on http://127.0.0.1:6970. The agent path runs in the studi
     {
       "className": null,
       "family": "Source Sans 3",
+      "preview": "'Source Sans 3', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
       "source": "pack",
       "stack": "var(--font-body)",
       "token": "--font-body"
@@ -90,6 +101,7 @@ call-action font.list on http://127.0.0.1:6970. The agent path runs in the studi
     {
       "className": null,
       "family": "JetBrains Mono",
+      "preview": "'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace",
       "source": "pack",
       "stack": "var(--font-mono)",
       "token": "--font-mono"
@@ -97,6 +109,7 @@ call-action font.list on http://127.0.0.1:6970. The agent path runs in the studi
     {
       "className": null,
       "family": "DM Sans",
+      "preview": "'DM Sans', ui-sans-serif, system-ui, sans-serif",
       "source": "google-link",
       "stack": "'DM Sans', ui-sans-serif, system-ui, sans-serif",
       "token": null
@@ -104,6 +117,7 @@ call-action font.list on http://127.0.0.1:6970. The agent path runs in the studi
     {
       "className": null,
       "family": "system-ui",
+      "preview": "system-ui, sans-serif",
       "source": "system",
       "stack": "system-ui, sans-serif",
       "token": null
@@ -111,6 +125,7 @@ call-action font.list on http://127.0.0.1:6970. The agent path runs in the studi
     {
       "className": null,
       "family": "ui-serif",
+      "preview": "ui-serif, Georgia, serif",
       "source": "system",
       "stack": "ui-serif, Georgia, serif",
       "token": null
@@ -118,6 +133,7 @@ call-action font.list on http://127.0.0.1:6970. The agent path runs in the studi
     {
       "className": null,
       "family": "ui-monospace",
+      "preview": "ui-monospace, monospace",
       "source": "system",
       "stack": "ui-monospace, monospace",
       "token": null
@@ -125,6 +141,7 @@ call-action font.list on http://127.0.0.1:6970. The agent path runs in the studi
     {
       "className": null,
       "family": "Georgia",
+      "preview": "Georgia, serif",
       "source": "system",
       "stack": "Georgia, serif",
       "token": null
@@ -132,6 +149,7 @@ call-action font.list on http://127.0.0.1:6970. The agent path runs in the studi
     {
       "className": null,
       "family": "Arial",
+      "preview": "Arial, sans-serif",
       "source": "system",
       "stack": "Arial, sans-serif",
       "token": null
@@ -146,6 +164,7 @@ call-action font.list on http://127.0.0.1:6970. The agent path runs in the studi
     {
       "className": null,
       "family": "Fraunces",
+      "preview": "'Fraunces', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif",
       "source": "pack",
       "stack": "var(--font-display)",
       "token": "--font-display"
@@ -153,6 +172,7 @@ call-action font.list on http://127.0.0.1:6970. The agent path runs in the studi
     {
       "className": null,
       "family": "Source Sans 3",
+      "preview": "'Source Sans 3', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
       "source": "pack",
       "stack": "var(--font-body)",
       "token": "--font-body"
@@ -160,6 +180,7 @@ call-action font.list on http://127.0.0.1:6970. The agent path runs in the studi
     {
       "className": null,
       "family": "JetBrains Mono",
+      "preview": "'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace",
       "source": "pack",
       "stack": "var(--font-mono)",
       "token": "--font-mono"
@@ -167,6 +188,7 @@ call-action font.list on http://127.0.0.1:6970. The agent path runs in the studi
     {
       "className": null,
       "family": "DM Sans",
+      "preview": "'DM Sans', ui-sans-serif, system-ui, sans-serif",
       "source": "google-link",
       "stack": "'DM Sans', ui-sans-serif, system-ui, sans-serif",
       "token": null
@@ -174,6 +196,7 @@ call-action font.list on http://127.0.0.1:6970. The agent path runs in the studi
     {
       "className": null,
       "family": "system-ui",
+      "preview": "system-ui, sans-serif",
       "source": "system",
       "stack": "system-ui, sans-serif",
       "token": null
@@ -181,6 +204,7 @@ call-action font.list on http://127.0.0.1:6970. The agent path runs in the studi
     {
       "className": null,
       "family": "ui-serif",
+      "preview": "ui-serif, Georgia, serif",
       "source": "system",
       "stack": "ui-serif, Georgia, serif",
       "token": null
@@ -188,6 +212,7 @@ call-action font.list on http://127.0.0.1:6970. The agent path runs in the studi
     {
       "className": null,
       "family": "ui-monospace",
+      "preview": "ui-monospace, monospace",
       "source": "system",
       "stack": "ui-monospace, monospace",
       "token": null
@@ -195,6 +220,7 @@ call-action font.list on http://127.0.0.1:6970. The agent path runs in the studi
     {
       "className": null,
       "family": "Georgia",
+      "preview": "Georgia, serif",
       "source": "system",
       "stack": "Georgia, serif",
       "token": null
@@ -202,6 +228,7 @@ call-action font.list on http://127.0.0.1:6970. The agent path runs in the studi
     {
       "className": null,
       "family": "Arial",
+      "preview": "Arial, sans-serif",
       "source": "system",
       "stack": "Arial, sans-serif",
       "token": null

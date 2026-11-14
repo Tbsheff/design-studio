@@ -20,6 +20,10 @@ const FontSchema = Schema.Struct({
       "The Tailwind class for the token, for example font-mono, or null.",
   }),
   family: Schema.String.annotate({ description: "The font family name." }),
+  preview: Schema.String.annotate({
+    description:
+      "The font-family value for a live preview: the resolved token value, or the stack.",
+  }),
   source: FontSourceSchema,
   stack: Schema.String.annotate({
     description:

@@ -1787,7 +1787,17 @@ export type ParentToBridge =
       token: string;
       type: "force-state";
       selector: string | null;
-      states: ("hover" | "focus" | "focus-visible" | "active" | "disabled")[];
+      states: (
+        | "hover"
+        | "focus"
+        | "focus-visible"
+        | "active"
+        | "disabled"
+        | "open"
+        | "checked"
+        | "selected"
+        | "selected-item"
+      )[];
       dark: boolean;
       track: boolean;
     }

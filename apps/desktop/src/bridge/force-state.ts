@@ -1,3 +1,10 @@
+import {
+  DATA_STATE_NAMES,
+  isDataStateName,
+  toDataStateValue,
+} from "@design-studio/contracts/state-styles";
+import type { DataStateName } from "@design-studio/contracts/state-styles";
+
 const STYLE_ID = "studio-force-state";
 const ATTR = "data-studio-force";
 const REBUILD_MS = 120;
@@ -7,21 +14,33 @@ const DARK_MEDIA = /\(\s*prefers-color-scheme\s*:\s*dark\s*\)/g;
 const DARK_TEST = /\(\s*prefers-color-scheme\s*:\s*dark\s*\)/;
 const HOVER_MEDIA = /\(\s*hover\s*:\s*hover\s*\)/g;
 const CLIMBING = new Set(["hover", "active"]);
+const DATA_STATE_ATTR = "data-state";
 
-export type ForcedState =
-  | "hover"
-  | "focus"
-  | "focus-visible"
-  | "active"
-  | "disabled";
+type PointerState = "hover" | "focus" | "focus-visible" | "active" | "disabled";
 
-export const FORCED_STATES: readonly ForcedState[] = [
+export type ForcedState = PointerState | DataStateName;
+
+const POINTER_STATES: readonly PointerState[] = [
   "hover",
   "focus",
   "focus-visible",
   "active",
   "disabled",
 ];
+
+export const FORCED_STATES: readonly ForcedState[] = [
+  ...POINTER_STATES,
+  ...DATA_STATE_NAMES,
+];
+
+interface HeldDataState {
+  readonly element: Element;
+  readonly old: string | null;
+}
+
+function isPointerState(state: ForcedState): state is PointerState {
+  return !isDataStateName(state);
+}
 
 interface Forced {
   selector: string;
@@ -48,7 +67,7 @@ function rewrite(text: string, forced: Forced): string | null {
   let out = text;
   let hit = false;
 
-  for (const state of forced.states) {
+  for (const state of forced.states.filter((each) => isPointerState(each))) {
     const pattern = stateRule(state);
 
     if (!pattern.test(out)) {
@@ -181,7 +200,13 @@ function clearMarks(): void {
   }
 }
 
-function mark(element: Element, states: ForcedState[]): void {
+function mark(element: Element, all: ForcedState[]): void {
+  const states = all.filter((state) => isPointerState(state));
+
+  if (states.length === 0) {
+    return;
+  }
+
   element.setAttribute(ATTR, states.join(" "));
   const climbing = states.filter((state) => CLIMBING.has(state));
 
@@ -212,35 +237,104 @@ function styleElement(): HTMLStyleElement {
   return style;
 }
 
+function restoreDataState(held: HeldDataState): void {
+  if (held.old === null) {
+    held.element.removeAttribute(DATA_STATE_ATTR);
+
+    return;
+  }
+
+  held.element.setAttribute(DATA_STATE_ATTR, held.old);
+}
+
+function wantedDataState(states: readonly ForcedState[]): string | null {
+  for (const state of states) {
+    if (isDataStateName(state)) {
+      return toDataStateValue(state);
+    }
+  }
+
+  return null;
+}
+
+interface HoldResult {
+  readonly held: HeldDataState | null;
+  readonly isChanged: boolean;
+}
+
+function holdDataState(
+  held: HeldDataState | null,
+  element: Element | null,
+  want: string | null
+): HoldResult {
+  const isSame = held !== null && held.element === element;
+  let isChanged = false;
+
+  if (held !== null && (!isSame || want === null)) {
+    restoreDataState(held);
+    isChanged = true;
+  }
+
+  if (element === null || want === null) {
+    return { held: null, isChanged };
+  }
+
+  let next: HeldDataState = {
+    element,
+    old: element.getAttribute(DATA_STATE_ATTR),
+  };
+
+  if (held !== null && isSame) {
+    next = held;
+  }
+
+  if (element.getAttribute(DATA_STATE_ATTR) !== want) {
+    element.setAttribute(DATA_STATE_ATTR, want);
+    isChanged = true;
+  }
+
+  return { held: next, isChanged };
+}
+
 export function createForceState(onChanged: () => void): ForceStateControl {
   let forced: Forced | null = null;
+  let held: HeldDataState | null = null;
   let timer = 0;
   let resizeTimer = 0;
 
   const apply = (): boolean => {
     clearMarks();
     const current = forced;
+    let element: Element | null = null;
+    let want: string | null = null;
+    let pointer: PointerState[] = [];
 
-    const needed =
-      current !== null && (current.states.length > 0 || current.dark);
+    if (current) {
+      element = query(current.selector);
+      want = wantedDataState(current.states);
+      pointer = current.states.filter((state) => isPointerState(state));
+    }
+
+    const hold = holdDataState(held, element, want);
+    ({ held } = hold);
+
+    const needed = current !== null && (pointer.length > 0 || current.dark);
 
     if (!current || !needed) {
       document.getElementById(STYLE_ID)?.remove();
 
-      return false;
+      return hold.isChanged;
     }
 
-    const element = query(current.selector);
-
-    if (element && current.states.length > 0) {
-      mark(element, current.states);
+    if (element && pointer.length > 0) {
+      mark(element, pointer);
     }
 
     const css = buildCss(current);
     const style = styleElement();
 
     if (style.textContent === css) {
-      return false;
+      return hold.isChanged;
     }
 
     style.textContent = css;

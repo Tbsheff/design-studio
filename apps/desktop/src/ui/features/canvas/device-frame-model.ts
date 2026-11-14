@@ -13,7 +13,7 @@ import type {
 } from "@design-studio/contracts/device-frame";
 
 import { copy } from "./copy.js";
-import { scaleFor } from "./play-model.js";
+import { scaleFor, toFittedSlot } from "./play-model.js";
 import type { Slot, StageSize } from "./play-model.js";
 
 interface DeviceOption {
@@ -124,7 +124,7 @@ const toSlotLayout = (
   orientation: DeviceOrientation
 ): SlotLayout => {
   if (device === null || slot.overlay) {
-    return toPlainLayout(slot, stage);
+    return toPlainLayout(toFittedSlot(slot, stage), stage);
   }
 
   const spec = toOrientedDeviceFrame(device, orientation);

@@ -98,6 +98,8 @@ const HALF = 2;
 
 const FULL_BLEED_HEIGHT_CHROME = 44;
 
+const PAGE_EXTENSIONS: ReadonlySet<string> = new Set(["htm", "html"]);
+
 const INSTANT: Motion = {
   duration: LINK_DURATION_DEFAULT,
   easing: LINK_EASING_DEFAULT,
@@ -109,6 +111,34 @@ const motionOf = (link: PrototypeLink): Motion => ({
   easing: easingCss(link.easing),
   transition: link.transition,
 });
+
+const toPathExtension = (path: string): string | null => {
+  const name = path.split("/").at(-1) ?? "";
+  const dot = name.lastIndexOf(".");
+
+  if (dot <= 0) {
+    return null;
+  }
+
+  return name.slice(dot + 1).toLowerCase();
+};
+
+const isPageFrame = (frame: Pick<CanvasFrame, "path">): boolean => {
+  const extension = toPathExtension(frame.path ?? "");
+
+  return extension === null || PAGE_EXTENSIONS.has(extension);
+};
+
+const toFittedSlot = (slot: Slot, stage: StageSize): Slot => {
+  if (!stage.isFullBleed || slot.overlay || !isPageFrame(slot.frame)) {
+    return slot;
+  }
+
+  const height = Math.max(1, stage.height - FULL_BLEED_HEIGHT_CHROME);
+  const width = Math.max(1, stage.width);
+
+  return { ...slot, frame: { ...slot.frame, height, width } };
+};
 
 const scaleFor = (slot: Slot, stage: StageSize): number => {
   const { frame } = slot;
@@ -319,6 +349,7 @@ export {
   slotClass,
   slotStyle,
   toPopoverPosition,
+  toFittedSlot,
   toPopoverScale,
   toShownFrame,
   toSlotViewStyle,

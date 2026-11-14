@@ -1,0 +1,49 @@
+call-action image-search.apply on http://127.0.0.1:4630. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] error, 8 ms, git spawns: not counted (server side)
+{
+  "_tag": "BadRequest",
+  "code": null,
+  "error": "BadRequest",
+  "message": "Image search is off. The studio does not connect to the image service. To turn it on, set STUDIO_IMAGE_SEARCH=on before you start the studio, or set the project setting imageSearch to true."
+}
+
+[mcp] error, 10 ms, git spawns: not counted (server side)
+"Image search is off. The studio does not connect to the image service. To turn it on, set STUDIO_IMAGE_SEARCH=on before you start the studio, or set the project setting imageSearch to true."
+
+[agent] error, 3 ms, git spawns: not counted (server side)
+"Image search is off. The studio does not connect to the image service. To turn it on, set STUDIO_IMAGE_SEARCH=on before you start the studio, or set the project setting imageSearch to true."
+
+diff http -> mcp:
+- {
++ "Image search is off. The studio does not connect to the image service. To turn it on, set STUDIO_IMAGE_SEARCH=on before you start the studio, or set the project setting imageSearch to true."
+-   "_tag": "BadRequest",
++ 
+-   "code": null,
++ 
+-   "error": "BadRequest",
++ 
+-   "message": "Image search is off. The studio does not connect to the image service. To turn it on, set STUDIO_IMAGE_SEARCH=on before you start the studio, or set the project setting imageSearch to true."
++ 
+- }
++ 
+
+diff http -> agent:
+- {
++ "Image search is off. The studio does not connect to the image service. To turn it on, set STUDIO_IMAGE_SEARCH=on before you start the studio, or set the project setting imageSearch to true."
+-   "_tag": "BadRequest",
++ 
+-   "code": null,
++ 
+-   "error": "BadRequest",
++ 
+-   "message": "Image search is off. The studio does not connect to the image service. To turn it on, set STUDIO_IMAGE_SEARCH=on before you start the studio, or set the project setting imageSearch to true."
++ 
+- }
++ 
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 3 error results
+
+fix: compare the outputs above, then run call-action again with the id image-search.apply and the same input

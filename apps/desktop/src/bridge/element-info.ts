@@ -236,6 +236,16 @@ const sourceOf = (element: Element): SourceLoc | null => {
   return null;
 };
 
+const parentLocOf = (element: Element): SourceLoc | null => {
+  const parent = element.parentElement;
+
+  if (parent === null || parent === document.body) {
+    return null;
+  }
+
+  return sourceOf(parent);
+};
+
 const usedAtOf = (element: Element): SourceLoc | null => {
   const value = element.getAttribute(USED_AT_ATTR);
 
@@ -291,6 +301,7 @@ const selectionFor = (element: Element): SelectionContext => {
     ancestors: ancestorsOf(element),
     outerHTML: element.outerHTML.slice(0, MAX_HTML),
     owners: componentOwners(element),
+    parentLoc: parentLocOf(element),
     rect: rectOf(element),
     selector: selectorFor(element),
     source: sourceOf(element),

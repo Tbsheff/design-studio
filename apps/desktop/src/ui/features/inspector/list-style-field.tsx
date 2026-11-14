@@ -23,6 +23,7 @@ const ListStyleField = ({
     <ListStyleChoice
       isDisabled={isDisabled}
       onPick={onPickType}
+      other={listStyle.other}
       type={listStyle.type}
     />
     <ListStyleInside

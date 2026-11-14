@@ -348,6 +348,7 @@ export interface SelectionContext {
   styles: Record<string, string>;
   rect: { x: number; y: number; width: number; height: number };
   source: SourceLoc | null;
+  parentLoc?: SourceLoc | null;
   usedAt?: SourceLoc | null;
   usedBy?: ComponentUse | null;
   component?: string;

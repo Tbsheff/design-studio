@@ -114,15 +114,10 @@ const toMeasuredGap = (measured: string | null): string | null => {
   return measured;
 };
 
-const toSpaceStack = (
-  classes: readonly string[] | null,
-  measured: Readonly<Record<StackAxis, string | null>>
-): SpaceStack | null => {
-  if (classes === null || classes.some((raw) => LAYOUT_CLASSES.has(raw))) {
-    return null;
-  }
+const VARIANT_STACK_PATTERN = /^(?<prefix>.+:)(?<rest>-?space-[xy]-.+)$/u;
 
-  const found = classes.flatMap((raw) => {
+const toStackClasses = (classes: readonly string[]): StackClass[] =>
+  classes.flatMap((raw) => {
     const entry = toStackClass(raw);
 
     if (entry === null) {
@@ -132,14 +127,91 @@ const toSpaceStack = (
     return [entry];
   });
 
-  const main = found.find((entry) => entry.suffix !== REVERSE) ?? null;
+const toVariantStacks = (set: readonly string[]): StackClass[] =>
+  toStackClasses(
+    set.flatMap((raw) => {
+      const rest = VARIANT_STACK_PATTERN.exec(raw)?.groups?.rest ?? null;
+
+      if (rest === null) {
+        return [];
+      }
+
+      return [rest];
+    })
+  );
+
+const toOpenStacks = (found: readonly StackClass[]): StackClass[] =>
+  found.filter((entry) => entry.suffix !== REVERSE);
+
+const toPickedStacks = (
+  base: readonly StackClass[],
+  variant: readonly StackClass[]
+): StackClass[] => {
+  const open = toOpenStacks(variant);
+
+  return [
+    ...open,
+    ...toOpenStacks(base).filter(
+      (entry) => !open.some((picked) => picked.axis === entry.axis)
+    ),
+  ];
+};
+
+const toAmount = (entry: StackClass): number => toSuffixPx(entry.suffix) ?? 0;
+
+const toMainClass = (stacks: readonly StackClass[]): StackClass | null => {
+  const ordered = [
+    ...stacks.filter((entry) => entry.axis === "y"),
+    ...stacks.filter((entry) => entry.axis === "x"),
+  ];
+
+  const [first = null, second = null] = ordered;
+
+  if (first !== null && second !== null && toAmount(second) > toAmount(first)) {
+    return second;
+  }
+
+  return first;
+};
+
+const isResponsiveStack = (classes: readonly string[]): boolean =>
+  classes.some((raw) => VARIANT_STACK_PATTERN.test(raw));
+
+const toStackGap = (
+  main: StackClass,
+  measured: string | null,
+  isResponsive: boolean
+): string | null => {
+  const fromClass = toGapText(toSuffixPx(main.suffix));
+
+  if (isResponsive) {
+    return fromClass;
+  }
+
+  return toMeasuredGap(measured) ?? fromClass;
+};
+
+const toSpaceStack = (
+  classes: readonly string[] | null,
+  variantSet: readonly string[],
+  measured: Readonly<Record<StackAxis, string | null>>
+): SpaceStack | null => {
+  if (classes === null || classes.some((raw) => LAYOUT_CLASSES.has(raw))) {
+    return null;
+  }
+
+  const found = toStackClasses(classes);
+  const main = toMainClass(toPickedStacks(found, toVariantStacks(variantSet)));
 
   if (main === null) {
     return null;
   }
 
-  const stackGap =
-    toMeasuredGap(measured[main.axis]) ?? toGapText(toSuffixPx(main.suffix));
+  const stackGap = toStackGap(
+    main,
+    measured[main.axis],
+    isResponsiveStack(classes)
+  );
 
   const isReversed = found.some((entry) => entry.suffix === REVERSE);
 

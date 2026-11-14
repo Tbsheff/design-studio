@@ -296,6 +296,14 @@ const toRecordHistory = (
   });
 };
 
+const toFillTitle = (plan: PhotoFillPlan, relative: string): string => {
+  if (plan.picks.length === 0) {
+    return `Photo misses: ${plan.misses.length} on ${relative}`;
+  }
+
+  return `Photos: ${plan.picks.length} on ${relative}`;
+};
+
 const toCommitFill = async (
   deps: DirectEditDeps,
   scope: PhotoFillScope,
@@ -317,7 +325,7 @@ const toCommitFill = async (
     return null;
   }
 
-  const title = `Photos: ${picks.length} on ${page.relative}`;
+  const title = toFillTitle(plan, page.relative);
 
   const files = [
     page.relative,

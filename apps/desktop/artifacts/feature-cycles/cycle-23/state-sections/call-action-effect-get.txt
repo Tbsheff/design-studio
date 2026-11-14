@@ -1,0 +1,68 @@
+call-action effect.get on http://127.0.0.1:47310. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 5 ms, git spawns: not counted (server side)
+{
+  "className": null,
+  "effects": [
+    {
+      "blur": 15,
+      "color": "rgba(0, 0, 0, 0.1)",
+      "isEnabled": true,
+      "kind": "drop-shadow",
+      "offsetX": 0,
+      "offsetY": 10,
+      "spread": -3
+    }
+  ],
+  "file": "index.html",
+  "reason": null,
+  "sheet": null,
+  "style": null,
+  "styleName": null
+}
+
+[mcp] ok, 8 ms, git spawns: not counted (server side)
+{
+  "className": null,
+  "effects": [
+    {
+      "blur": 15,
+      "color": "rgba(0, 0, 0, 0.1)",
+      "isEnabled": true,
+      "kind": "drop-shadow",
+      "offsetX": 0,
+      "offsetY": 10,
+      "spread": -3
+    }
+  ],
+  "file": "index.html",
+  "reason": null,
+  "sheet": null,
+  "style": null,
+  "styleName": null
+}
+
+[agent] ok, 4 ms, git spawns: not counted (server side)
+{
+  "className": null,
+  "effects": [
+    {
+      "blur": 15,
+      "color": "rgba(0, 0, 0, 0.1)",
+      "isEnabled": true,
+      "kind": "drop-shadow",
+      "offsetX": 0,
+      "offsetY": 10,
+      "spread": -3
+    }
+  ],
+  "file": "index.html",
+  "reason": null,
+  "sheet": null,
+  "style": null,
+  "styleName": null
+}
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

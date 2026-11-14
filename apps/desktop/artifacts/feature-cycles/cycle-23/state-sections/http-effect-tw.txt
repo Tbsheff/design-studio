@@ -1,0 +1,9 @@
+set_effect md:hover: on Tailwind button:
+{"className":null,"files":["index.html"],"hasShaderRuntime":false,"styleName":null,"title":"Effects (md:hover): drop-shadow, layer-blur, background-blur","versionId":"pending-4d0f2f54b2c842cb"}
+10:<button id="cta" class="rounded-lg bg-white px-6 py-3 shadow-sm hover:shadow-[0px_10px_15px_-3px_rgba(0,_0,_0,_0.1)] md:hover:shadow-[0px_20px_25px_-5px_rgba(0,_0,_0,_0.2)] md:hover:blur-[1px] md:hover:backdrop-blur-[8px] md:hover:backdrop-saturate-[150%]">Get started</button>
+get_effect md:hover:
+{"className":null,"effects":[{"blur":25,"color":"rgba(0, 0, 0, 0.2)","isEnabled":true,"kind":"drop-shadow","offsetX":0,"offsetY":20,"spread":-5},{"isEnabled":true,"kind":"layer-blur","radius":1},{"isEnabled":true,"kind":"background-blur","radius":8,"saturation":150}],"file":"index.html","reason":null,"sheet":null,"style":null,"styleName":null}
+get_effect base:
+{"className":null,"effects":[],"file":"index.html","reason":null,"sheet":null,"style":null,"styleName":null}
+set_effect noise under hover:
+{"_tag":"BadRequest","code":null,"error":"BadRequest","message":"A state or breakpoint takes drop and inner shadows, layer blur and background blur only. Pick Default in the state bar for noise, glass and shaders."}

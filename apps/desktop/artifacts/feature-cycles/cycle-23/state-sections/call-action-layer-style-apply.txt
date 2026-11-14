@@ -1,0 +1,80 @@
+call-action layer-style.apply on http://127.0.0.1:47310. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 16 ms, git spawns: not counted (server side)
+{
+  "changed": [
+    "index.html:15:1"
+  ],
+  "skipped": [],
+  "versionId": "pending-679a41f05b0777a7"
+}
+
+[mcp] ok, 313 ms, git spawns: not counted (server side)
+{
+  "changed": [],
+  "skipped": [
+    {
+      "layerId": "index.html:15:1",
+      "reason": "Already has this style."
+    }
+  ],
+  "versionId": null
+}
+
+[agent] ok, 13 ms, git spawns: not counted (server side)
+{
+  "changed": [],
+  "skipped": [
+    {
+      "layerId": "index.html:15:1",
+      "reason": "Already has this style."
+    }
+  ],
+  "versionId": null
+}
+
+diff http -> mcp:
+-   "changed": [
++   "changed": [],
+-     "index.html:15:1"
++   "skipped": [
+-   ],
++     {
+-   "skipped": [],
++       "layerId": "index.html:15:1",
+-   "versionId": "pending-679a41f05b0777a7"
++       "reason": "Already has this style."
+- }
++     }
+- 
++   ],
+- 
++   "versionId": null
+- 
++ }
+
+diff http -> agent:
+-   "changed": [
++   "changed": [],
+-     "index.html:15:1"
++   "skipped": [
+-   ],
++     {
+-   "skipped": [],
++       "layerId": "index.html:15:1",
+-   "versionId": "pending-679a41f05b0777a7"
++       "reason": "Already has this style."
+- }
++     }
+- 
++   ],
+- 
++   "versionId": null
+- 
++ }
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 0 error results
+
+fix: compare the outputs above, then run call-action again with the id layer-style.apply and the same input

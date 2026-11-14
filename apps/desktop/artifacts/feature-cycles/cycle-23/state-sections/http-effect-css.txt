@@ -1,0 +1,19 @@
+set_effect hover: on CSS page:
+{"className":null,"files":["index.html"],"hasShaderRuntime":false,"styleName":null,"title":"Effects (hover): drop-shadow","versionId":"pending-7a738a63de104dac"}
+--- index.html
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CSS page</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<button id="cta" class="cta sv-c11e9f">Get started</button>
+<style data-studio-variants>
+.sv-c11e9f:hover { box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1); }
+</style>
+</body>
+</html>
+get_effect hover:
+{"className":null,"effects":[{"blur":15,"color":"rgba(0, 0, 0, 0.1)","isEnabled":true,"kind":"drop-shadow","offsetX":0,"offsetY":10,"spread":-3}],"file":"index.html","reason":null,"sheet":null,"style":null,"styleName":null}

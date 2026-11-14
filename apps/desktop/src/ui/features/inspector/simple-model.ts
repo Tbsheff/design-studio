@@ -115,11 +115,11 @@ const OPACITY: NumberFieldConfig = {
   short: "Opacity",
   spec: {
     label: "Opacity",
-    max: 1,
+    max: 100,
     min: 0,
     prop: "opacity",
-    step: 0.05,
-    unit: "",
+    step: 5,
+    unit: "%",
   },
 };
 

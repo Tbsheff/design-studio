@@ -1,10 +1,15 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import type { FocusEvent, KeyboardEvent, ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import type { FieldSpec } from "./effect-model.js";
 
 import styles from "./effect.module.css";
+
+interface SentValue {
+  readonly from: number;
+  readonly next: number;
+}
 
 interface EffectFieldProps {
   readonly disabled: boolean;
@@ -20,15 +25,24 @@ const EffectField = ({
   onCommit,
 }: EffectFieldProps): ReactElement => {
   const label = copy.fieldLabel[spec.key];
+  const sent = useRef<SentValue | null>(null);
 
   const commit = useCallback(
     (next: number): void => {
-      if (Number.isFinite(next) && next !== value) {
+      const last = sent.current;
+      const isSent = last !== null && last.from === value && last.next === next;
+
+      if (Number.isFinite(next) && next !== value && !isSent) {
+        sent.current = { from: value, next };
         onCommit(spec, next);
       }
     },
     [onCommit, spec, value]
   );
+
+  const clearSent = useCallback((): void => {
+    sent.current = null;
+  }, []);
 
   const commitBlurred = useCallback(
     (event: FocusEvent<HTMLInputElement>): void => {
@@ -60,6 +74,7 @@ const EffectField = ({
         step={spec.step}
         type="number"
         onBlur={commitBlurred}
+        onFocus={clearSent}
         onKeyDown={commitOnEnter}
       />
     </label>

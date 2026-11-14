@@ -1,8 +1,11 @@
-import type { ReactElement } from "react";
+import { useCallback } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
 import { ColorField } from "./deps.js";
 import type { DirectEdit } from "./deps.js";
 import { PAINT_PROP, usePaintEdit } from "./use-paint-edit.js";
+
+import styles from "./fill.module.css";
 
 interface PaintFieldProps {
   readonly color: string;
@@ -10,6 +13,7 @@ interface PaintFieldProps {
   readonly label: string;
   readonly short: string;
   readonly onColor: (color: string) => void;
+  readonly onEnter: () => void;
 }
 
 const PaintField = ({
@@ -18,11 +22,23 @@ const PaintField = ({
   label,
   short,
   onColor,
+  onEnter,
 }: PaintFieldProps): ReactElement => {
   const paint = usePaintEdit(edit, color, onColor);
 
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>): void => {
+      if (event.key === "Enter" && !event.nativeEvent.isComposing) {
+        onEnter();
+      }
+    },
+    [onEnter]
+  );
+
   return (
-    <ColorField edit={paint} label={label} prop={PAINT_PROP} short={short} />
+    <div className={styles.paint} role="presentation" onKeyDown={handleKeyDown}>
+      <ColorField edit={paint} label={label} prop={PAINT_PROP} short={short} />
+    </div>
   );
 };
 

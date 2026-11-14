@@ -29,6 +29,7 @@ interface FillNote {
 
 interface FillView {
   readonly dirty: boolean;
+  readonly handleEnter: () => void;
   readonly draft: FillDraft;
   readonly loading: boolean;
   readonly note: FillNote | null;
@@ -167,12 +168,19 @@ const useFill = (ids: FillIds, scope: FillScope): FillView => {
     });
   }, [draft, ids, target, variant]);
 
+  const handleEnter = useCallback((): void => {
+    if (dirty && !pending) {
+      onApply();
+    }
+  }, [dirty, onApply, pending]);
+
   const { loading } = loaded;
   const note = noteOf(own, loaded.error);
 
   return {
     dirty,
     draft,
+    handleEnter,
     loading,
     note,
     onApply,

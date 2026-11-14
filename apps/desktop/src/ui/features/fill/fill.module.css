@@ -4,6 +4,10 @@
   gap: var(--s-2);
 }
 
+.paint {
+  display: contents;
+}
+
 .tabs {
   position: relative;
   min-width: 0;

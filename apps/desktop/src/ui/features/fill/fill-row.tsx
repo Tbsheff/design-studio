@@ -78,6 +78,7 @@ const FillRow = ({
           label={copy.colorLabel}
           short={copy.color}
           onColor={handleColor}
+          onEnter={fill.handleEnter}
         />
       )}
       {draft.type !== "solid" && (
@@ -86,6 +87,7 @@ const FillRow = ({
           draft={draft}
           edit={edit}
           onDraft={onDraft}
+          onEnter={fill.handleEnter}
         />
       )}
       <BlendSelect disabled={disabled} draft={draft} onDraft={onDraft} />

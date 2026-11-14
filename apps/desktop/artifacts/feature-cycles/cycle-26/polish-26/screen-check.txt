@@ -1,0 +1,10 @@
+images: Home desktop, Home mobile, Settings mobile
+failed: Settings desktop
+note: Studio screen check: the agent took no screenshot of 2 screen(s) (Home, Settings), so the studio took 3 image(s) and one fix loop ran. These images failed: Settings desktop.
+prompt:
+<studio-continue>
+You finished without a screenshot of 2 screen(s): "Home", "Settings". The studio took them at 1440 px and 390 px (attached, one image per size, top of the page).
+The studio could not take these images: Settings desktop. Take them with mcp__studio__screenshot.
+Look at every image. Find what is broken or weak on these screens: overlap, clipped or wrapping labels, crowded buttons, empty areas, missing states.
+Do one fix loop: fix what you see and these findings with Edit, then run mcp__studio__render_check once. Then reply in one or two sentences with what you fixed and what is left.
+</studio-continue>

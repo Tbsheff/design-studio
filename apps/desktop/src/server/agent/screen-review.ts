@@ -35,6 +35,7 @@ export interface ScreenReviewInput {
 export interface ScreenReview {
   screens: RunScreen[];
   images: ImagePart[];
+  failed: string[];
   findings: QualityFinding[];
 }
 
@@ -99,41 +100,70 @@ export async function unseenScreens(
     : [];
 }
 
-async function shotsOf(
+interface ScreenShots {
+  images: ImagePart[];
+  failed: string[];
+}
+
+async function toSizeShot(
+  input: ScreenReviewInput,
+  screen: RunScreen,
+  index: number,
+  { name, box }: (typeof SIZES)[number]
+): Promise<ImagePart> {
+  const outPrefix = path.join(
+    input.runsDir,
+    `${input.runId}-studio-screen-${index + 1}-${name}`
+  );
+
+  const tiles = await input.preview.screenshotTiles(screen.url, {
+    fresh: true,
+    from: 0,
+    maxTiles: 1,
+    outPrefix,
+    tileHeight: box.height,
+    viewport: box,
+    ...(screen.prepare ? { prepare: screen.prepare } : {}),
+  });
+
+  const file = tiles.paths[0];
+
+  if (!file) {
+    throw new Error("no tile");
+  }
+
+  return {
+    data: (await readFile(file)).toString("base64"),
+    mime: "image/png" as const,
+    name: `${screen.label} ${name}`,
+  };
+}
+
+function toFailedName(name: string, shot: ImagePart | null): string[] {
+  if (shot === null) {
+    return [name];
+  }
+
+  return [];
+}
+
+async function toScreenShots(
   input: ScreenReviewInput,
   screen: RunScreen,
   index: number
-): Promise<ImagePart[]> {
-  return Promise.all(
-    SIZES.map(async ({ name, box }) => {
-      const outPrefix = path.join(
-        input.runsDir,
-        `${input.runId}-studio-screen-${index + 1}-${name}`
-      );
-
-      const tiles = await input.preview.screenshotTiles(screen.url, {
-        fresh: true,
-        from: 0,
-        maxTiles: 1,
-        outPrefix,
-        tileHeight: box.height,
-        viewport: box,
-        ...(screen.prepare ? { prepare: screen.prepare } : {}),
-      });
-
-      const file = tiles.paths[0];
-
-      if (!file) {
-        throw new Error("no tile");
-      }
-
-      return {
-        data: (await readFile(file)).toString("base64"),
-        mime: "image/png" as const,
-        name: `${screen.label} ${name}`,
-      };
-    })
+): Promise<ScreenShots> {
+  const shots = await Promise.all(
+    SIZES.map((size) =>
+      toSizeShot(input, screen, index, size).catch(() => null)
+    )
   );
+
+  return {
+    failed: SIZES.flatMap((size, at) =>
+      toFailedName(`${screen.label} ${size.name}`, shots[at] ?? null)
+    ),
+    images: shots.filter((shot): shot is ImagePart => shot !== null),
+  };
 }
 
 export async function studioScreenReview(
@@ -141,9 +171,7 @@ export async function studioScreenReview(
   screens: RunScreen[]
 ): Promise<ScreenReview> {
   const shots = await Promise.all(
-    screens.map((screen, index) =>
-      shotsOf(input, screen, index).catch(() => [] as ImagePart[])
-    )
+    screens.map((screen, index) => toScreenShots(input, screen, index))
   );
 
   const labels = new Set(screens.map((screen) => screen.label));
@@ -155,7 +183,30 @@ export async function studioScreenReview(
       labels.has(finding.screen)
   );
 
-  return { findings, images: shots.flat(), screens };
+  return {
+    failed: shots.flatMap((shot) => shot.failed),
+    findings,
+    images: shots.flatMap((shot) => shot.images),
+    screens,
+  };
+}
+
+function toFailedLines(failed: string[]): string[] {
+  if (failed.length === 0) {
+    return [];
+  }
+
+  return [
+    `The studio could not take these images: ${failed.join(", ")}. Take them with mcp__studio__screenshot.`,
+  ];
+}
+
+function toFailedNote(failed: string[]): string {
+  if (failed.length === 0) {
+    return "";
+  }
+
+  return ` These images failed: ${failed.join(", ")}.`;
 }
 
 function findingLine(finding: QualityFinding): string {
@@ -172,6 +223,7 @@ export function screenReviewPrompt(review: ScreenReview): string | null {
   return [
     "<studio-continue>",
     `You finished without a screenshot of ${review.screens.length} screen(s): ${names}. The studio took them at 1440 px and 390 px (attached, one image per size, top of the page).`,
+    ...toFailedLines(review.failed),
     "Look at every image. Find what is broken or weak on these screens: overlap, clipped or wrapping labels, crowded buttons, empty areas, missing states.",
     ...(review.findings.length > 0
       ? [
@@ -188,5 +240,7 @@ export function screenReviewNote(
   review: ScreenReview,
   fixLoop: boolean
 ): string {
-  return `Studio screen check: the agent took no screenshot of ${review.screens.length} screen(s) (${review.screens.map((screen) => screen.label).join(", ")}), so the studio took ${review.images.length} image(s) and ${fixLoop ? "one fix loop ran" : "no fix loop ran"}.`;
+  const failed = toFailedNote(review.failed);
+
+  return `Studio screen check: the agent took no screenshot of ${review.screens.length} screen(s) (${review.screens.map((screen) => screen.label).join(", ")}), so the studio took ${review.images.length} image(s) and ${fixLoop ? "one fix loop ran" : "no fix loop ran"}.${failed}`;
 }

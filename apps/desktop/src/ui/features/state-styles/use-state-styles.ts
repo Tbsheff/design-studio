@@ -50,9 +50,10 @@ interface ForcedOn {
 interface ForcedHolder {
   current: ForcedOn | null;
   selector: string | null;
+  stopWatch: (() => void) | null;
 }
 
-const held: ForcedHolder = { current: null, selector: null };
+const held: ForcedHolder = { current: null, selector: null, stopWatch: null };
 
 const layerFor = (
   state: StyleState | null,
@@ -63,20 +64,6 @@ const layerFor = (
   }
 
   return selector;
-};
-
-const pushForced = (
-  ids: StateIds,
-  selector: string,
-  state: StyleState | null
-): void => {
-  held.current = null;
-
-  if (state !== null) {
-    held.current = { ids, selector };
-  }
-
-  void sendForced(ids, layerFor(state, selector), state);
 };
 
 const clearStale = (selector: string, active: ChipId | null): void => {
@@ -94,6 +81,37 @@ const clearStale = (selector: string, active: ChipId | null): void => {
   void sendForced(last.ids, null, null);
 };
 
+const clearOnReset = (): void => {
+  if (editVariantStore.get() !== "") {
+    return;
+  }
+
+  held.stopWatch?.();
+  held.stopWatch = null;
+  clearStale("", null);
+};
+
+const watchReset = (): void => {
+  if (held.stopWatch === null) {
+    held.stopWatch = editVariantStore.subscribe(clearOnReset);
+  }
+};
+
+const pushForced = (
+  ids: StateIds,
+  selector: string,
+  state: StyleState | null
+): void => {
+  held.current = null;
+
+  if (state !== null) {
+    held.current = { ids, selector };
+    watchReset();
+  }
+
+  void sendForced(ids, layerFor(state, selector), state);
+};
+
 interface ChipTarget {
   readonly ids: StateIds;
   readonly info: StateListResult | null;
@@ -109,9 +127,9 @@ const applyChip = (
   const frame = port.current;
 
   frame?.post({ type: "preview-reset" });
+  pushForced(ids, selector, stateWire(chip));
   editVariantStore.set(next);
   setForceState(frame, selector, next);
-  pushForced(ids, selector, stateWire(chip));
 };
 
 const isStateChip = (active: ChipId | null): boolean =>

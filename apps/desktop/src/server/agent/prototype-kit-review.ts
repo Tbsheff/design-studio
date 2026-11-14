@@ -14,7 +14,8 @@ import {
   listPrototypeDrift,
 } from "../components/kit-drift/kit-drift-prototype.js";
 import type { PrototypeDrift } from "../components/kit-drift/kit-drift-prototype.js";
-import type { AppReviewGaps } from "./final-check.js";
+import { listAppCheckLines, toAppLineCounts } from "./app-review-lines.js";
+import type { AppReviewGaps, StudioReviewInput } from "./final-check.js";
 import { listDarkLines } from "./prototype-dark-review.js";
 import {
   getFlow,
@@ -23,7 +24,7 @@ import {
 } from "./prototype-flow-review.js";
 import type { FlowContext } from "./prototype-flow-review.js";
 import { listPhoneLines } from "./prototype-phone-review.js";
-import { toCheckOpening } from "./prototype-review-opening.js";
+import { toAppOpening, toCheckOpening } from "./prototype-review-opening.js";
 import type { LineCounts } from "./prototype-review-opening.js";
 
 interface KitGroup {
@@ -296,8 +297,15 @@ const listFlowPhoneLines = async (
 
 const listKitLines = async (
   ctx: FlowContext,
-  preview: PreviewService
+  preview: PreviewService,
+  input: Pick<StudioReviewInput, "baseFile" | "ctx" | "run">
 ): Promise<string[]> => {
+  const app = await listAppCheckLines(input, preview);
+
+  if (app !== null) {
+    return app;
+  }
+
   const [kit, [flow, phone, dark]] = await Promise.all([
     listKitDriftLines(ctx, preview),
     listFlowPhoneLines(ctx, preview),
@@ -357,6 +365,11 @@ const toReviewOpening = (gaps: AppReviewGaps, pass: number): string | null => {
   }
 
   const ran = toRanList(gaps);
+  const app = toAppLineCounts(gaps);
+
+  if (app !== null) {
+    return toAppOpening(app, ran, pass);
+  }
 
   if (pass > 1) {
     return `You edited again after the studio checks, so the studio ran ${ran} once more.`;

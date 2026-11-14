@@ -39,6 +39,8 @@ import { listOutsideLines } from "./review-layout.js";
 import { defaultShotTarget, isContextFrame } from "./run-target.js";
 import {
   changedLinesSince,
+  NEAR_LINES,
+  toChangedEntry as changedEntry,
   type BaseFile,
   type ChangedFile,
 } from "./screens.js";
@@ -284,24 +286,6 @@ async function mobileImage(
   };
 }
 
-const NEAR_LINES = 3;
-
-function changedEntry(
-  source: string | null,
-  changed: readonly ChangedFile[]
-): { entry: ChangedFile; line: number | null } | null {
-  const match = source?.match(/^(.*?)(?::(\d+))?(?::\d+)?$/);
-  const file = match?.[1];
-  if (!file) return null;
-  const entry = changed.find(
-    (item) =>
-      item.file === file ||
-      item.file.endsWith(`/${file}`) ||
-      file.endsWith(`/${item.file}`)
-  );
-  return entry ? { entry, line: match?.[2] ? Number(match[2]) : null } : null;
-}
-
 function inChangedFile(
   source: string | null,
   changed: readonly ChangedFile[]
@@ -437,7 +421,7 @@ export async function studioAppReview(
       gaps.mobile
         ? cutsNow(input).catch(() => NO_CUTS)
         : Promise.resolve(NO_CUTS),
-      listKitLines(input.ctx, input.preview),
+      listKitLines(input.ctx, input.preview, input),
     ]);
   const log = input.run.log;
   if (image && log) recordShot(log, "mobile");

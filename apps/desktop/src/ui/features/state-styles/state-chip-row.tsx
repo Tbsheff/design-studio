@@ -4,7 +4,7 @@ import { copy } from "./copy.js";
 import type { PreviewPort, SaveStatus, SelectionContext } from "./deps.js";
 import { StateChip } from "./state-chip.js";
 import { StateNote } from "./state-note.js";
-import { hasDot, isGroupOff } from "./state-styles-model.js";
+import { hasDot, isGroupOff, toEdgeNote } from "./state-styles-model.js";
 import type { ChipId } from "./state-styles-model.js";
 import { useStateStyles } from "./use-state-styles.js";
 
@@ -21,10 +21,15 @@ interface StateChipRowProps {
 const noteOf = (
   active: ChipId | null,
   isOff: boolean,
-  reason: string | null
+  reason: string | null,
+  edgeNote: string | null
 ): string | null => {
   if (isOff) {
     return reason;
+  }
+
+  if (edgeNote !== null) {
+    return `${edgeNote} ${copy.stateNote}`;
   }
 
   if (active !== "default" && active !== null) {
@@ -54,7 +59,12 @@ const StateChipRow = (props: StateChipRowProps): ReactElement => {
       </div>
       <StateNote
         isError={false}
-        text={noteOf(state.active, state.isOff, state.reason)}
+        text={noteOf(
+          state.active,
+          state.isOff,
+          state.reason,
+          toEdgeNote(state.active, state.info)
+        )}
       />
       <StateNote isError text={state.error} />
     </fieldset>

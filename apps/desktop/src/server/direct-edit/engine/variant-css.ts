@@ -1,6 +1,8 @@
 import {
   isDataStateName,
+  isEdgeStateName,
   toDataStateValue,
+  toEdgePseudo,
 } from "@design-studio/contracts/state-styles";
 import type { DefaultTreeAdapterMap } from "parse5";
 
@@ -25,9 +27,10 @@ type Element = DefaultTreeAdapterMap["element"];
 
 export const VARIANT_STYLE_ATTR = "data-studio-variants";
 const KEY_CLASS = /^sv-[a-z0-9]{6}$/;
+const CHILD_RULE = " > * + *";
 
 const RULE_LINE =
-  /^(?:@media (.+?) \{ )?(\.sv-[a-z0-9]{6}(?:\[data-state="[a-z]+"\])?(?::[a-z-]+)*) \{ (.*?) \}(?: \})?$/;
+  /^(?:@media (.+?) \{ )?(\.sv-[a-z0-9]{6}(?:\[data-state="[a-z]+"\])?(?::[a-z-]+(?:\((?:odd|even)\))?)*(?: > \* \+ \*)?) \{ (.*?) \}(?: \})?$/;
 
 interface Rule {
   media: string | null;
@@ -86,6 +89,14 @@ function mediaOf(variant: ParsedVariant): string | null {
   return parts.length > 0 ? parts.join(" and ") : null;
 }
 
+function toPseudoPart(state: ParsedVariant["states"][number]): string {
+  if (isEdgeStateName(state)) {
+    return toEdgePseudo(state);
+  }
+
+  return state;
+}
+
 function selectorOf(key: string, variant: ParsedVariant): string {
   const data = variant.states
     .filter(isDataStateName)
@@ -93,7 +104,7 @@ function selectorOf(key: string, variant: ParsedVariant): string {
 
   const pseudo = variant.states
     .filter((state) => !isDataStateName(state))
-    .map((state) => `:${state}`);
+    .map((state) => `:${toPseudoPart(state)}`);
 
   return `.${key}${[...data, ...pseudo].join("")}`;
 }
@@ -233,6 +244,97 @@ function currentRules(document: Document): Rule[] {
   return readRules(text);
 }
 
+interface RuleTarget {
+  readonly document: Document;
+  readonly element: Element;
+  readonly raw: string;
+  readonly suffix: string;
+}
+
+interface RuleEdit extends RuleTarget {
+  readonly source: string;
+  readonly toBody: (before: string) => string;
+}
+
+const toVariantOf = (raw: string): ParsedVariant => {
+  const variant = parseVariant(raw);
+
+  if (!variant) {
+    throw new DirectEditError("invalid_request", `Unknown variant ${raw}`);
+  }
+
+  return variant;
+};
+
+const toRuleSplices = (edit: RuleEdit): Splice[] => {
+  const variant = toVariantOf(edit.raw);
+  const existing = keyOf(edit.element);
+  const key = existing ?? `sv-${globalThis.crypto.randomUUID().slice(0, 6)}`;
+  const media = mediaOf(variant);
+  const selector = `${selectorOf(key, variant)}${edit.suffix}`;
+  const rules = currentRules(edit.document);
+
+  const index = rules.findIndex(
+    (rule) => rule.selector === selector && rule.media === media
+  );
+
+  const body = edit.toBody(rules[index]?.body ?? "");
+  const next = rules.filter((_, at) => at !== index);
+
+  if (body !== "") {
+    next.push({ media, selector, body });
+  }
+
+  const splices = [styleBlockSplice(edit.source, edit.document, next)];
+
+  if (!existing) {
+    splices.push(keySplice(edit.element, key));
+  }
+
+  return splices;
+};
+
+const toMediaOrNull = (variant: ParsedVariant): string | null | false => {
+  try {
+    return mediaOf(variant);
+  } catch {
+    return false;
+  }
+};
+
+const toRuleBody = (target: RuleTarget): string | null => {
+  const variant = parseVariant(target.raw);
+  const key = keyOf(target.element);
+
+  if (!variant || !key) {
+    return null;
+  }
+
+  const media = toMediaOrNull(variant);
+
+  if (media === false) {
+    return null;
+  }
+
+  const selector = `${selectorOf(key, variant)}${target.suffix}`;
+
+  const rule = currentRules(target.document).find(
+    (entry) => entry.selector === selector && entry.media === media
+  );
+
+  return rule?.body ?? null;
+};
+
+const toPropList = (body: string | null): { prop: string; value: string }[] => {
+  if (body === null) {
+    return [];
+  }
+
+  return parseDeclarations(body)
+    .filter((entry) => entry.prop !== "")
+    .map((entry) => ({ prop: entry.prop, value: entry.value }));
+};
+
 export function variantCssSplices(
   source: string,
   document: Document,
@@ -240,70 +342,34 @@ export function variantCssSplices(
   style: Record<string, string | null>,
   raw: string
 ): Splice[] {
-  const variant = parseVariant(raw);
-
-  if (!variant) {
-    throw new DirectEditError("invalid_request", `Unknown variant ${raw}`);
-  }
-
-  const existing = keyOf(element);
-  const key = existing ?? `sv-${globalThis.crypto.randomUUID().slice(0, 6)}`;
-  const media = mediaOf(variant);
-  const selector = selectorOf(key, variant);
-  const rules = currentRules(document);
-
-  const index = rules.findIndex(
-    (rule) => rule.selector === selector && rule.media === media
-  );
-
-  const before =
-    index === -1 ? [] : parseDeclarations(rules[index]?.body ?? "");
-
-  const body = serializeDeclarations(applyDeclarationChanges(before, style));
-  const next = rules.filter((_, at) => at !== index);
-
-  if (body !== "") {
-    next.push({ media, selector, body });
-  }
-
-  const splices = [styleBlockSplice(source, document, next)];
-
-  if (!existing) {
-    splices.push(keySplice(element, key));
-  }
-
-  return splices;
+  return toRuleSplices({
+    document,
+    element,
+    raw,
+    source,
+    suffix: "",
+    toBody: (before) =>
+      serializeDeclarations(
+        applyDeclarationChanges(parseDeclarations(before), style)
+      ),
+  });
 }
+
+export const toChildRuleSplices = (
+  target: Omit<RuleEdit, "suffix" | "toBody">,
+  body: string
+): Splice[] =>
+  toRuleSplices({ ...target, suffix: CHILD_RULE, toBody: () => body });
+
+export const toChildRuleDeclarations = (
+  target: Omit<RuleTarget, "suffix">
+): { prop: string; value: string }[] =>
+  toPropList(toRuleBody({ ...target, suffix: CHILD_RULE }));
 
 export function variantCssProps(
   document: Document,
   element: Element,
   raw: string
 ): { prop: string; value: string }[] {
-  const variant = parseVariant(raw);
-  const key = keyOf(element);
-
-  if (!variant || !key) {
-    return [];
-  }
-
-  let media: string | null;
-
-  try {
-    media = mediaOf(variant);
-  } catch {
-    return [];
-  }
-
-  const selector = selectorOf(key, variant);
-
-  const rule = currentRules(document).find(
-    (entry) => entry.selector === selector && entry.media === media
-  );
-
-  return rule
-    ? parseDeclarations(rule.body)
-        .filter((entry) => entry.prop !== "")
-        .map((entry) => ({ prop: entry.prop, value: entry.value }))
-    : [];
+  return toPropList(toRuleBody({ document, element, raw, suffix: "" }));
 }

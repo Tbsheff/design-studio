@@ -1,0 +1,89 @@
+call-action state-style.set on http://127.0.0.1:47610. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 6 ms, git spawns: not counted (server side)
+{
+  "breakpoint": "base",
+  "classes": null,
+  "files": [
+    "index.html"
+  ],
+  "mode": "css",
+  "prefix": "last:",
+  "property": "border-width",
+  "state": "last",
+  "title": "State last: border-width 0px",
+  "value": "0px",
+  "versionId": "pending-f14a305c3fd8e941"
+}
+
+[mcp] error, 7 ms, git spawns: not counted (server side)
+"The layer already has this value in this state."
+
+[agent] error, 2 ms, git spawns: not counted (server side)
+"The layer already has this value in this state."
+
+diff http -> mcp:
+- {
++ "The layer already has this value in this state."
+-   "breakpoint": "base",
++ 
+-   "classes": null,
++ 
+-   "files": [
++ 
+-     "index.html"
++ 
+-   ],
++ 
+-   "mode": "css",
++ 
+-   "prefix": "last:",
++ 
+-   "property": "border-width",
++ 
+-   "state": "last",
++ 
+-   "title": "State last: border-width 0px",
++ 
+-   "value": "0px",
++ 
+-   "versionId": "pending-f14a305c3fd8e941"
++ 
+- }
++ 
+
+diff http -> agent:
+- {
++ "The layer already has this value in this state."
+-   "breakpoint": "base",
++ 
+-   "classes": null,
++ 
+-   "files": [
++ 
+-     "index.html"
++ 
+-   ],
++ 
+-   "mode": "css",
++ 
+-   "prefix": "last:",
++ 
+-   "property": "border-width",
++ 
+-   "state": "last",
++ 
+-   "title": "State last: border-width 0px",
++ 
+-   "value": "0px",
++ 
+-   "versionId": "pending-f14a305c3fd8e941"
++ 
+- }
++ 
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 2 error results
+
+fix: compare the outputs above, then run call-action again with the id state-style.set and the same input

@@ -12,7 +12,11 @@ export {
   themeForFile,
 } from "../../direct-edit/index.js";
 
-export { parseClass } from "../../direct-edit/engine/index.js";
+export {
+  parseClass,
+  toChildRulePatch,
+  toChildRuleProps,
+} from "../../direct-edit/engine/index.js";
 
 export { normalizeVariant } from "../../../shared/variants.js";
 

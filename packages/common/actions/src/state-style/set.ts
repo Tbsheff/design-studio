@@ -22,7 +22,7 @@ const setStateStyle = defineAction({
   },
   confirm: "none",
   description:
-    "Set one style property of one layer in one state: hover, focus-visible, active, disabled, dark, open, checked, selected, group-hover, group-open or group-checked. breakpoint is base (default) or a breakpoint name, so md with open writes md:data-[state=open]:. Open writes data-[state=open]:, checked data-[state=checked]:, selected data-[state=active]:. The group states need a parent with the group class in the same file and write group-hover:, group-data-[state=open]: or group-data-[state=checked]: (group-hover/name: for group/name). reset true removes the value. Saves one version.",
+    "Set one style property of one layer in one state: hover, focus-visible, active, disabled, dark, open, checked, selected, group-hover, group-open, group-checked, first, last, odd or even. breakpoint is base (default) or a breakpoint name, so md with last writes md:last:. open writes data-[state=open]:, checked data-[state=checked]:, selected data-[state=active]:. The group states need a group parent and write group-hover: or group-data-[state=open]:. first, last, odd and even write first: to even: (:first-child to :nth-child(even) in HTML). reset true removes the value. Saves one version.",
   errors: [BadRequest, Conflict, NotFound],
   http: {
     method: "POST",

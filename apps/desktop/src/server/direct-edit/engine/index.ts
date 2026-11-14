@@ -40,6 +40,8 @@ export { DirectEditError } from "./errors.js";
 
 export { htmlElementSpan, htmlVariantProps } from "./html.js";
 
+export { toChildRulePatch, toChildRuleProps } from "./child-rule-css.js";
+
 export { jsxElementSpan, parseSource } from "./jsx.js";
 
 export { positionAt, refuse } from "./structure-ops.js";

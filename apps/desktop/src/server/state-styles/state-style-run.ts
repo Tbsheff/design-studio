@@ -1,5 +1,5 @@
 import type {
-  ForcedFrameState,
+  ForcedStateChange,
   StateListResult,
   StateStyleResult,
   StyleState,
@@ -80,10 +80,10 @@ const runStateStyleSet = (
 
 const runStateStyleForced = (
   command: SetForcedStateStyleCommand
-): Effect.Effect<ForcedFrameState, KnownFailure> =>
+): Effect.Effect<ForcedStateChange, KnownFailure> =>
   runDirectionRead(
     command,
-    async ({ project, runtime }): Promise<ForcedFrameState> => {
+    async ({ project, runtime }): Promise<ForcedStateChange> => {
       const snapshot = await runtime.canvas.read(project);
       const canvasFrames = snapshot.canvas?.frames ?? [];
 

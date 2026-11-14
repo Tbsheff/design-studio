@@ -10,7 +10,18 @@ const STYLE_STATES = [
   "group-hover",
   "group-open",
   "group-checked",
+  "first",
+  "last",
+  "odd",
+  "even",
 ] as const;
+
+const EDGE_STATE_VARIANTS = {
+  even: "nth-child(even)",
+  first: "first-child",
+  last: "last-child",
+  odd: "nth-child(odd)",
+} as const;
 
 const GROUP_STATE_VARIANTS = {
   "group-checked": "group-data-[state=checked]",
@@ -41,6 +52,10 @@ type DataStateStyle = "checked" | "open" | "selected";
 
 type GroupStateName = keyof typeof GROUP_STATE_VARIANTS;
 
+type EdgeStateName = keyof typeof EDGE_STATE_VARIANTS;
+
+type StateEdgeKind = "list" | "siblings";
+
 type ForcedStatePart =
   | "active"
   | "disabled"
@@ -48,6 +63,7 @@ type ForcedStatePart =
   | "focus-visible"
   | "hover"
   | DataStateName
+  | EdgeStateName
   | GroupStateName;
 
 interface GroupPart {
@@ -87,7 +103,12 @@ interface ForcedFrameState {
   readonly state: StyleState | null;
 }
 
+interface ForcedStateChange extends ForcedFrameState {
+  readonly isStructural: boolean;
+}
+
 interface StateListResult {
+  readonly edge: StateEdgeKind | null;
   readonly forced: readonly ForcedFrameState[];
   readonly group: GroupAncestor | null;
   readonly layer: StateLayer;
@@ -156,6 +177,18 @@ const GROUP_STATE_NAMES = Object.keys(GROUP_STATE_VARIANTS) as GroupStateName[];
 
 const isGroupStateName = (value: string): value is GroupStateName =>
   (GROUP_STATE_NAMES as readonly string[]).includes(value);
+
+const EDGE_STATE_NAMES: readonly EdgeStateName[] = [
+  "first",
+  "last",
+  "odd",
+  "even",
+];
+
+const isEdgeStateName = (value: string): value is EdgeStateName =>
+  (EDGE_STATE_NAMES as readonly string[]).includes(value);
+
+const toEdgePseudo = (name: EdgeStateName): string => EDGE_STATE_VARIANTS[name];
 
 const toGroupVariant = (state: GroupStateName, name: string | null): string => {
   if (name === null) {
@@ -241,6 +274,8 @@ const withForcedParam = (
 export {
   DATA_STATE_NAMES,
   DATA_STATE_VARIANTS,
+  EDGE_STATE_NAMES,
+  EDGE_STATE_VARIANTS,
   FORCE_STATE_PARAM,
   fromDataStateVariant,
   fromGroupClass,
@@ -252,11 +287,13 @@ export {
   fromForcedParam,
   isDataStateName,
   isDataStateStyle,
+  isEdgeStateName,
   isStyleState,
   STATE_SELECTOR_MAX,
   STYLE_STATES,
   toDataStateValue,
   toDataStateVariant,
+  toEdgePseudo,
   toForcedParam,
   toStyleStateName,
   withForcedParam,
@@ -265,13 +302,16 @@ export {
 export type {
   DataStateName,
   DataStateStyle,
+  EdgeStateName,
   ForcedFrameState,
+  ForcedStateChange,
   ForcedStatePart,
   ForcedStateWire,
   GroupAncestor,
   GroupClass,
   GroupPart,
   GroupStateName,
+  StateEdgeKind,
   StateLayer,
   StateListResult,
   StateOverride,

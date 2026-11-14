@@ -24,6 +24,7 @@ export type { SelectionContext, SourceLoc } from "@design-studio/contracts";
 
 export {
   isDataStateStyle,
+  isEdgeStateName,
   isGroupStateName,
   toDataStateVariant,
   toStyleStateName,

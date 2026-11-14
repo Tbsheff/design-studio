@@ -5,8 +5,8 @@ import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import {
+  StateStyleForcedChangeSchema,
   StateStyleForcedFields,
-  StateStyleForcedSchema,
   StateStyleTargetFields,
 } from "./schema.js";
 
@@ -17,7 +17,7 @@ const setForcedStateStyle = defineAction({
     name: "set_forced_state",
     set: "core",
     short:
-      "Show one canvas frame in a state without a pointer. Source files stay the same.",
+      "Show one canvas frame in a state without a real pointer, so get_screenshot with frameId shows it. hover, focus-visible, active or disabled applies the rules of that state to the layer (a CSS selector). open, checked and selected set data-state on the layer. group-hover, group-open and group-checked do this on the nearest group parent. first, last, odd and even are structural: nothing is forced and isStructural is true. dark applies the dark rules (no layer needed). Pass state null to show the frame as it is. The source files do not change.",
   },
   confirm: "none",
   description:
@@ -35,7 +35,7 @@ const setForcedStateStyle = defineAction({
   invalidates: ["state-style.inspect"],
   mcp: { name: "set_forced_state" },
   needs: "project.update",
-  output: StateStyleForcedSchema,
+  output: StateStyleForcedChangeSchema,
   scope: "project",
 });
 

@@ -1,0 +1,29 @@
+call-action state-style.setForced on http://127.0.0.1:47610. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 3 ms, git spawns: not counted (server side)
+{
+  "frameId": "f1",
+  "isStructural": true,
+  "selector": "#rows > li:nth-child(3)",
+  "state": "last"
+}
+
+[mcp] ok, 6 ms, git spawns: not counted (server side)
+{
+  "frameId": "f1",
+  "isStructural": true,
+  "selector": "#rows > li:nth-child(3)",
+  "state": "last"
+}
+
+[agent] ok, 2 ms, git spawns: not counted (server side)
+{
+  "frameId": "f1",
+  "isStructural": true,
+  "selector": "#rows > li:nth-child(3)",
+  "state": "last"
+}
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

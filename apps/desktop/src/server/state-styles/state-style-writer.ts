@@ -1,5 +1,5 @@
 import type {
-  ForcedFrameState,
+  ForcedStateChange,
   StateStyleResult,
 } from "@design-studio/contracts/state-styles";
 import { Context, Effect, Layer } from "effect";
@@ -17,7 +17,7 @@ interface StateStyleWriterApi {
   ) => Effect.Effect<StateStyleResult, KnownFailure>;
   readonly setForced: (
     command: SetForcedStateStyleCommand
-  ) => Effect.Effect<ForcedFrameState, KnownFailure>;
+  ) => Effect.Effect<ForcedStateChange, KnownFailure>;
 }
 
 class StateStyleWriter extends Context.Service<

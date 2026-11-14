@@ -182,6 +182,13 @@ const toKitNote = (count: KitCount): string => {
   return ` Kit: ${toElementsText(count.found)} found, ${count.left ?? count.found} left.`;
 };
 
-export { hasKitGap, inspectRouteKit, toHighKitCount, toKitLines, toKitNote };
+export {
+  hasKitGap,
+  inspectRouteKit,
+  listScanFiles,
+  toHighKitCount,
+  toKitLines,
+  toKitNote,
+};
 
 export type { KitCount, KitRouteScope };

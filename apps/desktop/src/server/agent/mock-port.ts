@@ -42,6 +42,8 @@ const PORT_BASH_TAG = "[port-bash]";
 
 const PORT_APPLY_TAG = "[port-apply]";
 
+const PORT_DARK_TAG = "[port-dark]";
+
 const APPLY_TOOL_NAME = "mcp__studio__apply_port";
 
 const APPLY_TOOL_ID = "mock_port_apply";
@@ -199,6 +201,14 @@ const toHeadingRoute = (heading: string): string =>
     "",
   ].join("\n");
 
+const DARK_LABEL = toTagText(["<", 'p className="COLOR">$120', "<", "/p>"]);
+
+const toDarkRoute = (prompt: string, color: string): string =>
+  toHeadingRoute(toHeading(prompt)).replace(
+    HEADING_CLOSE,
+    `${HEADING_CLOSE}${DARK_LABEL.replace("COLOR", color)}`
+  );
+
 const THROW_ROUTE = [
   PAGE_START,
   '  throw new Error("Mock port route failed to render");',
@@ -242,6 +252,10 @@ const toRouteText = (prompt: string): string => {
 
   if (now !== null) {
     return toUpdatedRoute(prompt, now);
+  }
+
+  if (prompt.includes(PORT_DARK_TAG)) {
+    return toDarkRoute(prompt, "text-[#1a2a4a]");
   }
 
   if (prompt.includes(PORT_THROW_TAG)) {
@@ -298,6 +312,10 @@ const runMockPort = async (
 
 const toFixedRoute = (prompt: string): string => {
   const now = toRouteFileNow(prompt);
+
+  if (prompt.includes(PORT_DARK_TAG)) {
+    return toDarkRoute(prompt, "text-foreground");
+  }
 
   if (now !== null && prompt.includes(PORT_WORSE_TAG)) {
     return now.text.replace(MAIN_CLASS, `${MAIN_CLASS}mt-24 `);

@@ -230,6 +230,6 @@ const inspectAppDark = async (
   };
 };
 
-export { inspectAppDark };
+export { hasAppDarkValues, inspectAppDark };
 
 export type { AppDarkCheck };

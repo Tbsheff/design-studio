@@ -4,7 +4,7 @@ import type {
   PortFirstShift,
   PortMasked,
 } from "@design-studio/actions/port/schema";
-import type { FinalCheck, Project } from "@design-studio/contracts";
+import type { Direction, FinalCheck, Project } from "@design-studio/contracts";
 import { PORT_TASK } from "@design-studio/contracts/port";
 import type { PortReviewRecord } from "@design-studio/contracts/port";
 
@@ -15,12 +15,15 @@ import type {
 } from "../../shared/server-ports.js";
 import type { PortKitFind } from "../components/kit-drift/index.js";
 import type { StudioRuntime } from "../platform/studio-runtime/index.js";
+import type { AppDarkCheck } from "./app-review-dark.js";
 import { isLeanRun } from "./lean-run.js";
 import { EDIT_TOOL_NAMES } from "./permissions.js";
+import { hasDarkGap, toDarkText } from "./port-review-dark.js";
 import { hasKitGap, toKitLines } from "./port-review-kit.js";
 import type { PortMatchRead, RouteRender } from "./port-review-read.js";
 import { hasRouteChange, toStartSnapshot } from "./port-review-snapshot.js";
 import { toRouteFileNow } from "./port-route-update.js";
+import type { RouteFileText } from "./port-route-update.js";
 import type { ImagePart } from "./user-message.js";
 
 const CHECK_TAG = /<port-check\b(?<attributes>[^>]*)\/>/gu;
@@ -46,6 +49,7 @@ interface PortCheckRef {
 }
 
 interface PortRouteGaps {
+  readonly before: RouteFileText | null;
   readonly isUpdate: boolean;
   readonly ref: PortCheckRef;
   readonly url: string;
@@ -53,6 +57,7 @@ interface PortRouteGaps {
 
 interface PortReviewGaps extends PortRouteGaps {
   readonly appDirectionId: string;
+  readonly direction: Direction;
   readonly files: readonly string[];
   readonly project: Project;
   readonly routes: readonly PortRouteGaps[];
@@ -60,6 +65,7 @@ interface PortReviewGaps extends PortRouteGaps {
 }
 
 interface PortCheck {
+  readonly dark: AppDarkCheck | null;
   readonly kit: readonly PortKitFind[] | null;
   readonly match: PortMatchRead;
   readonly render: RouteRender;
@@ -174,6 +180,18 @@ const isRouteUpdate = (
   return toPageSection(prompt, ref.path).includes(UPDATE_OPEN);
 };
 
+const toBeforeText = (
+  prompt: string,
+  refs: readonly PortCheckRef[],
+  ref: PortCheckRef
+): RouteFileText | null => {
+  if (refs.length === 1) {
+    return toRouteFileNow(prompt);
+  }
+
+  return toRouteFileNow(toPageSection(prompt, ref.path));
+};
+
 const toCheckGaps = (ctx: PortReviewContext): PortReviewGaps | null => {
   const { prompt } = ctx.request;
   const refs = toPortCheckRefs(prompt);
@@ -185,6 +203,7 @@ const toCheckGaps = (ctx: PortReviewContext): PortReviewGaps | null => {
   }
 
   const routeGaps = refs.map((checkRef) => ({
+    before: toBeforeText(prompt, refs, checkRef),
     isUpdate: isRouteUpdate(prompt, refs, checkRef),
     ref: checkRef,
     url: toRouteUrl(base, checkRef.routePath),
@@ -192,6 +211,8 @@ const toCheckGaps = (ctx: PortReviewContext): PortReviewGaps | null => {
 
   return {
     appDirectionId: ctx.direction.id,
+    before: routeGaps[0]?.before ?? null,
+    direction: ctx.direction,
     files: toRouteFiles(prompt),
     isUpdate: routeGaps[0]?.isUpdate ?? false,
     project: ctx.project,
@@ -229,7 +250,10 @@ const isLowMatch = (match: PortMatchRead): boolean =>
   (match.score < REFERENCE_LOW_SCORE || match.areas.length > 0);
 
 const isFixNeeded = (check: PortCheck): boolean =>
-  !check.render.isRendered || isLowMatch(check.match) || hasKitGap(check.kit);
+  !check.render.isRendered ||
+  isLowMatch(check.match) ||
+  hasKitGap(check.kit) ||
+  hasDarkGap(check.dark);
 
 const toRenderText = (render: RouteRender): string => {
   if (render.isRendered) {
@@ -254,7 +278,7 @@ const toScoreText = (match: PortMatchRead): string => {
 };
 
 const toCheckText = (check: PortCheck): string =>
-  `${toScoreText(check.match)}, ${toRenderText(check.render)}`;
+  `${toScoreText(check.match)}, ${toRenderText(check.render)}; ${toDarkText(check.dark)}`;
 
 const toTag = (name: string, isClose: boolean): string => {
   if (isClose) {
@@ -395,6 +419,7 @@ const toFixLines = (gaps: PortRouteGaps, check: PortCheck): string[] => [
   ...toMaskedLines(check.match),
   ...toAreaLines(check.match),
   ...toKitLines(check.kit),
+  ...(check.dark?.lines ?? []),
 ];
 
 const toContinueText = (lines: readonly string[]): string =>

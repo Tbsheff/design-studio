@@ -1,7 +1,7 @@
 import type { PortReviewRecord } from "@design-studio/contracts/port";
 
 import { REFERENCE_LOW_SCORE } from "../../shared/reference.js";
-import { toHighKitCount } from "./port-review-kit.js";
+import { toDarkText, toGapCount } from "./port-review-dark.js";
 import {
   createRouteSnapshot,
   restoreRouteSnapshot,
@@ -195,14 +195,11 @@ const isLowerSet = (
   const [was, now] = toScoreSum(before, after);
 
   const kitWas = before.reduce(
-    (sum, route) => sum + toHighKitCount(route.check.kit),
+    (sum, route) => sum + toGapCount(route.check),
     0
   );
 
-  const kitNow = after.reduce(
-    (sum, route) => sum + toHighKitCount(route.check.kit),
-    0
-  );
+  const kitNow = after.reduce((sum, route) => sum + toGapCount(route.check), 0);
 
   const isKitTrade = kitNow < kitWas && was - now <= KIT_DROP_MAX;
 
@@ -381,7 +378,7 @@ const toRouteScore = (item: RouteCheck): string => {
     return `${text}, fails to render (${render.problem})`;
   }
 
-  return text;
+  return `${text}, ${toDarkText(item.check.dark)}`;
 };
 
 const toScoresText = (checks: readonly RouteCheck[]): string =>

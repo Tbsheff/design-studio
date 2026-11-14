@@ -50,7 +50,7 @@ const StrokePositionRing = ({
           onBlur={blurWidth}
         />
       </div>
-      <div className="ins-field color wide">
+      <div className="ins-field wide">
         <label htmlFor={COLOR_ID} className="ins-scrub static">
           {strokePositionCopy.color}
         </label>

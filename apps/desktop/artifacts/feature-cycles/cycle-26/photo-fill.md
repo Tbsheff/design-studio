@@ -15,7 +15,7 @@ Branch `feat/photo-fill`, cut from `54a921252`.
 - Runs in the agent's own first-draft run: a new project has no saved version until the run ends, so `assertCanEdit` refused the call. In that case the action writes the files and the run version keeps them.
 - Agent:
   - `prompt.ts` line 13 is now a photo rule from `photo-search.ts`. When search is on, the agent writes `data-photo` slots and calls `apply_image_search` once after the first draft. When search is off, it writes gray-box divs with `data-photo` and a label, never an `<img>` with no `src`. React projects get the same line.
-  - `run-level.ts`: PROTOTYPE and POLISH add a "Photos" step after the draft when search is on. WIREFRAME says "no img slots and no apply_image_search".
+  - `run-level.ts`: PROTOTYPE and POLISH add a "Photos" step after the draft when search is on. It tells the agent to replace each `img` slot in `missed` with a gray-box div, so no `img` stays without a `src`. WIREFRAME says "no img slots and no apply_image_search".
   - `run-notes.ts` and `photo-note.ts`: when search is off and a PROTOTYPE or POLISH page has `data-photo` slots, the run note ends with "Photo slots are gray boxes. Turn on image search in the image sheet (Turn on image search for this project) or with STUDIO_IMAGE_SEARCH=on for real photos." A marker file next to the runs folder (`photo-note.json`) shows it once per project. Lean runs and ask mode are skipped.
 - Cmd+K "Fill photo slots" (Run group) calls the action on the page of the active canvas frame. If nothing fills, the error banner lists the search words.
 
@@ -24,9 +24,11 @@ Branch `feat/photo-fill`, cut from `54a921252`.
 - `call-action.ts image-search.apply` on a page with one nonsense slot: pass, 3 surfaces, 0 diffs (`photo-fill/call-action-on.txt`). With search off, all 3 surfaces return the same message, which names `STUDIO_IMAGE_SEARCH` and the `imageSearch` setting (`call-action-off.txt`). The tool reports "fail" there only because the HTTP error body and the MCP error text have different shapes.
 - Mock agent, search on, a page with a wide hero, 2 square cards and 1 nonsense slot: 3 distinct photos, 3 credits in `ASSETS.md`, the nonsense slot listed in `missed`. One undo (HTTP, and Cmd+Z in the UI) restored all 3 `data-photo` slots. A second fill of a new "croissant pastry" slot took a new photo, not the one already on the page. A `div` slot got a background image.
 - A one-off script ran the fill inside `runAsAgent` with no saved version (the first-draft case): HTML and `.tsx` (`img` slot filled, `div` slot listed in `missed`), versionId null, files written.
+- The real-run failure message ("no saved version yet", not "The agent is editing this direction") shows that `isOwnAgentRun` is true on the real MCP path during a run, so the first-draft branch takes effect there. The run-end commit stages the whole work tree (`git add -A .`), so it keeps the photos and `ASSETS.md`.
+- The real-model page, restored to its run version and filled again over HTTP with the final scanner: 5 of 5 slots filled, 5 credits, 0 broken images. Undo restored all 5 slots, and redo filled them again. Cmd+Z in the UI was checked before the scanner refactor, and the HTTP undo after it.
 - Run note: a one-off script with search off returned the note on the first call and nothing on the second.
 - Screenshots: `photo-fill/palette-{dark,light}.png` (the command), `filled-{dark,light}.png` (the test page after Cmd+K), `real-page-filled-{dark,light}.png` (the real-model page after one fill: 5 slots, 5 backgrounds, 0 broken images).
-- `pnpm run typecheck`, `pnpm run lint:gate` (59605, baseline 89733) and `pnpm run build:ui` pass. `pnpm run check:scripts` fails on main already (E1 and S11 hits in files this pick does not touch). None of its hits are in this pick's files.
+- `pnpm run typecheck`, `pnpm run typecheck:tsrs`, `pnpm run lint:gate` (59605, baseline 89733) and `pnpm run build:ui` pass. `pnpm run check:scripts` fails on main already (E1 and S11 hits in files this pick does not touch). None of its hits are in this pick's files.
 
 ## Real-model runs (2, Sonnet 5.5, search on, "A bakery landing page", PROTOTYPE)
 

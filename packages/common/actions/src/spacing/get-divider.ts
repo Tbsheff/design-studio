@@ -6,6 +6,7 @@ import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { DirectionIdSchema, ProjectIdSchema } from "../_core/ids.js";
+import { PageFields } from "../_core/list-page.js";
 import { DividerInfoSchema, DividerVariantSchema } from "./divider/schema.js";
 
 const getDividerSpacing = defineAction({
@@ -19,7 +20,7 @@ const getDividerSpacing = defineAction({
   },
   confirm: "none",
   description:
-    "Read the lines that one element draws between its children, from its Tailwind divide classes. axis is x, y or null when there are no lines. width is in px. color and token name the line color. isReverse is true for divide-y-reverse. variant reads one state or breakpoint prefix such as md:. Read only.",
+    "Read the lines that one element draws between its children, from its Tailwind divide classes. axis is x, y or null when there are no lines. width is in px. color and token name the line color. isReverse is true for divide-y-reverse. variant reads one state or breakpoint prefix such as md:. The limit caps the class list. Read only.",
   errors: [BadRequest, Conflict, NotFound],
   http: {
     method: "GET",
@@ -29,6 +30,7 @@ const getDividerSpacing = defineAction({
   input: Schema.Struct({
     ...ElementSourceFields,
     directionId: DirectionIdSchema,
+    limit: PageFields.limit,
     projectId: ProjectIdSchema,
     variant: DividerVariantSchema,
   }),

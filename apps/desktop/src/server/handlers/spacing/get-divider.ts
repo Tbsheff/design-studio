@@ -19,7 +19,7 @@ const handle = Effect.fn("spacing.getDivider")(function* run(
     variant: input.variant,
   });
 
-  return { ...info, classes: [...info.classes] };
+  return { ...info, classes: info.classes.slice(0, input.limit) };
 }) satisfies Handle<typeof getDividerSpacing>;
 
 export { handle };

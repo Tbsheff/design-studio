@@ -9,17 +9,14 @@ import type {
   TransitionStartFunction,
 } from "react";
 
+import { call } from "../../platform/http.js";
 import { useAction } from "../../platform/query.js";
 import type { ActionState } from "../../platform/query.js";
 import { useUi } from "../../platform/storage.js";
 import type { UsePlacedPopoverResult } from "./composer-menu-model.js";
 import { LEVEL_FOCUS } from "./composer-menu-model.js";
 import { copy } from "./copy.js";
-import {
-  DECISION_PAGE_LIMIT,
-  isShownOption,
-  toOtherText,
-} from "./decision-row-model.js";
+import { DECISION_PAGE_LIMIT, toOtherText } from "./decision-row-model.js";
 import type { RunView } from "./run-state-model.js";
 import { useFocusOnOpen } from "./use-focus-on-open.js";
 import { useMenuToggle } from "./use-menu-toggle.js";
@@ -59,6 +56,14 @@ interface DecisionOtherState {
 const NO_DECISIONS: readonly DecisionWire[] = [];
 
 const THEME_PAGE_LIMIT = 20;
+
+const LOOK_IN_USE = "The token values are already set";
+
+interface LookIds {
+  readonly directionId: string;
+  readonly projectId: string;
+  readonly themeId: string;
+}
 
 const isLookDecision = (decision: DecisionWire): boolean =>
   decision.topic === copy.decisionLook;
@@ -102,6 +107,14 @@ const useLookThemes = (
   return useAction(themeRoutes.listTheme, input);
 };
 
+const toFailureText = (failure: Error): string | null => {
+  if (failure.message === LOOK_IN_USE) {
+    return null;
+  }
+
+  return failure.message;
+};
+
 const useLookPick = (
   run: RunView,
   projectId: string | null,
@@ -110,13 +123,30 @@ const useLookPick = (
 ): LookPickState => {
   const { directionId } = run;
   const [lookPick, setLookPick] = useState<string | null>(null);
-  const applier = useAction(themeRoutes.applyTheme);
-  const { run: applyTheme } = applier;
+  const [lookError, setLookError] = useState<string | null>(null);
   const themes = useLookThemes(run, projectId, items);
 
   const decisions = useMemo(
     () => toLookDecisions(items, run.status === "running", lookPick),
     [items, lookPick, run.status]
+  );
+
+  const applyLook = useCallback(
+    async (lookIds: LookIds, option: string): Promise<void> => {
+      try {
+        await call(themeRoutes.applyTheme, lookIds);
+        setLookError(null);
+        setLookPick(option);
+      } catch (error) {
+        const failure = toFailureText(error as Error);
+        setLookError(failure);
+
+        if (failure === null) {
+          setLookPick(option);
+        }
+      }
+    },
+    []
   );
 
   const onLookPick = useCallback(
@@ -130,37 +160,22 @@ const useLookPick = (
         return false;
       }
 
-      if (
-        projectId === null ||
-        directionId === null ||
-        isShownOption(decision, option)
-      ) {
+      if (projectId === null || directionId === null) {
         return true;
       }
 
       const lookIds = { directionId, projectId, themeId: theme.id };
 
       startTransition(async () => {
-        const applied = await applyTheme(lookIds);
-
-        if (applied !== null) {
-          setLookPick(option);
-        }
+        await applyLook(lookIds, option);
       });
 
       return true;
     },
-    [
-      applyTheme,
-      decisions,
-      directionId,
-      projectId,
-      startTransition,
-      themes.data,
-    ]
+    [applyLook, decisions, directionId, projectId, startTransition, themes.data]
   );
 
-  const error = applier.error?.message ?? null;
+  const error = lookError;
 
   return { decisions, error, onLookPick };
 };

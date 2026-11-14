@@ -1,0 +1,43 @@
+call-action image-search.apply on http://127.0.0.1:5760. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 18 ms, git spawns: not counted (server side)
+{
+  "filled": [],
+  "missed": [],
+  "note": "Image search is off. The studio painted 1 art slot.",
+  "versionId": "pending-cc41db1bf6728cfe"
+}
+
+[mcp] ok, 13 ms, git spawns: not counted (server side)
+{
+  "filled": [],
+  "missed": [],
+  "note": "Image search is off. src/App.tsx has no plain data-photo slot, so nothing changed.",
+  "versionId": null
+}
+
+[agent] ok, 2 ms, git spawns: not counted (server side)
+{
+  "filled": [],
+  "missed": [],
+  "note": "Image search is off. src/App.tsx has no plain data-photo slot, so nothing changed.",
+  "versionId": null
+}
+
+diff http -> mcp:
+-   "note": "Image search is off. The studio painted 1 art slot.",
++   "note": "Image search is off. src/App.tsx has no plain data-photo slot, so nothing changed.",
+-   "versionId": "pending-cc41db1bf6728cfe"
++   "versionId": null
+
+diff http -> agent:
+-   "note": "Image search is off. The studio painted 1 art slot.",
++   "note": "Image search is off. src/App.tsx has no plain data-photo slot, so nothing changed.",
+-   "versionId": "pending-cc41db1bf6728cfe"
++   "versionId": null
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 0 error results
+
+fix: compare the outputs above, then run call-action again with the id image-search.apply and the same input

@@ -1,9 +1,11 @@
 import {
   DATA_STATE_NAMES,
+  EDGE_STATE_NAMES,
   fromDataStateVariant,
   fromGroupVariant,
   GROUP_STATE_NAMES,
   isDataStateName,
+  isEdgeStateName,
   isGroupStateName,
   toDataStateVariant,
   toGroupVariant,
@@ -23,6 +25,7 @@ export const PSEUDO_STATES = [
   ...DATA_STATE_NAMES,
   ...GROUP_STATE_NAMES,
   ...POINTER_STATES,
+  ...EDGE_STATE_NAMES,
 ] as const;
 
 export type PseudoState = (typeof PSEUDO_STATES)[number];
@@ -69,7 +72,7 @@ function stateOfPart(part: string): PseudoState | null {
     return grouped.state;
   }
 
-  if (isState(part)) {
+  if (isState(part) || isEdgeStateName(part)) {
     return part;
   }
 

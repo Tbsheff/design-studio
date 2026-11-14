@@ -37,6 +37,7 @@ const REVIEW_RAN =
 
 const TAG_WORDS: Readonly<Record<DriftTag, string>> = {
   "a-as-button": "link styled as a button",
+  badge: "badge",
   button: "button",
   card: "card",
   input: "input",
@@ -48,6 +49,7 @@ const TAG_WORDS: Readonly<Record<DriftTag, string>> = {
 
 const PLURAL_WORDS: Readonly<Record<DriftTag, string>> = {
   "a-as-button": "links styled as buttons",
+  badge: "badges",
   button: "buttons",
   card: "cards",
   input: "inputs",
@@ -128,6 +130,38 @@ const toCardLine = (group: KitGroup, first: MarkupDrift): string => {
   return `- ${toCount(group, "card")} hand-styled (${toPlaces(group.finds)}). Replace the hand-styled card with the app Card${nameText}; keep the content. Give the outer block ${toRecipeText(first.recipe)}.${partText} Keep the page CSS for the look, so Move to app maps it to Card.`;
 };
 
+const listBadgeVariants = (group: KitGroup): string[] => [
+  ...new Set(group.finds.map((find) => find.variant ?? "default")),
+];
+
+const toVariantClasses = (recipe: PackRecipe, variant: string): string =>
+  recipe.component.groups
+    .find((entry) => entry.prop === "variant")
+    ?.options.find((option) => option.value === variant)?.classes ?? "";
+
+const toBadgeLine = (group: KitGroup, first: MarkupDrift): string => {
+  const variants = listBadgeVariants(group);
+
+  const places = group.finds
+    .slice(0, LISTED_LINES)
+    .map((find) => `${find.file}:${find.line} ${find.variant ?? "default"}`)
+    .join(", ");
+
+  const classes = variants
+    .map(
+      (variant) => `${variant} \`${toVariantClasses(first.recipe, variant)}\``
+    )
+    .join("; ");
+
+  let name = "per place";
+
+  if (variants.length === 1) {
+    name = variants[0] ?? "default";
+  }
+
+  return `- ${toCount(group, "badge")} hand-styled (${places}). Replace the hand-styled badge with the app Badge (variant ${name}); keep the text. Give each one ${toRecipeText(first.recipe)} and the classes of its variant: ${classes}. Move to app then maps it to Badge.`;
+};
+
 const toKitLine = (group: KitGroup): string => {
   const [first] = group.finds;
 
@@ -137,6 +171,10 @@ const toKitLine = (group: KitGroup): string => {
 
   if (first.tag === "card") {
     return toCardLine(group, first);
+  }
+
+  if (first.tag === "badge") {
+    return toBadgeLine(group, first);
   }
 
   const { component, slot } = first.recipe;

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Visits</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="p-8 font-sans">
+  <h1 class="text-xl font-semibold">Visits</h1>
+  <div class="flex gap-2 mt-4">
+    <span class="rounded-full bg-green-100 text-green-800 px-2 py-0.5 text-xs font-medium">Completed</span>
+    <span class="rounded-full bg-amber-100 text-amber-800 px-2 py-0.5 text-xs">Scheduled</span>
+    <span class="pill-missed">Missed</span>
+    <span class="inline-flex items-center gap-1 rounded-md bg-gray-100 text-gray-700 px-2 text-xs"><span class="h-1.5 w-1.5 rounded-full bg-gray-500"></span>Draft</span>
+    <span style="border: 1px solid #d4d4d4; border-radius: 9999px; padding: 2px 8px; font-size: 12px">On hold</span>
+    <span data-slot="badge" class="inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 gap-1 border-transparent bg-emerald-100 text-emerald-800">Kit badge</span>
+    <button class="rounded-full bg-blue-600 text-white px-3 text-sm">New</button>
+  </div>
+  <table class="mt-6 w-full text-sm">
+    <thead><tr><th>Patient</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>Ana Ruiz</td><td><span class="rounded-full bg-red-50 text-red-700 px-2 text-xs">Cancelled</span></td></tr>
+    </tbody>
+  </table>
+  <p class="text-sm text-gray-500 mt-4">Showing 1 of 12 visits for this week.</p>
+</body>
+</html>

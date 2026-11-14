@@ -92,6 +92,7 @@ const toItem = (located: Located, importPath: string): KitDrift => {
     suggestedSize: match.suggestedSize,
     suggestedVariant: match.suggestedVariant,
     tag: match.tag,
+    variant: null,
   };
 };
 
@@ -153,6 +154,7 @@ const toMarkupItem = (drift: MarkupDrift): KitDrift => ({
   suggestedSize: drift.suggestedSize,
   suggestedVariant: drift.suggestedVariant,
   tag: drift.tag,
+  variant: drift.variant,
 });
 
 const listPrototypePage = async (

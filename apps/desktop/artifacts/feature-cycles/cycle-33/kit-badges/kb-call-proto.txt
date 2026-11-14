@@ -1,0 +1,530 @@
+call-action kit-drift.list on http://127.0.0.1:5720. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 11 ms, git spawns: not counted (server side)
+{
+  "items": [
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [
+        "rounded-full",
+        "px-2",
+        "py-0.5",
+        "text-xs",
+        "font-medium"
+      ],
+      "file": "index.html",
+      "id": "1711b2d428fefc0c",
+      "keptClasses": [
+        "bg-green-100",
+        "text-green-800"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/badge.tsx",
+        "name": "Badge"
+      },
+      "line": 12,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": "success",
+      "tag": "badge",
+      "variant": "success"
+    },
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [
+        "rounded-full",
+        "bg-amber-100",
+        "text-amber-800",
+        "px-2",
+        "py-0.5",
+        "text-xs"
+      ],
+      "file": "index.html",
+      "id": "1711f5dd28fffe0d",
+      "keptClasses": [],
+      "kitComponent": {
+        "importPath": "components/ui/badge.tsx",
+        "name": "Badge"
+      },
+      "line": 13,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": "warning",
+      "tag": "badge",
+      "variant": "warning"
+    },
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "171238e62901000e",
+      "keptClasses": [
+        "pill-missed"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/badge.tsx",
+        "name": "Badge"
+      },
+      "line": 14,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": "destructive",
+      "tag": "badge",
+      "variant": "destructive"
+    },
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [
+        "inline-flex",
+        "items-center",
+        "gap-1",
+        "px-2",
+        "text-xs"
+      ],
+      "file": "index.html",
+      "id": "17127bef2902020f",
+      "keptClasses": [
+        "rounded-md",
+        "bg-gray-100",
+        "text-gray-700"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/badge.tsx",
+        "name": "Badge"
+      },
+      "line": 15,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": "secondary",
+      "tag": "badge",
+      "variant": "secondary"
+    },
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "1712bef829030410",
+      "keptClasses": [],
+      "kitComponent": {
+        "importPath": "components/ui/badge.tsx",
+        "name": "Badge"
+      },
+      "line": 16,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": "outline",
+      "tag": "badge",
+      "variant": "outline"
+    },
+    {
+      "column": 5,
+      "confidence": "high",
+      "droppedClasses": [
+        "text-sm"
+      ],
+      "file": "index.html",
+      "id": "1713450a29050812",
+      "keptClasses": [
+        "rounded-full",
+        "bg-blue-600",
+        "text-white",
+        "px-3"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/button.tsx",
+        "name": "Button"
+      },
+      "line": 18,
+      "parts": [],
+      "suggestedSize": "default",
+      "suggestedVariant": "default",
+      "tag": "button",
+      "variant": null
+    },
+    {
+      "column": 32,
+      "confidence": "medium",
+      "droppedClasses": [
+        "rounded-full",
+        "px-2",
+        "text-xs"
+      ],
+      "file": "index.html",
+      "id": "3b8310361b840c89",
+      "keptClasses": [
+        "bg-red-50",
+        "text-red-700"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/badge.tsx",
+        "name": "Badge"
+      },
+      "line": 23,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": "destructive",
+      "tag": "badge",
+      "variant": "destructive"
+    }
+  ],
+  "next": null
+}
+
+[mcp] ok, 10 ms, git spawns: not counted (server side)
+{
+  "items": [
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [
+        "rounded-full",
+        "px-2",
+        "py-0.5",
+        "text-xs",
+        "font-medium"
+      ],
+      "file": "index.html",
+      "id": "1711b2d428fefc0c",
+      "keptClasses": [
+        "bg-green-100",
+        "text-green-800"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/badge.tsx",
+        "name": "Badge"
+      },
+      "line": 12,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": "success",
+      "tag": "badge",
+      "variant": "success"
+    },
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [
+        "rounded-full",
+        "bg-amber-100",
+        "text-amber-800",
+        "px-2",
+        "py-0.5",
+        "text-xs"
+      ],
+      "file": "index.html",
+      "id": "1711f5dd28fffe0d",
+      "keptClasses": [],
+      "kitComponent": {
+        "importPath": "components/ui/badge.tsx",
+        "name": "Badge"
+      },
+      "line": 13,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": "warning",
+      "tag": "badge",
+      "variant": "warning"
+    },
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "171238e62901000e",
+      "keptClasses": [
+        "pill-missed"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/badge.tsx",
+        "name": "Badge"
+      },
+      "line": 14,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": "destructive",
+      "tag": "badge",
+      "variant": "destructive"
+    },
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [
+        "inline-flex",
+        "items-center",
+        "gap-1",
+        "px-2",
+        "text-xs"
+      ],
+      "file": "index.html",
+      "id": "17127bef2902020f",
+      "keptClasses": [
+        "rounded-md",
+        "bg-gray-100",
+        "text-gray-700"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/badge.tsx",
+        "name": "Badge"
+      },
+      "line": 15,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": "secondary",
+      "tag": "badge",
+      "variant": "secondary"
+    },
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "1712bef829030410",
+      "keptClasses": [],
+      "kitComponent": {
+        "importPath": "components/ui/badge.tsx",
+        "name": "Badge"
+      },
+      "line": 16,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": "outline",
+      "tag": "badge",
+      "variant": "outline"
+    },
+    {
+      "column": 5,
+      "confidence": "high",
+      "droppedClasses": [
+        "text-sm"
+      ],
+      "file": "index.html",
+      "id": "1713450a29050812",
+      "keptClasses": [
+        "rounded-full",
+        "bg-blue-600",
+        "text-white",
+        "px-3"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/button.tsx",
+        "name": "Button"
+      },
+      "line": 18,
+      "parts": [],
+      "suggestedSize": "default",
+      "suggestedVariant": "default",
+      "tag": "button",
+      "variant": null
+    },
+    {
+      "column": 32,
+      "confidence": "medium",
+      "droppedClasses": [
+        "rounded-full",
+        "px-2",
+        "text-xs"
+      ],
+      "file": "index.html",
+      "id": "3b8310361b840c89",
+      "keptClasses": [
+        "bg-red-50",
+        "text-red-700"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/badge.tsx",
+        "name": "Badge"
+      },
+      "line": 23,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": "destructive",
+      "tag": "badge",
+      "variant": "destructive"
+    }
+  ],
+  "next": null
+}
+
+[agent] ok, 4 ms, git spawns: not counted (server side)
+{
+  "items": [
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [
+        "rounded-full",
+        "px-2",
+        "py-0.5",
+        "text-xs",
+        "font-medium"
+      ],
+      "file": "index.html",
+      "id": "1711b2d428fefc0c",
+      "keptClasses": [
+        "bg-green-100",
+        "text-green-800"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/badge.tsx",
+        "name": "Badge"
+      },
+      "line": 12,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": "success",
+      "tag": "badge",
+      "variant": "success"
+    },
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [
+        "rounded-full",
+        "bg-amber-100",
+        "text-amber-800",
+        "px-2",
+        "py-0.5",
+        "text-xs"
+      ],
+      "file": "index.html",
+      "id": "1711f5dd28fffe0d",
+      "keptClasses": [],
+      "kitComponent": {
+        "importPath": "components/ui/badge.tsx",
+        "name": "Badge"
+      },
+      "line": 13,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": "warning",
+      "tag": "badge",
+      "variant": "warning"
+    },
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "171238e62901000e",
+      "keptClasses": [
+        "pill-missed"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/badge.tsx",
+        "name": "Badge"
+      },
+      "line": 14,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": "destructive",
+      "tag": "badge",
+      "variant": "destructive"
+    },
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [
+        "inline-flex",
+        "items-center",
+        "gap-1",
+        "px-2",
+        "text-xs"
+      ],
+      "file": "index.html",
+      "id": "17127bef2902020f",
+      "keptClasses": [
+        "rounded-md",
+        "bg-gray-100",
+        "text-gray-700"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/badge.tsx",
+        "name": "Badge"
+      },
+      "line": 15,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": "secondary",
+      "tag": "badge",
+      "variant": "secondary"
+    },
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "1712bef829030410",
+      "keptClasses": [],
+      "kitComponent": {
+        "importPath": "components/ui/badge.tsx",
+        "name": "Badge"
+      },
+      "line": 16,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": "outline",
+      "tag": "badge",
+      "variant": "outline"
+    },
+    {
+      "column": 5,
+      "confidence": "high",
+      "droppedClasses": [
+        "text-sm"
+      ],
+      "file": "index.html",
+      "id": "1713450a29050812",
+      "keptClasses": [
+        "rounded-full",
+        "bg-blue-600",
+        "text-white",
+        "px-3"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/button.tsx",
+        "name": "Button"
+      },
+      "line": 18,
+      "parts": [],
+      "suggestedSize": "default",
+      "suggestedVariant": "default",
+      "tag": "button",
+      "variant": null
+    },
+    {
+      "column": 32,
+      "confidence": "medium",
+      "droppedClasses": [
+        "rounded-full",
+        "px-2",
+        "text-xs"
+      ],
+      "file": "index.html",
+      "id": "3b8310361b840c89",
+      "keptClasses": [
+        "bg-red-50",
+        "text-red-700"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/badge.tsx",
+        "name": "Badge"
+      },
+      "line": 23,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": "destructive",
+      "tag": "badge",
+      "variant": "destructive"
+    }
+  ],
+  "next": null
+}
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

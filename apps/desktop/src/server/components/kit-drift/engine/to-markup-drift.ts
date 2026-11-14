@@ -1,4 +1,6 @@
 import { toClassTokens } from "./class-names.js";
+import { toBadgeDrift } from "./to-badge-drift.js";
+import type { BadgeFind } from "./to-badge-drift.js";
 import { toCardDrift } from "./to-card-drift.js";
 import type { CardFind } from "./to-card-drift.js";
 import { toDriftId } from "./to-drift-id.js";
@@ -25,6 +27,7 @@ interface MarkupDrift {
   readonly suggestedSize: string | null;
   readonly suggestedVariant: string | null;
   readonly tag: DriftTag;
+  readonly variant: string | null;
 }
 
 interface MarkupPlace {
@@ -74,6 +77,7 @@ const TEXT_INPUT_TYPES: ReadonlySet<string> = new Set([
 
 const COMPONENT_NAMES: Readonly<Record<DriftTag, ReadonlySet<string>>> = {
   "a-as-button": new Set(["Button"]),
+  badge: new Set(["Badge"]),
   button: new Set(["Button"]),
   card: new Set(["Card"]),
   input: new Set(["Input"]),
@@ -232,6 +236,7 @@ const toElementDrift = (
   const parts: readonly PackRecipe[] = [];
   const suggestedSize = toDefaultOf(recipe.component, SIZE_PROP);
   const suggestedVariant = toDefaultOf(recipe.component, VARIANT_PROP);
+  const variant = null;
 
   return [
     {
@@ -247,6 +252,7 @@ const toElementDrift = (
       suggestedSize,
       suggestedVariant,
       tag,
+      variant,
     },
   ];
 };
@@ -263,6 +269,7 @@ const toCardItem = (input: MarkupInput, find: CardFind): MarkupDrift => {
   const suggestedSize = null;
   const suggestedVariant = null;
   const tag: DriftTag = "card";
+  const variant = null;
 
   return {
     column,
@@ -277,6 +284,58 @@ const toCardItem = (input: MarkupInput, find: CardFind): MarkupDrift => {
     suggestedSize,
     suggestedVariant,
     tag,
+    variant,
+  };
+};
+
+const toVariantClasses = (kit: KitComponent, variant: string): Set<string> => {
+  const found = new Set<string>(kit.base);
+
+  for (const group of kit.groups) {
+    let chosen = group.default;
+
+    if (group.prop === VARIANT_PROP) {
+      chosen = variant;
+    }
+
+    const option = group.options.find((entry) => entry.value === chosen);
+
+    for (const token of toClassTokens(option?.classes ?? "")) {
+      found.add(token);
+    }
+  }
+
+  return found;
+};
+
+const toBadgeItem = (input: MarkupInput, find: BadgeFind): MarkupDrift => {
+  const covered = toVariantClasses(find.recipe.component, find.variant);
+  const { column, line } = toPlace(input.html, find.offset);
+  const { file } = input;
+  const { recipe, tokens, variant } = find;
+  const confidence: DriftConfidence = "medium";
+  const droppedClasses = tokens.filter((token) => covered.has(token));
+  const id = toDriftId(file, line, column);
+  const keptClasses = tokens.filter((token) => !covered.has(token));
+  const parts: readonly PackRecipe[] = [];
+  const suggestedSize = null;
+  const suggestedVariant = variant;
+  const tag: DriftTag = "badge";
+
+  return {
+    column,
+    confidence,
+    droppedClasses,
+    file,
+    id,
+    keptClasses,
+    line,
+    parts,
+    recipe,
+    suggestedSize,
+    suggestedVariant,
+    tag,
+    variant,
   };
 };
 
@@ -289,6 +348,7 @@ const toMarkupDrift = (input: MarkupInput): MarkupDrift[] =>
       toElementDrift(input, element)
     ),
     ...toCardDrift(input).map((find) => toCardItem(input, find)),
+    ...toBadgeDrift(input).map((find) => toBadgeItem(input, find)),
   ].toSorted(toOrder);
 
 export { toMarkupDrift };

@@ -7,8 +7,11 @@ import type {
   QualitySeverity,
 } from "@design-studio/contracts";
 
+import type { RenderClip } from "../../shared/render-rpc.js";
 import type { AxeNode, AxeViolation } from "../../shared/server-ports.js";
 import { packagedResource } from "../platform/resources/index.js";
+import type { PhotoTextHit } from "./text-on-photo.js";
+import { runPhotoTextPass } from "./text-on-photo.js";
 
 const AXE_RULES = [
   "color-contrast",
@@ -112,7 +115,47 @@ function axeFindings(
 
 interface AxePage {
   evaluate<T>(expression: string): Promise<T>;
+  screenshot?: (outPath: string, clip: RenderClip) => Promise<void>;
 }
+
+const PART_WORD: Record<PhotoTextHit["part"], string> = {
+  darkest: "dark",
+  lightest: "light",
+};
+
+const toPhotoTextFinding = (hit: PhotoTextHit): QualityFinding => {
+  const ratio = hit.ratio.toFixed(1);
+  const word = PART_WORD[hit.part];
+
+  return {
+    check: "a11y",
+    message: `Text on a photo or gradient is ${ratio}:1 at its ${hit.part} part (AA needs ${hit.need}:1). Add a scrim behind the text, a text shadow, or move the text off the ${word} part.`,
+    selector: hit.selector,
+    severity: severityForImpact(hit.impact ?? "serious"),
+    source: LOC_IN_HTML.exec(hit.html)?.[1] ?? null,
+    viewport: "desktop",
+  };
+};
+
+const toPhotoTextFindings = async (
+  page: AxePage
+): Promise<QualityFinding[]> => {
+  const { screenshot } = page;
+
+  if (!screenshot) {
+    return [];
+  }
+
+  const hits = await runPhotoTextPass(
+    {
+      evaluate: (expression) => page.evaluate(expression),
+      screenshot: (outPath, clip) => screenshot.call(page, outPath, clip),
+    },
+    loadAxeSource
+  );
+
+  return hits.map((hit) => toPhotoTextFinding(hit));
+};
 
 function axeRunExpression(rules: readonly string[]): string {
   return `window.axe.run(document, { runOnly: { type: 'rule', values: ${JSON.stringify(rules)} }, resultTypes: ['violations'] }).then((result) => result.violations)`;
@@ -139,6 +182,11 @@ export async function runAxe(
   shared?: () => Promise<AxeViolation[]>
 ): Promise<QualityFinding[]> {
   const violations = await (shared ? shared() : runSharedAxe(page));
+  const found = axeFindings(pickRules(violations, AXE_RULES), viewport);
 
-  return axeFindings(pickRules(violations, AXE_RULES), viewport);
+  if (viewport !== "desktop") {
+    return found;
+  }
+
+  return [...found, ...(await toPhotoTextFindings(page))];
 }

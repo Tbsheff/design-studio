@@ -13,6 +13,7 @@ import type {
   StyleQuery,
   StyleScanResult,
 } from "@design-studio/contracts/style-search";
+import { TEXT_FORMAT_PROPERTIES } from "@design-studio/contracts/text-format-properties";
 import type { EditScope } from "@design-studio/contracts/usage-scope";
 
 export type LegacyBinding<T> = T;
@@ -2001,9 +2002,7 @@ export const DIRECT_STYLE_PROPERTIES = [
   "flex",
   "box-shadow",
   "filter",
-  "font-style",
-  "text-decoration-line",
-  "text-transform",
+  ...TEXT_FORMAT_PROPERTIES,
   "overflow",
   "text-shadow",
   "transform",

@@ -140,6 +140,7 @@ const useDividerWrite = (
           });
 
           absorbClasses(result.classes);
+          edit.absorb({});
           edit.reselect();
         } catch (error) {
           setError(errorText(error));

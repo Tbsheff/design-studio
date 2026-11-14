@@ -7,6 +7,7 @@ import { Effect } from "effect";
 
 import { DevServerStore } from "../../app/index.js";
 import { CanvasWriter } from "../../canvas/index.js";
+import { FixtureStore } from "../../export/index.js";
 import {
   isRouteMatch,
   ProjectOpsWriter,
@@ -23,9 +24,16 @@ import type { Handle } from "../_core/handler.js";
 
 type CreatePrototypeProjectInput = Input<typeof createPrototypeProject>;
 
-type FixtureOffer = NonNullable<
-  Output<typeof createPrototypeProject>["fixtureOffer"]
->;
+type CreatePrototypeProjectOutput = Output<typeof createPrototypeProject>;
+
+type FixtureOffer = NonNullable<CreatePrototypeProjectOutput["fixtureOffer"]>;
+
+type RouteTarget = Omit<CreatePrototypeProjectOutput, "fixtureOffer">;
+
+interface RouteLabel {
+  readonly fixtureRoute: string | null;
+  readonly sourceRoute: string;
+}
 
 interface RouteRunBody {
   readonly canvas: {
@@ -59,6 +67,7 @@ const ESCAPED_UNDERSCORE = /%5F/giu;
 const DATA_FAILURE = /answered [45]\d\d\.$|had nothing to copy/u;
 const ENTRY_FRAME = "f1";
 const MAIN_DIRECTION = "main";
+const FIXTURE_LIST_LIMIT = 200;
 
 const toRoutePath = (routePath: string): string => {
   const trimmed = routePath.trim();
@@ -207,9 +216,17 @@ const applyRouteTokens = Effect.fn("project.createPrototype.applyRouteTokens")(
   }
 );
 
+const toRunPrompt = (label: RouteLabel, prompt: string): string => {
+  if (label.fixtureRoute === null) {
+    return `Redesign ${label.sourceRoute}: ${prompt}`;
+  }
+
+  return `Redesign ${label.sourceRoute} (with a data fixture): ${prompt}\n\nThe page data comes from the data fixture route ${label.fixtureRoute}.`;
+};
+
 const toRouteRunBody = (
   input: CreatePrototypeProjectInput,
-  routePath: string,
+  label: RouteLabel,
   copy: RouteCopy
 ): RouteRunBody => {
   const body: RouteRunBody = {
@@ -220,7 +237,7 @@ const toRouteRunBody = (
       width: copy.width,
     },
     mode: "edit",
-    prompt: `Redesign ${routePath}: ${input.prompt}`,
+    prompt: toRunPrompt(label, input.prompt),
   };
 
   if (input.level === null) {
@@ -229,6 +246,79 @@ const toRouteRunBody = (
 
   return { ...body, level: input.level };
 };
+
+const toRouteLabel = Effect.fn("project.createPrototype.toRouteLabel")(
+  function* run(appProjectId: string, routePath: string) {
+    const store = yield* FixtureStore;
+
+    const { items } = yield* store.list({
+      cursor: null,
+      limit: FIXTURE_LIST_LIMIT,
+      projectId: appProjectId,
+    });
+
+    const fixture = items.find((item) => item.route === routePath) ?? null;
+
+    if (fixture === null) {
+      const label: RouteLabel = { fixtureRoute: null, sourceRoute: routePath };
+
+      return label;
+    }
+
+    const label: RouteLabel = {
+      fixtureRoute: routePath,
+      sourceRoute: toRoutePath(fixture.sourceRoute),
+    };
+
+    return label;
+  }
+);
+
+const toIntoTarget = Effect.fn("project.createPrototype.toIntoTarget")(
+  function* run(appProjectId: string, intoProjectId: string) {
+    const projects = yield* ProjectStore;
+    const project = yield* projects.get(intoProjectId);
+    const isSameApp = project.appProjectId === appProjectId;
+
+    if (!isSameApp || project.kind !== "html") {
+      return yield* new BadRequest({
+        message: `${project.name} is not a route copy of this app. Pass the id of a prototype that create_prototype_project made from this app, or leave intoProjectId out.`,
+      });
+    }
+
+    const directionId = toMainDirectionId(project.directions);
+    const main = project.directions.find((item) => item.id === directionId);
+
+    const folder = main?.workTree ?? "";
+
+    const target: RouteTarget = {
+      folder,
+      project,
+      runId: null,
+      tokensFile: null,
+    };
+
+    return target;
+  }
+);
+
+const toRouteTarget = Effect.fn("project.createPrototype.toRouteTarget")(
+  function* run(input: CreatePrototypeProjectInput, label: RouteLabel) {
+    if (input.intoProjectId !== null) {
+      return yield* toIntoTarget(input.projectId, input.intoProjectId);
+    }
+
+    const writer = yield* ProjectOpsWriter;
+
+    const created: RouteTarget = yield* writer.createPrototype({
+      ...input,
+      name: toRouteName(input.name, label.sourceRoute),
+      shouldStartRun: false,
+    });
+
+    return created;
+  }
+);
 
 const recordRouteSource = Effect.fn(
   "project.createPrototype.recordRouteSource"
@@ -266,13 +356,8 @@ const createRoutePrototype = Effect.fn("project.createPrototype.route")(
     }
 
     const upstream = yield* toReadyAppUpstream(input.projectId);
-    const writer = yield* ProjectOpsWriter;
-
-    const created = yield* writer.createPrototype({
-      ...input,
-      name: toRouteName(input.name, routePath),
-      shouldStartRun: false,
-    });
+    const label = yield* toRouteLabel(input.projectId, routePath);
+    const created = yield* toRouteTarget(input, label);
 
     const target = {
       directionId: toMainDirectionId(created.project.directions),
@@ -312,7 +397,7 @@ const createRoutePrototype = Effect.fn("project.createPrototype.route")(
 
     const { runId } = yield* runs.start({
       ...target,
-      body: toRouteRunBody(input, routePath, copy),
+      body: toRouteRunBody(input, label, copy),
     });
 
     return { ...created, fixtureOffer: null, runId };
@@ -324,6 +409,13 @@ const handle = Effect.fn("project.createPrototype")(function* run(
 ) {
   if (input.routePath !== null) {
     return yield* createRoutePrototype(input, input.routePath);
+  }
+
+  if (input.intoProjectId !== null) {
+    return yield* new BadRequest({
+      message:
+        "intoProjectId needs routePath. Pass the route to copy into that project.",
+    });
   }
 
   const writer = yield* ProjectOpsWriter;

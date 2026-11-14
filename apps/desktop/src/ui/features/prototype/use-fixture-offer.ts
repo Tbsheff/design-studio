@@ -1,7 +1,14 @@
 import { useCallback, useState, useTransition } from "react";
 
-import { call, errorText, fixtureRoutes, projectRoutes } from "./deps.js";
+import {
+  call,
+  errorText,
+  fixtureRoutes,
+  projectRoutes,
+  runRoutes,
+} from "./deps.js";
 import type { FixtureOffer } from "./fixture-offer-model.js";
+import { toOpenPrompt } from "./fixture-offer-model.js";
 
 interface FixtureOfferState {
   readonly failure: string | null;
@@ -31,8 +38,9 @@ const useFixtureOffer = (
         });
 
         const created = await call(projectRoutes.createPrototypeProject, {
+          intoProjectId: offer.copyProjectId,
           level: null,
-          name: `Redesign ${offer.route}`,
+          name: null,
           projectId: offer.appProjectId,
           prompt: promptText,
           routePath: fixture.route,
@@ -48,8 +56,21 @@ const useFixtureOffer = (
   }, [offer, onCreated, promptText]);
 
   const handleOpen = useCallback((): void => {
-    onCreated(offer.copyProjectId);
-  }, [offer, onCreated]);
+    startTransition(async (): Promise<void> => {
+      try {
+        await call(runRoutes.startRun, {
+          directionId: offer.copyDirectionId,
+          mode: "edit",
+          projectId: offer.copyProjectId,
+          prompt: toOpenPrompt(offer, promptText),
+        });
+
+        onCreated(offer.copyProjectId);
+      } catch (error: unknown) {
+        setFailure(errorText(error));
+      }
+    });
+  }, [offer, onCreated, promptText]);
 
   return { failure, handleMake, handleOpen, isPending };
 };

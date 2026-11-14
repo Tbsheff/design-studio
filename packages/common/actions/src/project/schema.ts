@@ -154,6 +154,12 @@ const CommandRulesSchema = Schema.Struct({
 });
 
 const ProjectPrototypeFields = {
+  intoProjectId: Schema.NullOr(ProjectIdSchema)
+    .annotate({
+      description:
+        "Id of an earlier route copy of this app to write the route copy into, as a new version. Pass the empty copy's project id when you copy a fixture route after a fixtureOffer. Leave out to make a new prototype project.",
+    })
+    .pipe(Schema.withDecodingDefaultKey(Effect.succeed(null))),
   level: Schema.NullOr(Schema.Literals(["wireframe", "prototype", "polish"]))
     .annotate({
       description:
@@ -209,7 +215,7 @@ const FixtureOfferSchema = Schema.Struct({
 const ProjectPrototypeCreatedSchema = Schema.Struct({
   fixtureOffer: Schema.NullOr(FixtureOfferSchema).annotate({
     description:
-      "Set when the route copy failed or is empty. The page can need server data. Ask the user, then call create_fixture with this route, then copy the fixture route.",
+      "Set when the route copy failed or is empty. The page can need server data. Ask the user, then call create_fixture with this route, then copy the fixture route with intoProjectId set to this project id, so one route keeps one prototype project.",
   }),
   folder: Schema.String,
   project: ProjectSchema,

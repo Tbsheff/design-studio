@@ -15,6 +15,7 @@ import {
   prototypeRoute,
 } from "./deps.js";
 import type { FixtureOffer } from "./fixture-offer-model.js";
+import { toMainDirectionId } from "./fixture-offer-model.js";
 
 interface PrototypeCreate {
   readonly failure: string | null;
@@ -59,6 +60,7 @@ const usePrototypeCreate = (
       startTransition(async (): Promise<void> => {
         try {
           const created = await call(projectRoutes.createPrototypeProject, {
+            intoProjectId: null,
             level: null,
             name: null,
             projectId: appProjectId,
@@ -76,6 +78,7 @@ const usePrototypeCreate = (
 
           setOffer({
             ...created.fixtureOffer,
+            copyDirectionId: toMainDirectionId(created.project.directions),
             copyProjectId: created.project.id,
           });
         } catch (error: unknown) {

@@ -1,0 +1,59 @@
+call-action page.inspectFlow on http://127.0.0.1:6340. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 4 ms, git spawns: not counted (server side)
+{
+  "gaps": [
+    {
+      "detail": "--brand is #c2410c on plans.html and #2f7d6d on index.html.",
+      "kind": "token-changed",
+      "page": "plans.html",
+      "part": "--brand",
+      "selector": null
+    }
+  ],
+  "pages": [
+    "index.html",
+    "plans.html",
+    "done.html"
+  ]
+}
+
+[mcp] ok, 7 ms, git spawns: not counted (server side)
+{
+  "gaps": [
+    {
+      "detail": "--brand is #c2410c on plans.html and #2f7d6d on index.html.",
+      "kind": "token-changed",
+      "page": "plans.html",
+      "part": "--brand",
+      "selector": null
+    }
+  ],
+  "pages": [
+    "index.html",
+    "plans.html",
+    "done.html"
+  ]
+}
+
+[agent] ok, 3 ms, git spawns: not counted (server side)
+{
+  "gaps": [
+    {
+      "detail": "--brand is #c2410c on plans.html and #2f7d6d on index.html.",
+      "kind": "token-changed",
+      "page": "plans.html",
+      "part": "--brand",
+      "selector": null
+    }
+  ],
+  "pages": [
+    "index.html",
+    "plans.html",
+    "done.html"
+  ]
+}
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

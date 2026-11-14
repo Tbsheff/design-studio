@@ -1,0 +1,64 @@
+{
+  "main": {
+    "status": "completed",
+    "costUsd": 0.347943025,
+    "durationMs": 103692,
+    "wallS": "120",
+    "appReview": {
+      "mobileShot": "studio",
+      "review": "studio",
+      "findings": 0,
+      "fixLoop": true,
+      "oldCode": 0,
+      "passes": [
+        {
+          "mobileShot": "studio",
+          "review": "studio",
+          "findings": 2,
+          "oldCode": 0,
+          "fixLoop": true
+        },
+        {
+          "mobileShot": "studio",
+          "review": "studio",
+          "findings": 0,
+          "oldCode": 0,
+          "fixLoop": false
+        }
+      ]
+    },
+    "flowGaps": 0,
+    "pages": ["index.html", "plan.html", "done.html"]
+  },
+  "branch": {
+    "status": "completed",
+    "costUsd": 0.3190182750000001,
+    "durationMs": 88873,
+    "wallS": "103",
+    "appReview": {
+      "mobileShot": "studio",
+      "review": "studio",
+      "findings": 0,
+      "fixLoop": true,
+      "oldCode": 0,
+      "passes": [
+        {
+          "mobileShot": "studio",
+          "review": "studio",
+          "findings": 1,
+          "oldCode": 0,
+          "fixLoop": true
+        },
+        {
+          "mobileShot": "studio",
+          "review": "studio",
+          "findings": 0,
+          "oldCode": 0,
+          "fixLoop": false
+        }
+      ]
+    },
+    "flowGaps": 0,
+    "pages": ["index.html", "plans.html", "done.html"]
+  }
+}

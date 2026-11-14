@@ -33,7 +33,7 @@ interface VariantEdit {
     readonly add: string[];
     readonly remove: string[];
   } | null;
-  readonly style: VariantStyle | null;
+  readonly style: Partial<VariantStyle> | null;
 }
 
 const VARIANT_KINDS: ReadonlySet<EffectItem["kind"]> = new Set([
@@ -108,12 +108,26 @@ const toClassEdit = (
   return { classes: { add, remove }, style: null };
 };
 
-const toStyleEdit = (effects: readonly EffectItem[]): VariantEdit => {
+const DECLARATION_GAP = ":";
+
+const toSetProperties = (set: readonly string[]): ReadonlySet<string> =>
+  new Set(set.map((entry) => entry.split(DECLARATION_GAP, 1)[0]?.trim() ?? ""));
+
+const toStyleEdit = (
+  effects: readonly EffectItem[],
+  set: readonly string[]
+): VariantEdit => {
   if (effects.some((item) => item.kind === "background-blur")) {
     throw new EffectError(NO_BACKDROP);
   }
 
-  return { classes: null, style: toVariantStyle(effects) };
+  const style = toVariantStyle(effects, toSetProperties(set));
+
+  if (Object.keys(style).length === 0) {
+    throw new EffectError(NOTHING);
+  }
+
+  return { classes: null, style };
 };
 
 const toVariantSite = async (
@@ -153,7 +167,7 @@ const toVariantEdit = (
   }
 
   if (site.mode === "css") {
-    return toStyleEdit(effects);
+    return toStyleEdit(effects, site.set);
   }
 
   throw new EffectError(

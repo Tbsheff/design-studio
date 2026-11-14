@@ -161,13 +161,45 @@ interface VariantStyle {
   readonly filter: string;
 }
 
-const toVariantStyle = (effects: readonly EffectItem[]): VariantStyle => {
-  const declarations = toVariantDeclarations(effects);
+const toStyleValue = (
+  values: ReadonlyMap<string, string>,
+  property: string,
+  kept: ReadonlySet<string>
+): string | null => {
+  const value = values.get(property) ?? null;
 
-  const toValue = (property: string): string =>
-    declarations.find((entry) => entry.property === property)?.value ?? NONE;
+  if (value !== null) {
+    return value;
+  }
 
-  return { [BOX_SHADOW]: toValue(BOX_SHADOW), [FILTER]: toValue(FILTER) };
+  if (kept.has(property)) {
+    return NONE;
+  }
+
+  return null;
+};
+
+const toVariantStyle = (
+  effects: readonly EffectItem[],
+  kept: ReadonlySet<string>
+): Partial<VariantStyle> => {
+  const values = new Map(
+    toVariantDeclarations(effects).map((entry) => [entry.property, entry.value])
+  );
+
+  const shadow = toStyleValue(values, BOX_SHADOW, kept);
+  const filter = toStyleValue(values, FILTER, kept);
+  const style: { -readonly [Key in keyof VariantStyle]?: string } = {};
+
+  if (shadow !== null) {
+    style[BOX_SHADOW] = shadow;
+  }
+
+  if (filter !== null) {
+    style[FILTER] = filter;
+  }
+
+  return style;
 };
 
 const isEffectBase = (base: string): boolean =>

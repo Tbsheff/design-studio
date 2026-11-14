@@ -4,16 +4,14 @@ import type { CanvasSection } from "@design-studio/contracts/canvas-file";
 
 import type { CanvasFrame } from "./canvas-layout-types.js";
 import { stateCheckCopy } from "./copy.js";
-import { toStateRunPlan } from "./state-run-model.js";
-import type { StateRunPlan } from "./state-run-model.js";
 
 type StateCheckWire = WireOutput<typeof inspectStateFramesCanvas>;
 
 type StateCheckRow = StateCheckWire["items"][number];
 
 interface StateCheckView {
+  readonly hasMissing: boolean;
   readonly line: string;
-  readonly plan: StateRunPlan | null;
 }
 
 const DEFAULT_STATE = "default";
@@ -79,18 +77,17 @@ const toLine = (same: number, total: number): string => {
 
 const toStateCheckView = (wire: StateCheckWire | null): StateCheckView => {
   if (wire === null) {
-    return { line: stateCheckCopy.checking, plan: null };
+    return { hasMissing: false, line: stateCheckCopy.checking };
   }
 
   const same = toSameRows(wire.items);
   const line = toLine(same.length, toStateCount(wire.items));
-  const plan = toStateRunPlan(wire);
 
-  if (plan === null) {
-    return { line, plan };
+  if (same.length === 0) {
+    return { hasMissing: false, line };
   }
 
-  return { line: `${line}: ${toNameList(same)}`, plan };
+  return { hasMissing: true, line: `${line}: ${toNameList(same)}` };
 };
 
 export { isStateBoardSection, toBoardFrameId, toStateCheckView };

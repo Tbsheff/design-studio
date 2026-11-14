@@ -1,137 +1,99 @@
 import type { WireOutput } from "@design-studio/actions/_core/action";
-import type { inspectStateFramesCanvas } from "@design-studio/actions/canvas/inspect-state-frames";
+import type { getStatesRun } from "@design-studio/actions/run/get-states";
 
 import { stateRunCopy } from "./copy.js";
 
-type StateRunWire = WireOutput<typeof inspectStateFramesCanvas>;
+type StateRunWire = WireOutput<typeof getStatesRun>;
 
-interface StateRunStep {
-  readonly frameId: string;
-  readonly state: string;
-  readonly stateName: string;
-}
-
-interface StateRunPlan {
-  readonly page: string;
-  readonly steps: readonly StateRunStep[];
-}
+type StateRunRow = StateRunWire["items"][number];
 
 interface StateRunIdle {
   readonly kind: "idle";
 }
 
 interface StateRunActive {
-  readonly index: number;
   readonly kind: "running";
-  readonly plan: StateRunPlan;
+  readonly line: string;
+  readonly runId: string | null;
 }
 
 interface StateRunEnded {
   readonly kind: "ended";
-  readonly stateName: string;
+  readonly line: string;
 }
 
 type StateRunPhase = StateRunActive | StateRunEnded | StateRunIdle;
 
-const DEFAULT_STATE = "default";
-
-const COMPLETED = "completed";
+const SEQUENCE_PREFIX = "states-";
 
 const IDLE_PHASE: StateRunIdle = { kind: "idle" };
 
-const toStateRunPlan = (wire: StateRunWire | null): StateRunPlan | null => {
+const toSequenceId = (sectionId: string): string =>
+  `${SEQUENCE_PREFIX}${sectionId}`;
+
+const isActiveRow = (row: StateRunRow): boolean =>
+  row.status === "running" || row.status === "waiting";
+
+const isEndedRow = (row: StateRunRow): boolean =>
+  row.status === "failed" || row.status === "stopped";
+
+const toLastRunId = (
+  rows: readonly StateRunRow[],
+  index: number
+): string | null =>
+  rows
+    .slice(0, index + 1)
+    .flatMap((row): string[] => {
+      if (row.runId === null) {
+        return [];
+      }
+
+      return [row.runId];
+    })
+    .at(-1) ?? null;
+
+const toActivePhase = (
+  rows: readonly StateRunRow[],
+  index: number
+): StateRunActive => {
+  const row = rows[index];
+
+  return {
+    kind: "running",
+    line: `${stateRunCopy.designing}${row?.stateName ?? ""} (${index + 1}${stateRunCopy.of}${rows.length})…`,
+    runId: toLastRunId(rows, index),
+  };
+};
+
+const toStateRunPhase = (wire: StateRunWire | null): StateRunPhase => {
   if (wire === null) {
+    return IDLE_PHASE;
+  }
+
+  const rows = wire.items;
+  const active = rows.findIndex((row) => isActiveRow(row));
+
+  if (active !== -1) {
+    return toActivePhase(rows, active);
+  }
+
+  const ended = rows.find((row) => isEndedRow(row));
+
+  if (!ended) {
+    return IDLE_PHASE;
+  }
+
+  return { kind: "ended", line: `${ended.stateName}${stateRunCopy.notDone}` };
+};
+
+const toStopRunId = (phase: StateRunPhase): string | null => {
+  if (phase.kind !== "running") {
     return null;
   }
 
-  const steps = wire.items.flatMap((row): StateRunStep[] => {
-    if (row.state === DEFAULT_STATE || !row.isSameAsDefault) {
-      return [];
-    }
-
-    return [
-      { frameId: row.frameId, state: row.state, stateName: row.stateName },
-    ];
-  });
-
-  if (steps.length === 0) {
-    return null;
-  }
-
-  return { page: wire.page, steps };
+  return phase.runId;
 };
 
-const toStateRunPrompt = (page: string, step: StateRunStep): string =>
-  `${stateRunCopy.promptStart}${step.stateName}${stateRunCopy.promptOf}/${page}${stateRunCopy.promptEnd}`;
+export { toSequenceId, toStateRunPhase, toStopRunId };
 
-const isStillSame = (
-  wire: StateRunWire | null,
-  step: StateRunStep
-): boolean => {
-  if (wire === null) {
-    return true;
-  }
-
-  const row = wire.items.find((item) => item.state === step.state);
-
-  return row?.isSameAsDefault ?? false;
-};
-
-const toNextStepIndex = (
-  plan: StateRunPlan,
-  index: number,
-  fresh: StateRunWire | null
-): number | null => {
-  const next = plan.steps.findIndex(
-    (step, at) => at > index && isStillSame(fresh, step)
-  );
-
-  if (next === -1) {
-    return null;
-  }
-
-  return next;
-};
-
-const isRunDone = (status: string): boolean => status === COMPLETED;
-
-const toRunningLine = (active: StateRunActive): string => {
-  const step = active.plan.steps[active.index];
-
-  return `${stateRunCopy.designing}${step?.stateName ?? ""} (${active.index + 1}${stateRunCopy.of}${active.plan.steps.length})…`;
-};
-
-const toActivePhase = (plan: StateRunPlan, index: number): StateRunActive => {
-  const kind = "running";
-
-  return { index, kind, plan };
-};
-
-const toEndedPhase = (active: StateRunActive): StateRunEnded => ({
-  kind: "ended",
-  stateName: active.plan.steps[active.index]?.stateName ?? "",
-});
-
-const toEndedLine = (ended: StateRunEnded): string =>
-  `${ended.stateName}${stateRunCopy.notDone}`;
-
-export {
-  IDLE_PHASE,
-  isRunDone,
-  toActivePhase,
-  toEndedLine,
-  toEndedPhase,
-  toNextStepIndex,
-  toRunningLine,
-  toStateRunPlan,
-  toStateRunPrompt,
-};
-
-export type {
-  StateRunActive,
-  StateRunEnded,
-  StateRunPhase,
-  StateRunPlan,
-  StateRunStep,
-  StateRunWire,
-};
+export type { StateRunActive, StateRunEnded, StateRunPhase, StateRunWire };

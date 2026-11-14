@@ -1,5 +1,3 @@
-import type { RunStatus } from "@design-studio/contracts";
-
 import { findElement } from "./find-element.js";
 import { isComposerShown } from "./focus.js";
 import { createLiveStore } from "./live-store.js";
@@ -14,11 +12,6 @@ const DOCK = ".studio-dock";
 
 type TextListener = (text: string) => void;
 
-interface SelectionRunEnd {
-  readonly prompt: string;
-  readonly status: RunStatus;
-}
-
 interface PromptBounds {
   readonly bottom: number;
   readonly left: number;
@@ -26,10 +19,6 @@ interface PromptBounds {
 }
 
 const selectionRun = createLiveStore(false);
-
-const selectionRunEnd = createLiveStore<SelectionRunEnd | null>(null);
-
-const stopListeners = new Set<() => void>();
 
 const sendListeners = new Set<TextListener>();
 
@@ -94,24 +83,6 @@ const setSelectionRunning = (isRunning: boolean): void => {
   selectionRun.set(isRunning);
 };
 
-const setSelectionRunEnd = (end: SelectionRunEnd): void => {
-  selectionRunEnd.set(end);
-};
-
-const requestSelectionStop = (): void => {
-  for (const listener of stopListeners) {
-    listener();
-  }
-};
-
-const onSelectionStop = (listener: () => void): (() => void) => {
-  stopListeners.add(listener);
-
-  return (): void => {
-    stopListeners.delete(listener);
-  };
-};
-
 const toPromptBounds = (): PromptBounds => {
   const inspector = findElement(document.body, INSPECTOR);
   const dock = findElement(document.body, DOCK);
@@ -135,17 +106,13 @@ export {
   onSelectionPromptChat,
   onSelectionPromptOpen,
   onSelectionPromptSend,
-  onSelectionStop,
   requestAskAtSelection,
   requestAskChat,
   requestSelectionPrompt,
-  requestSelectionStop,
   selectionRun,
-  selectionRunEnd,
   sendSelectionPrompt,
-  setSelectionRunEnd,
   setSelectionRunning,
   toPromptBounds,
 };
 
-export type { PromptBounds, SelectionRunEnd };
+export type { PromptBounds };

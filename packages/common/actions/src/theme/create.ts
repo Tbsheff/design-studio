@@ -18,7 +18,7 @@ const createTheme = defineAction({
   },
   confirm: "none",
   description:
-    "Build whole-theme candidates, each with a palette and a type pair for light and dark, from the project tokens or a brief. A seed makes the result repeat. Every text and surface pair must pass contrast, or the candidate is dropped. Stores the candidates. Writes no source file and makes no model call, so it runs offline.",
+    "Build whole-theme candidates, each with a palette and a type pair for light and dark, from the project tokens or a brief. A seed makes the result repeat. Every text and surface pair must pass contrast, or the candidate is dropped. Stores the candidates. Writes no page file and makes no model call, so it runs offline. On a blank HTML prototype with no token file, it first writes a starter design-system/tokens.json and tokens.css as one version, then builds the themes.",
   errors: [BadRequest, NotFound, Conflict],
   http: {
     method: "POST",

@@ -32,6 +32,7 @@ const copy = {
   ctrlROrFor: "Ctrl+R or ↓ for the next match, Enter to use, Esc to close",
   decisionChange: "Change this choice",
   decisionChose: "Chose:",
+  decisionLook: "Look",
   decisionOther: "Other…",
   decisionOtherLabel: "Other option",
   decisionOtherPlaceholder: "Type another option",

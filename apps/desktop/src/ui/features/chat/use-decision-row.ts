@@ -1,12 +1,21 @@
 import type { DecisionWire } from "@design-studio/actions/run/decision/schema";
 import { routes } from "@design-studio/actions/run/routes";
+import { routes as themeRoutes } from "@design-studio/actions/theme/routes";
 import { useCallback, useMemo, useState, useTransition } from "react";
-import type { ChangeEvent, KeyboardEvent, RefObject } from "react";
+import type {
+  ChangeEvent,
+  KeyboardEvent,
+  RefObject,
+  TransitionStartFunction,
+} from "react";
 
+import { call } from "../../platform/http.js";
 import { useAction } from "../../platform/query.js";
+import type { ActionState } from "../../platform/query.js";
 import { useUi } from "../../platform/storage.js";
 import type { UsePlacedPopoverResult } from "./composer-menu-model.js";
 import { LEVEL_FOCUS } from "./composer-menu-model.js";
+import { copy } from "./copy.js";
 import { DECISION_PAGE_LIMIT, toOtherText } from "./decision-row-model.js";
 import type { RunView } from "./run-state-model.js";
 import { useFocusOnOpen } from "./use-focus-on-open.js";
@@ -31,6 +40,12 @@ interface DecisionChipState {
   readonly menu: UsePlacedPopoverResult;
 }
 
+interface LookPickState {
+  readonly decisions: readonly DecisionWire[];
+  readonly error: string | null;
+  readonly onLookPick: (decisionId: string, option: string) => boolean;
+}
+
 interface DecisionOtherState {
   readonly handleChange: (event: ChangeEvent<HTMLInputElement>) => void;
   readonly handleKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
@@ -39,6 +54,131 @@ interface DecisionOtherState {
 }
 
 const NO_DECISIONS: readonly DecisionWire[] = [];
+
+const THEME_PAGE_LIMIT = 20;
+
+const LOOK_IN_USE = "The token values are already set";
+
+interface LookIds {
+  readonly directionId: string;
+  readonly projectId: string;
+  readonly themeId: string;
+}
+
+const isLookDecision = (decision: DecisionWire): boolean =>
+  decision.topic === copy.decisionLook;
+
+const toLookDecisions = (
+  items: readonly DecisionWire[],
+  isRunning: boolean,
+  lookPick: string | null
+): readonly DecisionWire[] =>
+  items.flatMap((decision) => {
+    if (!isLookDecision(decision)) {
+      return [decision];
+    }
+
+    if (isRunning) {
+      return [];
+    }
+
+    return [{ ...decision, picked: lookPick ?? decision.picked }];
+  });
+
+const useLookThemes = (
+  run: RunView,
+  projectId: string | null,
+  decisions: readonly DecisionWire[]
+): ActionState<typeof themeRoutes.listTheme> => {
+  const { directionId } = run;
+  const hasLook = decisions.some((decision) => isLookDecision(decision));
+
+  const input = useMemo(() => {
+    if (!hasLook || projectId === null || directionId === null) {
+      return null;
+    }
+
+    const cursor = null;
+    const limit = THEME_PAGE_LIMIT;
+
+    return { cursor, directionId, limit, projectId };
+  }, [directionId, hasLook, projectId]);
+
+  return useAction(themeRoutes.listTheme, input);
+};
+
+const toFailureText = (failure: Error): string | null => {
+  if (failure.message === LOOK_IN_USE) {
+    return null;
+  }
+
+  return failure.message;
+};
+
+const useLookPick = (
+  run: RunView,
+  projectId: string | null,
+  items: readonly DecisionWire[],
+  startTransition: TransitionStartFunction
+): LookPickState => {
+  const { directionId } = run;
+  const [lookPick, setLookPick] = useState<string | null>(null);
+  const [lookError, setLookError] = useState<string | null>(null);
+  const themes = useLookThemes(run, projectId, items);
+
+  const decisions = useMemo(
+    () => toLookDecisions(items, run.status === "running", lookPick),
+    [items, lookPick, run.status]
+  );
+
+  const applyLook = useCallback(
+    async (lookIds: LookIds, option: string): Promise<void> => {
+      try {
+        await call(themeRoutes.applyTheme, lookIds);
+        setLookError(null);
+        setLookPick(option);
+      } catch (error) {
+        const failure = toFailureText(error as Error);
+        setLookError(failure);
+
+        if (failure === null) {
+          setLookPick(option);
+        }
+      }
+    },
+    []
+  );
+
+  const onLookPick = useCallback(
+    (decisionId: string, option: string): boolean => {
+      const decision = decisions.find((item) => item.id === decisionId);
+
+      const theme =
+        themes.data?.items.find((item) => item.name === option) ?? null;
+
+      if (!decision || !isLookDecision(decision) || theme === null) {
+        return false;
+      }
+
+      if (projectId === null || directionId === null) {
+        return true;
+      }
+
+      const lookIds = { directionId, projectId, themeId: theme.id };
+
+      startTransition(async () => {
+        await applyLook(lookIds, option);
+      });
+
+      return true;
+    },
+    [applyLook, decisions, directionId, projectId, startTransition, themes.data]
+  );
+
+  const error = lookError;
+
+  return { decisions, error, onLookPick };
+};
 
 const useDecisionRow = (run: RunView): DecisionRowState => {
   const { activeProjectId } = useUi();
@@ -60,10 +200,14 @@ const useDecisionRow = (run: RunView): DecisionRowState => {
   const read = useAction(routes.listDecisionsRun, input);
   const setter = useAction(routes.setDecisionRun);
   const { run: setDecision } = setter;
+  const items = read.data?.items ?? NO_DECISIONS;
+
+  const look = useLookPick(run, activeProjectId, items, startTransition);
+  const { onLookPick } = look;
 
   const onPick = useCallback(
     (decisionId: string, option: string): void => {
-      if (activeProjectId === null) {
+      if (activeProjectId === null || onLookPick(decisionId, option)) {
         return;
       }
 
@@ -73,12 +217,12 @@ const useDecisionRow = (run: RunView): DecisionRowState => {
         await setDecision({ decisionId, option, projectId, runId });
       });
     },
-    [activeProjectId, runId, setDecision]
+    [activeProjectId, onLookPick, runId, setDecision]
   );
 
   return {
-    decisions: read.data?.items ?? NO_DECISIONS,
-    error: setter.error?.message ?? null,
+    decisions: look.decisions,
+    error: setter.error?.message ?? look.error,
     isPending,
     onPick,
   };

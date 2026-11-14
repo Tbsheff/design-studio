@@ -4,7 +4,14 @@ import type { AgentRunContext } from "../../shared/server-ports.js";
 import { appReviewGaps } from "./final-check.js";
 import type { AppReviewGaps } from "./final-check.js";
 import { EDIT_TOOL_NAMES } from "./permissions.js";
-import { isStudioRan, toKitGaps, toKitNote } from "./prototype-kit-review.js";
+import {
+  isStudioRan,
+  toKitAfterClause,
+  toKitClause,
+  toKitGaps,
+  toKitTally,
+} from "./prototype-kit-review.js";
+import type { KitTally } from "./prototype-kit-review.js";
 import { isContextFrame } from "./run-target.js";
 import type { RunToolState } from "./types.js";
 
@@ -111,16 +118,27 @@ const toRanText = (record: AppReviewRecord): string => {
   return ran.join(" and ") || "checks";
 };
 
+const toKitOnlyNote = (
+  tally: KitTally | null,
+  records: readonly AppReviewRecord[]
+): string => {
+  if (tally === null) {
+    return "";
+  }
+
+  return `Studio check: ${toKitClause(tally, records)}.`;
+};
+
 const toReviewNote = (
   ctx: Pick<AgentRunContext, "direction" | "project" | "request">,
   records: readonly AppReviewRecord[]
 ): string => {
-  const kit = toKitNote(ctx, records);
+  const tally = toKitTally(ctx);
   const ran = records.filter((record) => isStudioRan(record));
   const [first] = ran;
 
   if (!first) {
-    return kit;
+    return toKitOnlyNote(tally, records);
   }
 
   let label = "Studio check";
@@ -130,9 +148,16 @@ const toReviewNote = (
   }
 
   const passes = ran.map((record, index) => toPassText(record, index));
-  const note = `${label}: the agent skipped the ${toRanText(first)} after its last edit, so the studio ran them (desktop and 390 px); ${passes.join("; ")}.`;
+  const parts = [
+    `${label}: the agent skipped the ${toRanText(first)} after its last edit, so the studio ran them (desktop and 390 px)`,
+    ...passes,
+  ];
 
-  return [note, kit].filter((text) => text !== "").join(" ");
+  if (tally !== null) {
+    parts.push(toKitAfterClause(tally));
+  }
+
+  return `${parts.join("; ")}.`;
 };
 
 export { toPrototypeReviewGaps, toReviewGaps, toReviewNote };

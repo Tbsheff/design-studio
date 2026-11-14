@@ -38,13 +38,23 @@ const HIDDEN_BLOCK_PATTERN =
   /<!--[\s\S]*?-->|<script\b[\s\S]*?<\/script>|<style\b[\s\S]*?<\/style>/giu;
 
 const TAG_PATTERN =
-  /<(?<tag>a|button|input|select|textarea)(?=[\s/>])(?<rest>[^>]*)>/giu;
+  /<(?<tag>a|button|input|label|select|table|textarea)(?=[\s/>])(?<rest>[^>]*)>/giu;
 
 const ATTRIBUTE_PATTERN =
   /(?<name>[^\s=/>"']+)(?:\s*=\s*(?:"(?<double>[^"]*)"|'(?<single>[^']*)'|(?<bare>[^\s>"']+)))?/gu;
 
 const BUTTON_CLASS_PATTERN =
   /^(?:btn|button|cta)(?:[-_].*)?$|[-_](?:btn|button)$/u;
+
+const PLAIN_TAGS: ReadonlySet<string> = new Set([
+  "button",
+  "label",
+  "select",
+  "table",
+  "textarea",
+]);
+
+const isPlainTag = (tag: string): tag is DriftTag => PLAIN_TAGS.has(tag);
 
 const TEXT_INPUT_TYPES: ReadonlySet<string> = new Set([
   "date",
@@ -62,9 +72,9 @@ const COMPONENT_NAMES: Readonly<Record<DriftTag, ReadonlySet<string>>> = {
   "a-as-button": new Set(["Button"]),
   button: new Set(["Button"]),
   input: new Set(["Input"]),
-  label: new Set(),
+  label: new Set(["Label"]),
   select: new Set(["NativeSelect", "Select"]),
-  table: new Set(),
+  table: new Set(["Table"]),
   textarea: new Set(["Textarea"]),
 };
 
@@ -124,12 +134,8 @@ const toTag = (element: MarkupElement): DriftTag | null => {
     return null;
   }
 
-  if (element.tag === "button" || element.tag === "select") {
+  if (isPlainTag(element.tag)) {
     return element.tag;
-  }
-
-  if (element.tag === "textarea") {
-    return "textarea";
   }
 
   return null;

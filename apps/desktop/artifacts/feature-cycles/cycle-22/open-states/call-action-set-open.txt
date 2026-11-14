@@ -1,0 +1,124 @@
+call-action state-style.set on http://127.0.0.1:46610. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 12 ms, git spawns: not counted (server side)
+{
+  "breakpoint": "base",
+  "classes": {
+    "add": [
+      "data-[state=open]:bg-slate-200"
+    ],
+    "remove": [
+      "data-[state=open]:bg-slate-100"
+    ]
+  },
+  "files": [
+    "index.html"
+  ],
+  "mode": "classes",
+  "prefix": "data-[state=open]:",
+  "property": "background-color",
+  "state": "open",
+  "title": "State data-[state=open]: background-color #e2e8f0",
+  "value": "#e2e8f0",
+  "versionId": "pending-2f2a7799aa25b81b"
+}
+
+[mcp] error, 12 ms, git spawns: not counted (server side)
+"The layer already has this value in this state."
+
+[agent] error, 6 ms, git spawns: not counted (server side)
+"The layer already has this value in this state."
+
+diff http -> mcp:
+- {
++ "The layer already has this value in this state."
+-   "breakpoint": "base",
++ 
+-   "classes": {
++ 
+-     "add": [
++ 
+-       "data-[state=open]:bg-slate-200"
++ 
+-     ],
++ 
+-     "remove": [
++ 
+-       "data-[state=open]:bg-slate-100"
++ 
+-     ]
++ 
+-   },
++ 
+-   "files": [
++ 
+-     "index.html"
++ 
+-   ],
++ 
+-   "mode": "classes",
++ 
+-   "prefix": "data-[state=open]:",
++ 
+-   "property": "background-color",
++ 
+-   "state": "open",
++ 
+-   "title": "State data-[state=open]: background-color #e2e8f0",
++ 
+-   "value": "#e2e8f0",
++ 
+-   "versionId": "pending-2f2a7799aa25b81b"
++ 
+- }
++ 
+
+diff http -> agent:
+- {
++ "The layer already has this value in this state."
+-   "breakpoint": "base",
++ 
+-   "classes": {
++ 
+-     "add": [
++ 
+-       "data-[state=open]:bg-slate-200"
++ 
+-     ],
++ 
+-     "remove": [
++ 
+-       "data-[state=open]:bg-slate-100"
++ 
+-     ]
++ 
+-   },
++ 
+-   "files": [
++ 
+-     "index.html"
++ 
+-   ],
++ 
+-   "mode": "classes",
++ 
+-   "prefix": "data-[state=open]:",
++ 
+-   "property": "background-color",
++ 
+-   "state": "open",
++ 
+-   "title": "State data-[state=open]: background-color #e2e8f0",
++ 
+-   "value": "#e2e8f0",
++ 
+-   "versionId": "pending-2f2a7799aa25b81b"
++ 
+- }
++ 
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 2 error results
+
+fix: compare the outputs above, then run call-action again with the id state-style.set and the same input

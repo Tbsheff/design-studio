@@ -1,0 +1,124 @@
+call-action state-style.set on http://127.0.0.1:46610. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 9 ms, git spawns: not counted (server side)
+{
+  "breakpoint": "base",
+  "classes": {
+    "add": [
+      "data-[state=selected]:text-[#dc2626]"
+    ],
+    "remove": [
+      "data-[state=selected]:text-slate-900"
+    ]
+  },
+  "files": [
+    "index.html"
+  ],
+  "mode": "classes",
+  "prefix": "data-[state=selected]:",
+  "property": "color",
+  "state": "selected",
+  "title": "State data-[state=selected]: color #dc2626",
+  "value": "#dc2626",
+  "versionId": "pending-d45d34c322ac904c"
+}
+
+[mcp] error, 10 ms, git spawns: not counted (server side)
+"The layer already has this value in this state."
+
+[agent] error, 5 ms, git spawns: not counted (server side)
+"The layer already has this value in this state."
+
+diff http -> mcp:
+- {
++ "The layer already has this value in this state."
+-   "breakpoint": "base",
++ 
+-   "classes": {
++ 
+-     "add": [
++ 
+-       "data-[state=selected]:text-[#dc2626]"
++ 
+-     ],
++ 
+-     "remove": [
++ 
+-       "data-[state=selected]:text-slate-900"
++ 
+-     ]
++ 
+-   },
++ 
+-   "files": [
++ 
+-     "index.html"
++ 
+-   ],
++ 
+-   "mode": "classes",
++ 
+-   "prefix": "data-[state=selected]:",
++ 
+-   "property": "color",
++ 
+-   "state": "selected",
++ 
+-   "title": "State data-[state=selected]: color #dc2626",
++ 
+-   "value": "#dc2626",
++ 
+-   "versionId": "pending-d45d34c322ac904c"
++ 
+- }
++ 
+
+diff http -> agent:
+- {
++ "The layer already has this value in this state."
+-   "breakpoint": "base",
++ 
+-   "classes": {
++ 
+-     "add": [
++ 
+-       "data-[state=selected]:text-[#dc2626]"
++ 
+-     ],
++ 
+-     "remove": [
++ 
+-       "data-[state=selected]:text-slate-900"
++ 
+-     ]
++ 
+-   },
++ 
+-   "files": [
++ 
+-     "index.html"
++ 
+-   ],
++ 
+-   "mode": "classes",
++ 
+-   "prefix": "data-[state=selected]:",
++ 
+-   "property": "color",
++ 
+-   "state": "selected",
++ 
+-   "title": "State data-[state=selected]: color #dc2626",
++ 
+-   "value": "#dc2626",
++ 
+-   "versionId": "pending-d45d34c322ac904c"
++ 
+- }
++ 
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 2 error results
+
+fix: compare the outputs above, then run call-action again with the id state-style.set and the same input

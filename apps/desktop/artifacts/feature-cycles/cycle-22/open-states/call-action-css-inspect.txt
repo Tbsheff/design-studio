@@ -1,0 +1,137 @@
+call-action state-style.inspect on http://127.0.0.1:46610. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 10 ms, git spawns: not counted (server side)
+{
+  "forced": [],
+  "layer": {
+    "file": "index.html",
+    "mode": "css",
+    "overrides": [
+      {
+        "breakpoint": "base",
+        "prefix": "hover:",
+        "props": [
+          "background-color"
+        ],
+        "set": [
+          "background-color: #e2e8f0"
+        ],
+        "state": "hover"
+      },
+      {
+        "breakpoint": "base",
+        "prefix": "data-[state=open]:",
+        "props": [
+          "background-color"
+        ],
+        "set": [
+          "background-color: #e2e8f0"
+        ],
+        "state": "open"
+      }
+    ],
+    "reason": null
+  },
+  "states": [
+    "hover",
+    "focus-visible",
+    "active",
+    "disabled",
+    "dark",
+    "open",
+    "checked",
+    "selected"
+  ]
+}
+
+[mcp] ok, 12 ms, git spawns: not counted (server side)
+{
+  "forced": [],
+  "layer": {
+    "file": "index.html",
+    "mode": "css",
+    "overrides": [
+      {
+        "breakpoint": "base",
+        "prefix": "hover:",
+        "props": [
+          "background-color"
+        ],
+        "set": [
+          "background-color: #e2e8f0"
+        ],
+        "state": "hover"
+      },
+      {
+        "breakpoint": "base",
+        "prefix": "data-[state=open]:",
+        "props": [
+          "background-color"
+        ],
+        "set": [
+          "background-color: #e2e8f0"
+        ],
+        "state": "open"
+      }
+    ],
+    "reason": null
+  },
+  "states": [
+    "hover",
+    "focus-visible",
+    "active",
+    "disabled",
+    "dark",
+    "open",
+    "checked",
+    "selected"
+  ]
+}
+
+[agent] ok, 5 ms, git spawns: not counted (server side)
+{
+  "forced": [],
+  "layer": {
+    "file": "index.html",
+    "mode": "css",
+    "overrides": [
+      {
+        "breakpoint": "base",
+        "prefix": "hover:",
+        "props": [
+          "background-color"
+        ],
+        "set": [
+          "background-color: #e2e8f0"
+        ],
+        "state": "hover"
+      },
+      {
+        "breakpoint": "base",
+        "prefix": "data-[state=open]:",
+        "props": [
+          "background-color"
+        ],
+        "set": [
+          "background-color: #e2e8f0"
+        ],
+        "state": "open"
+      }
+    ],
+    "reason": null
+  },
+  "states": [
+    "hover",
+    "focus-visible",
+    "active",
+    "disabled",
+    "dark",
+    "open",
+    "checked",
+    "selected"
+  ]
+}
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

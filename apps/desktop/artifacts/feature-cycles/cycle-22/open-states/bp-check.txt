@@ -1,0 +1,15 @@
+{"ok":235,"counts":{"open":113,"selected":97,"checked":25,"hover":4,"null":1}}
+not read: 14 6 group-data-[state=open]:rotate-180 -> null
+4 group-data-[state=open]:rotate-90 -> null
+4 group-data-[state=active]:text-primary -> null
+4 group-data-[state=active]:bg-primary-foreground -> null
+1 has-data-[state=checked]:border-primary -> null
+1 has-data-[state=checked]:bg-primary/5 -> null
+1 group-data-[state=open]:hidden -> null
+1 group-data-[state=checked]:opacity-100 -> null
+1 group-data-[state=checked]:border-primary -> null
+1 group-data-[state=checked]:border-blue-500! -> null
+1 group-data-[state=checked]:bg-primary -> null
+1 group-data-[state=checked]:bg-blue-500 -> null
+1 dark:has-data-[state=checked]:bg-primary/10 -> null
+1 dark:group-data-[state=checked]:bg-primary -> null

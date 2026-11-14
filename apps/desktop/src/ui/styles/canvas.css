@@ -1082,6 +1082,36 @@ fieldset.compare-modes {
   border-radius: 50%;
 }
 
+.resize-handle.group.n {
+  left: 50%;
+  top: 0;
+  cursor: ns-resize;
+}
+
+.resize-handle.group.w {
+  left: 0;
+  top: 50%;
+  cursor: ew-resize;
+}
+
+.resize-handle.group.nw {
+  left: 0;
+  top: 0;
+  cursor: nwse-resize;
+}
+
+.resize-handle.group.ne {
+  left: 100%;
+  top: 0;
+  cursor: nesw-resize;
+}
+
+.resize-handle.group.sw {
+  left: 0;
+  top: 100%;
+  cursor: nesw-resize;
+}
+
 .scale-ghost {
   position: absolute;
   border: calc(var(--stroke) * 1) dashed var(--select);

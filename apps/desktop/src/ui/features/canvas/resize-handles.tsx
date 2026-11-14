@@ -15,6 +15,17 @@ const EDGES: ResizeEdge[] = ["e", "s", "se"];
 const COMPACT_EDGES: ResizeEdge[] = ["se"];
 const COMPACT_PX = 40;
 
+const toLiveBox = (
+  rect: SelectionContext["rect"],
+  live: ResizeControl["live"]
+): SelectionContext["rect"] => {
+  if (!live) {
+    return rect;
+  }
+
+  return { ...rect, x: live.boxX, y: live.boxY };
+};
+
 const ResizeHandles = ({
   control,
   rect,
@@ -65,7 +76,7 @@ const ResizeHandles = ({
     <div
       className={`resize-frame${part}${part3}${part4}`}
       data-testid="resize-frame"
-      style={toRectStyle(rect, liveSize)}
+      style={toRectStyle(toLiveBox(rect, live), liveSize)}
     >
       {!isScaling && !live && <RotateZones down={control.onRotateDown} />}
       {result.map((edge) => (

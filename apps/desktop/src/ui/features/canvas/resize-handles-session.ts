@@ -6,7 +6,9 @@ import {
   resizeReadout,
   resizedSize,
   snapSize,
+  toLiveRect,
   toPixels,
+  toPlace,
   toScale,
 } from "./resize-handles-model.js";
 import type {
@@ -83,7 +85,7 @@ const previewDrag = (
   context.setSize({
     base: drag.base,
     guides: drag.guides,
-    rect: drag.target.rect,
+    rect: toLiveRect(drag, next),
     size: next,
   });
   resizeReadout.set({
@@ -123,6 +125,14 @@ const cancelDrag = (context: ResizeContext): void => {
   endDrag(context, false);
 };
 
+const toReach = (isCentered: boolean): number => {
+  if (isCentered) {
+    return 2;
+  }
+
+  return 1;
+};
+
 const moveDrag = (
   context: ResizeContext,
   drag: Drag,
@@ -132,17 +142,22 @@ const moveDrag = (
     return;
   }
 
+  drag.isCentered = event.altKey;
+  drag.hasCentered ||= event.altKey;
+  const reach = toReach(event.altKey);
+
   const raw = resizedSize(
     drag.edge,
     drag.base,
     {
-      dx: (event.clientX - drag.startX) / drag.zoom,
-      dy: (event.clientY - drag.startY) / drag.zoom,
+      dx: ((event.clientX - drag.startX) / drag.zoom) * reach,
+      dy: ((event.clientY - drag.startY) / drag.zoom) * reach,
     },
     event.shiftKey
   );
 
-  const snapped = snapSize(drag, raw, event.shiftKey || snapOff(event));
+  const isFree = event.shiftKey || event.altKey || snapOff(event);
+  const snapped = snapSize(drag, raw, isFree);
   drag.guides = snapped.guides;
   previewDrag(context, drag, snapped.size, event.shiftKey);
 };
@@ -221,7 +236,10 @@ const createDrag = (
     detach: () => null,
     edge: resizeEdge,
     guides: [],
+    hasCentered: false,
+    isCentered: false,
     lines: [],
+    place: toPlace(source),
     pointerId: event.pointerId,
     size: startSize,
     startX: event.clientX,

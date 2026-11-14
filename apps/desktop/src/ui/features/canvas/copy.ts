@@ -340,6 +340,10 @@ const presentCopy = {
   playTip: "Play prototype. The arrow shows more ways to present",
 } as const;
 
+const groupResizeCopy = {
+  failed: "Could not resize the layers",
+} as const;
+
 const rotateHandleCopy = {
   degree: "°",
   each: "Each",
@@ -352,6 +356,7 @@ const rulerGuideCopy = {
 
 export {
   copy,
+  groupResizeCopy,
   layoutGridCopy,
   presentCopy,
   rotateHandleCopy,

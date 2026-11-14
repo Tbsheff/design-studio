@@ -435,6 +435,6 @@ const useRotateDrag = (
   return { label, onRotateDown };
 };
 
-export { useRotateDrag };
+export { toClassesOf, useRotateDrag };
 
 export type { RotateDrag };

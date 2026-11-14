@@ -1,10 +1,21 @@
 import type { SelectionContext } from "@design-studio/contracts";
 import type { ReactElement } from "react";
 
+import { copy } from "./copy.js";
+import { GroupResizeHandle } from "./group-resize-handle.js";
+import { GROUP_EDGES } from "./group-resize-model.js";
 import { toRectStyle } from "./overlay-styles.js";
 import { RotateAngleLabel } from "./rotate-angle-label.js";
 import { RotateZones } from "./rotate-zone.js";
 import type { ResizeControl } from "./use-resize-handles.js";
+
+const toFrameClass = (isLive: boolean): string => {
+  if (isLive) {
+    return "resize-frame active";
+  }
+
+  return "resize-frame";
+};
 
 const GroupRotateFrame = ({
   control,
@@ -22,14 +33,26 @@ const GroupRotateFrame = ({
     return null;
   }
 
+  const live = control.groupBox;
+
   return (
     <div
-      className="resize-frame"
+      className={toFrameClass(live !== null)}
       data-testid="rotate-group-frame"
-      style={toRectStyle(rect, null)}
+      style={toRectStyle(live ?? rect, null)}
     >
-      <RotateZones down={control.onRotateDown} />
+      {live === null && <RotateZones down={control.onRotateDown} />}
+      {GROUP_EDGES.map((edge) => (
+        <GroupResizeHandle key={edge} edge={edge} down={control.onGroupDown} />
+      ))}
       {control.rotateLabel && <RotateAngleLabel label={control.rotateLabel} />}
+      {live && (
+        <span className="resize-label" data-testid="group-resize-label">
+          {Math.round(live.width)}
+          {copy.times2}
+          {Math.round(live.height)}
+        </span>
+      )}
     </div>
   );
 };

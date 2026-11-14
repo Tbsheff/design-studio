@@ -364,19 +364,30 @@ const toSizeStyle = (layer: GroupLayer, factor: GroupFactor): GroupStyle => {
   return { ...toEntry("width", width), ...toEntry("height", height) };
 };
 
+const toPivot = (start: number, size: number, isSized: boolean): number => {
+  if (isSized) {
+    return start;
+  }
+
+  return start + size / 2;
+};
+
 const toPlaceStyle = (layer: GroupLayer, factor: GroupFactor): GroupStyle => {
   if (!layer.isAbsolute) {
     return {};
   }
 
+  const atX = toPivot(layer.rect.x, layer.rect.width, layer.isWidthFixed);
+  const atY = toPivot(layer.rect.y, layer.rect.height, layer.isHeightFixed);
+
   const left = toMoveValue(
-    { at: layer.rect.x, start: layer.left },
+    { at: atX, start: layer.left },
     { origin: factor.originX, value: factor.scaleX },
     layer.snapLeft
   );
 
   const top = toMoveValue(
-    { at: layer.rect.y, start: layer.top },
+    { at: atY, start: layer.top },
     { origin: factor.originY, value: factor.scaleY },
     layer.snapTop
   );

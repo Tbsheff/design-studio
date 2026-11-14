@@ -61,6 +61,39 @@ const toLiveSize = (
   return null;
 };
 
+const toBoxLive = (
+  target: SelectionContext,
+  resize: ResizeControl | undefined
+): ResizeLive | null => {
+  if (resize?.target?.selector === target.selector) {
+    return resize.live;
+  }
+
+  return null;
+};
+
+const toSelectedBoxes = (
+  selection: SelectionContext[],
+  resize: ResizeControl | undefined
+): ReactElement[] => {
+  if (resize?.groupBox) {
+    return [];
+  }
+
+  return selection.map((target) => {
+    const live = toBoxLive(target, resize);
+
+    return (
+      <div
+        key={target.selector}
+        className="box selected"
+        data-selector={target.selector}
+        style={toRectStyle(toLiveRect(target.rect, live), toLiveSize(live))}
+      />
+    );
+  });
+};
+
 const ArtboardOverlay = ({
   hover,
   selection,
@@ -92,25 +125,7 @@ const ArtboardOverlay = ({
           )}
         </div>
       )}
-      {selection.map((selectionContext3) => {
-        let live: ResizeLive | null = null;
-
-        if (resize?.target?.selector === selectionContext3.selector) {
-          ({ live } = resize);
-        }
-
-        return (
-          <div
-            key={selectionContext3.selector}
-            className="box selected"
-            data-selector={selectionContext3.selector}
-            style={toRectStyle(
-              toLiveRect(selectionContext3.rect, live),
-              toLiveSize(live)
-            )}
-          />
-        );
-      })}
+      {toSelectedBoxes(selection, resize)}
       {!resize?.live && !resize?.ghost && spacing}
       {resize?.target && (
         <ResizeHandles control={resize} rect={resize.target.rect} zoom={zoom} />

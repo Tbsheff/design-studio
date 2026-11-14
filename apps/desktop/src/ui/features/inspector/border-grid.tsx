@@ -1,48 +1,51 @@
 import type { ReactElement } from "react";
 
-import { toStyleCellClass, toWidthFields } from "./border-side-model.js";
+import { BorderInsideFields } from "./border-inside-fields.js";
 import { BorderSideRow } from "./border-side-row.js";
-import { ColorField } from "./color-field.js";
 import type { DirectEdit } from "./deps.js";
-import { SelectField } from "./select-field.js";
-import { BORDER_STYLES } from "./simple-model.js";
-import { SpecNumberField } from "./spec-number-field.js";
+import { toShownSide } from "./stroke-position-model.js";
+import { StrokePositionOutline } from "./stroke-position-outline.js";
+import { StrokePositionRing } from "./stroke-position-ring.js";
+import { StrokePositionRow } from "./stroke-position-row.js";
 import { useBorderSides } from "./use-border-sides.js";
+import type { StrokePositionControls } from "./use-stroke-position.js";
 
 interface BorderGridProps {
   readonly edit: DirectEdit;
+  readonly stroke: StrokePositionControls;
 }
 
-const BorderGrid = ({ edit }: BorderGridProps): ReactElement => {
+const BorderGrid = ({ edit, stroke }: BorderGridProps): ReactElement => {
   const { side, handleSidePick } = useBorderSides(edit);
-  const isCustom = side === "custom";
-
-  const widthFields = toWidthFields(side).map((field) => (
-    <SpecNumberField key={field.spec.prop} edit={edit} field={field} />
-  ));
+  const isInside = stroke.position === "inside" && stroke.ring === null;
+  const isOutline = !isInside && stroke.ring === null;
 
   return (
     <div className="ins-grid">
-      <BorderSideRow side={side} onSidePick={handleSidePick} />
-      {!isCustom && widthFields}
-      <div className={toStyleCellClass(side)}>
-        <SelectField
-          prop="border-style"
-          label="Border style"
-          short="Style"
-          edit={edit}
-          options={BORDER_STYLES}
+      <StrokePositionRow
+        isAllSides={!isInside || side === "all"}
+        position={stroke.position}
+        onPositionPick={stroke.handlePositionPick}
+      />
+      <BorderSideRow
+        isDisabled={!isInside}
+        side={toShownSide(side, isInside)}
+        onSidePick={handleSidePick}
+      />
+      {isInside && <BorderInsideFields edit={edit} side={side} />}
+      {isOutline && <StrokePositionOutline edit={stroke.outlineEdit} />}
+      {stroke.ring && (
+        <StrokePositionRing
+          ring={stroke.ring}
+          onRingColor={stroke.handleRingColor}
+          onRingWidth={stroke.handleRingWidth}
         />
-      </div>
-      {isCustom && widthFields}
-      <div className="wide">
-        <ColorField
-          prop="border-color"
-          label="Border color"
-          short="Color"
-          edit={edit}
-        />
-      </div>
+      )}
+      {stroke.error && (
+        <p className="ins-note wide" role="alert">
+          {stroke.error}
+        </p>
+      )}
     </div>
   );
 };

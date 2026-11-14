@@ -6,6 +6,7 @@ import type { BorderSide } from "./border-side-model.js";
 import { borderSideCopy } from "./copy.js";
 
 interface BorderSideRowProps {
+  readonly isDisabled: boolean;
   readonly side: BorderSide;
   readonly onSidePick: (next: string) => void;
 }
@@ -13,6 +14,7 @@ interface BorderSideRowProps {
 const SIDE_SELECT_ID = "ins-border-sides";
 
 const BorderSideRow = ({
+  isDisabled,
   side,
   onSidePick,
 }: BorderSideRowProps): ReactElement => (
@@ -22,6 +24,7 @@ const BorderSideRow = ({
       aria-label={borderSideCopy.sidesLabel}
       value={side}
       options={BORDER_SIDE_OPTIONS}
+      disabled={isDisabled}
       onChange={onSidePick}
     />
   </div>

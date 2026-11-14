@@ -10,6 +10,8 @@ const EFFECT_KINDS = [
 
 const SHADER_PRESETS = ["mesh", "grain", "aurora", "dither"] as const;
 
+const SHADOW_SIZES = ["2xs", "xs", "sm", "md", "lg", "xl", "2xl"] as const;
+
 const EFFECT_STACK_MAX = 12;
 
 const EFFECT_NAME_MAX = 40;
@@ -61,6 +63,8 @@ type EffectKind = (typeof EFFECT_KINDS)[number];
 
 type ShaderPreset = (typeof SHADER_PRESETS)[number];
 
+type ShadowSize = (typeof SHADOW_SIZES)[number];
+
 export {
   EFFECT_CLASS_PREFIX,
   EFFECT_COLOR_MAX,
@@ -75,6 +79,7 @@ export {
   SHADER_COLORS_MIN,
   SHADER_COLOR_PATTERN,
   SHADER_PRESETS,
+  SHADOW_SIZES,
 };
 
-export type { EffectKind, EffectRange, ShaderPreset };
+export type { EffectKind, EffectRange, ShaderPreset, ShadowSize };

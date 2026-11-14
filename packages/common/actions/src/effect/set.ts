@@ -23,7 +23,7 @@ const setEffect = defineAction({
   },
   confirm: "none",
   description:
-    "Set the effects of one layer in one version. effects is the full ordered stack: drop-shadow, inner-shadow, layer-blur, background-blur, noise, glass and shader, each with an enabled flag. styleName applies a saved effect style by name, null removes it. The stack is saved as a stylesheet class, so exports keep it. A shader also writes a small WebGL script. variant is a state or breakpoint prefix such as hover:, md:hover: or data-[state=open]:, and the default is the base style. A variant takes shadows and blurs only. Saves one version.",
+    "Set the effects of one layer in one version. effects is the full ordered stack: drop-shadow, inner-shadow, layer-blur, background-blur, noise, glass and shader, each with an enabled flag. A shadow size such as md writes the scale name shadow-md and ignores the numbers; null writes the numbers. styleName applies a saved effect style, null removes it. A shader also writes a WebGL script. variant is a state or breakpoint prefix such as hover:, md: or data-[state=open]:, and the default is the base style. A variant takes shadows and blurs only. Saves one version.",
   errors: [BadRequest, Conflict, NotFound],
   http: {
     method: "POST",

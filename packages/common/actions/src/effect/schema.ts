@@ -10,6 +10,7 @@ import {
   SHADER_COLORS_MIN,
   SHADER_COLOR_PATTERN,
   SHADER_PRESETS,
+  SHADOW_SIZES,
 } from "@design-studio/contracts/layer-effect";
 import type { EffectRange } from "@design-studio/contracts/layer-effect";
 import { Effect, Schema } from "effect";
@@ -58,12 +59,19 @@ const ShaderColorsSchema = Schema.Array(ShaderColorSchema)
     )
   );
 
+const ShadowSizeSchema = Schema.Literals(SHADOW_SIZES);
+
+const ShadowSizeFieldSchema = Schema.NullOr(ShadowSizeSchema).pipe(
+  Schema.withDecodingDefaultKey(Effect.succeed(null))
+);
+
 const ShadowFields = {
   blur: toRange(EFFECT_RANGES.shadowBlur),
   color: toColor(SHADOW_COLOR),
   isEnabled: IsEnabledSchema,
   offsetX: toRange(EFFECT_RANGES.shadowOffsetX),
   offsetY: toRange(EFFECT_RANGES.shadowOffsetY),
+  size: ShadowSizeFieldSchema,
   spread: toRange(EFFECT_RANGES.shadowSpread),
 } as const;
 
@@ -170,7 +178,9 @@ const EffectInfoSchema = Schema.Struct({
   className: Schema.NullOr(Schema.String),
   effects: EffectStackSchema,
   file: Schema.String,
+  innerShadowSizes: Schema.Array(ShadowSizeSchema),
   reason: Schema.NullOr(Schema.String),
+  shadowSizes: Schema.Array(ShadowSizeSchema),
   sheet: Schema.NullOr(Schema.String),
   style: Schema.NullOr(EffectStyleSchema),
   styleName: Schema.NullOr(Schema.String),

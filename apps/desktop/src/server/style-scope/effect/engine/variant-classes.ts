@@ -1,10 +1,16 @@
 import type { EffectItem } from "@design-studio/actions/effect/schema";
-import { EFFECT_COLOR_PATTERN } from "@design-studio/contracts/layer-effect";
 
 import { toEffectDeclarations } from "./compile.js";
 import type { EffectDeclaration } from "./compile.js";
-
-type ShadowKind = "drop-shadow" | "inner-shadow";
+import { toShadowItem, toSplitTopLevel } from "./shadow-parse.js";
+import {
+  fromShadowVar,
+  isShadowClass,
+  isShadowItem,
+  toScaledEffects,
+} from "./shadow-scale.js";
+import type { ShadowScale } from "./shadow-scale.js";
+import { toShadowTokens } from "./shadow-tokens.js";
 
 const BOX_SHADOW = "box-shadow";
 
@@ -14,11 +20,7 @@ const BACKDROP = "backdrop-filter";
 
 const NONE = "none";
 
-const LENGTH_COUNT = 4;
-
 const PERCENT = "%";
-
-const LENGTH_RE = /^-?[\d.]+(?:px)?$/u;
 
 const BLUR_RE = /blur\((?<radius>-?[\d.]+)px\)/u;
 
@@ -26,9 +28,9 @@ const SATURATE_RE = /saturate\((?<amount>[\d.]+)%?\)/u;
 
 const ARBITRARY_RE = /^(?<name>[a-z-]+)-\[(?<value>[^\]]+)\]$/u;
 
+const SHADOW_BASES: readonly string[] = ["shadow", "inset-shadow"];
+
 const EFFECT_BASES: readonly string[] = [
-  "shadow",
-  "inset-shadow",
   "blur",
   "backdrop-blur",
   "backdrop-saturate",
@@ -37,72 +39,7 @@ const EFFECT_BASES: readonly string[] = [
 
 const SATURATE_FULL = 100;
 
-const toClassValue = (value: string): string =>
-  value.trim().replaceAll(/\s+/gu, "_");
-
 const fromClassValue = (value: string): string => value.replaceAll("_", " ");
-
-const toSplitTopLevel = (text: string): string[] => {
-  const parts: string[] = [];
-  let depth = 0;
-  let start = 0;
-
-  for (let index = 0; index < text.length; index += 1) {
-    const char = text[index];
-
-    if (char === "(") {
-      depth += 1;
-    }
-
-    if (char === ")") {
-      depth -= 1;
-    }
-
-    if (char === "," && depth === 0) {
-      parts.push(text.slice(start, index));
-      start = index + 1;
-    }
-  }
-
-  parts.push(text.slice(start));
-
-  return parts.flatMap((part) => {
-    const trimmed = part.trim();
-
-    if (trimmed === "") {
-      return [];
-    }
-
-    return [trimmed];
-  });
-};
-
-const toSplitWords = (text: string): string[] => {
-  const words: string[] = [];
-  let depth = 0;
-  let word = "";
-
-  for (const char of text) {
-    if (char === "(") {
-      depth += 1;
-    }
-
-    if (char === ")") {
-      depth -= 1;
-    }
-
-    if (/\s/u.test(char) && depth === 0) {
-      words.push(word);
-      word = "";
-    } else {
-      word += char;
-    }
-  }
-
-  words.push(word);
-
-  return words.filter((entry) => entry !== "");
-};
 
 const toVariantDeclarations = (
   effects: readonly EffectItem[]
@@ -142,19 +79,26 @@ const toFilterTokens = (value: string, variant: string): string[] => {
 
 const toVariantTokens = (
   effects: readonly EffectItem[],
-  variant: string
-): string[] =>
-  toVariantDeclarations(effects).flatMap((entry) => {
-    if (entry.property === BOX_SHADOW) {
-      return [`${variant}shadow-[${toClassValue(entry.value)}]`];
-    }
+  variant: string,
+  scale: ShadowScale
+): string[] => {
+  const scaled = toScaledEffects(effects, scale);
+  const others = scaled.filter((item) => !isShadowItem(item));
 
+  const rest = toVariantDeclarations(others).flatMap((entry) => {
     if (entry.property === FILTER) {
       return toFilterTokens(entry.value, variant);
     }
 
-    return toBackdropTokens(entry.value, variant);
+    if (entry.property === BACKDROP) {
+      return toBackdropTokens(entry.value, variant);
+    }
+
+    return [];
   });
+
+  return [...toShadowTokens(scaled, variant, scale), ...rest];
+};
 
 interface VariantStyle {
   readonly "box-shadow": string;
@@ -202,8 +146,17 @@ const toVariantStyle = (
   return style;
 };
 
-const isEffectBase = (base: string): boolean =>
-  EFFECT_BASES.some((name) => base === name || base.startsWith(`${name}-`));
+const isEffectBase = (base: string, scale: ShadowScale): boolean => {
+  if (
+    SHADOW_BASES.some((name) => base === name || base.startsWith(`${name}-`))
+  ) {
+    return isShadowClass(base, scale);
+  }
+
+  return EFFECT_BASES.some(
+    (name) => base === name || base.startsWith(`${name}-`)
+  );
+};
 
 const fromVariantToken = (base: string): EffectDeclaration | null => {
   const match = ARBITRARY_RE.exec(base);
@@ -229,46 +182,9 @@ const fromVariantToken = (base: string): EffectDeclaration | null => {
   return null;
 };
 
-const toShadowItem = (text: string): EffectItem | null => {
-  const words = toSplitWords(text);
-  let shadowKind: ShadowKind = "drop-shadow";
-
-  if (words[0] === "inset") {
-    shadowKind = "inner-shadow";
-    words.shift();
-  }
-
-  const lengths: number[] = [];
-  const colors: string[] = [];
-
-  for (const word of words) {
-    if (LENGTH_RE.test(word)) {
-      lengths.push(Number(word.replace("px", "")));
-    } else {
-      colors.push(word);
-    }
-  }
-
-  if (lengths.length < 2 || !EFFECT_COLOR_PATTERN.test(colors.join(" "))) {
-    return null;
-  }
-
-  const [x = 0, y = 0, radius = 0, size = 0] = lengths.slice(0, LENGTH_COUNT);
-
-  return {
-    blur: radius,
-    color: colors.join(" "),
-    isEnabled: true,
-    kind: shadowKind,
-    offsetX: x,
-    offsetY: y,
-    spread: size,
-  };
-};
-
-const toShadowItems = (value: string): EffectItem[] =>
+const toShadowItems = (value: string, scale: ShadowScale): EffectItem[] =>
   toSplitTopLevel(value).flatMap((text) => {
-    const item = toShadowItem(text);
+    const item = fromShadowVar(text, scale) ?? toShadowItem(text);
 
     if (item === null) {
       return [];
@@ -307,7 +223,8 @@ const toBackdropItems = (values: readonly string[]): EffectItem[] => {
 };
 
 const fromVariantDeclarations = (
-  declarations: readonly EffectDeclaration[]
+  declarations: readonly EffectDeclaration[],
+  scale: ShadowScale
 ): EffectItem[] => {
   const shadows: EffectItem[] = [];
   const filters: EffectItem[] = [];
@@ -315,7 +232,7 @@ const fromVariantDeclarations = (
 
   for (const entry of declarations) {
     if (entry.property === BOX_SHADOW && entry.value !== NONE) {
-      shadows.push(...toShadowItems(entry.value));
+      shadows.push(...toShadowItems(entry.value, scale));
     }
 
     if (entry.property === FILTER) {

@@ -23,7 +23,8 @@ export {
 } from "../direct-edit/index.js";
 
 export {
-  hasSelectedItem,
+  hasItemPart,
+  toOtherStateParts,
   scopedStyleOf,
   stateClassOverridesOf,
   stateCssOverridesOf,

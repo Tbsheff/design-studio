@@ -10,9 +10,12 @@ export {
 } from "../../direct-edit/engine/index.js";
 
 export {
+  isAriaStateName,
   isDataStateStyle,
   isGroupStateName,
+  isOtherStatePart,
   STYLE_STATES,
+  toAriaStateVariant,
   toDataStateVariant,
   toGroupVariant,
   toStyleStateName,

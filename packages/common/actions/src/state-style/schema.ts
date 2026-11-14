@@ -86,6 +86,7 @@ const StateStyleInfoSchema = Schema.Struct({
   forced: Schema.Array(StateStyleForcedSchema),
   group: Schema.NullOr(StateStyleGroupSchema),
   layer: StateStyleLayerInfoSchema,
+  other: Schema.Array(Schema.String),
   states: Schema.Array(StateStyleStateSchema),
 });
 

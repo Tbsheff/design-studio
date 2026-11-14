@@ -1,12 +1,16 @@
 import {
+  ARIA_STATE_NAMES,
   DATA_STATE_NAMES,
   EDGE_STATE_NAMES,
+  fromAriaStateVariant,
   fromDataStateVariant,
   fromGroupVariant,
   GROUP_STATE_NAMES,
+  isAriaStateName,
   isDataStateName,
   isEdgeStateName,
   isGroupStateName,
+  toAriaStateVariant,
   toDataStateVariant,
   toGroupVariant,
 } from "@design-studio/contracts/state-styles";
@@ -23,6 +27,7 @@ const POINTER_STATES = [
 
 export const PSEUDO_STATES = [
   ...DATA_STATE_NAMES,
+  ...ARIA_STATE_NAMES,
   ...GROUP_STATE_NAMES,
   ...POINTER_STATES,
   ...EDGE_STATE_NAMES,
@@ -76,7 +81,7 @@ function stateOfPart(part: string): PseudoState | null {
     return part;
   }
 
-  return fromDataStateVariant(part);
+  return fromDataStateVariant(part) ?? fromAriaStateVariant(part);
 }
 
 function toVariantPart(state: PseudoState, group: string | null): string {
@@ -86,6 +91,10 @@ function toVariantPart(state: PseudoState, group: string | null): string {
 
   if (isDataStateName(state)) {
     return toDataStateVariant(state);
+  }
+
+  if (isAriaStateName(state)) {
+    return toAriaStateVariant(state);
   }
 
   return state;

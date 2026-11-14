@@ -22,7 +22,7 @@ const inspectStateStyle = defineAction({
   },
   confirm: "none",
   description:
-    "Read the state styles of one layer: hover, focus-visible, active, disabled, dark, the Radix looks open, checked and selected, the parent states group-hover, group-open and group-checked, and the edge states first, last, odd and even, at base and at each breakpoint. In Tailwind these are state prefix classes (hover:bg-slate-900, last:border-0). In plain HTML these are its state rules. group is the nearest group parent or null. edge is list (a mapped list), siblings or null. It also gives the state of each frame from set_forced_state. Read only. limit caps the frame and state lists.",
+    "Read the state styles of one layer at base and at each breakpoint: hover, focus-visible, active, disabled, dark, the Radix states open, closed, checked, on, selected, active-item and invalid, the parent states group-hover, group-open and group-checked, and first, last, odd and even. In Tailwind these are state prefix classes (hover:bg-slate-900). In plain HTML these are its state rules. other lists the data- and aria- prefixes it cannot edit (data-[side=top]). group is the nearest group parent or null. edge is list, siblings or null. It also gives the forced state of each frame. Read only.",
   errors: [BadRequest, Conflict, NotFound],
   http: {
     method: "GET",

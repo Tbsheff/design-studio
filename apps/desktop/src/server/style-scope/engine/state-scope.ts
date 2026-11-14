@@ -7,8 +7,11 @@ import {
   parseClass,
   parseVariant,
   STYLE_STATES,
+  isAriaStateName,
   isDataStateStyle,
   isGroupStateName,
+  isOtherStatePart,
+  toAriaStateVariant,
   toDataStateVariant,
   toGroupVariant,
   toStyleStateName,
@@ -30,19 +33,27 @@ interface StateScope {
 
 const toStatePart = (
   state: StyleState,
-  isSelectedItem: boolean,
+  isItem: boolean,
   group: string | null
 ): string => {
   if (isGroupStateName(state)) {
     return toGroupVariant(state, group);
   }
 
-  if (state === "selected" && isSelectedItem) {
+  if (state === "selected" && isItem) {
     return toDataStateVariant("selected-item");
+  }
+
+  if (state === "disabled" && isItem) {
+    return toDataStateVariant("disabled-item");
   }
 
   if (isDataStateStyle(state)) {
     return toDataStateVariant(state);
+  }
+
+  if (isAriaStateName(state)) {
+    return toAriaStateVariant(state);
   }
 
   return state;
@@ -53,7 +64,7 @@ const toStateParts = (state: StyleState): string[] => {
     return [];
   }
 
-  if (state === "selected") {
+  if (state === "selected" || state === "disabled") {
     return [toStatePart(state, false, null), toStatePart(state, true, null)];
   }
 
@@ -62,8 +73,38 @@ const toStateParts = (state: StyleState): string[] => {
 
 const SELECTED_ITEM = /(?:^|:)data-\[state=selected\]:/u;
 
-const hasSelectedItem = (classes: readonly string[]): boolean =>
-  classes.some((token) => SELECTED_ITEM.test(parseClass(token).variants));
+const DISABLED_ITEM = /(?:^|:)data-\[disabled\]:/u;
+
+const hasItemPart = (
+  classes: readonly string[],
+  state: StyleState
+): boolean => {
+  if (state !== "selected" && state !== "disabled") {
+    return false;
+  }
+
+  let pattern = SELECTED_ITEM;
+
+  if (state === "disabled") {
+    pattern = DISABLED_ITEM;
+  }
+
+  return classes.some((token) => pattern.test(parseClass(token).variants));
+};
+
+const toOtherStateParts = (classes: readonly string[]): string[] => {
+  const found = new Set<string>();
+
+  for (const token of classes) {
+    for (const part of parseClass(token).variants.split(":")) {
+      if (isOtherStatePart(part)) {
+        found.add(part);
+      }
+    }
+  }
+
+  return [...found].toSorted();
+};
 
 const statePrefixOf = (
   list: readonly BreakpointEntry[],
@@ -192,7 +233,8 @@ const stateCssOverridesOf = (
 };
 
 export {
-  hasSelectedItem,
+  hasItemPart,
+  toOtherStateParts,
   stateClassOverridesOf,
   stateCssOverridesOf,
   statePrefixOf,

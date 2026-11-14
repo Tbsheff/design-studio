@@ -19,6 +19,12 @@ import type { BuildOptions, Metafile, Plugin } from "esbuild";
 import { buildBridge } from "../src/server/platform/bridge-build/index.js";
 import { linkEsbuildBinary, pruneModules } from "./prune.js";
 import type { PruneStats } from "./prune.js";
+import {
+  assertSingleCopy,
+  isBundled,
+  packageName,
+  toModuleSubpath,
+} from "./server-bundle.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const WORKSPACE_ROOT = path.resolve(ROOT, "..", "..");
@@ -141,17 +147,18 @@ export async function buildDesktopApp(
     cpSync(path.join(desktop, file), path.join(outDir, file));
 }
 
-const WORKSPACE_PACKAGE = /^@design-studio\//;
 const BARE_SPECIFIER = /^[^./]/;
 
 const externalizeBare: Plugin = {
   name: "externalize-bare",
   setup: (pluginBuild) => {
-    pluginBuild.onResolve({ filter: BARE_SPECIFIER }, (args) =>
-      WORKSPACE_PACKAGE.test(args.path) || path.isAbsolute(args.path)
-        ? null
-        : { external: true, path: args.path }
-    );
+    pluginBuild.onResolve({ filter: BARE_SPECIFIER }, (args) => {
+      if (isBundled(args.path)) {
+        return null;
+      }
+
+      return { external: true, path: args.path };
+    });
   },
 };
 
@@ -197,13 +204,6 @@ async function buildServer(serverDir: string): Promise<Metafile[]> {
     routeGraph.metafile,
     thumbnails.metafile,
   ].filter((meta): meta is Metafile => meta !== undefined);
-}
-
-function packageName(specifier: string): string {
-  const parts = specifier.split("/");
-  return specifier.startsWith("@")
-    ? parts.slice(0, 2).join("/")
-    : (parts[0] ?? specifier);
 }
 
 export function importedPackages(metafiles: Metafile[]): string[] {
@@ -314,11 +314,6 @@ function copyWebsiteReader(serverDir: string, modulesRoot: string): number {
   return dirs.length;
 }
 
-function toModuleSubpath(dir: string): string {
-  const marker = `${path.sep}node_modules${path.sep}`;
-  return dir.slice(dir.lastIndexOf(marker) + marker.length);
-}
-
 function copyServerModules(serverDir: string, metafiles: Metafile[]): number {
   const modulesRoot = path.join(WORKSPACE_ROOT, "node_modules");
   const loopLink = path.join(modulesRoot, "node_modules");
@@ -328,6 +323,7 @@ function copyServerModules(serverDir: string, metafiles: Metafile[]): number {
     );
   }
   const dirs = dependencyClosure(importedPackages(metafiles));
+  assertSingleCopy(dirs);
   const placed = new Set<string>();
   for (const dir of dirs) {
     const subpath = dir.startsWith(`${modulesRoot}${path.sep}`)

@@ -1557,7 +1557,7 @@ export const MATCH_SELECT_MAX = 200;
 export const LAYER_TREE_MAX = 5000;
 export const LAYER_LABEL_MAX = 60;
 
-export type SelectMove = "child" | "parent" | "next" | "prev";
+export type SelectMove = "child" | "parent" | "next" | "prev" | "siblings";
 
 export type AppKey =
   | "palette"

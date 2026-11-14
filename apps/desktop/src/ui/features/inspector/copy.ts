@@ -439,12 +439,20 @@ const dividerCopy = {
   widthLabel: "Line width",
 };
 
+const sizeKeysCopy = {
+  frameRoot:
+    "This layer is the frame root, so its size comes from the frame. Resize the frame instead.",
+  noSource:
+    "This layer has no single source location, so the size keys cannot change it. Ask the agent in Chat.",
+};
+
 export {
   borderSideCopy,
   copy,
   dividerCopy,
   editKeysCopy,
   rotationCopy,
+  sizeKeysCopy,
   spaceStackCopy,
   strokePositionCopy,
   textListCopy,

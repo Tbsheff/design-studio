@@ -70,6 +70,7 @@ const readApplyCheck = Effect.fn("port.apply.check")(function* run(
   return yield* store.planApply(
     reads,
     {
+      appWorkTree: target.workTree,
       directionId: input.directionId,
       isSourced: shouldSource,
       limit: AREA_LIMIT,

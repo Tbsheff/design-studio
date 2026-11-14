@@ -5,6 +5,8 @@ import { Effect } from "effect";
 import { PNG } from "pngjs";
 
 import { REFERENCE_LOW_SCORE } from "../../../shared/reference.js";
+import { projectTailwindTheme } from "../../direct-edit/index.js";
+import type { TailwindTheme } from "../../direct-edit/index.js";
 import { attemptKnown } from "../../platform/attempt/index.js";
 import { loadConfig } from "../../platform/config/index.js";
 import {
@@ -13,6 +15,7 @@ import {
 } from "../../preview/picture-diff/index.js";
 import type { PictureRegion } from "../../preview/picture-diff/index.js";
 import type { PortCheckQuery, PortReads } from "./port-check-query.js";
+import { toHintedMatch } from "./port-class-hints.js";
 import { createPortFiles, toPortFileStem } from "./port-diff-file.js";
 import type { ProbeElement } from "./port-mask-probe.js";
 import {
@@ -84,6 +87,18 @@ interface PortCheckRead {
   readonly pairs: readonly PortPair[];
 }
 
+const getAppTheme = (
+  workTree: string | null
+): Effect.Effect<TailwindTheme | null> => {
+  if (workTree === null) {
+    return Effect.succeed(null);
+  }
+
+  return attemptKnown(() => projectTailwindTheme(workTree)).pipe(
+    Effect.orElseSucceed(() => null)
+  );
+};
+
 const readPortCheck = Effect.fn("PortMatchStore.readPortCheck")(function* run(
   reads: PortReads,
   query: PortCheckQuery
@@ -119,7 +134,7 @@ const readPortCheck = Effect.fn("PortMatchStore.readPortCheck")(function* run(
     )
   );
 
-  const match: PortMatch = {
+  const unhinted: PortMatch = {
     ...files,
     areas: toPairedAreas(
       toLowAreas(diff.regions, shots.app.probe.elements, query.width).slice(
@@ -135,6 +150,10 @@ const readPortCheck = Effect.fn("PortMatchStore.readPortCheck")(function* run(
     masked: toMaskedList(shots, query.update !== null),
     score: diff.score,
   };
+
+  const theme = yield* getAppTheme(query.appWorkTree);
+
+  const match = toHintedMatch(unhinted, pairs, theme);
 
   const check: PortCheckRead = { appNodes, match, pairs };
 

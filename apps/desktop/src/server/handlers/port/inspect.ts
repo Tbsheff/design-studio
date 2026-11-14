@@ -9,6 +9,7 @@ import {
   toPortRouteUpdate,
   toPortSourceCommand,
 } from "../../review/index.js";
+import { ProjectStore } from "../../store/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type InspectPortInput = Input<typeof inspectPort>;
@@ -17,14 +18,18 @@ const handle = Effect.fn("port.inspect")(function* run(
   input: InspectPortInput
 ) {
   const reads = yield* McpReadStore;
+  const projects = yield* ProjectStore;
   const store = yield* PortMatchStore;
   const routeSource = yield* RouteSourceStore;
+
+  const app = yield* projects.get(input.targetProjectId);
 
   const changes = yield* routeSource
     .inspectChanges(toPortSourceCommand(input))
     .pipe(Effect.orElseSucceed(() => null));
 
   return yield* store.inspect(reads, {
+    appWorkTree: app.directions[0]?.workTree ?? null,
     directionId: input.directionId,
     isSourced: false,
     limit: input.limit,

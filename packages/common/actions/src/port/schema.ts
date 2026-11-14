@@ -131,6 +131,10 @@ const PortDiffSchema = Schema.Struct({
   app: Schema.String,
   property: Schema.String,
   prototype: Schema.String,
+  write: Schema.NullOr(Schema.String).annotate({
+    description:
+      "In a Tailwind app: the class to write for the prototype value, and the class it replaces, for example mb-6, not mb-2. null in a plain CSS app or when the value comes from a parent.",
+  }),
 });
 
 const PortElementSchema = Schema.Struct({

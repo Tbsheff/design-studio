@@ -1,6 +1,8 @@
 export { createActivityLog } from "./activity.js";
 
-export { runAgentTool } from "./agent-call.js";
+export { runAgentTool, runConfirmedAgentTool } from "./agent-call.js";
+
+export type { ConfirmedScope } from "./agent-call.js";
 
 export { createApprovalQueue } from "./approvals.js";
 

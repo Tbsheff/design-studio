@@ -13,16 +13,10 @@ import type {
   AgentRunContext,
   PreviewService,
 } from "../../shared/server-ports.js";
-import { runAgentTool } from "../mcp/index.js";
 import type { StudioRuntime } from "../platform/studio-runtime/index.js";
 import { isLeanRun } from "./lean-run.js";
 import { EDIT_TOOL_NAMES } from "./permissions.js";
-import { inspectPortMatch, inspectRouteRender } from "./port-review-read.js";
-import type {
-  InspectCall,
-  PortMatchRead,
-  RouteRender,
-} from "./port-review-read.js";
+import type { PortMatchRead, RouteRender } from "./port-review-read.js";
 import { toRouteFileNow } from "./port-route-update.js";
 import type { ImagePart } from "./user-message.js";
 
@@ -36,8 +30,6 @@ const CONTINUE_TAG = "studio-continue";
 
 const MASKED_TEXT_MAX = 5;
 
-const SECOND_LOOP_MS = 60_000;
-
 const HID_ROWS = /^Hid \d+ extra data rows? on the \w+ page\.$/u;
 
 interface PortCheckRef {
@@ -49,10 +41,12 @@ interface PortCheckRef {
 }
 
 interface PortReviewGaps {
+  readonly appDirectionId: string;
   readonly files: readonly string[];
   readonly isUpdate: boolean;
   readonly ref: PortCheckRef;
   readonly url: string;
+  readonly workTree: string;
 }
 
 interface PortCheck {
@@ -77,7 +71,10 @@ interface PortReview {
   readonly record: PortReviewRecord;
 }
 
-type PortReviewContext = Pick<AgentRunContext, "previewUrl" | "request">;
+type PortReviewContext = Pick<
+  AgentRunContext,
+  "direction" | "previewUrl" | "request"
+>;
 
 const toAttribute = (attributes: string, key: string): string => {
   const found = new RegExp(`\\b${key}="(?<value>[^"]*)"`, "u").exec(attributes);
@@ -147,10 +144,12 @@ const toPortReviewGaps = (
   }
 
   return {
+    appDirectionId: ctx.direction.id,
     files: toRouteFiles(ctx.request.prompt),
     isUpdate: toRouteFileNow(ctx.request.prompt) !== null,
     ref: checkRef,
     url: toRouteUrl(base, checkRef.routePath),
+    workTree: ctx.direction.workTree,
   };
 };
 
@@ -238,8 +237,16 @@ const toMaskedLines = (match: PortMatchRead): string[] => {
   return lines;
 };
 
+const toWriteText = (diff: PortDiff): string => {
+  if (diff.write === null) {
+    return "";
+  }
+
+  return ` (write ${diff.write})`;
+};
+
 const toDiffText = (diff: PortDiff): string =>
-  `${diff.property} app ${diff.app}, prototype ${diff.prototype}`;
+  `${diff.property} app ${diff.app}, prototype ${diff.prototype}${toWriteText(diff)}`;
 
 const toDiffsText = (diffs: readonly PortDiff[]): string =>
   diffs.map((diff) => toDiffText(diff)).join("; ");
@@ -337,111 +344,11 @@ const toHidText = (check: PortCheck): string => {
   return `; ${hid.text.charAt(0).toLowerCase()}${hid.text.slice(1, -1)}`;
 };
 
-const toNote = (checks: readonly PortCheck[]): string => {
-  const first = checks[0] ?? null;
-  const second = checks[1] ?? null;
-  const third = checks[2] ?? null;
-
-  if (first === null) {
-    return "";
-  }
-
-  if (second === null) {
-    return `Studio port check: ${toCheckText(first)}${toHidText(first)}.`;
-  }
-
-  if (third === null) {
-    return `Studio port check: ${toCheckText(first)}, a fix loop ran; after it ${toCheckText(second)}${toHidText(second)}.`;
-  }
-
-  return `Studio port check: ${toCheckText(first)}, 2 fix loops ran; after the first ${toCheckText(second)}; after the second ${toCheckText(third)}${toHidText(third)}.`;
-};
-
 const toRecord = (check: PortCheck, isFixLoop: boolean): PortReviewRecord => ({
   fixLoop: isFixLoop,
   rendered: check.render.isRendered,
   score: check.match.score,
 });
-
-const inspectRoute = async (input: PortReviewInput): Promise<PortCheck> => {
-  const inspect: InspectCall = (name, body) =>
-    runAgentTool(input.runtime, name, body);
-
-  const [match, render] = await Promise.all([
-    inspectPortMatch(inspect, input.gaps.ref),
-    inspectRouteRender(input.preview, input.gaps.url, input.gaps.files),
-  ]);
-
-  return { match, render };
-};
-
-const runFixLoop = async (
-  input: PortReviewInput,
-  check: PortCheck
-): Promise<PortCheck | null> => {
-  const isRan = await input.continueWith(
-    toFixPrompt(input.gaps, check),
-    check.match.images
-  );
-
-  if (!isRan) {
-    return null;
-  }
-
-  return inspectRoute(input);
-};
-
-const isRaised = (first: PortCheck, next: PortCheck): boolean =>
-  first.match.score !== null &&
-  next.match.score !== null &&
-  next.match.score > first.match.score;
-
-const isSecondLoop = (
-  first: PortCheck,
-  next: PortCheck,
-  loopMs: number
-): boolean =>
-  loopMs <= SECOND_LOOP_MS && isRaised(first, next) && isFixNeeded(next);
-
-const toReview = (checks: readonly PortCheck[]): PortReview => {
-  const last = checks.at(-1) ?? null;
-
-  if (last === null) {
-    return {
-      note: "",
-      record: { fixLoop: false, rendered: false, score: null },
-    };
-  }
-
-  return { note: toNote(checks), record: toRecord(last, checks.length > 1) };
-};
-
-const runPortReview = async (input: PortReviewInput): Promise<PortReview> => {
-  const first = await inspectRoute(input);
-
-  if (!isFixNeeded(first)) {
-    return toReview([first]);
-  }
-
-  const startedAt = Date.now();
-  const second = await runFixLoop(input, first);
-
-  if (second === null) {
-    return toReview([first]);
-  }
-
-  if (!isSecondLoop(first, second, Date.now() - startedAt)) {
-    return toReview([first, second]);
-  }
-
-  const third = await runFixLoop(input, second);
-
-  if (third === null) {
-    return toReview([first, second]);
-  }
-
-  return toReview([first, second, third]);
-};
 
 const EMPTY_CHECK: FinalCheck = {
   errors: 0,
@@ -463,11 +370,22 @@ const toPortChecked = (
 };
 
 export {
-  runPortReview,
+  isFixNeeded,
+  toCheckText,
+  toFixPrompt,
+  toHidText,
   toPortCheckRef,
   toPortChecked,
   toPortReviewGaps,
+  toRecord,
   toRouteFiles,
 };
 
-export type { PortCheckRef, PortContinue, PortReview, PortReviewGaps };
+export type {
+  PortCheck,
+  PortCheckRef,
+  PortContinue,
+  PortReview,
+  PortReviewGaps,
+  PortReviewInput,
+};

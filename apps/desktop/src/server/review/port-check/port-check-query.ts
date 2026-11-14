@@ -11,6 +11,7 @@ interface PortRouteUpdate {
 }
 
 interface PortCheckQuery {
+  readonly appWorkTree: string | null;
   readonly directionId: string | null;
   readonly isSourced: boolean;
   readonly limit: number;

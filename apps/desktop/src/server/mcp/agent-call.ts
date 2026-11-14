@@ -3,6 +3,9 @@ import type { AnyAction } from "@design-studio/actions/_core/action";
 import { Schema } from "effect";
 
 import { TARGET_SCOPED_ACTIONS } from "../agent-tools/index.js";
+import type { ActionAsk } from "../agent/ask-gate.js";
+import { runAsAgent } from "../platform/call-origin/index.js";
+import { toLegacyPrincipal } from "../store/index.js";
 import { actionCaller, runActionCaller } from "./registry.js";
 import type { CallById } from "./registry.js";
 import type { TextResult } from "./tool-result.js";
@@ -25,6 +28,13 @@ const AgentCallSchema = Schema.Struct({
 const isAgentCall = Schema.is(AgentCallSchema);
 
 const isText = Schema.is(Schema.NonEmptyString);
+
+const toAllowAnswer: ActionAsk = () => Promise.resolve({ allow: true });
+
+interface ConfirmedScope {
+  readonly directionId: string;
+  readonly projectId: string;
+}
 
 const toAgentEntries = (
   action: AnyAction
@@ -115,4 +125,38 @@ const runAgentTool = (
   return caller(action, args);
 };
 
-export { runAgentTool };
+const runConfirmedAgentTool = (
+  runtime: AgentRuntime,
+  name: string,
+  body: AgentCallArgs,
+  scope: ConfirmedScope
+): Promise<TextResult> => {
+  const action = AGENT_ACTIONS.get(name) ?? null;
+
+  if (action === null) {
+    return Promise.resolve(toRefusal(`No agent tool has the name ${name}.`));
+  }
+
+  if (!isAgentCall(body)) {
+    return Promise.resolve(toRefusal(BAD_BODY));
+  }
+
+  const caller = actionCaller(
+    runtime,
+    toLegacyPrincipal(),
+    toAllowAnswer,
+    null
+  );
+
+  if (caller === null) {
+    return Promise.resolve(toRefusal(RUNTIME_OFF));
+  }
+
+  const { args } = body;
+
+  return runAsAgent(scope, () => caller(action, args));
+};
+
+export { runAgentTool, runConfirmedAgentTool };
+
+export type { ConfirmedScope };

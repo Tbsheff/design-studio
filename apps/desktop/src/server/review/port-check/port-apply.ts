@@ -125,7 +125,7 @@ const toTypeChoice = (
   return toSkip("inherited");
 };
 
-const toChoice = (node: PairNode, diff: PortDiff): PartChoice => {
+const toPartChoice = (node: PairNode, diff: PortDiff): PartChoice => {
   const patterns = TYPE_PATTERNS.get(diff.property) ?? null;
 
   if (diff.property === "height") {
@@ -208,7 +208,7 @@ const toPairPlan = (
   const siteReason = toSiteReason(pair, counts);
 
   for (const diff of pair.diffs) {
-    const choice = toChoice(pair.app, diff);
+    const choice = toPartChoice(pair.app, diff);
 
     if (choice.kind === "skip") {
       skipped.push(toSkipItem(pair, diff, choice.reason));
@@ -260,6 +260,6 @@ const toPortApplyPlan = (
   };
 };
 
-export { toPortApplyPlan };
+export { toPartChoice, toPortApplyPlan };
 
-export type { PortApplyEdit, PortApplyPart, PortApplyPlan };
+export type { PartChoice, PortApplyEdit, PortApplyPart, PortApplyPlan };

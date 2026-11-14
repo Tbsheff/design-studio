@@ -1,12 +1,14 @@
 import type { CanvasGuide } from "@design-studio/contracts/canvas-file";
 import type { CSSProperties } from "react";
 
-import { SNAP_PX } from "./snap-model.js";
+import { SNAP_PX, snapRect, unionBox } from "./snap-model.js";
 import type { Axis, Rect, SnapGuide, SnapKind } from "./snap-model.js";
 
 const MIN_ZOOM = 0.01;
 
 const SAME = 0.5;
+
+const GUIDE_REACH = 100_000;
 
 interface StageView {
   readonly x: number;
@@ -26,6 +28,16 @@ interface GuideSnap {
   readonly rect: Rect;
   readonly x: SnapKind;
   readonly y: SnapKind;
+}
+
+interface GuideKinds {
+  readonly x: SnapKind;
+  readonly y: SnapKind;
+}
+
+interface FrameGuideSnap {
+  readonly at: number;
+  readonly marks: SnapGuide[];
 }
 
 interface Span {
@@ -151,6 +163,53 @@ const toGuideMarks = (
   return marks;
 };
 
+const toGuideRect = (guide: CanvasGuide, box: Rect): Rect => {
+  if (guide.axis === "x") {
+    return { ...box, width: GUIDE_REACH, x: guide.at - GUIDE_REACH };
+  }
+
+  return { ...box, height: GUIDE_REACH, y: guide.at - GUIDE_REACH };
+};
+
+const toGuideKinds = (axis: Axis): GuideKinds => {
+  if (axis === "x") {
+    return { x: "end", y: null };
+  }
+
+  return { x: null, y: "end" };
+};
+
+const toGuideEnd = (rect: Rect, axis: Axis): number => toSpan(rect, axis).hi;
+
+const snapGuideToFrames = (
+  guide: CanvasGuide,
+  frames: Rect[],
+  zoom: number
+): FrameGuideSnap => {
+  const box = unionBox(frames);
+
+  if (box === null) {
+    return { at: guide.at, marks: [] };
+  }
+
+  const snapped = snapRect({
+    candidates: frames,
+    rect: toGuideRect(guide, box),
+    ...toGuideKinds(guide.axis),
+    zoom,
+  });
+
+  return {
+    at: Math.round(toGuideEnd(snapped.rect, guide.axis)),
+    marks: snapped.guides.map((mark) => ({
+      at: Math.round(mark.at),
+      axis: mark.axis,
+      from: mark.from,
+      to: mark.to,
+    })),
+  };
+};
+
 const toWorld = (
   screen: number,
   view: StageView,
@@ -233,6 +292,7 @@ const toDragClass = (drag: {
 const toLabelText = (guide: CanvasGuide): string => `${guide.axis} ${guide.at}`;
 
 export {
+  snapGuideToFrames,
   snapToGuides,
   toDragClass,
   toGuideClass,
@@ -244,4 +304,4 @@ export {
   toWorld,
 };
 
-export type { GuideSnap, GuideSnapInput, StageView };
+export type { FrameGuideSnap, GuideSnap, GuideSnapInput, StageView };

@@ -165,6 +165,42 @@ const writePrototypeFiles = Effect.fn("ProjectOpsPrototype.writeFiles")(
   }
 );
 
+const DESIGN_MD_FILE = "DESIGN.md";
+
+const createRouteSetupVersion = Effect.fn(
+  "ProjectOpsPrototype.createRouteSetupVersion"
+)(function* run(
+  runtime: ProjectOpsRuntime,
+  project: Project,
+  tokens: PrototypeTokens,
+  hasDesignMd: boolean
+) {
+  const main = runtime.projects.mainDirection(project);
+  const files = [CONTEXT_FILE];
+
+  if (tokens.css !== null) {
+    files.push(TOKENS_FILE);
+  }
+
+  if (hasDesignMd) {
+    files.push(DESIGN_MD_FILE);
+  }
+
+  const version = yield* attemptKnown(() =>
+    runtime.versions.commitFile(project, main, files, "Folder context", {
+      kind: "manual",
+    })
+  );
+
+  if (version === null) {
+    return project;
+  }
+
+  yield* attemptKnown(() => runtime.recordVersion(project, main, version));
+
+  return yield* attemptKnown(() => runtime.projects.get(project.id));
+});
+
 const toCreatedProject = Effect.fn("ProjectOpsPrototype.toCreatedProject")(
   function* run(
     runtime: ProjectOpsRuntime,
@@ -220,9 +256,18 @@ const createPrototypeWith = Effect.fn("ProjectOpsPrototype.create")(
 
     yield* attemptKnown(() => runtime.versions.ensureRepo(created));
 
-    const project = yield* attemptKnown(() =>
+    let project = yield* attemptKnown(() =>
       runtime.prepareCreated(created, null, NO_DESIGN_MD)
     );
+
+    if (input.routePath !== null) {
+      project = yield* createRouteSetupVersion(
+        runtime,
+        project,
+        tokens,
+        isFilled(designMd)
+      );
+    }
 
     const main = runtime.projects.mainDirection(project);
     runtime.watchDirection(project, main);

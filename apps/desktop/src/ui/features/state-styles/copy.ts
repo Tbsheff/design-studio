@@ -1,5 +1,25 @@
+const dataStates = {
+  chipTip: {
+    "active-item":
+      "Active item state. The frame sets data-active to true on the layer, as sidebar items do. Edits write data-[active=true]: styles",
+    closed:
+      "Closed state. The frame sets data-state to closed on the layer. Edits write data-[state=closed]: styles",
+    invalid:
+      "Invalid state. The frame sets aria-invalid to true on the layer. Edits write aria-invalid: styles",
+    on: "On state. The frame sets data-state to on on the layer, as toggles do. Edits write data-[state=on]: styles",
+  },
+  label: {
+    "active-item": "Active item",
+    closed: "Closed",
+    invalid: "Invalid",
+    on: "On",
+  },
+  otherTip: "Other state prefix on this layer. Read only: edit it in the code",
+} as const;
+
 const copy = {
   chipTip: {
+    ...dataStates.chipTip,
     active:
       "Pressed state. The frame shows the layer as if pressed. Edits write active: styles",
     checked:
@@ -7,7 +27,7 @@ const copy = {
     dark: "Dark theme. The frame shows the dark theme. Edits write dark: styles",
     default: "Default state. Edits change the normal styles",
     disabled:
-      "Disabled state. The frame shows the layer as disabled. Edits write disabled: styles",
+      "Disabled state. The frame shows the layer as disabled. Edits write disabled: styles, or data-[disabled]: when the layer has them",
     even: "Even items. The frame outlines the even items. Edits write even: styles",
     first:
       "First item. The frame outlines the first item. Edits write first: styles",
@@ -45,6 +65,7 @@ const copy = {
   groupOff: "Add the group class to the parent",
   hasStyles: "Has styles in this state",
   label: {
+    ...dataStates.label,
     active: "Pressed",
     checked: "Checked",
     dark: "Dark",
@@ -62,6 +83,7 @@ const copy = {
     open: "Open",
     selected: "Selected",
   },
+  otherTip: dataStates.otherTip,
   stateNote: "Edits go to this state. Press Esc for Default.",
 } as const;
 

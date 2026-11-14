@@ -1,6 +1,5 @@
 import { copy } from "./copy.js";
 import {
-  isDataStateStyle,
   isEdgeStateName,
   isGroupStateName,
   parseVariant,
@@ -28,7 +27,17 @@ const CHIPS: readonly ChipId[] = [
   "dark",
 ];
 
-const DATA_CHIPS: readonly ChipId[] = ["open", "checked", "selected"];
+const DATA_CHIPS: readonly ChipId[] = [
+  "open",
+  "closed",
+  "checked",
+  "on",
+  "selected",
+];
+
+const ACTIVE_ITEM_CHIPS: readonly ChipId[] = ["active-item"];
+
+const INVALID_CHIPS: readonly ChipId[] = ["invalid"];
 
 const GROUP_HOVER_CHIPS: readonly ChipId[] = ["group-hover"];
 
@@ -42,6 +51,16 @@ const DATA_STATE_ATTR = /\sdata-state\s*=/u;
 
 const DATA_STATE_CLASS = /(?:^|[\s"':])data-\[state=/u;
 
+const DATA_ACTIVE_ATTR = /\sdata-active\s*=/u;
+
+const DATA_ACTIVE_CLASS = /(?:^|[\s"':])data-\[active=/u;
+
+const FIELD_TAG = /^<(?:input|textarea|select)[\s/>]/iu;
+
+const COMBOBOX_ROLE = /\srole\s*=\s*["']?combobox/iu;
+
+const INVALID_CLASS = /(?:^|[\s"':])aria-invalid:/u;
+
 const BASE: ParsedVariant = {
   breakpoint: null,
   dark: false,
@@ -49,15 +68,61 @@ const BASE: ParsedVariant = {
   states: [],
 };
 
-const hasDataStateTag = (outerHTML: string): boolean => {
-  const start = START_TAG.exec(outerHTML)?.[0] ?? "";
+const toStartTag = (outerHTML: string): string =>
+  START_TAG.exec(outerHTML)?.[0] ?? "";
 
-  return DATA_STATE_ATTR.test(start) || DATA_STATE_CLASS.test(start);
+const hasStateStyles = (
+  info: StateListResult | null,
+  chips: readonly ChipId[]
+): boolean => {
+  const wanted = new Set(chips);
+
+  return (
+    info !== null &&
+    info.layer.overrides.some((entry) => wanted.has(entry.state))
+  );
 };
 
-const hasDataStateStyles = (info: StateListResult | null): boolean =>
-  info !== null &&
-  info.layer.overrides.some((entry) => isDataStateStyle(entry.state));
+const isDataStateFit = (start: string, info: StateListResult | null): boolean =>
+  DATA_STATE_ATTR.test(start) ||
+  DATA_STATE_CLASS.test(start) ||
+  hasStateStyles(info, DATA_CHIPS);
+
+const isActiveItemFit = (
+  start: string,
+  info: StateListResult | null
+): boolean =>
+  DATA_ACTIVE_ATTR.test(start) ||
+  DATA_ACTIVE_CLASS.test(start) ||
+  hasStateStyles(info, ACTIVE_ITEM_CHIPS);
+
+const isInvalidFit = (start: string, info: StateListResult | null): boolean =>
+  FIELD_TAG.test(start) ||
+  COMBOBOX_ROLE.test(start) ||
+  INVALID_CLASS.test(start) ||
+  hasStateStyles(info, INVALID_CHIPS);
+
+const toDataChips = (
+  outerHTML: string,
+  info: StateListResult | null
+): readonly ChipId[] => {
+  const start = toStartTag(outerHTML);
+  const chips: ChipId[] = [];
+
+  if (isDataStateFit(start, info)) {
+    chips.push(...DATA_CHIPS);
+  }
+
+  if (isActiveItemFit(start, info)) {
+    chips.push(...ACTIVE_ITEM_CHIPS);
+  }
+
+  if (isInvalidFit(start, info)) {
+    chips.push(...INVALID_CHIPS);
+  }
+
+  return chips;
+};
 
 const hasGroupDataStyles = (info: StateListResult): boolean =>
   info.layer.overrides.some(
@@ -100,15 +165,12 @@ const toEdgeNote = (
 const chipsFor = (
   outerHTML: string,
   info: StateListResult | null
-): readonly ChipId[] => {
-  let chips = CHIPS;
-
-  if (hasDataStateTag(outerHTML) || hasDataStateStyles(info)) {
-    chips = [...CHIPS, ...DATA_CHIPS];
-  }
-
-  return [...chips, ...toGroupChips(info), ...toEdgeChips(info)];
-};
+): readonly ChipId[] => [
+  ...CHIPS,
+  ...toDataChips(outerHTML, info),
+  ...toGroupChips(info),
+  ...toEdgeChips(info),
+];
 
 const isGroupOff = (chip: ChipId, info: StateListResult | null): boolean =>
   isGroupStateName(chip) && info?.group === null;
@@ -144,18 +206,26 @@ const stateWire = (chip: ChipId): StyleState | null => {
   return chip;
 };
 
-const isSelectedItem = (info: StateListResult | null): boolean =>
+const hasPrefixPart = (info: StateListResult | null, part: string): boolean =>
   info !== null &&
-  info.layer.overrides.some((entry) =>
-    entry.prefix.split(":").includes(toDataStateVariant("selected-item"))
-  );
+  info.layer.overrides.some((entry) => entry.prefix.split(":").includes(part));
 
 const partOf = (
   chip: Exclude<ChipId, "dark" | "default">,
   info: StateListResult | null
 ): PseudoPart => {
-  if (chip === "selected" && isSelectedItem(info)) {
+  if (
+    chip === "selected" &&
+    hasPrefixPart(info, toDataStateVariant("selected-item"))
+  ) {
     return "selected-item";
+  }
+
+  if (
+    chip === "disabled" &&
+    hasPrefixPart(info, toDataStateVariant("disabled-item"))
+  ) {
+    return "disabled-item";
   }
 
   return chip;

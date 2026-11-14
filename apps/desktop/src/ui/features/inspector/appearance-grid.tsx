@@ -4,9 +4,9 @@ import { BackgroundField } from "./background-field.js";
 import { copy } from "./copy.js";
 import type { DirectEdit } from "./deps.js";
 import { RadiusField } from "./inspector-corners.js";
+import { OpacityField } from "./opacity-field.js";
 import { SelectField } from "./select-field.js";
-import { OPACITY, OVERFLOWS } from "./simple-model.js";
-import { SpecNumberField } from "./spec-number-field.js";
+import { OVERFLOWS } from "./simple-model.js";
 
 interface AppearanceGridProps {
   readonly edit: DirectEdit;
@@ -24,7 +24,7 @@ const AppearanceGrid = ({ edit, fill }: AppearanceGridProps): ReactElement => (
       edit={edit}
       options={OVERFLOWS}
     />
-    <SpecNumberField edit={edit} field={OPACITY} />
+    <OpacityField edit={edit} />
   </div>
 );
 

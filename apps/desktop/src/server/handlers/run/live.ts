@@ -8,6 +8,7 @@ import {
   RunDraftStore,
   RunLogStore,
   RunLogWriter,
+  RunWaitStore,
   StateRunQueue,
   StateRunStore,
 } from "../../run-log/index.js";
@@ -21,6 +22,7 @@ const RunLive = Layer.mergeAll(
   RunDraftStore.layer,
   RunDecisionStore.layer,
   RunDecisionWriter.layer,
+  RunWaitStore.layer,
   StateRunQueue.layer,
   StateRunStore.layer
 );

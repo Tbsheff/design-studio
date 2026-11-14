@@ -26,6 +26,7 @@ import { ExportLive } from "../handlers/export/live.js";
 import { FileLockLive } from "../handlers/file-lock/live.js";
 import { FillLive } from "../handlers/fill/live.js";
 import { FixtureLive } from "../handlers/fixture/live.js";
+import { FontLive } from "../handlers/font/live.js";
 import { GalleryLive } from "../handlers/gallery/live.js";
 import { GridLive } from "../handlers/grid/live.js";
 import { IconLive } from "../handlers/icon/live.js";
@@ -106,6 +107,7 @@ const liveLayer = Layer.mergeAll(
   FileLockLive,
   FillLive,
   FixtureLive,
+  FontLive,
   GalleryLive,
   GridLive,
   IconLive,

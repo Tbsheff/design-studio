@@ -13,10 +13,12 @@ export {
 } from "./scoped-style.js";
 
 export {
+  hasSelectedItem,
   stateClassOverridesOf,
   stateCssOverridesOf,
   statePrefixOf,
   stateScopesOf,
+  toStatePart,
 } from "./state-scope.js";
 
 export type { StateScope } from "./state-scope.js";

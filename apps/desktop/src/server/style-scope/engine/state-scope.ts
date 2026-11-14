@@ -7,6 +7,9 @@ import {
   parseClass,
   parseVariant,
   STYLE_STATES,
+  isDataStateStyle,
+  toDataStateVariant,
+  toStyleStateName,
 } from "./deps.js";
 import type {
   BreakpointEntry,
@@ -23,9 +26,34 @@ interface StateScope {
   readonly state: StyleState;
 }
 
+const toStatePart = (state: StyleState, isSelectedItem: boolean): string => {
+  if (state === "selected" && isSelectedItem) {
+    return toDataStateVariant("selected-item");
+  }
+
+  if (isDataStateStyle(state)) {
+    return toDataStateVariant(state);
+  }
+
+  return state;
+};
+
+const toStateParts = (state: StyleState): string[] => {
+  if (state === "selected") {
+    return [toStatePart(state, false), toStatePart(state, true)];
+  }
+
+  return [toStatePart(state, false)];
+};
+
+const SELECTED_ITEM = /(?:^|:)data-\[state=selected\]:/u;
+
+const hasSelectedItem = (classes: readonly string[]): boolean =>
+  classes.some((token) => SELECTED_ITEM.test(parseClass(token).variants));
+
 const statePrefixOf = (
   list: readonly BreakpointEntry[],
-  state: StyleState,
+  part: string,
   breakpoint: string
 ): ScopeResult<string> => {
   const scope = prefixOf(list, breakpoint);
@@ -34,16 +62,18 @@ const statePrefixOf = (
     return scope;
   }
 
-  return { ok: true, value: `${scope.value}${state}:` };
+  return { ok: true, value: `${scope.value}${part}:` };
 };
 
 const stateScopesOf = (list: readonly BreakpointEntry[]): StateScope[] =>
   STYLE_STATES.flatMap((state) =>
-    scopesOf(list).map((scope) => ({
-      breakpoint: scope.breakpoint,
-      prefix: `${scope.prefix}${state}:`,
-      state,
-    }))
+    toStateParts(state).flatMap((part) =>
+      scopesOf(list).map((scope) => ({
+        breakpoint: scope.breakpoint,
+        prefix: `${scope.prefix}${part}:`,
+        state,
+      }))
+    )
   );
 
 const statesOfVariant = (variants: string): StyleState[] => {
@@ -53,11 +83,9 @@ const statesOfVariant = (variants: string): StyleState[] => {
     return [];
   }
 
-  const names: readonly string[] = parsed.states;
-
-  const found: StyleState[] = names.filter((state): state is StyleState =>
-    (STYLE_STATES as readonly string[]).includes(state)
-  );
+  const found: StyleState[] = parsed.states
+    .map((state) => toStyleStateName(state))
+    .filter((state): state is StyleState => state !== null);
 
   if (parsed.dark) {
     found.push("dark");
@@ -150,10 +178,12 @@ const stateCssOverridesOf = (
 };
 
 export {
+  hasSelectedItem,
   stateClassOverridesOf,
   stateCssOverridesOf,
   statePrefixOf,
   stateScopesOf,
+  toStatePart,
 };
 
 export type { StateScope };

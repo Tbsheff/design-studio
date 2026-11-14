@@ -1,4 +1,9 @@
-import { parseVariant, variantPrefix } from "./deps.js";
+import {
+  parseVariant,
+  toDataStateVariant,
+  toStyleStateName,
+  variantPrefix,
+} from "./deps.js";
 import type {
   ParsedVariant,
   SaveStatus,
@@ -7,6 +12,8 @@ import type {
 } from "./deps.js";
 
 type ChipId = "default" | StyleState;
+
+type PseudoPart = ParsedVariant["states"][number];
 
 const CHIPS: readonly ChipId[] = [
   "default",
@@ -17,13 +24,36 @@ const CHIPS: readonly ChipId[] = [
   "dark",
 ];
 
+const DATA_CHIPS: readonly ChipId[] = ["open", "checked", "selected"];
+
+const START_TAG = /^<[^>]*>/u;
+
+const DATA_STATE_ATTR = /\sdata-state\s*=/u;
+
+const DATA_STATE_CLASS = "data-[state=";
+
 const BASE: ParsedVariant = { breakpoint: null, dark: false, states: [] };
 
-const isInteraction = (part: string): part is Exclude<StyleState, "dark"> =>
-  part === "hover" ||
-  part === "focus-visible" ||
-  part === "active" ||
-  part === "disabled";
+const hasDataStateTag = (outerHTML: string): boolean => {
+  const start = START_TAG.exec(outerHTML)?.[0] ?? "";
+
+  return DATA_STATE_ATTR.test(start) || start.includes(DATA_STATE_CLASS);
+};
+
+const hasDataStateStyles = (info: StateListResult | null): boolean =>
+  info !== null &&
+  info.layer.overrides.some((entry) => entry.prefix.includes(DATA_STATE_CLASS));
+
+const chipsFor = (
+  outerHTML: string,
+  info: StateListResult | null
+): readonly ChipId[] => {
+  if (hasDataStateTag(outerHTML) || hasDataStateStyles(info)) {
+    return [...CHIPS, ...DATA_CHIPS];
+  }
+
+  return CHIPS;
+};
 
 const stateOf = (prefix: string): ChipId | null => {
   const parsed = parseVariant(prefix) ?? BASE;
@@ -41,11 +71,11 @@ const stateOf = (prefix: string): ChipId | null => {
     return "default";
   }
 
-  if (isInteraction(first)) {
-    return first;
+  if (first === "focus") {
+    return null;
   }
 
-  return null;
+  return toStyleStateName(first);
 };
 
 const stateWire = (chip: ChipId): StyleState | null => {
@@ -56,7 +86,28 @@ const stateWire = (chip: ChipId): StyleState | null => {
   return chip;
 };
 
-const prefixFor = (current: string, chip: ChipId): string => {
+const isSelectedItem = (info: StateListResult | null): boolean =>
+  info !== null &&
+  info.layer.overrides.some((entry) =>
+    entry.prefix.includes(toDataStateVariant("selected-item"))
+  );
+
+const partOf = (
+  chip: Exclude<ChipId, "dark" | "default">,
+  info: StateListResult | null
+): PseudoPart => {
+  if (chip === "selected" && isSelectedItem(info)) {
+    return "selected-item";
+  }
+
+  return chip;
+};
+
+const prefixFor = (
+  current: string,
+  chip: ChipId,
+  info: StateListResult | null
+): string => {
   const { breakpoint } = parseVariant(current) ?? BASE;
 
   if (chip === "default") {
@@ -67,7 +118,11 @@ const prefixFor = (current: string, chip: ChipId): string => {
     return variantPrefix({ breakpoint, dark: true, states: [] });
   }
 
-  return variantPrefix({ breakpoint, dark: false, states: [chip] });
+  return variantPrefix({
+    breakpoint,
+    dark: false,
+    states: [partOf(chip, info)],
+  });
 };
 
 const styledStates = (
@@ -113,7 +168,7 @@ const isTypingTarget = (target: EventTarget | null): boolean => {
 };
 
 export {
-  CHIPS,
+  chipsFor,
   hasDot,
   isTypingTarget,
   prefixFor,

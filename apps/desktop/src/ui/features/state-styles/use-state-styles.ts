@@ -6,11 +6,13 @@ import type {
   PreviewPort,
   SaveStatus,
   SelectionContext,
+  StateListResult,
   StyleState,
 } from "./deps.js";
 import { sendForced } from "./state-styles-api.js";
 import type { StateIds } from "./state-styles-api.js";
 import {
+  chipsFor,
   isTypingTarget,
   prefixFor,
   roundOf,
@@ -31,6 +33,7 @@ interface StateStylesOptions {
 
 interface StateStylesView {
   readonly active: ChipId | null;
+  readonly chips: readonly ChipId[];
   readonly error: string | null;
   readonly isOff: boolean;
   readonly handlePick: (chip: ChipId) => void;
@@ -90,13 +93,18 @@ const clearStale = (selector: string, active: ChipId | null): void => {
   void sendForced(last.ids, null, null);
 };
 
+interface ChipTarget {
+  readonly ids: StateIds;
+  readonly info: StateListResult | null;
+  readonly selector: string;
+}
+
 const applyChip = (
   port: MutableRefObject<PreviewPort | null>,
-  ids: StateIds,
-  selector: string,
+  { ids, info, selector }: ChipTarget,
   chip: ChipId
 ): void => {
-  const next = prefixFor(editVariantStore.get(), chip);
+  const next = prefixFor(editVariantStore.get(), chip, info);
   const frame = port.current;
 
   frame?.post({ type: "preview-reset" });
@@ -141,7 +149,7 @@ const useStateStyles = (options: StateStylesOptions): StateStylesView => {
   const { directionId, port, projectId, status, target } = options;
   const prefix = useEditVariant();
   const active = stateOf(prefix);
-  const { selector, source } = target;
+  const { outerHTML, selector, source } = target;
 
   const ids = useMemo(
     () => ({ directionId, projectId }),
@@ -149,11 +157,13 @@ const useStateStyles = (options: StateStylesOptions): StateStylesView => {
   );
 
   const loaded = useStateInfo(ids, source, roundOf(status));
-  const styled = useMemo(() => styledStates(loaded.info), [loaded.info]);
+  const { info } = loaded;
+  const styled = useMemo(() => styledStates(info), [info]);
+  const chips = useMemo(() => chipsFor(outerHTML, info), [info, outerHTML]);
 
   const handlePick = useCallback(
-    (chip: ChipId) => applyChip(port, ids, selector, chip),
-    [ids, port, selector]
+    (chip: ChipId) => applyChip(port, { ids, info, selector }, chip),
+    [ids, info, port, selector]
   );
 
   useEffect(() => {
@@ -173,10 +183,10 @@ const useStateStyles = (options: StateStylesOptions): StateStylesView => {
   useEscape(active, handlePick);
 
   const { error } = loaded;
-  const isOff = loaded.info?.layer.mode === "none";
-  const reason = loaded.info?.layer.reason ?? null;
+  const isOff = info?.layer.mode === "none";
+  const reason = info?.layer.reason ?? null;
 
-  return { active, error, handlePick, isOff, reason, styled };
+  return { active, chips, error, handlePick, isOff, reason, styled };
 };
 
 export { useStateStyles };

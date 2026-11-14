@@ -1,0 +1,8 @@
+set_state_style {"target":{"source":{"file":"index.html","line":1,"col":202}},"state":"open","property":"color","value":"#b91c1c"}: {"breakpoint":"base","classes":{"add":["data-[state=open]:text-[#b91c1c]"],"remove":[]},"files":["index.html"],"mode":"classes","prefix":"data-[state=open]:","property":"color","state":"open","title":"State data-[state=open]: color #b91c1c","value":"#b91c1c","versionId":"pending-8b431571c3f59b32"}
+set_forced_state {"state":"open","layer":"#trigger"}: {"frameId":"f1","selector":"#trigger","state":"open"}
+get_screenshot: image -> mcp-open.png
+get_screenshot {"frameId":"f1","width":640,"height":320}: 640 × 320 px of the work tree at version 52d82317c281fdad81f9db815c7351d71f973574.
+list_state_styles {"file":"index.html","line":1,"col":202}: {"forced":[{"frameId":"f1","selector":"#trigger","state":"open"}],"layer":{"file":"index.html","mode":"classes","overrides":[{"breakpoint":"base","prefix":"data-[state=open]:","props":["background-color","color"],"set":["data-[state=open]:bg-slate-200","data-[state=open]:text-[#b91c1c]"],"state":"open"}],"reason":null},"states":["hover","focus-visible","active","disabled","dark","open","checked","selected"]}
+set_forced_state {"state":null}: {"frameId":"f1","selector":null,"state":null}
+get_screenshot: image -> mcp-default.png
+get_screenshot {"frameId":"f1","width":640,"height":320}: 640 × 320 px of the work tree at version 52d82317c281fdad81f9db815c7351d71f973574.

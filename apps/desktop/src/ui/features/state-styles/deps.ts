@@ -22,6 +22,11 @@ export type { ParsedVariant } from "../../../shared/variants.js";
 
 export type { SelectionContext, SourceLoc } from "@design-studio/contracts";
 
+export {
+  toDataStateVariant,
+  toStyleStateName,
+} from "@design-studio/contracts/state-styles";
+
 export type {
   ForcedFrameState,
   StateListResult,

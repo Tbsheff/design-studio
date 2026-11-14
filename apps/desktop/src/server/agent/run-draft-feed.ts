@@ -140,9 +140,13 @@ const insertDraftChunk = (
   write.timer ??= setTimeout(() => publishPending(key.toolUseId), EMIT_MS);
 };
 
-const stopDraft = (target: DraftTarget, toolUseId: string): void => {
+const stopDraft = (
+  target: DraftTarget,
+  toolUseId: string,
+  isReplaceAll: boolean
+): void => {
   publishPending(toolUseId);
-  setDraftComplete(target.runId, toolUseId);
+  setDraftComplete(target.runId, toolUseId, isReplaceAll);
 };
 
 export { stopDraft, insertDraftChunk, startDraftBase };

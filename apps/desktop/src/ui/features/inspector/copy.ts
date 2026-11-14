@@ -410,7 +410,6 @@ const textListCopy = {
   numbers: "Numbers",
   numbersTip: "Numbers: show a number before each item",
   other: "Other",
-  otherTip: "Other: a marker type set in code",
   readOnly: "Edit the list layer",
   typeLabel: "List style",
 };

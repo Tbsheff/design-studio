@@ -47,9 +47,9 @@ const ListStyleChoice = ({
         className="on"
         aria-pressed
         aria-disabled
-        data-tip={textListCopy.otherTip}
+        data-tip={`${textListCopy.other}: ${other}`}
       >
-        {`${textListCopy.other}: ${other}`}
+        {textListCopy.other}
       </button>
     )}
   </div>

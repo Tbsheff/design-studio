@@ -141,11 +141,11 @@ const LIST_PARENT_TAGS: ReadonlySet<string> = new Set(["ol", "ul"]);
 
 const SELECTOR_JOIN = " > ";
 
-const toParentSelector = (selector: string): string | null => {
+const toParentSelector = (selector: string, tag: string): string => {
   const cut = selector.lastIndexOf(SELECTOR_JOIN);
 
   if (cut <= 0) {
-    return null;
+    return `${tag}:has(${SELECTOR_JOIN.trim()} ${selector})`;
   }
 
   return selector.slice(0, cut);
@@ -178,16 +178,13 @@ const isSameFileParent = (
 
 const toParentTarget = (selection: SelectionContext): ListTarget | null => {
   const source = selection.parentLoc ?? null;
-  const selector = toParentSelector(selection.selector);
   const tag = toParentTag(selection);
 
-  if (
-    !isSameFileParent(source, selection.source) ||
-    selector === null ||
-    tag === null
-  ) {
+  if (!isSameFileParent(source, selection.source) || tag === null) {
     return null;
   }
+
+  const selector = toParentSelector(selection.selector, tag);
 
   return { selector, source, tag };
 };

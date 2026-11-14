@@ -1,4 +1,5 @@
 interface LineCounts {
+  readonly dark: number;
   readonly flow: number;
   readonly kit: number;
   readonly phone: number;
@@ -9,6 +10,9 @@ const FLOW_RULE =
 
 const PHONE_RULE =
   "At 390 px, as share Play shows it on a phone, each page must fit with no sideways scroll and keep tap targets at 44 px or more.";
+
+const DARK_RULE =
+  "Each page must keep AA text contrast in dark too, as share Play shows it when the viewer picks dark.";
 
 const listCheckedWords = (counts: LineCounts): string[] => {
   const words: string[] = [];
@@ -23,6 +27,10 @@ const listCheckedWords = (counts: LineCounts): string[] => {
 
   if (counts.phone > 0) {
     words.push("each page at 390 x 844");
+  }
+
+  if (counts.dark > 0) {
+    words.push("each page in dark");
   }
 
   return words;
@@ -69,6 +77,10 @@ const toFirstOpening = (counts: LineCounts): string | null => {
     parts.push(PHONE_RULE);
   }
 
+  if (counts.dark > 0) {
+    parts.push(DARK_RULE);
+  }
+
   return parts.join(" ");
 };
 
@@ -77,7 +89,7 @@ const toCheckOpening = (counts: LineCounts, pass: number): string | null => {
     return toFirstOpening(counts);
   }
 
-  if (counts.flow === 0 && counts.phone === 0) {
+  if (counts.flow === 0 && counts.phone === 0 && counts.dark === 0) {
     return null;
   }
 

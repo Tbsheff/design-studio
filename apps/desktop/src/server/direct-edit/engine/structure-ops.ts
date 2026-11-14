@@ -54,7 +54,7 @@ const CLEARABLE =
 
 const NO_REINDENT = /<pre|<textarea|`/i;
 
-const ROOT_MESSAGE =
+export const ROOT_MESSAGE =
   "This is the top element of a component, so it cannot be removed or copied here; ask the agent";
 
 export function refuse(message: string): DirectEditError {
@@ -151,7 +151,7 @@ function reindent(
     .join("\n");
 }
 
-function applyTracked(source: string, splices: Splice[]): OpPlan {
+export function applyTracked(source: string, splices: Splice[]): OpPlan {
   const ordered = [...splices].sort(
     (a, b) => a.start - b.start || a.end - b.end
   );
@@ -182,7 +182,7 @@ function removal(source: string, node: StructNode): Splice {
   return { ...removalSpan(source, node), text: "", marks: [] };
 }
 
-function assertMovable(node: StructNode): void {
+export function assertMovable(node: StructNode): void {
   if (node.fixed) {
     throw refuse(`<${node.tag}> cannot be changed this way`);
   }
@@ -324,11 +324,11 @@ function unwrapOp(source: string, nodes: StructNode[]): Splice[] {
   return nodes.map((node) => unwrapOne(source, node));
 }
 
-function contains(outer: Range, inner: Range): boolean {
+export function contains(outer: Range, inner: Range): boolean {
   return inner.start >= outer.start && inner.end <= outer.end;
 }
 
-function movedTexts(
+export function movedTexts(
   source: string,
   nodes: StructNode[],
   indent: string | null
@@ -538,7 +538,7 @@ function indentLines(text: string, indent: string | null): string {
         .join("\n");
 }
 
-function replaceSplice(
+export function replaceSplice(
   source: string,
   texts: (indent: string | null) => string[],
   node: StructNode

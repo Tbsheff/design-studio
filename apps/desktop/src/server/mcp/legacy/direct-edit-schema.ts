@@ -48,6 +48,15 @@ const alsoList = z
     "With op: more elements to change in the same edit, like a multi-select in the studio. For group and wrap they must be siblings in one file. Layer ids from select_matching work here."
   );
 
+const replaceList = z
+  .array(alsoItem)
+  .min(1)
+  .max(ALSO_MAX)
+  .optional()
+  .describe(
+    "For op duplicate: elements to replace with a copy of selector and also, like Mod+Shift+R (paste to replace) in the studio. Each one is replaced at its place in its parent. All changes are one version and one undo step. They must be in the file of the copied elements."
+  );
+
 const editFields = z.strictObject({
   ...targetFields,
   also: alsoList,
@@ -59,6 +68,7 @@ const editFields = z.strictObject({
       'Structure edit instead of style/text: delete, duplicate, wrap (in a flex column frame), group (in a plain <div data-name="Group"> with no layout, like Cmd+G), unwrap (keep the children, drop the element; also ungroups) or move (into targetSelector, as its last child).'
     ),
   path: pagePath,
+  replace: replaceList,
   selector: selector.describe("CSS selector of one element on the page."),
   style: style
     .optional()
@@ -113,6 +123,10 @@ const editElementSchema = editFields
   .refine(
     (input) => (input.op === "move") === !absent(input.targetSelector),
     "op move needs targetSelector; other ops take none"
+  )
+  .refine(
+    (input) => absent(input.replace) || input.op === "duplicate",
+    "replace needs op duplicate"
   )
   .refine(
     (input) => input.target !== "use" || absent(input.op),

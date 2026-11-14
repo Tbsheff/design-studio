@@ -2119,6 +2119,7 @@ export interface StructureEditRequest {
   into?: StructureTarget;
   before?: StructureTarget;
   after?: StructureTarget;
+  replace?: StructureTarget[];
   style?: Partial<Record<DirectStyleProperty, string | null>>;
 }
 

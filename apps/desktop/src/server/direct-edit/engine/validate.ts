@@ -210,6 +210,12 @@ const toStructureConflicts = (request: DecodedStructureEdit): string[] => {
     );
   }
 
+  if (request.replace && (request.op !== "duplicate" || places > 0)) {
+    conflicts.push(
+      "replace works only with duplicate and without into, before or after"
+    );
+  }
+
   if (
     request.style !== undefined &&
     !(request.op === "duplicate" && request.targets.length === 1)

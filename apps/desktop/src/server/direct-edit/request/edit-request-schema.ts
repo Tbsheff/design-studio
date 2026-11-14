@@ -135,16 +135,19 @@ const TargetSchema = Schema.Struct({
   tag: Schema.optional(TagSchema),
 });
 
+const TargetListSchema = Schema.Array(TargetSchema).check(
+  Schema.isMinLength(1),
+  Schema.isMaxLength(MAX_BATCH)
+);
+
 const StructureSchema = Schema.Struct({
   after: Schema.optional(TargetSchema),
   before: Schema.optional(TargetSchema),
   into: Schema.optional(TargetSchema),
   op: Schema.Literals(STRUCTURE_OPS),
+  replace: Schema.optional(TargetListSchema),
   style: Schema.optional(StyleSchema),
-  targets: Schema.Array(TargetSchema).check(
-    Schema.isMinLength(1),
-    Schema.isMaxLength(MAX_BATCH)
-  ),
+  targets: TargetListSchema,
 });
 
 const BatchSchema = Schema.Struct({

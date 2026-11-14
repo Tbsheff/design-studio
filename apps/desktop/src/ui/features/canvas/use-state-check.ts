@@ -6,6 +6,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
   useSyncExternalStore,
   useTransition,
 } from "react";
@@ -85,6 +86,19 @@ const useVersionRecheck = (
   }, [headVersionId, refetch]);
 };
 
+const useSeenSequence = (
+  sectionId: string,
+  isRunning: boolean
+): [boolean, (seenId: string) => void] => {
+  const [seenId, setSeenId] = useState<string | null>(null);
+
+  if (isRunning && seenId !== sectionId) {
+    setSeenId(sectionId);
+  }
+
+  return [isRunning || seenId === sectionId, setSeenId];
+};
+
 const useStateSequence = (
   projectId: string,
   section: CanvasSection
@@ -95,20 +109,29 @@ const useStateSequence = (
   const { run: runStart } = start;
   const { run: runStop } = stop;
   const sectionId = section.id;
+  const isRunning = useLive(selectionRun);
+  const [hasSequence, setSeenId] = useSeenSequence(sectionId, isRunning);
 
-  const sequenceQuery = useMemo(
-    () => ({ projectId, sequenceId: toSequenceId(sectionId) }),
-    [projectId, sectionId]
-  );
+  const sequenceQuery = useMemo(() => {
+    if (!hasSequence) {
+      return null;
+    }
+
+    return { projectId, sequenceId: toSequenceId(sectionId) };
+  }, [hasSequence, projectId, sectionId]);
 
   const { data } = useAction(runRoutes.getStatesRun, sequenceQuery);
   const phase = useMemo(() => toStateRunPhase(data), [data]);
 
   const handleDesign = useCallback((): void => {
     startTransition(async (): Promise<void> => {
-      await runStart({ projectId, section: sectionId });
+      const started = await runStart({ projectId, section: sectionId });
+
+      if (started !== null) {
+        setSeenId(sectionId);
+      }
     });
-  }, [projectId, runStart, sectionId]);
+  }, [projectId, runStart, sectionId, setSeenId]);
 
   const runId = toStopRunId(phase);
 

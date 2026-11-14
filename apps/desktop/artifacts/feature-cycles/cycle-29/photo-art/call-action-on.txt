@@ -1,0 +1,85 @@
+call-action image-search.apply on http://127.0.0.1:5690. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 10815 ms, git spawns: not counted (server side)
+{
+  "filled": [
+    {
+      "photoId": "551f87bf-8534-4086-9a84-43d6998df86f",
+      "query": "bakery landing page",
+      "selector": "[style*=\"assets/30743077194-8e64b33172-b-3208c418be.jpg\"]"
+    }
+  ],
+  "missed": [],
+  "note": null,
+  "versionId": "pending-3d89069a3b642797"
+}
+
+[mcp] ok, 8 ms, git spawns: not counted (server side)
+{
+  "filled": [],
+  "missed": [],
+  "note": "index.html has no data-photo slot left, so nothing changed and no search ran. Do not call apply_image_search again on this page. To add a photo, write an img or element with data-photo=\"<2 to 6 search words>\".",
+  "versionId": null
+}
+
+[agent] ok, 7 ms, git spawns: not counted (server side)
+{
+  "filled": [],
+  "missed": [],
+  "note": "index.html has no data-photo slot left, so nothing changed and no search ran. Do not call apply_image_search again on this page. To add a photo, write an img or element with data-photo=\"<2 to 6 search words>\".",
+  "versionId": null
+}
+
+diff http -> mcp:
+-   "filled": [
++   "filled": [],
+-     {
++   "missed": [],
+-       "photoId": "551f87bf-8534-4086-9a84-43d6998df86f",
++   "note": "index.html has no data-photo slot left, so nothing changed and no search ran. Do not call apply_image_search again on this page. To add a photo, write an img or element with data-photo=\"<2 to 6 search words>\".",
+-       "query": "bakery landing page",
++   "versionId": null
+-       "selector": "[style*=\"assets/30743077194-8e64b33172-b-3208c418be.jpg\"]"
++ }
+-     }
++ 
+-   ],
++ 
+-   "missed": [],
++ 
+-   "note": null,
++ 
+-   "versionId": "pending-3d89069a3b642797"
++ 
+- }
++ 
+
+diff http -> agent:
+-   "filled": [
++   "filled": [],
+-     {
++   "missed": [],
+-       "photoId": "551f87bf-8534-4086-9a84-43d6998df86f",
++   "note": "index.html has no data-photo slot left, so nothing changed and no search ran. Do not call apply_image_search again on this page. To add a photo, write an img or element with data-photo=\"<2 to 6 search words>\".",
+-       "query": "bakery landing page",
++   "versionId": null
+-       "selector": "[style*=\"assets/30743077194-8e64b33172-b-3208c418be.jpg\"]"
++ }
+-     }
++ 
+-   ],
++ 
+-   "missed": [],
++ 
+-   "note": null,
++ 
+-   "versionId": "pending-3d89069a3b642797"
++ 
+- }
++ 
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 0 error results
+
+fix: compare the outputs above, then run call-action again with the id image-search.apply and the same input

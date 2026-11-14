@@ -8,8 +8,13 @@ Branch `feat/port-look`. Move to app of a new route now keeps the prototype font
 - **Added** `agent/port-look-css.ts`: pure CSS and font parsing.
 - **Added** `agent/port-look-lines.ts`: the plan lines.
   - **Fonts list:** each prototype font is shown with its matching app font, or "not in the app" plus a rule: next/font in the layout, a `--font-<name>` entry in the Tailwind 4 `@theme`, and use only on the elements that use it. Next with plain CSS, and plain CSS without Next, each get their own rule.
-  - **Token lines:** a token with no app token now gets its value, also from linked CSS. Tailwind 4 gets `add --color-ink: #1c1917 to the @theme block in app/globals.css and use text-ink, bg-ink or border-ink`. Plain CSS gets `add --ink: ... to :root in <css>`. A near app color still wins through `matchColor`. A `--font-*` token gets "see Fonts".
+  - **Token lines:** a token with no app token now gets its value, also from linked CSS.
+    - Tailwind 4 gets `--ink = #1c1917 -> no app token: add --color-ink in @theme; use text-ink, bg-ink or border-ink`, and the list ends with one line that names the `@theme` block in `app/globals.css`.
+    - Plain CSS gets `add --ink on :root; use var(--ink)` and one line that names the CSS file.
+    - A near app color still wins through `matchColor`.
+    - A `--font-*` token gets "see Fonts".
 - **Changed** `port-plan.ts`: `portPlanText(plan, look)` calls the two line builders. The file went from 1298 to 1295 lines.
+- **Raised** `PLAN_TEXT_MAX` from 6000 to 7000. A synthetic page with 20 sections, 20 images, 20 links and 15 new tokens makes a 6612-character plan (5022 before). At 6000 the cut dropped the Links tail and the "Do not copy" line. At 7000 nothing is cut.
 - **Changed** `port-start.ts`: computes the look once per page run and once per flow (one app read per flow). The file went from 486 to 497 lines.
 - **Kept** the `PortPlan` type, `get_port_plan` output, and the `start_port` description. No new action, so there is no gen-routes change.
 
@@ -36,6 +41,7 @@ Real-model runs (Sonnet 5.5, Move to app as new route `/menu`):
 
 No-model and surface checks:
 - **Plan text (tsx script):** shows the Fonts list and the `@theme` rules for the Tailwind app. A plain CSS Next app gets the `:root` rule and the next/font rule. An `@font-face` app font matches.
+- **Flow:** MCP `start_port` with `flow: true` (mock agent) on a 2-page prototype. The stored prompt has 2 `<port-plan>` blocks, each with a Fonts list. The app is read once per flow.
 - **MCP `start_port`** (mock agent, route `/menu-mcp` on the branch app, after the real run): the stored run prompt maps every token to the new app tokens (`--ink -> --color-ink`). It shows "Fraunces -> app font Fraunces (next/font in app/layout.tsx)". This proves the match path over MCP.
 - **`call-action.ts port.start`:**
   - **http:** passes.
@@ -49,6 +55,11 @@ No-model and surface checks:
 Screenshots in `cycle-31/port-look/`:
 - `ported-route-dark.png` and `ported-route-light.png`: the studio with the ported `/menu` frame and the 98% port check row.
 - `app-route-main.png` and `app-route-branch.png`: the route on main and on the branch.
+
+## Notes
+
+- **Wording changed after the real runs.** The token lines were made shorter after the branch run, to fit the plan limit. The facts and the rule did not change. The branch run used the longer wording: `add --color-ink: #1c1917 to the @theme block in app/globals.css and use text-ink, ...`.
+- **Commit hook missed a tsc error.** Commit `73f8f6660` has a tsc error (`context` is possibly null in `port-look.ts`), and the commit hook let it through. `b03bdafe2` fixes it, and `pnpm run typecheck` passes at the branch tip.
 
 ## Left out
 

@@ -2,6 +2,7 @@ import type { BridgeToParent } from "@design-studio/contracts";
 
 import { toTextKeyId } from "../shared/text-keys.js";
 import { IS_MAC } from "./dom-input.js";
+import { toPlainOffset } from "./text-edit-range-mode.js";
 import { toRangeTarget } from "./text-range-target.js";
 import type { RangeTarget } from "./text-range-target.js";
 
@@ -50,19 +51,20 @@ interface RangeReading {
   readonly target: RangeTarget;
 }
 
-const toOffsetOf = (
-  element: HTMLElement,
-  node: Node,
-  offset: number
-): number => {
-  const before = document.createRange();
-  before.selectNodeContents(element);
-  before.setEnd(node, offset);
-
-  return before.toString().length;
+const COMMAND_TAGS: Readonly<Record<TextRangeCommand, ReadonlySet<string>>> = {
+  bold: new Set(["strong", "b"]),
+  italic: new Set(["em", "i"]),
+  link: new Set(["a"]),
+  strike: new Set(["s", "del", "strike"]),
+  underline: new Set(["u", "ins"]),
 };
 
-const toReading = (element: HTMLElement): RangeReading | null => {
+const NO_TAGS: ReadonlySet<string> = new Set();
+
+const toReading = (
+  element: HTMLElement,
+  tags: ReadonlySet<string>
+): RangeReading | null => {
   const selection = globalThis.getSelection();
 
   if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
@@ -76,14 +78,18 @@ const toReading = (element: HTMLElement): RangeReading | null => {
   }
 
   const box = range.getBoundingClientRect();
-  const target = toRangeTarget(element, range);
+  const target = toRangeTarget(element, range, tags);
 
   return {
-    end: toOffsetOf(target.element, range.endContainer, range.endOffset),
-    layerEnd: toOffsetOf(element, range.endContainer, range.endOffset),
-    layerStart: toOffsetOf(element, range.startContainer, range.startOffset),
+    end: toPlainOffset(target.element, range.endContainer, range.endOffset),
+    layerEnd: toPlainOffset(element, range.endContainer, range.endOffset),
+    layerStart: toPlainOffset(element, range.startContainer, range.startOffset),
     rect: { height: box.height, width: box.width, x: box.x, y: box.y },
-    start: toOffsetOf(target.element, range.startContainer, range.startOffset),
+    start: toPlainOffset(
+      target.element,
+      range.startContainer,
+      range.startOffset
+    ),
     target,
   };
 };
@@ -232,7 +238,7 @@ const createTextRange = (deps: TextRangeDeps): TextRangeReporter => {
       return;
     }
 
-    const reading = toReading(current.element);
+    const reading = toReading(current.element, NO_TAGS);
     const key = toReadingKey(reading);
 
     if (key === lastKey) {
@@ -274,7 +280,7 @@ const createTextRange = (deps: TextRangeDeps): TextRangeReporter => {
     }
 
     event.preventDefault();
-    const reading = toReading(current.element);
+    const reading = toReading(current.element, COMMAND_TAGS[command]);
 
     if (reading === null || event.repeat) {
       return true;

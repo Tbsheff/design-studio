@@ -26,7 +26,33 @@ const toOwnerOf = (layer: HTMLElement, node: Node): Node | null => {
   return layer;
 };
 
-const toRangeTarget = (layer: HTMLElement, range: Range): RangeTarget => {
+const toStyledInside = (
+  head: HTMLElement,
+  range: Range,
+  tags: ReadonlySet<string>
+): HTMLElement => {
+  let current: Node | null = range.commonAncestorContainer;
+
+  while (current !== null && current !== head) {
+    if (
+      current instanceof HTMLElement &&
+      tags.has(current.tagName.toLowerCase()) &&
+      current.hasAttribute(SOURCE_LOC_ATTR)
+    ) {
+      return current;
+    }
+
+    current = current.parentNode;
+  }
+
+  return head;
+};
+
+const toRangeTarget = (
+  layer: HTMLElement,
+  range: Range,
+  tags: ReadonlySet<string>
+): RangeTarget => {
   const head = toOwnerOf(layer, range.startContainer);
   const tail = toOwnerOf(layer, range.endContainer);
   const fallback = { element: layer, source: null };
@@ -40,13 +66,14 @@ const toRangeTarget = (layer: HTMLElement, range: Range): RangeTarget => {
     return fallback;
   }
 
-  const source = sourceOf(head);
+  const element = toStyledInside(head, range, tags);
+  const source = sourceOf(element);
 
   if (source === null) {
     return fallback;
   }
 
-  return { element: head, source };
+  return { element, source };
 };
 
 export { toRangeTarget };

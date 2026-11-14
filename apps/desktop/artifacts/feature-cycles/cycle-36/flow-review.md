@@ -34,6 +34,7 @@ Branch `feat/flow-review`. The studio check of a Move to app flow now renders, s
 - **Passed** `call-action.ts port.start` (flow) on HTTP. MCP returned "A run is in progress", because the HTTP run was still going, as in cycle 35. Agent: off (`run-control`).
 - **Passed** MCP alone after the HTTP run ended (`start_port`, card approved): 3 routes, and the run prompt has 3 check lines.
 - **Passed** single page over HTTP: `port.start` with `index-2.html` and route `/visits/1` returned `/visits/[id]`, updated `app/visits/[id]/page.tsx` in place, and checked `/visits/1`.
+- **Passed** Start with the route the dialog sends: `port.start` with route `/visits/[id]` returned 200 and that route, and its check line has `routePath="/visits/1"`.
 - **Passed** dialog: Move to app on the `/visits/1` copy shows route `/visits/[id]`, "Updates app/visits/[id]/page.tsx" and no taken-route error.
 - **Passed** real run 1 (Sonnet, fresh data folder `flow-review-data-r1`; the detail prototype was changed to a 4-column grid):
   - The model called `inspect_port` for all 3 routes with the right page and path.
@@ -50,5 +51,6 @@ Branch `feat/flow-review`. The studio check of a Move to app flow now renders, s
 - **Route update note covers one file.** `toRouteUpdateNotes` names only the first route file ("Updated app/visits/page.tsx (kept 1 data read)"). The 2 other routes changed too.
 - **Asset folder for a dynamic single page.** A single-page move to `/visits/[id]` copies assets to `public/id/`. The folder comes from the route slug.
 - **Review is sequential.** Each check renders one route at a time. A flow of 3 routes runs about 3 times as long in the first check as a single page.
+- **apply_port with a pattern path.** If the model passes `/visits/[id]` to `apply_port`, the call falls back to the first ref. The prompt tells the model to pass a real path.
 - **Found: route copy drops a frame.** This is the same as cycle 35: `index.html` has no canvas frame after the 3 copies.
 - **Missing roadmap file.** The worktree has no `.claude/goal/roadmap.md`, so I added no Appendix A entry for `port-review-routes.ts`.

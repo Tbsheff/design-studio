@@ -69,16 +69,25 @@ const toStyledInside = (
   return head;
 };
 
+const isStyleTag = (
+  element: Element,
+  tagSets: readonly ReadonlySet<string>[]
+): boolean => {
+  const tag = toTagOf(element);
+
+  return tagSets.some((tags) => tags.has(tag));
+};
+
 const listStyleTags = (
   target: HTMLElement,
   range: Range,
-  tags: ReadonlySet<string>
+  tagSets: readonly ReadonlySet<string>[]
 ): string[] => {
   const found: string[] = [];
   let current: Node | null = range.commonAncestorContainer;
 
   while (current !== null && current !== target) {
-    if (current instanceof Element && tags.has(toTagOf(current))) {
+    if (current instanceof Element && isStyleTag(current, tagSets)) {
       found.push(toTagOf(current));
     }
 

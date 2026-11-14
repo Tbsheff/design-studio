@@ -62,9 +62,8 @@ const COMMAND_TAGS: Readonly<Record<TextRangeCommand, ReadonlySet<string>>> = {
 
 const NO_TAGS: ReadonlySet<string> = new Set();
 
-const STYLE_TAGS: ReadonlySet<string> = new Set(
-  Object.values(COMMAND_TAGS).flatMap((tags) => tags.values().toArray())
-);
+const STYLE_TAG_SETS: readonly ReadonlySet<string>[] =
+  Object.values(COMMAND_TAGS);
 
 const toReading = (
   element: HTMLElement,
@@ -95,7 +94,7 @@ const toReading = (
       range.startContainer,
       range.startOffset
     ),
-    styleTags: listStyleTags(target.element, range, STYLE_TAGS),
+    styleTags: listStyleTags(target.element, range, STYLE_TAG_SETS),
     target,
   };
 };

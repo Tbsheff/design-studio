@@ -107,7 +107,7 @@ const toLimitedShot = <Failure>(
 const toPortShots = Effect.fn("PortMatchStore.toPortShots")(function* run(
   reads: PortReads,
   query: PortCheckQuery,
-  hide: readonly string[]
+  keptTexts: readonly string[]
 ) {
   const prototypeTarget: PortShotTarget = {
     directionId: query.directionId,
@@ -123,8 +123,16 @@ const toPortShots = Effect.fn("PortMatchStore.toPortShots")(function* run(
 
   const [prototype, app] = yield* Effect.all(
     [
-      toPortShot(reads, query, prototypeTarget, { hide: [], rowLimits: null }),
-      toPortShot(reads, query, appTarget, { hide, rowLimits: null }),
+      toPortShot(reads, query, prototypeTarget, {
+        hide: [],
+        isSourced: false,
+        rowLimits: null,
+      }),
+      toPortShot(reads, query, appTarget, {
+        hide: keptTexts,
+        isSourced: query.isSourced,
+        rowLimits: null,
+      }),
     ],
     { concurrency: 2 }
   );
@@ -140,10 +148,18 @@ const toPortShots = Effect.fn("PortMatchStore.toPortShots")(function* run(
   const [prototypeLimited, appLimited] = yield* Effect.all(
     [
       toLimitedShot(prototype, rowLimits, () =>
-        toPortShot(reads, query, prototypeTarget, { hide: [], rowLimits })
+        toPortShot(reads, query, prototypeTarget, {
+          hide: [],
+          isSourced: false,
+          rowLimits,
+        })
       ),
       toLimitedShot(app, rowLimits, () =>
-        toPortShot(reads, query, appTarget, { hide, rowLimits })
+        toPortShot(reads, query, appTarget, {
+          hide: keptTexts,
+          isSourced: query.isSourced,
+          rowLimits,
+        })
       ),
     ],
     { concurrency: 2 }

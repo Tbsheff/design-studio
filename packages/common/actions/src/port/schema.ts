@@ -190,6 +190,69 @@ const PortMatchSchema = Schema.Struct({
   score: Schema.Int,
 });
 
+const PortApplyInputSchema = Schema.Struct({
+  directionId: PortCheckInputSchema.fields.directionId,
+  path: PortCheckInputSchema.fields.path,
+  projectId: PortCheckInputSchema.fields.projectId,
+  routePath: PortCheckInputSchema.fields.routePath,
+  targetProjectId: PortCheckInputSchema.fields.targetProjectId,
+  width: PortCheckInputSchema.fields.width,
+});
+
+const PORT_APPLY_MAX = 40;
+
+const PortSkipReasonSchema = Schema.Literals([
+  "no-source",
+  "shared-site",
+  "dynamic-site",
+  "inherited",
+  "follows-parent",
+  "not-written",
+]).annotate({
+  description:
+    "no-source: the element has no source site. shared-site: one site renders more than one element. dynamic-site: the class is built at run time. inherited: the value comes from a parent. follows-parent: the size follows the parent or the content. not-written: the edit could not be planned.",
+});
+
+const PortWriteSchema = Schema.Struct({
+  app: Schema.String,
+  file: Schema.String,
+  property: Schema.String,
+  prototype: Schema.String,
+  selector: Schema.String,
+  text: Schema.String,
+  written: Schema.String.annotate({
+    description:
+      "The class or declaration the studio wrote, for example mb-6 (was mb-2) or margin-bottom: 24px.",
+  }),
+});
+
+const PortSkipSchema = Schema.Struct({
+  app: Schema.String,
+  property: Schema.String,
+  prototype: Schema.String,
+  reason: PortSkipReasonSchema,
+  selector: Schema.String,
+  text: Schema.String,
+});
+
+const PortAppliedSchema = Schema.Struct({
+  applied: Schema.Array(PortWriteSchema).check(
+    Schema.isMaxLength(PORT_APPLY_MAX)
+  ),
+  scoreAfter: Schema.Int.annotate({
+    description:
+      "Port score after the writes. The same as scoreBefore when nothing was written.",
+  }),
+  scoreBefore: Schema.Int,
+  skipped: Schema.Array(PortSkipSchema).check(
+    Schema.isMaxLength(PORT_APPLY_MAX)
+  ),
+  versionId: Schema.NullOr(Schema.String).annotate({
+    description:
+      "The app version with all the writes. null when nothing was written.",
+  }),
+});
+
 type PortStarted = typeof PortStartedSchema.Type;
 
 type PortArea = typeof PortAreaSchema.Type;
@@ -204,14 +267,25 @@ type PortMasked = typeof PortMaskedSchema.Type;
 
 type PortMatch = typeof PortMatchSchema.Type;
 
+type PortApplied = typeof PortAppliedSchema.Type;
+
+type PortWrite = typeof PortWriteSchema.Type;
+
+type PortSkip = typeof PortSkipSchema.Type;
+
+type PortSkipReason = typeof PortSkipReasonSchema.Type;
+
 type PortAreaWire = typeof PortAreaSchema.Encoded;
 
 type PortMatchWire = typeof PortMatchSchema.Encoded;
 
 export {
+  PORT_APPLY_MAX,
   PORT_AREA_ELEMENTS_MAX,
   PORT_DIFFS_MAX,
   PORT_MASKED_MAX,
+  PortAppliedSchema,
+  PortApplyInputSchema,
   PortAreaSchema,
   PortCheckInputSchema,
   PortDiffSchema,
@@ -221,10 +295,13 @@ export {
   PortMatchSchema,
   PortRouteSchema,
   PortStartInputSchema,
+  PortSkipSchema,
   PortStartedSchema,
+  PortWriteSchema,
 };
 
 export type {
+  PortApplied,
   PortArea,
   PortAreaWire,
   PortDiff,
@@ -233,5 +310,8 @@ export type {
   PortMasked,
   PortMatch,
   PortMatchWire,
+  PortSkip,
+  PortSkipReason,
   PortStarted,
+  PortWrite,
 };

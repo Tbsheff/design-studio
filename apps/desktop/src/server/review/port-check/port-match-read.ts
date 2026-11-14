@@ -21,7 +21,9 @@ import {
   toAreaElements,
   toMaskedList,
 } from "./port-masks.js";
+import type { PairNode } from "./port-pairs-probe.js";
 import { toFirstShift, toPairedAreas, toPairs } from "./port-pairs.js";
+import type { PortPair } from "./port-pairs.js";
 import { toPortShots } from "./port-shots.js";
 
 const ROW_NAMES = ["top", "middle", "bottom"];
@@ -76,7 +78,13 @@ const toLowAreas = (
 const fromBase64Png = (data: string): PNG =>
   PNG.sync.read(Buffer.from(data, "base64"));
 
-const readPortMatch = Effect.fn("PortMatchStore.readPortMatch")(function* run(
+interface PortCheckRead {
+  readonly appNodes: readonly PairNode[];
+  readonly match: PortMatch;
+  readonly pairs: readonly PortPair[];
+}
+
+const readPortCheck = Effect.fn("PortMatchStore.readPortCheck")(function* run(
   reads: PortReads,
   query: PortCheckQuery
 ) {
@@ -128,7 +136,20 @@ const readPortMatch = Effect.fn("PortMatchStore.readPortMatch")(function* run(
     score: diff.score,
   };
 
-  return match;
+  const check: PortCheckRead = { appNodes, match, pairs };
+
+  return check;
 });
 
-export { readPortMatch };
+const readPortMatch = Effect.fn("PortMatchStore.readPortMatch")(function* run(
+  reads: PortReads,
+  query: PortCheckQuery
+) {
+  const check = yield* readPortCheck(reads, query);
+
+  return check.match;
+});
+
+export { readPortCheck, readPortMatch };
+
+export type { PortCheckRead };

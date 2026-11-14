@@ -12,6 +12,7 @@ interface PortRouteUpdate {
 
 interface PortCheckQuery {
   readonly directionId: string | null;
+  readonly isSourced: boolean;
   readonly limit: number;
   readonly path: string;
   readonly projectId: string;

@@ -223,6 +223,18 @@ export const KEYMAP = [
   },
   { id: "tidy-up", label: "Tidy up", keys: ["Ctrl+Alt+T"], group: "Selection" },
   {
+    id: "flip-h",
+    label: "Flip horizontal",
+    keys: ["Shift+H"],
+    group: "Selection",
+  },
+  {
+    id: "flip-v",
+    label: "Flip vertical",
+    keys: ["Shift+V"],
+    group: "Selection",
+  },
+  {
     id: "layer-delete",
     label: "Delete",
     keys: ["Backspace", "Delete"],

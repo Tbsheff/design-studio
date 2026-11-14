@@ -1,13 +1,18 @@
 import { lazy } from "react";
 import type { LazyExoticComponent } from "react";
 
+import type { ConnectAiDialog as ConnectAiDialogView } from "./connect-ai-dialog.js";
 import type { FigmaImportDialog as FigmaImportDialogView } from "./figma-import-dialog.js";
 
-const ConnectAiDialog = lazy(async () => {
+const loadConnectAiDialog = async (): Promise<typeof ConnectAiDialogView> => {
   const loaded = await import("./connect-ai-dialog.js");
 
-  return { default: loaded.ConnectAiDialog };
-});
+  return loaded.ConnectAiDialog;
+};
+
+const ConnectAiDialog = lazy(async () => ({
+  default: await loadConnectAiDialog(),
+}));
 
 const ExportDialog = lazy(async () => {
   const loaded = await import("./export-dialog.js");
@@ -54,6 +59,7 @@ export {
   PublishSetup,
   ShareDialog,
   ShipDialog,
+  loadConnectAiDialog,
 };
 
 export { exportApi } from "./export-api.js";

@@ -2,6 +2,7 @@ import { lazy } from "react";
 import type { LazyExoticComponent } from "react";
 
 import type { CodeEditDialog as CodeEditDialogView } from "./code-edit-dialog.js";
+import type { CodeEditHost as CodeEditHostView } from "./code-edit-host.js";
 import type { TweaksPanel as TweaksPanelView } from "./tweaks-panel.js";
 
 const Inspector = lazy(async () => {
@@ -27,15 +28,25 @@ const CodeEditDialog: LazyExoticComponent<typeof CodeEditDialogView> = lazy(
   }
 );
 
-const CodeEditHost = lazy(async () => {
+const importCodeEditHost = async (): Promise<typeof CodeEditHostView> => {
   const loaded = await import("./code-edit-host.js");
 
-  return { default: loaded.CodeEditHost };
-});
+  return loaded.CodeEditHost;
+};
 
-export { CodeEditDialog, CodeEditHost, Inspector, TweaksPanel };
+const CodeEditHost = lazy(async () => ({
+  default: await importCodeEditHost(),
+}));
 
-export { codeEditStore } from "./use-code-edit-target.js";
+export {
+  CodeEditDialog,
+  CodeEditHost,
+  Inspector,
+  TweaksPanel,
+  importCodeEditHost,
+};
+
+export { codeEditStore, setCodeEditFile } from "./use-code-edit-target.js";
 
 export {
   editVariantStore,

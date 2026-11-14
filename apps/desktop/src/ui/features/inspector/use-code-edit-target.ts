@@ -9,8 +9,19 @@ interface CodeEditTarget {
 
 const codeEditStore = createLiveStore<CodeEditTarget | null>(null);
 
+const FIRST_LINE = 1;
+
+const setCodeEditFile = (target: Omit<CodeEditTarget, "line">): void => {
+  codeEditStore.set({
+    directionId: target.directionId,
+    file: target.file,
+    line: FIRST_LINE,
+    projectId: target.projectId,
+  });
+};
+
 const useCodeEditTarget = (): CodeEditTarget | null => useLive(codeEditStore);
 
-export { codeEditStore, useCodeEditTarget };
+export { codeEditStore, setCodeEditFile, useCodeEditTarget };
 
 export type { CodeEditTarget };

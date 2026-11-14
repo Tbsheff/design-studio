@@ -1,10 +1,8 @@
-import { lazy, Suspense, useCallback } from "react";
+import { lazy, Suspense, useCallback, useState } from "react";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 
-import { McpToasts } from "../features/chat";
 import { CommandLayer } from "../features/commands";
 import type { CommandLayerName, FileOpenTarget } from "../features/commands";
-import { CodeEditHost, codeEditStore } from "../features/inspector";
 import { isDesktop } from "../platform/desktop";
 import { ConnectAiLayer } from "./connect-ai-layer";
 
@@ -14,7 +12,23 @@ const DesktopApp = lazy(async () => {
   return { default: loaded.DesktopApp };
 });
 
-const FIRST_LINE = 1;
+const McpToasts = lazy(async () => {
+  const loaded = await import("../features/chat");
+
+  return { default: await loaded.loadMcpToasts() };
+});
+
+const CodeEditHost = lazy(async () => {
+  const loaded = await import("../features/inspector");
+
+  return { default: await loaded.importCodeEditHost() };
+});
+
+const openCodeEdit = async (target: FileOpenTarget): Promise<void> => {
+  const loaded = await import("../features/inspector");
+
+  loaded.setCodeEditFile(target);
+};
 
 interface AppNoticeProps {
   activeProjectId: string | null;
@@ -27,13 +41,17 @@ const AppNotice = ({
   layer,
   onLayer,
 }: AppNoticeProps): ReactNode => {
+  const [isCodeEditUsed, setIsCodeEditUsed] = useState(
+    activeProjectId !== null
+  );
+
+  if (activeProjectId !== null && !isCodeEditUsed) {
+    setIsCodeEditUsed(true);
+  }
+
   const openFile = useCallback((target: FileOpenTarget): void => {
-    codeEditStore.set({
-      directionId: target.directionId,
-      file: target.file,
-      line: FIRST_LINE,
-      projectId: target.projectId,
-    });
+    setIsCodeEditUsed(true);
+    void openCodeEdit(target);
   }, []);
 
   return (
@@ -43,9 +61,11 @@ const AppNotice = ({
           <CommandLayer layer={layer} onLayer={onLayer} onOpenFile={openFile} />
         </Suspense>
       )}
-      <Suspense fallback={null}>
-        <CodeEditHost />
-      </Suspense>
+      {isCodeEditUsed && (
+        <Suspense fallback={null}>
+          <CodeEditHost />
+        </Suspense>
+      )}
       <Suspense fallback={null}>
         <McpToasts />
       </Suspense>

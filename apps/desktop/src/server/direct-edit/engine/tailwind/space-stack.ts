@@ -6,6 +6,7 @@ type StackAxis = "x" | "y";
 
 interface SpaceStack {
   readonly axis: StackAxis;
+  readonly isInherited: boolean;
   readonly raw: string;
   readonly suffix: string;
   readonly variants: string;
@@ -20,6 +21,12 @@ const FLEX_DIRECTION: SingleGroup = "flex-direction";
 const DISPLAY: SingleGroup = "display";
 
 const REVERSE = "reverse";
+
+const ARBITRARY_PATTERN = /^\[(?<amount>\d+(?:\.\d+)?)(?<unit>px|rem)\]$/u;
+
+const PX_STEP = 0.25;
+
+const REM_STEPS = 4;
 
 const LAYOUT_DISPLAYS: ReadonlySet<string> = new Set([
   "flex",
@@ -62,7 +69,10 @@ const toStackOf = (raw: string): SpaceStack | null => {
     return null;
   }
 
-  return { axis, raw, suffix, variants: parsed.variants };
+  const { variants } = parsed;
+  const isInherited = false;
+
+  return { axis, isInherited, raw, suffix, variants };
 };
 
 const isReversed = (raw: string, stack: SpaceStack): boolean => {
@@ -74,25 +84,71 @@ const isReversed = (raw: string, stack: SpaceStack): boolean => {
   );
 };
 
-const toSpaceStack = (
+const toStacksAt = (
   classes: readonly string[],
   variants: string
-): SpaceStack | null => {
-  const stack =
-    classes
-      .map((raw) => toStackOf(raw))
-      .find((entry) => entry !== null && entry.variants === variants) ?? null;
+): SpaceStack[] => {
+  const found = classes.flatMap((raw) => {
+    const entry = toStackOf(raw);
 
-  if (
-    stack === null ||
+    if (entry === null || entry.variants !== variants) {
+      return [];
+    }
+
+    return [entry];
+  });
+
+  return (["y", "x"] as const).flatMap((axis) => {
+    const entry = found.find((stack) => stack.axis === axis) ?? null;
+
+    if (entry === null) {
+      return [];
+    }
+
+    return [entry];
+  });
+};
+
+const isBlocked = (
+  classes: readonly string[],
+  stacks: readonly SpaceStack[]
+): boolean =>
+  stacks.some((stack) =>
     classes.some(
-      (raw) => isReversed(raw, stack) || isLayoutClass(raw, variants)
+      (raw) => isReversed(raw, stack) || isLayoutClass(raw, stack.variants)
     )
-  ) {
-    return null;
+  );
+
+const toInherited = (stack: SpaceStack, variants: string): SpaceStack => ({
+  ...stack,
+  isInherited: true,
+  variants,
+});
+
+const toOpenStacks = (
+  classes: readonly string[],
+  stacks: SpaceStack[]
+): SpaceStack[] => {
+  if (isBlocked(classes, stacks)) {
+    return [];
   }
 
-  return stack;
+  return stacks;
+};
+
+const toSpaceStacks = (
+  classes: readonly string[],
+  variants: string
+): SpaceStack[] => {
+  const own = toStacksAt(classes, variants);
+
+  if (own.length > 0 || variants === "") {
+    return toOpenStacks(classes, own);
+  }
+
+  return toOpenStacks(classes, toStacksAt(classes, "")).map((stack) =>
+    toInherited(stack, variants)
+  );
 };
 
 const isGapEdit = (edit: ClassEdit): edit is GapEdit =>
@@ -139,12 +195,54 @@ const toDirectionEdits = (
   return [direction];
 };
 
+const toSuffixAmount = (suffix: string): number => {
+  if (suffix === "px") {
+    return PX_STEP;
+  }
+
+  const groups = ARBITRARY_PATTERN.exec(suffix)?.groups ?? null;
+
+  if (groups === null) {
+    return Number(suffix) || 0;
+  }
+
+  if (groups.unit === "rem") {
+    return Number(groups.amount) * REM_STEPS;
+  }
+
+  return Number(groups.amount) * PX_STEP;
+};
+
+const toMainStack = (stacks: readonly SpaceStack[]): SpaceStack | null => {
+  const [first = null, second = null] = stacks;
+
+  if (
+    first !== null &&
+    second !== null &&
+    toSuffixAmount(second.suffix) > toSuffixAmount(first.suffix)
+  ) {
+    return second;
+  }
+
+  return first;
+};
+
+const toAxisValue = (
+  stacks: readonly SpaceStack[],
+  axis: StackAxis,
+  main: SpaceStack
+): SideValue => {
+  const stack = stacks.find((entry) => entry.axis === axis) ?? main;
+
+  return { negative: false, suffix: stack.suffix };
+};
+
 const toConvertEdits = (
-  stack: SpaceStack,
+  stacks: readonly SpaceStack[],
+  main: SpaceStack,
   edits: readonly ClassEdit[]
 ): ClassEdit[] => {
-  const { variants } = stack;
-  const value: SideValue = { negative: false, suffix: stack.suffix };
+  const { variants } = main;
 
   const display = toGroupEdit(edits, DISPLAY, {
     group: DISPLAY,
@@ -157,13 +255,30 @@ const toConvertEdits = (
     (edit) => !isGroupEdit(edit, DISPLAY) && !isGroupEdit(edit, FLEX_DIRECTION)
   );
 
+  const values = {
+    x: toAxisValue(stacks, "x", main),
+    y: toAxisValue(stacks, "y", main),
+  };
+
   return [
-    { kind: "remove", token: stack.raw },
+    ...stacks.map((stack): ClassEdit => ({ kind: "remove", token: stack.raw })),
     display,
-    ...toDirectionEdits(stack, edits),
-    { group: "gap", kind: "sided", values: { x: value, y: value }, variants },
+    ...toDirectionEdits(main, edits),
+    { group: "gap", kind: "sided", values, variants },
     ...rest,
   ];
+};
+
+const toLayoutEdits = (
+  stacks: readonly SpaceStack[],
+  main: SpaceStack,
+  edits: readonly ClassEdit[]
+): ClassEdit[] => {
+  if (main.isInherited) {
+    return [...edits];
+  }
+
+  return toConvertEdits(stacks, main, edits);
 };
 
 const toStackToken = (
@@ -182,30 +297,44 @@ const toStackToken = (
   ];
 };
 
-const isStackGap = (edit: ClassEdit, stack: SpaceStack): edit is GapEdit =>
-  isGapEdit(edit) && edit.variants === stack.variants;
+const toRemoveStack = (stack: SpaceStack): ClassEdit[] => {
+  if (stack.isInherited) {
+    return [];
+  }
 
-const toGapStackEdits = (
+  return [{ kind: "remove", token: stack.raw }];
+};
+
+const isStackGap = (edit: ClassEdit, variants: string): edit is GapEdit =>
+  isGapEdit(edit) && edit.variants === variants;
+
+const toAxisGapEdits = (
   stack: SpaceStack,
   edits: readonly ClassEdit[]
 ): ClassEdit[] => {
-  const rest = edits.filter((edit) => !isStackGap(edit, stack));
-
   const last =
     edits.findLast(
-      (edit) => isStackGap(edit, stack) && stack.axis in edit.values
+      (edit) => isStackGap(edit, stack.variants) && stack.axis in edit.values
     ) ?? null;
 
   if (last === null || !isGapEdit(last)) {
-    return rest;
+    return [];
   }
 
   return [
-    ...rest,
-    { kind: "remove", token: stack.raw },
+    ...toRemoveStack(stack),
     ...toStackToken(stack, last.values[stack.axis] ?? null),
   ];
 };
+
+const toGapStackEdits = (
+  stacks: readonly SpaceStack[],
+  main: SpaceStack,
+  edits: readonly ClassEdit[]
+): ClassEdit[] => [
+  ...edits.filter((edit) => !isStackGap(edit, main.variants)),
+  ...stacks.flatMap((stack) => toAxisGapEdits(stack, edits)),
+];
 
 const toEditVariants = (edits: readonly ClassEdit[]): string => {
   for (const edit of edits) {
@@ -221,21 +350,22 @@ const toSpaceStackEdits = (
   classes: readonly string[],
   edits: readonly ClassEdit[]
 ): ClassEdit[] => {
-  const stack = toSpaceStack(classes, toEditVariants(edits));
+  const stacks = toSpaceStacks(classes, toEditVariants(edits));
+  const main = toMainStack(stacks);
 
-  if (stack === null) {
+  if (main === null) {
     return [...edits];
   }
 
   if (edits.some((edit) => isLayoutEdit(edit))) {
-    return toConvertEdits(stack, edits);
+    return toLayoutEdits(stacks, main, edits);
   }
 
   if (!edits.some((edit) => isGapEdit(edit))) {
     return [...edits];
   }
 
-  return toGapStackEdits(stack, edits);
+  return toGapStackEdits(stacks, main, edits);
 };
 
 export { toSpaceStackEdits };

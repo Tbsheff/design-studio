@@ -1,0 +1,23 @@
+photo-text: leased page, 3 nodes, 0 under AA, reasons [bgGradient, bgGradient, bgGradient], 207 ms
+photo-text: leased page, 3 nodes, 1 under AA, reasons [imgNode, bgGradient, bgGradient], 215 ms
+[agent] dark check: rendered index.html, plan.html in 585 ms
+run 1 (587 ms): 1 lines
+  - Dark: text "h1" on a photo on index.html is 1.2:1 at its lightest part in dark (AA needs 3:1). Add a scrim behind the text, or move it off the light part.
+
+transition fixture, branch:
+run 1 (315 ms): 1 lines
+  - Dark: 2 text items on index.html are under AA contrast in dark (first: ".raw:nth-child(3)" 1.3:1). Use token colors such as var(--fg), not raw colors, then take get_screenshot with colorScheme dark.
+run 2 (272 ms): 1 lines
+  - Dark: 2 text items on index.html are under AA contrast in dark (first: ".raw:nth-child(3)" 1.3:1). Use token colors such as var(--fg), not raw colors, then take get_screenshot with colorScheme dark.
+run 3 (263 ms): 1 lines
+  - Dark: 2 text items on index.html are under AA contrast in dark (first: ".raw:nth-child(3)" 1.3:1). Use token colors such as var(--fg), not raw colors, then take get_screenshot with colorScheme dark.
+run 4 (266 ms): 1 lines
+  - Dark: 2 text items on index.html are under AA contrast in dark (first: ".raw:nth-child(3)" 1.3:1). Use token colors such as var(--fg), not raw colors, then take get_screenshot with colorScheme dark.
+run 5 (276 ms): 1 lines
+  - Dark: 2 text items on index.html are under AA contrast in dark (first: ".raw:nth-child(3)" 1.3:1). Use token colors such as var(--fg), not raw colors, then take get_screenshot with colorScheme dark.
+transition fixture, main:
+run 1 (282 ms): 0 lines
+run 2 (248 ms): 0 lines
+run 3 (235 ms): 0 lines
+run 4 (228 ms): 0 lines
+run 5 (242 ms): 0 lines

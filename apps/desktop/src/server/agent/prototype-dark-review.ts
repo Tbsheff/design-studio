@@ -12,14 +12,19 @@ import type {
 import { logInfo } from "../platform/logger/index.js";
 import {
   loadAxeSource,
+  runPhotoTextPass,
   toSchemedPreview,
   waitForPage,
 } from "../preview/page-capture/index.js";
+import type { PhotoTextHit } from "../preview/page-capture/index.js";
 import { withPagePath } from "../project-source/index.js";
 
 type DarkContext = Pick<AgentRunContext, "direction" | "project">;
 
 interface DarkMiss {
+  readonly kind: "contrast" | "photo";
+  readonly need: number | null;
+  readonly part: PhotoTextHit["part"] | null;
   readonly ratio: number | null;
   readonly selector: string;
 }
@@ -39,6 +44,8 @@ const RENDER_TIMEOUT_MS = 12_000;
 
 const RATIO_STEP = 10;
 
+const AA_NEED = 4.5;
+
 const CONTRAST_RULE = "color-contrast";
 
 const DARK_BLOCK =
@@ -53,6 +60,19 @@ const STYLESHEET_REL = /\brel\s*=\s*["']?stylesheet\b/iu;
 const LINK_HREF = /\bhref\s*=\s*["'](?<href>[^"']+)["']/iu;
 
 const REMOTE_HREF = /^(?:[a-z][a-z\d+.-]*:|\/\/)/iu;
+
+const STILL_EXPRESSION = `(async () => {
+    const style = document.createElement('style');
+    style.textContent = '*, *::before, *::after { transition: none !important; animation: none !important; }';
+    document.head.append(style);
+    await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
+    return true;
+  })()`;
+
+const PART_WORD: Record<PhotoTextHit["part"], string> = {
+  darkest: "dark",
+  lightest: "light",
+};
 
 const CONTRAST_EXPRESSION = `window.axe.run(document, { runOnly: { type: 'rule', values: [${JSON.stringify(CONTRAST_RULE)}] }, resultTypes: ['violations'] }).then((result) => result.violations)`;
 
@@ -137,23 +157,39 @@ const toRatio = (node: AxeNode): number | null => {
 };
 
 const toMiss = (node: AxeNode): DarkMiss => ({
+  kind: "contrast",
+  need: null,
+  part: null,
   ratio: toRatio(node),
   selector: node.target.map(String).join(" "),
 });
 
+const toPhotoMiss = (hit: PhotoTextHit): DarkMiss => ({
+  kind: "photo",
+  need: hit.need,
+  part: hit.part,
+  ratio: hit.ratio,
+  selector: hit.selector,
+});
+
 const listContrastMisses = async (page: RenderPage): Promise<DarkMiss[]> => {
   await waitForPage(page);
+  await page.evaluate(STILL_EXPRESSION);
   await page.evaluate(`${await loadAxeSource()}\n;0`);
 
   const violations = await page.evaluate<AxeViolation[]>(CONTRAST_EXPRESSION);
 
-  return violations.flatMap((violation) => {
+  const misses = violations.flatMap((violation) => {
     if (violation.id !== CONTRAST_RULE) {
       return [];
     }
 
     return violation.nodes.map((node) => toMiss(node));
   });
+
+  const hits = await runPhotoTextPass(page, loadAxeSource);
+
+  return [...misses, ...hits.map((hit) => toPhotoMiss(hit))];
 };
 
 const listDarkMisses = async (
@@ -197,14 +233,14 @@ const toRatioText = (miss: DarkMiss): string => {
   return ` ${Math.round(miss.ratio * RATIO_STEP) / RATIO_STEP}:1`;
 };
 
-const toDarkLine = (page: DarkPage): string => {
-  const [first] = page.misses;
-  const count = page.misses.length;
-  let head = `${count} text items on ${page.file} are`;
+const toContrastLine = (file: string, misses: readonly DarkMiss[]): string => {
+  const [first] = misses;
+  const count = misses.length;
+  let head = `${count} text items on ${file} are`;
   let firstText = "";
 
   if (count === 1) {
-    head = `1 text item on ${page.file} is`;
+    head = `1 text item on ${file} is`;
   }
 
   if (first) {
@@ -214,8 +250,27 @@ const toDarkLine = (page: DarkPage): string => {
   return `- Dark: ${head} under AA contrast in dark${firstText}. Use token colors such as var(--fg), not raw colors, then take get_screenshot with colorScheme dark.`;
 };
 
+const toPhotoLine = (miss: DarkMiss, place: string): string => {
+  const part = miss.part ?? "lightest";
+  const ratio = (miss.ratio ?? 0).toFixed(1);
+
+  return `- Dark: text "${miss.selector}" on a photo ${place} is ${ratio}:1 at its ${part} part in dark (AA needs ${miss.need ?? AA_NEED}:1). Add a scrim behind the text, or move it off the ${PART_WORD[part]} part.`;
+};
+
+const toPageLines = (page: DarkPage): string[] => {
+  const contrast = page.misses.filter((miss) => miss.kind === "contrast");
+  const photo = page.misses.filter((miss) => miss.kind === "photo");
+  const lines = photo.map((miss) => toPhotoLine(miss, `on ${page.file}`));
+
+  if (contrast.length > 0) {
+    lines.unshift(toContrastLine(page.file, contrast));
+  }
+
+  return lines;
+};
+
 const toRestLine = (count: number): string =>
-  `- Dark: ${count} more pages are under AA contrast in dark. Take get_screenshot with colorScheme dark on each page to see them all.`;
+  `- Dark: ${count} more dark lines are not shown. Take get_screenshot with colorScheme dark on each page to see them all.`;
 
 const getDarkBase = async (
   ctx: DarkContext,
@@ -275,15 +330,16 @@ const listDarkLines = async (
     `[agent] dark check: rendered ${files.join(", ")} in ${Date.now() - start} ms`
   );
 
-  const gaps = shown.filter((page) => page.misses.length > 0);
+  const all = shown.flatMap((page) => toPageLines(page));
+  const lines = all.slice(0, LISTED_LINES);
 
-  const lines = gaps.slice(0, LISTED_LINES).map((page) => toDarkLine(page));
-
-  if (gaps.length > LISTED_LINES) {
-    lines.push(toRestLine(gaps.length - LISTED_LINES));
+  if (all.length > LISTED_LINES) {
+    lines.push(toRestLine(all.length - LISTED_LINES));
   }
 
   return lines;
 };
 
-export { listContrastMisses, listDarkLines };
+export { listContrastMisses, listDarkLines, toPhotoLine };
+
+export type { DarkMiss };

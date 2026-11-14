@@ -17,6 +17,8 @@ export { RunLogStore } from "./run-log-store.js";
 
 export { RunLogWriter } from "./run-log-writer.js";
 
+export { RunWaitStore } from "./run-wait-store.js";
+
 export { updateStaleRuns } from "./run-stale.js";
 
 export type {

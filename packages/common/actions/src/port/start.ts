@@ -9,7 +9,7 @@ const startPort = defineAction({
   agent: { off: "run-control" },
   confirm: "user",
   description:
-    "Move an HTML prototype page, or a flow of pages, into an attached app as React routes. A route must be new, except when the page is a route copy of that route in that app: then the run updates the route file in place and keeps its data reads and exports. It checks that no run is active in the app, builds the port plan and the prompt from the plan and the prototype HTML, then starts one studio agent run in the app. The user must click Allow first. Returns the run id; read it with get_run. Plan first with get_port_plan.",
+    "Move an HTML prototype page, or a flow of pages, into an attached app as React routes. A route must be new, except when the page is a route copy of that route in that app: then the run updates the route file in place and keeps its data reads and exports. It checks that no run is active in the app, builds the port plan and the prompt from the plan and the prototype HTML, then starts one studio agent run in the app. The user must click Allow first. Returns the run id; read it with get_run and waitSeconds. Plan first with get_port_plan.",
   errors: [BadRequest, Conflict, NotFound],
   http: { method: "POST", path: "/api/port/start" },
   id: "port.start",

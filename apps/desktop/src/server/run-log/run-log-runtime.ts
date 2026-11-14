@@ -18,6 +18,7 @@ interface ActiveRun {
     decision: PermissionDecision
   ) => boolean;
   readonly cancel: () => void;
+  readonly done: Promise<unknown>;
   readonly setQueue?: (items: QueuedMessage[]) => boolean;
   readonly steer?: (text: string) => boolean;
 }

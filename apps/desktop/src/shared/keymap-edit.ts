@@ -112,6 +112,18 @@ const EDIT_KEYS = [
     label: "Send backward: paint under the next layer that overlaps it",
   },
   {
+    group: "Selection",
+    id: "bring-to-front",
+    keys: ["Mod+Shift+]"],
+    label: "Bring to front: paint over every layer that overlaps it",
+  },
+  {
+    group: "Selection",
+    id: "send-to-back",
+    keys: ["Mod+Shift+["],
+    label: "Send to back: paint under every layer that overlaps it",
+  },
+  {
     group: "Edit",
     id: "copy-style",
     keys: ["Mod+Alt+C"],

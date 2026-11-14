@@ -124,6 +124,24 @@ const toTransformMenuItems = (): PreviewMenuItem[] => [
     },
     "layer-backward"
   ),
+  toStackingItem(
+    {
+      icon: "layers",
+      id: "bring-to-front",
+      keyId: "bring-to-front",
+      label: copy.layerMenuFront,
+    },
+    "layer-front"
+  ),
+  toStackingItem(
+    {
+      icon: "layers",
+      id: "send-to-back",
+      keyId: "send-to-back",
+      label: copy.layerMenuBack,
+    },
+    "layer-back"
+  ),
   toCommandItem(
     {
       divider: true,

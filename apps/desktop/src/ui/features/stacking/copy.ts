@@ -43,9 +43,13 @@ const copy = {
   zStop: {
     back: "Already at the back",
     front: "Already in front",
+    "no-overlap-back":
+      "No layer overlaps this one. Use Alt+↓ to move it in the list.",
     "no-overlap-backward":
       "No layer overlaps this one. Use Alt+↓ to move it in the list.",
     "no-overlap-forward":
+      "No layer overlaps this one. Use Alt+↑ to move it in the list.",
+    "no-overlap-front":
       "No layer overlaps this one. Use Alt+↑ to move it in the list.",
     "no-read":
       "Design Studio cannot read the layers around this one. Try again.",

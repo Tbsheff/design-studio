@@ -13,13 +13,14 @@ import {
 import type {
   PreviewPort,
   SelectionContext,
+  SelectionStack,
   StackingKeyDetail,
 } from "./deps.js";
 import { writeZOrder } from "./stacking-api.js";
 import type { StackingIds, ZTargetEdit } from "./stacking-api.js";
 import { breakpointOf } from "./stacking-model.js";
 import type { StackingEdit } from "./stacking-model.js";
-import { toZPlan } from "./z-order-model.js";
+import { toCompare, toPaintKey, toZPlan } from "./z-order-model.js";
 import type { ZStep, ZStop, ZWrite } from "./z-order-model.js";
 import { readStack } from "./z-order-read.js";
 
@@ -47,6 +48,8 @@ const IS_MAC = isMacPlatform();
 const STEP_KEYS = [
   { appKey: "layer-forward", keyId: "bring-forward", step: "forward" },
   { appKey: "layer-backward", keyId: "send-backward", step: "backward" },
+  { appKey: "layer-front", keyId: "bring-to-front", step: "front" },
+  { appKey: "layer-back", keyId: "send-to-back", step: "back" },
 ] as const;
 
 type StepKey = (typeof STEP_KEYS)[number];
@@ -89,7 +92,7 @@ const toZEdit = (write: ZWrite): StackingEdit => {
 
 interface StepPlan {
   readonly stop: StepStop | null;
-  readonly write: ZTargetEdit | null;
+  readonly writes: readonly ZTargetEdit[];
 }
 
 const toSourceKey = (layer: ZTargetEdit): string => {
@@ -109,18 +112,21 @@ const toStepPlan = async (
   const stack = await readStack(run.options.port?.current ?? null, target);
 
   if (stack === null) {
-    return { stop: "no-read", write: null };
+    return { stop: "no-read", writes: [] };
   }
 
   const plan = toZPlan(stack, run.step);
 
   if (plan.kind === "stop") {
-    return { stop: plan.stop, write: null };
+    return { stop: plan.stop, writes: [] };
   }
 
   return {
     stop: null,
-    write: { edit: toZEdit(plan.write), target: toTarget(plan.write) },
+    writes: plan.writes.map((write) => ({
+      edit: toZEdit(write),
+      target: toTarget(write),
+    })),
   };
 };
 
@@ -128,25 +134,105 @@ const toUniqueWrites = (plans: readonly StepPlan[]): ZTargetEdit[] => {
   const seen = new Map<string, ZTargetEdit>();
 
   for (const plan of plans) {
-    if (plan.write !== null && !seen.has(toSourceKey(plan.write))) {
-      seen.set(toSourceKey(plan.write), plan.write);
+    for (const write of plan.writes) {
+      if (!seen.has(toSourceKey(write))) {
+        seen.set(toSourceKey(write), write);
+      }
     }
   }
 
   return [...seen.values()];
 };
 
+interface PaintEntry {
+  readonly stack: SelectionStack | null;
+  readonly target: SelectionContext;
+}
+
+const readEntries = (
+  run: StepRun,
+  targets: readonly SelectionContext[]
+): Promise<PaintEntry[]> =>
+  Promise.all(
+    targets.map(async (target) => ({
+      stack: await readStack(run.options.port?.current ?? null, target),
+      target,
+    }))
+  );
+
+const toPaintCompare = (one: PaintEntry, two: PaintEntry): number => {
+  if (one.stack === null || two.stack === null) {
+    return 0;
+  }
+
+  return toCompare(toPaintKey(one.stack.self), toPaintKey(two.stack.self));
+};
+
+const isEndStep = (run: StepRun): boolean =>
+  run.step === "front" || run.step === "back";
+
+const toRunOrder = async (run: StepRun): Promise<SelectionContext[]> => {
+  const targets = toDomOrder(run.options.selection);
+
+  if (targets.length < 2 || !isEndStep(run)) {
+    return targets;
+  }
+
+  const read = await readEntries(run, targets);
+  const entries = read.toSorted(toPaintCompare);
+
+  if (run.step === "back") {
+    entries.reverse();
+  }
+
+  return entries.map((entry) => entry.target);
+};
+
+const runEndSteps = async (
+  run: StepRun,
+  targets: readonly SelectionContext[],
+  done: readonly StepPlan[]
+): Promise<StepPlan[]> => {
+  const target = targets.at(0) ?? null;
+
+  if (target === null) {
+    return [...done];
+  }
+
+  const plan = await toStepPlan(run, target);
+
+  if (plan.writes.length > 0) {
+    await writeZOrder(run.ids, plan.writes, run.breakpoint);
+  }
+
+  return runEndSteps(run, targets.slice(1), [...done, plan]);
+};
+
+const runStepPlans = async (run: StepRun): Promise<StepPlan[]> => {
+  const targets = await toRunOrder(run);
+
+  if (isEndStep(run) && targets.length > 1) {
+    return runEndSteps(run, targets, []);
+  }
+
+  const plans = await Promise.all(
+    targets.map((target) => toStepPlan(run, target))
+  );
+
+  const writes = toUniqueWrites(plans);
+
+  if (writes.length > 0) {
+    await writeZOrder(run.ids, writes, run.breakpoint);
+  }
+
+  return plans;
+};
+
 const runZStep = async (run: StepRun): Promise<void> => {
   try {
-    const plans = await Promise.all(
-      toDomOrder(run.options.selection).map((target) => toStepPlan(run, target))
-    );
+    const plans = await runStepPlans(run);
 
-    const writes = toUniqueWrites(plans);
-
-    if (writes.length > 0) {
-      await writeZOrder(run.ids, writes, run.breakpoint);
-
+    if (plans.some((plan) => plan.writes.length > 0)) {
       return;
     }
 

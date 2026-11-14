@@ -1,6 +1,6 @@
 import type { SelectionStack, StackPeer } from "./deps.js";
 
-type ZStep = "backward" | "forward";
+type ZStep = "back" | "backward" | "forward" | "front";
 
 type ZStop = "back" | "front" | "no-overlap" | "no-source";
 
@@ -12,7 +12,7 @@ interface ZWrite {
 
 type ZPlan =
   | { readonly kind: "stop"; readonly stop: ZStop }
-  | { readonly kind: "write"; readonly write: ZWrite };
+  | { readonly kind: "write"; readonly writes: readonly ZWrite[] };
 
 type PaintKey = readonly [number, number, number];
 
@@ -78,7 +78,7 @@ const toWritePlan = (peer: StackPeer, z: number): ZPlan => {
     return { kind: "stop", stop: "no-source" };
   }
 
-  return { kind: "write", write: toWrite(peer, z) };
+  return { kind: "write", writes: [toWrite(peer, z)] };
 };
 
 const toNearest = (
@@ -155,18 +155,75 @@ const toBackwardPlan = (stack: SelectionStack): ZPlan => {
   return toWritePlan(stack.self, passes);
 };
 
+const toTopPeer = (peers: readonly StackPeer[]): StackPeer | null =>
+  toNearest(peers, () => true, -1);
+
+const toFrontPlan = (stack: SelectionStack): ZPlan => {
+  const top = toTopPeer(stack.peers);
+
+  if (top === null || toCompare(toPaintKey(stack.self), toPaintKey(top)) > 0) {
+    return { kind: "stop", stop: "front" };
+  }
+
+  const base = toEffectiveZ(top);
+
+  const passes = [base, base + 1].find(
+    (z) => z >= 0 && toCompare(toKeyWith(stack.self, z), toPaintKey(top)) > 0
+  );
+
+  return toWritePlan(stack.self, passes ?? base + 1);
+};
+
+const isUnder = (stack: SelectionStack): boolean =>
+  stack.peers.every(
+    (peer) => toCompare(toPaintKey(stack.self), toPaintKey(peer)) < 0
+  );
+
+const toBackPlan = (stack: SelectionStack): ZPlan => {
+  if (isUnder(stack)) {
+    return { kind: "stop", stop: "back" };
+  }
+
+  const floor = toKeyWith(stack.self, 0);
+
+  const raised = stack.peers.filter(
+    (peer) => toCompare(toPaintKey(peer), floor) < 0
+  );
+
+  if (raised.some((peer) => peer.source === null)) {
+    return { kind: "stop", stop: "no-source" };
+  }
+
+  const raises = raised.map((peer) => toWrite(peer, 1));
+
+  if (isZApplied(stack.self) && stack.self.z === 0) {
+    return { kind: "write", writes: raises };
+  }
+
+  const self = toWritePlan(stack.self, 0);
+
+  if (self.kind === "stop") {
+    return self;
+  }
+
+  return { kind: "write", writes: [...raises, ...self.writes] };
+};
+
+const PLAN_OF_STEP = {
+  back: toBackPlan,
+  backward: toBackwardPlan,
+  forward: toForwardPlan,
+  front: toFrontPlan,
+} as const satisfies Record<ZStep, (stack: SelectionStack) => ZPlan>;
+
 const toZPlan = (stack: SelectionStack | null, step: ZStep): ZPlan => {
   if (stack === null || stack.peers.length === 0) {
     return { kind: "stop", stop: "no-overlap" };
   }
 
-  if (step === "forward") {
-    return toForwardPlan(stack);
-  }
-
-  return toBackwardPlan(stack);
+  return PLAN_OF_STEP[step](stack);
 };
 
-export { toZPlan };
+export { toPaintKey, toCompare, toZPlan };
 
 export type { ZPlan, ZStep, ZStop, ZWrite };

@@ -1,0 +1,126 @@
+call-action viewport.run on http://127.0.0.1:6440. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 1458 ms, git spawns: not counted (server side)
+{
+  "cells": [
+    {
+      "clippedText": 0,
+      "frameId": null,
+      "horizontalScroll": true,
+      "overflow": 1,
+      "scheme": "light",
+      "tapTargets": 0,
+      "width": 390
+    }
+  ],
+  "contactSheet": "/Volumes/DevProjects/code/ds-wt/phone-flow-data/branch-run/viewport-sheets/3uIjQ7XlZ1-1794680554106.png",
+  "findings": [
+    {
+      "detail": "element spans 16px to 1216px in a 390px viewport",
+      "frameId": null,
+      "kind": "overflow",
+      "scheme": "light",
+      "selector": "main > div.plans",
+      "source": "plan.html:1:423",
+      "width": 390
+    },
+    {
+      "detail": "page is 1216px wide in a 390px viewport",
+      "frameId": null,
+      "kind": "horizontal-scroll",
+      "scheme": "light",
+      "selector": "html",
+      "source": null,
+      "width": 390
+    }
+  ],
+  "page": "plan.html"
+}
+
+[mcp] ok, 122 ms, git spawns: not counted (server side)
+{
+  "cells": [
+    {
+      "clippedText": 0,
+      "frameId": null,
+      "horizontalScroll": true,
+      "overflow": 1,
+      "scheme": "light",
+      "tapTargets": 0,
+      "width": 390
+    }
+  ],
+  "contactSheet": "/Volumes/DevProjects/code/ds-wt/phone-flow-data/branch-run/viewport-sheets/3uIjQ7XlZ1-1794680554239.png",
+  "findings": [
+    {
+      "detail": "element spans 16px to 1216px in a 390px viewport",
+      "frameId": null,
+      "kind": "overflow",
+      "scheme": "light",
+      "selector": "main > div.plans",
+      "source": "plan.html:1:423",
+      "width": 390
+    },
+    {
+      "detail": "page is 1216px wide in a 390px viewport",
+      "frameId": null,
+      "kind": "horizontal-scroll",
+      "scheme": "light",
+      "selector": "html",
+      "source": null,
+      "width": 390
+    }
+  ],
+  "page": "plan.html"
+}
+
+[agent] ok, 122 ms, git spawns: not counted (server side)
+{
+  "cells": [
+    {
+      "clippedText": 0,
+      "frameId": null,
+      "horizontalScroll": true,
+      "overflow": 1,
+      "scheme": "light",
+      "tapTargets": 0,
+      "width": 390
+    }
+  ],
+  "contactSheet": "/Volumes/DevProjects/code/ds-wt/phone-flow-data/branch-run/viewport-sheets/3uIjQ7XlZ1-1794680554372.png",
+  "findings": [
+    {
+      "detail": "element spans 16px to 1216px in a 390px viewport",
+      "frameId": null,
+      "kind": "overflow",
+      "scheme": "light",
+      "selector": "main > div.plans",
+      "source": "plan.html:1:423",
+      "width": 390
+    },
+    {
+      "detail": "page is 1216px wide in a 390px viewport",
+      "frameId": null,
+      "kind": "horizontal-scroll",
+      "scheme": "light",
+      "selector": "html",
+      "source": null,
+      "width": 390
+    }
+  ],
+  "page": "plan.html"
+}
+
+diff http -> mcp:
+-   "contactSheet": "/Volumes/DevProjects/code/ds-wt/phone-flow-data/branch-run/viewport-sheets/3uIjQ7XlZ1-1794680554106.png",
++   "contactSheet": "/Volumes/DevProjects/code/ds-wt/phone-flow-data/branch-run/viewport-sheets/3uIjQ7XlZ1-1794680554239.png",
+
+diff http -> agent:
+-   "contactSheet": "/Volumes/DevProjects/code/ds-wt/phone-flow-data/branch-run/viewport-sheets/3uIjQ7XlZ1-1794680554106.png",
++   "contactSheet": "/Volumes/DevProjects/code/ds-wt/phone-flow-data/branch-run/viewport-sheets/3uIjQ7XlZ1-1794680554372.png",
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 0 error results
+
+fix: compare the outputs above, then run call-action again with the id viewport.run and the same input

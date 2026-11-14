@@ -32,6 +32,7 @@ export interface RunLevelContext {
   app?: boolean;
   appTokens?: boolean;
   isNewPage?: boolean;
+  isImageSearchOn?: boolean;
 }
 
 const PLAN_STEP = `Call \`TodoWrite\` first with your plan: 3 to 6 short todos (brief, build each screen, checks, fixes). The user sees this list. Call TodoWrite again to mark todos completed as you go: at least once after the build, once after the checks and once before your final reply, when every todo must be completed or removed. The studio also marks a todo done when the file or screen it names is written and its render_check passes, so name the file or screen in each build todo.`;
@@ -53,6 +54,16 @@ const FLOW_CHECK = `When render_check lists more than one screen (each view of a
 const APP_STEP = `App work: use the app's real components and tokens. Call \`mcp__studio__list_components\` with a query for each part you need (for example card, badge, button, table) before you write markup, and use the import line it returns. Never build a lookalike of a kit component from plain elements, and never use inline styles or raw colors and sizes where a token class exists. Find the target with \`mcp__studio__get_layers\` and add the markup with \`mcp__studio__insert_jsx\` (Edit only for logic or data wiring). Put new UI inside the section it belongs to, match the width of the cards next to it (when the request says small or compact, at most half the content width: one grid column beside a card, or max-w-md), wire it to the data the page already loads before you add sample data, and do not repeat data the page already shows: when the page lists items, show a summary (count, latest date, status) or a link, not the same items again. render_check measures both and files high \`size-request\` and \`duplicate-data\` findings. No code comments and no unused imports.`;
 
 const APP_REVIEW_STEP = `Review: call \`mcp__studio__review_frame\` on the frame that shows the page you changed (call canvas_list first; add a frame for that route with canvas_place when none shows it). Fix every finding in your new UI that has a directFix with \`mcp__studio__edit_element\` (style is directFix.style), and the high findings that need judgment with Edit. List findings in code you did not touch; do not fix them. Also take a mobile screenshot of that page. When you skip either one, the studio runs it and sends you back for a fix loop.`;
+
+const PHOTO_STEP = `Photos: after the first draft, call \`mcp__studio__apply_image_search\` once with the page path. It fills every \`data-photo\` slot with a real photo and lists the slots it missed. Replace each img slot in \`missed\` with a gray-box div that keeps \`data-photo\` and a short label, so no img stays without a src. Image search is on.`;
+
+function toPhotoSteps(context: RunLevelContext): readonly string[] {
+  if (context.isImageSearchOn === true) {
+    return [PHOTO_STEP];
+  }
+
+  return [];
+}
 
 function isApp(context: RunLevelContext): boolean {
   return context.app === true || context.appTokens === true;
@@ -111,7 +122,7 @@ function wireframeEdit(context: RunLevelContext): string {
   return `Level: WIREFRAME. Goal: fast, cheap structure the user can judge and iterate on.
 - Plan: call \`TodoWrite\` first with 2 to 4 todos, and mark each one completed when it is done.
 - Look: grayscale only (white, black and grays). Use the system font stack (system-ui, sans-serif). No Google Fonts, no design-system tokens or token stylesheet, no brand color, no shadows or gradients. For this run this overrides the design-system, DESIGN.md and font rules above.
-- Content: real section structure, real headings, real labels, real button text and realistic sample values. No images, illustrations, icons or decorative SVG; use a plain gray box with a short label where an image would go.
+- Content: real section structure, real headings, real labels, real button text and realistic sample values. No images, illustrations, icons or decorative SVG; use a plain gray box with a short label where an image would go. No img slots and no apply_image_search in this run.
 - ${FLOW_STEP}${appLine(context)}
 - Skills: do NOT call the Skill tool in this run.
 - Taste: apply only the <taste> rules in the layout and behavior areas. Ignore the others in this run.
@@ -124,6 +135,7 @@ function prototypeEdit(context: RunLevelContext): string {
 REQUIRED steps, in this order. Do not skip one:
 ${toNumberedSteps([
   ...toPrototypeStart(context),
+  ...toPhotoSteps(context),
   "Call `mcp__studio__render_check`. It returns errors, layout findings and `quality` findings (a11y, tap-target, placeholder, tokens, nav-mobile, visual-diff), each with a severity, for every screen it lists.",
   `Call \`mcp__studio__screenshot\` mobile from=0, then desktop from=0. Look at every image against the checklist. ${FLOW_CHECK}`,
   "Call `mcp__studio__design_review` once: a quick critic that has not seen your work reviews every screen.",
@@ -141,6 +153,7 @@ function polishEdit(context: RunLevelContext): string {
 REQUIRED steps, in this order. Do not skip one:
 ${toNumberedSteps([
   ...toPolishStart(context),
+  ...toPhotoSteps(context),
   "Call `mcp__studio__render_check`. It runs at 390, 768 and 1440 px and returns errors, layout findings and `quality` findings (a11y, tap-target, placeholder, tokens, nav-mobile, visual-diff, generic-layout) with severities.",
   `Call \`mcp__studio__screenshot\` mobile from=0, tablet from=0 and desktop from=0. Look at every image. ${FLOW_CHECK}`,
   "Call `mcp__studio__design_review` (a separate critic that has not seen your work; it reviews every screen). Call it at most twice per run. A second call also compares desktop with the first and files regressions; when you stop, the studio runs that desktop comparison itself if you did not.",
@@ -261,7 +274,11 @@ export function withRunLevel(
   mode: RunMode,
   context: RunLevelContext = {}
 ): UserMessageParts {
-  const level = { ...context, isNewPage: parts.isNewPage === true };
+  const level = {
+    ...context,
+    isImageSearchOn: parts.isImageSearchOn === true,
+    isNewPage: parts.isNewPage === true,
+  };
 
   return {
     ...parts,

@@ -345,6 +345,7 @@
     "./icon/inspect": "./src/icon/inspect.ts",
     "./icon/routes": "./src/icon/routes.ts",
     "./icon/schema": "./src/icon/schema.ts",
+    "./image-search/apply": "./src/image-search/apply.ts",
     "./image-search/errors/index": "./src/image-search/errors/index.ts",
     "./image-search/errors/status": "./src/image-search/errors/status.ts",
     "./image-search/get": "./src/image-search/get.ts",

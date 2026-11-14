@@ -28,6 +28,8 @@ const TAG_MAX = 100;
 
 const HTML_MAX = 4000;
 
+const PAGE_PATH_MAX = 500;
+
 const ImageSearchProjectFields = {
   projectId: ProjectIdSchema.annotate({
     description:
@@ -180,8 +182,37 @@ const ImagePlacedSchema = Schema.Struct({
   versionId: Schema.NullOr(Schema.String),
 });
 
+const ImageSearchApplyFields = {
+  path: Schema.String.check(
+    Schema.isMinLength(1),
+    Schema.isMaxLength(PAGE_PATH_MAX)
+  ).annotate({
+    description:
+      'The page file, relative to the project folder, for example "index.html".',
+  }),
+} as const;
+
+const PhotoSlotMissSchema = Schema.Struct({
+  query: Schema.String,
+  selector: Schema.String,
+});
+
+const PhotoSlotFillSchema = Schema.Struct({
+  photoId: Schema.String,
+  query: Schema.String,
+  selector: Schema.String,
+});
+
+const PhotoFillSchema = Schema.Struct({
+  filled: Schema.Array(PhotoSlotFillSchema),
+  missed: Schema.Array(PhotoSlotMissSchema),
+  versionId: Schema.NullOr(Schema.String),
+});
+
 export {
   ImagePlacedSchema,
+  ImageSearchApplyFields,
+  PhotoFillSchema,
   ImageSearchDirectionFields,
   ImageSearchInspectFields,
   ImageSearchInsertFields,

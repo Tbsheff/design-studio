@@ -13,6 +13,8 @@ import type {
   SourceLoc,
 } from "./deps.js";
 import { toImageSearchFailure } from "./image-search-failure.js";
+import { toPhotoFill } from "./photo-fill.js";
+import type { PhotoFillResult } from "./photo-fill.js";
 import { placeImage } from "./place.js";
 import { searchImages } from "./search.js";
 import type { PlaceTarget } from "./target.js";
@@ -94,6 +96,29 @@ const runImagePlace = (
     toImageSearchFailure
   );
 
-export { runImagePlace, runImageSearch };
+interface ApplyImageSearchCommand extends DirectionIds {
+  readonly path: string;
+}
 
-export type { ImageOwner, ImagePlaceTarget, InsertImageSearchCommand };
+const runPhotoFill = (
+  command: ApplyImageSearchCommand
+): Effect.Effect<PhotoFillResult, KnownFailure> =>
+  runDirectionWrite(
+    command,
+    async ({ direction, project, runtime }): Promise<PhotoFillResult> =>
+      await toPhotoFill(
+        runtime.editDeps,
+        { direction, project, workTree: direction.workTree },
+        command.path
+      ),
+    toImageSearchFailure
+  );
+
+export { runImagePlace, runImageSearch, runPhotoFill };
+
+export type {
+  ApplyImageSearchCommand,
+  ImageOwner,
+  ImagePlaceTarget,
+  InsertImageSearchCommand,
+};

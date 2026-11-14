@@ -267,6 +267,7 @@ export {
   toPlaceFiles as placeFiles,
   toPlaceImage as placeImage,
   toPlanPlaceImage as planPlaceImage,
+  toFetchImage,
   toPlaceResult,
   toWritePlacePlan as writePlacePlan,
 };

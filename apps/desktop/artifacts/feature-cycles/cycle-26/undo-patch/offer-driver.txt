@@ -1,0 +1,57 @@
+import { readFile } from "node:fs/promises";
+import { chromium } from "/Volumes/DevProjects/code/ds-wt/undo-patch/node_modules/playwright-core/index.mjs";
+const O = "http://127.0.0.1:47310";
+const OUT = "/Volumes/DevProjects/code/ds-wt/undo-patch/apps/desktop/artifacts/feature-cycles/cycle-26/undo-patch";
+const [SCHEME = "dark", STEP = "explore", ROUTE = "/patients"] = process.argv.slice(2);
+const key = (await readFile("/Volumes/DevProjects/code/ds-wt/undo-secret", "utf-8")).trim();
+const browser = await chromium.launch({ channel: "chrome", headless: true });
+const ctx = await browser.newContext({ colorScheme: SCHEME, viewport: { width: 1440, height: 900 } });
+const page = await ctx.newPage();
+page.on("pageerror", (e) => console.log("PAGEERR", e.message));
+page.on("response", (r) => { if (r.request().method() !== "GET" && r.url().includes("/api/") && !r.url().includes("telemetry") && !r.url().includes("presence")) console.log("RESP", r.request().method(), r.url().replace(O, ""), r.status()); });
+await page.goto(`${O}/api/session/open?key=${key}`);
+await page.goto(`${O}/p/etKg5-wQVY?theme=${SCHEME}`);
+await page.waitForTimeout(7000);
+await page.evaluate(async (route) => {
+  const mod = await import("/src/ui/platform/prototype-route.ts").catch(() => null);
+  return mod !== null;
+}, ROUTE).catch(() => null);
+await page.keyboard.press("Escape");
+if (STEP === "add") {
+  await page.getByRole("button", { name: "Pick a route" }).click();
+  await page.waitForTimeout(800);
+  await page.locator("button", { hasText: "/patients" }).last().click();
+  await page.waitForTimeout(6000);
+}
+const labels = page.locator(".frame-label");
+console.log("labels", await labels.allInnerTexts());
+await page.keyboard.press("Shift+1"); await page.waitForTimeout(800); await page.keyboard.press("Shift+1");
+await page.waitForTimeout(1000);
+const pl = page.locator(".frame-label[data-frame-id=f2]");
+const box = await pl.boundingBox();
+await page.mouse.move(box.x + 20, box.y + box.height / 2);
+await page.waitForTimeout(400);
+console.log("lbtn", await pl.locator("button").evaluateAll((l) => l.map((b) => `${b.getAttribute("aria-label")}:${b.getBoundingClientRect().width}`).join(",")));
+await pl.locator("button").last().click({ force: true });
+await page.waitForTimeout(800);
+console.log("items", (await page.locator("[role=menuitem]").allInnerTexts()).join(" / "));
+await page.getByRole("menuitem", { name: "Redesign as prototype" }).click();
+await page.waitForTimeout(1000);
+await page.getByTestId("prototype-prompt").fill("Make the list denser");
+await page.getByTestId("prototype-create").click();
+await page.getByTestId("fixture-offer").waitFor({ timeout: 90000 });
+await page.waitForTimeout(500);
+console.log("offer", (await page.getByTestId("fixture-offer").innerText()).replace(/\n/g, " | "));
+await page.screenshot({ path: `${OUT}/offer-${SCHEME}.png` });
+if (STEP === "make") {
+  const before = page.url();
+  await page.getByTestId("fixture-offer-make").click();
+  await page.waitForTimeout(500);
+  console.log("pending label", await page.getByTestId("fixture-offer-make").innerText().catch(() => "gone"));
+  await page.waitForURL((u) => u.toString() !== before, { timeout: 120000 });
+  await page.waitForTimeout(8000);
+  console.log("opened", page.url());
+  await page.screenshot({ path: `${OUT}/fixture-copy-${SCHEME}.png` });
+}
+console.log(await page.getByRole("button").evaluateAll((l) => l.map((b) => b.getAttribute("aria-label") ?? b.textContent?.trim()).filter(Boolean).slice(0, 60).join(" | ")));
+await browser.close();

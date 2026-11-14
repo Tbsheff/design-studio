@@ -1,0 +1,180 @@
+call-action project.createPrototype on http://127.0.0.1:47310. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 3434 ms, git spawns: not counted (server side)
+{
+  "fixtureOffer": {
+    "appProjectId": "etKg5-wQVY",
+    "reason": "http://127.0.0.1:47500/patients answered 500.",
+    "route": "/patients"
+  },
+  "folder": "/Volumes/DevProjects/code/ds-wt/undo-patch-projects/prototypes/undo-next/redesign-patients-11",
+  "project": {
+    "appProjectId": "etKg5-wQVY",
+    "createdAt": 1794642517709,
+    "directions": [
+      {
+        "branch": "d/main",
+        "createdAt": 1794642517709,
+        "headVersionId": null,
+        "id": "main",
+        "name": "Main",
+        "parentVersionId": null,
+        "sessionId": null,
+        "workTree": "/Volumes/DevProjects/code/ds-wt/undo-patch-projects/prototypes/undo-next/redesign-patients-11"
+      }
+    ],
+    "entry": "index.html",
+    "id": "ooGDsQNdad",
+    "imported": {
+      "created": true,
+      "sourcePath": "/Volumes/DevProjects/code/ds-wt/undo-patch-projects/prototypes/undo-next/redesign-patients-11"
+    },
+    "kind": "html",
+    "name": "Redesign /patients",
+    "settings": {
+      "allowBash": true,
+      "allowInstall": true,
+      "autoApprove": true,
+      "defaultLevel": "prototype",
+      "disabledSkills": [],
+      "maxTurns": 40,
+      "model": "claude-sonnet-5-5"
+    },
+    "settingsVersion": 2,
+    "updatedAt": 1794642517709
+  },
+  "runId": null,
+  "tokensFile": null
+}
+
+[mcp] ok, 1936 ms, git spawns: not counted (server side)
+{
+  "fixtureOffer": {
+    "appProjectId": "etKg5-wQVY",
+    "reason": "http://127.0.0.1:47500/patients answered 500.",
+    "route": "/patients"
+  },
+  "folder": "/Volumes/DevProjects/code/ds-wt/undo-patch-projects/prototypes/undo-next/redesign-patients-12",
+  "project": {
+    "appProjectId": "etKg5-wQVY",
+    "createdAt": 1794642520109,
+    "directions": [
+      {
+        "branch": "d/main",
+        "createdAt": 1794642520109,
+        "headVersionId": null,
+        "id": "main",
+        "name": "Main",
+        "parentVersionId": null,
+        "sessionId": null,
+        "workTree": "/Volumes/DevProjects/code/ds-wt/undo-patch-projects/prototypes/undo-next/redesign-patients-12"
+      }
+    ],
+    "entry": "index.html",
+    "id": "yVLvmGi2Wy",
+    "imported": {
+      "created": true,
+      "sourcePath": "/Volumes/DevProjects/code/ds-wt/undo-patch-projects/prototypes/undo-next/redesign-patients-12"
+    },
+    "kind": "html",
+    "name": "Redesign /patients",
+    "settings": {
+      "allowBash": true,
+      "allowInstall": true,
+      "autoApprove": true,
+      "defaultLevel": "prototype",
+      "disabledSkills": [],
+      "maxTurns": 40,
+      "model": "claude-sonnet-5-5"
+    },
+    "settingsVersion": 2,
+    "updatedAt": 1794642520109
+  },
+  "runId": null,
+  "tokensFile": null
+}
+
+[agent] ok, 1867 ms, git spawns: not counted (server side)
+{
+  "fixtureOffer": {
+    "appProjectId": "etKg5-wQVY",
+    "reason": "http://127.0.0.1:47500/patients answered 500.",
+    "route": "/patients"
+  },
+  "folder": "/Volumes/DevProjects/code/ds-wt/undo-patch-projects/prototypes/undo-next/redesign-patients-13",
+  "project": {
+    "appProjectId": "etKg5-wQVY",
+    "createdAt": 1794642522043,
+    "directions": [
+      {
+        "branch": "d/main",
+        "createdAt": 1794642522043,
+        "headVersionId": null,
+        "id": "main",
+        "name": "Main",
+        "parentVersionId": null,
+        "sessionId": null,
+        "workTree": "/Volumes/DevProjects/code/ds-wt/undo-patch-projects/prototypes/undo-next/redesign-patients-13"
+      }
+    ],
+    "entry": "index.html",
+    "id": "kXS2KBpjth",
+    "imported": {
+      "created": true,
+      "sourcePath": "/Volumes/DevProjects/code/ds-wt/undo-patch-projects/prototypes/undo-next/redesign-patients-13"
+    },
+    "kind": "html",
+    "name": "Redesign /patients",
+    "settings": {
+      "allowBash": true,
+      "allowInstall": true,
+      "autoApprove": true,
+      "defaultLevel": "prototype",
+      "disabledSkills": [],
+      "maxTurns": 40,
+      "model": "claude-sonnet-5-5"
+    },
+    "settingsVersion": 2,
+    "updatedAt": 1794642522043
+  },
+  "runId": null,
+  "tokensFile": null
+}
+
+diff http -> mcp:
+-   "folder": "/Volumes/DevProjects/code/ds-wt/undo-patch-projects/prototypes/undo-next/redesign-patients-11",
++   "folder": "/Volumes/DevProjects/code/ds-wt/undo-patch-projects/prototypes/undo-next/redesign-patients-12",
+-     "createdAt": 1794642517709,
++     "createdAt": 1794642520109,
+-         "createdAt": 1794642517709,
++         "createdAt": 1794642520109,
+-         "workTree": "/Volumes/DevProjects/code/ds-wt/undo-patch-projects/prototypes/undo-next/redesign-patients-11"
++         "workTree": "/Volumes/DevProjects/code/ds-wt/undo-patch-projects/prototypes/undo-next/redesign-patients-12"
+-     "id": "ooGDsQNdad",
++     "id": "yVLvmGi2Wy",
+-       "sourcePath": "/Volumes/DevProjects/code/ds-wt/undo-patch-projects/prototypes/undo-next/redesign-patients-11"
++       "sourcePath": "/Volumes/DevProjects/code/ds-wt/undo-patch-projects/prototypes/undo-next/redesign-patients-12"
+-     "updatedAt": 1794642517709
++     "updatedAt": 1794642520109
+
+diff http -> agent:
+-   "folder": "/Volumes/DevProjects/code/ds-wt/undo-patch-projects/prototypes/undo-next/redesign-patients-11",
++   "folder": "/Volumes/DevProjects/code/ds-wt/undo-patch-projects/prototypes/undo-next/redesign-patients-13",
+-     "createdAt": 1794642517709,
++     "createdAt": 1794642522043,
+-         "createdAt": 1794642517709,
++         "createdAt": 1794642522043,
+-         "workTree": "/Volumes/DevProjects/code/ds-wt/undo-patch-projects/prototypes/undo-next/redesign-patients-11"
++         "workTree": "/Volumes/DevProjects/code/ds-wt/undo-patch-projects/prototypes/undo-next/redesign-patients-13"
+-     "id": "ooGDsQNdad",
++     "id": "kXS2KBpjth",
+-       "sourcePath": "/Volumes/DevProjects/code/ds-wt/undo-patch-projects/prototypes/undo-next/redesign-patients-11"
++       "sourcePath": "/Volumes/DevProjects/code/ds-wt/undo-patch-projects/prototypes/undo-next/redesign-patients-13"
+-     "updatedAt": 1794642517709
++     "updatedAt": 1794642522043
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 0 error results
+
+fix: compare the outputs above, then run call-action again with the id project.createPrototype and the same input

@@ -27,7 +27,7 @@ const HomePrompt = ({
         onPaste={onPromptPaste}
         describedBy={reasonId(ui.sendBlocker)}
         menuKeys={slashKeys}
-        placeholder={promptPlaceholder(chip, ui.isEmpty)}
+        placeholder={promptPlaceholder(chip)}
       />
       {modules.slashMod && (
         <modules.slashMod.HomeSlashMenu

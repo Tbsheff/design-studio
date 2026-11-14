@@ -3,6 +3,7 @@ import type {
   ProjectKind,
   ProjectSettings,
   RunLevel,
+  Starter,
 } from "@design-studio/contracts";
 import { shortenHome } from "@design-studio/contracts/folders";
 import type { WorkspaceList } from "@design-studio/contracts/folders";
@@ -34,9 +35,16 @@ const LEVEL_LABEL: Record<RunLevel, string> = {
   wireframe: "Wireframe",
 };
 
-const PLACEHOLDER = "Describe what to design…";
-
 const HOME_REASON_ID = "home-send-reason";
+
+const EXAMPLE_HINT_ID = "home-example-hint";
+
+const TAKE_MODIFIERS = ["altKey", "ctrlKey", "metaKey", "shiftKey"] as const;
+
+type TakeKeyEvent = Pick<
+  KeyboardEvent,
+  "key" | (typeof TAKE_MODIFIERS)[number]
+>;
 
 const EMPTY_PROMPT = "Describe the design first";
 
@@ -200,19 +208,38 @@ const createFromHome = async (input: HomeCreateInput): Promise<Project> => {
 const hasFiles = (event: DragEvent): boolean =>
   [...(event.dataTransfer?.types ?? [])].includes("Files");
 
-const getPromptPlaceholder = (
-  chip: AppChip | null,
-  empty: boolean
-): string | null => {
+const getPromptPlaceholder = (chip: AppChip | null): string | null => {
   if (chip) {
     return `Describe what to design for ${chipName(chip)}`;
   }
 
-  if (empty) {
-    return PLACEHOLDER;
+  return null;
+};
+
+const toExamples = (starters: readonly Starter[]): readonly string[] => {
+  if (starters.length === 0) {
+    return EXAMPLES;
   }
 
-  return null;
+  return starters.map((starter) => starter.prompt);
+};
+
+const isExampleTakeKey = (event: TakeKeyEvent): boolean =>
+  event.key === "Tab" && TAKE_MODIFIERS.every((name) => !event[name]);
+
+const toPromptDescribedBy = (
+  describedBy: string | null,
+  isHintShown: boolean
+): string | null => {
+  if (!isHintShown) {
+    return describedBy;
+  }
+
+  if (describedBy === null) {
+    return EXAMPLE_HINT_ID;
+  }
+
+  return `${describedBy} ${EXAMPLE_HINT_ID}`;
 };
 
 const getReasonId = (blocker: string | null): string | null => {
@@ -262,20 +289,23 @@ interface StarProps {
 export {
   EMPTY_PROMPT,
   EXAMPLES,
+  EXAMPLE_HINT_ID,
   EXAMPLE_MS,
   HOME_REASON_ID,
   LEVEL_LABEL,
   MODEL_OPTIONS,
-  PLACEHOLDER,
   createFromHome,
   getFolderLabel as folderLabel,
   hasFiles,
   getHome as homeOf,
   getHomeSendBlocker as homeSendBlocker,
   isEmpty,
+  isExampleTakeKey,
   getModelSummary as modelSummary,
   getPromptPlaceholder as promptPlaceholder,
   getReasonId as reasonId,
+  toExamples,
+  toPromptDescribedBy,
   toShortHome as shortHome,
 };
 
@@ -288,4 +318,5 @@ export type {
   Point,
   Pop,
   StarProps,
+  TakeKeyEvent,
 };

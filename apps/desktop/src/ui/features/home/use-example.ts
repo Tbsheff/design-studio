@@ -1,27 +1,24 @@
 import { useEffect, useState } from "react";
 
-import { EXAMPLES, EXAMPLE_MS, PLACEHOLDER } from "./home-model.js";
+import { EXAMPLE_MS } from "./home-model.js";
 
-const useExample = (paused: boolean, fixed: boolean): string => {
+const useExample = (examples: readonly string[], isPaused: boolean): string => {
   const [index, setIndex] = useState(0);
+  const count = examples.length;
   useEffect(() => {
-    if (paused || fixed) {
+    if (isPaused || count < 2) {
       return;
     }
 
     const timer = globalThis.setTimeout(
-      () => setIndex((index + 1) % EXAMPLES.length),
+      () => setIndex((index + 1) % count),
       EXAMPLE_MS
     );
 
     return (): void => globalThis.clearTimeout(timer);
-  }, [paused, fixed, index]);
+  }, [isPaused, count, index]);
 
-  if (fixed) {
-    return PLACEHOLDER;
-  }
-
-  return EXAMPLES[index] ?? "";
+  return examples[index % Math.max(count, 1)] ?? "";
 };
 
 export { useExample };

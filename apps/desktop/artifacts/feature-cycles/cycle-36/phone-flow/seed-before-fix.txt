@@ -1,0 +1,5 @@
+gaps {"isPrototype":true,"mobile":false,"review":false}
+pass 1: 2 line(s), 364 ms
+- Phone: plan.html scrolls sideways at 390 px (page 1216 px wide). Let the grid wrap or stack under 640 px, then run run_viewport on plan.html.
+- Phone: 1 tap target on done.html is under 44 px (first: "Back" 32 x 20 px). Give each one at least 44 x 44 px with padding or min-height, then run run_viewport on done.html.
+opening 1: You finished a prototype, so the studio checked each page at 390 x 844. At 390 px, as share Play shows it on a phone, each page must fit with no sideways scroll and keep tap targets at 44 px or more.

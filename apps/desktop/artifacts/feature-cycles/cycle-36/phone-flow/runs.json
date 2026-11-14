@@ -1,0 +1,66 @@
+{
+  "main": {
+    "costUsd": 0.315750975,
+    "durationMs": 92191,
+    "wallS": "108",
+    "appReview": {
+      "mobileShot": "studio",
+      "review": "studio",
+      "findings": 0,
+      "fixLoop": true,
+      "oldCode": 0,
+      "passes": [
+        {
+          "mobileShot": "studio",
+          "review": "studio",
+          "findings": 2,
+          "oldCode": 0,
+          "fixLoop": true
+        },
+        {
+          "mobileShot": "studio",
+          "review": "studio",
+          "findings": 0,
+          "oldCode": 0,
+          "fixLoop": false
+        }
+      ]
+    },
+    "reviewPrompts": [
+      "<studio-continue>\nYou finished a prototype run without a mobile screenshot at 390 px wide, 2400 px tall so content in inner scroll areas shows (attached) and review_frame on the context frame at its size and at 390 px, so the studio ran them.\nFindings on the lines you changed:\n- [medium] interaction on a \"Willow Yoga\" (index.html:41:3): This control has no hover style. No stylesheet rule styles it under :hover and it has no hover: class.\n- [medium] interaction on a \"Get started\" (index.html:52:7): This control has no hover style. No stylesheet rule styles it under :hover and it has no hover: class.\nLook at the mobile image: the new UI must sit inside the page content and fit 390 px without overlap or sideways scroll.\nDo one fix loop: fix these findings and what you see in your new UI only, with edit_element or Edit. Then run mcp__studio__render_check once. Do not edit code you did not touch. Then reply in one or two sentences with what you fixed and what is left.\n</studio-continue>",
+      "<studio-continue>\nYou finished without a screenshot of 3 screen(s): \"Welcome to Willow. Let\u2019s find your calm.: Welcome to Willow. Let\u2019s find your calm.\", \"Choose your plan: Choose your plan\", \"You\u2019re in. See you on the mat.: You\u2019re in. See you on the mat.\". The studio took them at 1440 px and 390 px (attached, one image per size, top of the page).\nLook at every image. Find what is broken or weak on these screens: overlap, clipped or wrapping labels, crowded buttons, empty areas, missing states.\nDo one fix loop: fix what you see and these findings with Edit, then run mcp__studio__render_check once. Then reply in one or two sentences with what you fixed and what is left.\n</studio-continue>"
+    ]
+  },
+  "branch": {
+    "costUsd": 0.25330515,
+    "durationMs": 90709,
+    "wallS": "104",
+    "appReview": {
+      "mobileShot": "studio",
+      "review": "studio",
+      "findings": 0,
+      "fixLoop": true,
+      "oldCode": 0,
+      "passes": [
+        {
+          "mobileShot": "studio",
+          "review": "studio",
+          "findings": 3,
+          "oldCode": 0,
+          "fixLoop": true
+        },
+        {
+          "mobileShot": "studio",
+          "review": "studio",
+          "findings": 0,
+          "oldCode": 0,
+          "fixLoop": false
+        }
+      ]
+    },
+    "reviewPrompts": [
+      "<studio-continue>\nYou finished a prototype run without a mobile screenshot at 390 px wide, 2400 px tall so content in inner scroll areas shows (attached) and review_frame on the context frame at its size and at 390 px, so the studio ran them.\nFindings on the lines you changed:\n- [medium] interaction on a \"Still Point Yoga\" (index.html:44:3): This control has no hover style. No stylesheet rule styles it under :hover and it has no hover: class.\n- [medium] interaction on a \"Get started \u2192\" (index.html:53:24): This control has no hover style. No stylesheet rule styles it under :hover and it has no hover: class.\n- Phone: 1 tap target on confirmed.html is under 44 px (first: \"Change plan\" 92 x 25 px). Give each one at least 44 x 44 px with padding or min-height, then run run_viewport on confirmed.html.\nLook at the mobile image: the new UI must sit inside the page content and fit 390 px without overlap or sideways scroll.\nDo one fix loop: fix these findings and what you see in your new UI only, with edit_element or Edit. Then run mcp__studio__render_check once. Do not edit code you did not touch. Then reply in one or two sentences with what you fixed and what is left.\n</studio-continue>",
+      "<studio-continue>\nYou finished without a screenshot of 3 screen(s): \"Welcome: Find your breath. Find your place.\", \"Choose a plan: Choose your plan\", \"You're in: You're in. Welcome to the studio.\". The studio took them at 1440 px and 390 px (attached, one image per size, top of the page).\nLook at every image. Find what is broken or weak on these screens: overlap, clipped or wrapping labels, crowded buttons, empty areas, missing states.\nDo one fix loop: fix what you see and these findings with Edit, then run mcp__studio__render_check once. Then reply in one or two sentences with what you fixed and what is left.\n</studio-continue>"
+    ]
+  }
+}

@@ -1,4 +1,7 @@
-import type { PageFlowGap } from "@design-studio/actions/page/flow/schema";
+import type {
+  PageFlow,
+  PageFlowGap,
+} from "@design-studio/actions/page/flow/schema";
 
 import type { AgentRunContext } from "../../shared/server-ports.js";
 import { inspectFlowPages } from "../canvas/page-flow/index.js";
@@ -13,7 +16,7 @@ type FlowContext = Pick<
 
 const FLOW_GAPS = new WeakMap<AppReviewGaps, FlowContext>();
 
-const FLOW_COUNTS = new WeakMap<FlowContext, number>();
+const NO_FLOW: PageFlow = { gaps: [], pages: [] };
 
 const LISTED_LINES = 6;
 
@@ -47,21 +50,8 @@ const toFlowReviewGaps = (
   return gaps;
 };
 
-const isFlowGaps = (gaps: AppReviewGaps): boolean => FLOW_GAPS.has(gaps);
-
-const toFlowOpening = (gaps: AppReviewGaps, pass: number): string | null => {
-  const ctx = FLOW_GAPS.get(gaps) ?? null;
-
-  if (ctx === null || (FLOW_COUNTS.get(ctx) ?? 0) === 0) {
-    return null;
-  }
-
-  if (pass > 1) {
-    return "You edited again after the flow check, so the studio compared the linked pages once more.";
-  }
-
-  return "You finished a prototype with linked pages, so the studio compared the pages. Each page must keep the same header, nav, footer, :root values and style sheets.";
-};
+const toFlowContext = (gaps: AppReviewGaps): FlowContext | null =>
+  FLOW_GAPS.get(gaps) ?? null;
 
 const toPartSpot = (gap: PageFlowGap): string => {
   if (gap.selector === null) {
@@ -89,39 +79,32 @@ const toFlowLine = (gap: PageFlowGap): string => {
 const toRestLine = (count: number): string =>
   `- Flow: ${count} more gaps. Run inspect_flow_page to list them all.`;
 
-const listFlowGaps = async (
-  ctx: FlowContext
-): Promise<readonly PageFlowGap[]> => {
+const getFlow = async (ctx: FlowContext): Promise<PageFlow> => {
+  if (!isFlowRun(ctx)) {
+    return NO_FLOW;
+  }
+
   try {
-    const flow = await inspectFlowPages(
+    return await inspectFlowPages(
       ctx.direction.workTree,
       null,
       ctx.project.entry
     );
-
-    return flow.gaps;
   } catch {
-    return [];
+    return NO_FLOW;
   }
 };
 
-const listFlowLines = async (ctx: FlowContext): Promise<string[]> => {
-  if (!isFlowRun(ctx)) {
-    return [];
-  }
+const listFlowLines = (flow: PageFlow): string[] => {
+  const lines = flow.gaps.slice(0, LISTED_LINES).map((gap) => toFlowLine(gap));
 
-  const gaps = await listFlowGaps(ctx);
-
-  FLOW_COUNTS.set(ctx, gaps.length);
-  const lines = gaps.slice(0, LISTED_LINES).map((gap) => toFlowLine(gap));
-
-  if (gaps.length > LISTED_LINES) {
-    lines.push(toRestLine(gaps.length - LISTED_LINES));
+  if (flow.gaps.length > LISTED_LINES) {
+    lines.push(toRestLine(flow.gaps.length - LISTED_LINES));
   }
 
   return lines;
 };
 
-export { isFlowGaps, listFlowLines, toFlowOpening, toFlowReviewGaps };
+export { getFlow, listFlowLines, toFlowContext, toFlowReviewGaps };
 
 export type { FlowContext };

@@ -386,4 +386,24 @@ const strokePositionCopy = {
   widthLabel: "Stroke width",
 };
 
-export { borderSideCopy, copy, spaceStackCopy, strokePositionCopy };
+const textListCopy = {
+  bullets: "Bullets",
+  bulletsTip: "Bullets: show a dot before each item",
+  inside: "Inside",
+  insideTip: "Inside: put the marker inside the text box",
+  label: "List",
+  none: "None",
+  noneTip: "None: show no marker",
+  numbers: "Numbers",
+  numbersTip: "Numbers: show a number before each item",
+  readOnly: "Edit the list layer",
+  typeLabel: "List style",
+};
+
+export {
+  borderSideCopy,
+  copy,
+  spaceStackCopy,
+  strokePositionCopy,
+  textListCopy,
+};

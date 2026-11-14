@@ -5,6 +5,7 @@ import { copy } from "./copy.js";
 import type { DirectEdit } from "./deps.js";
 import type { ElementClasses } from "./element-classes-model.js";
 import { InspectorSection } from "./inspector-fields.js";
+import { ListStyleRow } from "./list-style-row.js";
 import { TextGrid } from "./text-grid.js";
 import type { TokenUi } from "./use-token-snap.js";
 
@@ -31,6 +32,7 @@ const TextSection = ({
       classes={classes}
       textStyle={textStyle}
     />
+    <ListStyleRow edit={edit} selection={selection} classes={classes} />
   </InspectorSection>
 );
 

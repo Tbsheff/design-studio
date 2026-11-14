@@ -25,6 +25,7 @@ interface RouteUpdateInput {
 interface RouteUpdate {
   readonly file: string;
   readonly folderFiles: readonly RouteFolderFile[];
+  readonly layoutLine: string;
   readonly now: string;
   readonly snapshot: string | null;
   readonly styleStack: string;
@@ -91,6 +92,8 @@ const RULE_LINES = [
   "Replace the markup and the classes with the prototype design. Map them to the app tokens and kit as the port plan says.",
   "Also restyle the components that the route imports from its own folder. Keep their data reads (hooks, queries) and exports.",
   "Bind the design to the route's own data. The prototype rows are sample data: do not write a sample row into the app.",
+  "Change the route files only with the Edit or Write tool. Do not change them with Bash: sed -i fails on macOS.",
+  "First, before any other route write, call the tool mcp__studio__apply_port with only routePath (load it with ToolSearch). It writes the measured prototype values (spacing, size, gap) into the route files. Then make the other changes with Edit.",
 ];
 
 const RouteFileSchema = Schema.Struct({ file: Schema.String });
@@ -104,6 +107,8 @@ const RouteCopyEntrySchema = Schema.Struct({
 const RouteCopyRecordSchema = Schema.Struct({
   entries: Schema.Array(RouteCopyEntrySchema),
 });
+
+type RouteCopyEntry = typeof RouteCopyEntrySchema.Type;
 
 const decodeRecord = toDecoder(
   Schema.fromJsonString(RouteCopyRecordSchema),
@@ -120,31 +125,46 @@ const getText = async (file: string): Promise<string | null> => {
 
 const toPagePath = (page: string): string => page.replace(/^\/+/u, "");
 
-const isRouteCopyOf = async (
-  input: RouteUpdateInput,
-  routeFile: string
-): Promise<boolean> => {
+const toCopyEntry = async (
+  input: RouteUpdateInput
+): Promise<RouteCopyEntry | null> => {
   const text = await getText(
     path.join(input.source.direction.workTree, RECORD_FILE)
   );
 
   if (text === null) {
-    return false;
+    return null;
   }
 
   const decoded = decodeRecord(text);
 
   if (Result.isFailure(decoded)) {
-    return false;
+    return null;
   }
 
   const page = toPagePath(input.source.path);
-  const entry = decoded.success.entries.find((item) => item.page === page);
 
-  return (
-    entry?.appProjectId === input.target.project.id &&
-    entry.files[0]?.file === routeFile
-  );
+  return decoded.success.entries.find((item) => item.page === page) ?? null;
+};
+
+const isRouteCopyOf = (
+  input: RouteUpdateInput,
+  entry: RouteCopyEntry | null,
+  routeFile: string
+): boolean =>
+  entry?.appProjectId === input.target.project.id &&
+  entry.files[0]?.file === routeFile;
+
+const toLayoutLine = (entry: RouteCopyEntry | null): string => {
+  const layouts = (entry?.files ?? [])
+    .slice(1)
+    .map((item) => `\`${item.file}\``);
+
+  if (layouts.length === 0) {
+    return "";
+  }
+
+  return `The prototype page also shows the parts that ${layouts.join(", ")} render, for example the app header and nav. Those files stay as they are, and the route renders inside them. Do not copy that markup into the route.`;
 };
 
 const toRouteUpdate = async (
@@ -157,7 +177,9 @@ const toRouteUpdate = async (
     return null;
   }
 
-  if (!(await isRouteCopyOf(input, file))) {
+  const entry = await toCopyEntry(input);
+
+  if (!isRouteCopyOf(input, entry, file)) {
     throw new ConflictError(
       `The app already has the route ${input.target.route} (${file}). Pick a new path.`
     );
@@ -179,6 +201,7 @@ const toRouteUpdate = async (
   return {
     file,
     folderFiles,
+    layoutLine: toLayoutLine(entry),
     now: now ?? "",
     snapshot: snapshot ?? null,
     styleStack: await toStyleStackLine(targetTree, file, folderFiles),
@@ -253,12 +276,15 @@ const toUpdateTag = (update: RouteUpdate): string => {
 
   const body = [
     ...RULE_LINES,
+    update.layoutLine,
     update.styleStack,
     toBlock(NOW_TAG, update.now),
     ...update.folderFiles.map((folderFile) => toFolderBlock(folderFile)),
     ...toSnapshotBlock(update),
     ...toChangedNote(diff),
-  ].join("\n\n");
+  ]
+    .filter((part) => part !== "")
+    .join("\n\n");
 
   return [
     "<",

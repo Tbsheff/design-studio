@@ -29,6 +29,7 @@ import { toImageListLines } from "./image-list.js";
 import { layoutLines } from "./layout-region.js";
 import type { RunTarget, TargetFrame } from "./run-target.js";
 import { toSelectedElementsEnd, toStylesText } from "./selected-elements.js";
+import { toParentLines } from "./selection-parent.js";
 
 const IMAGE_MIMES = [
   "image/jpeg",
@@ -64,6 +65,7 @@ function formatSelection(selection: SelectionContext, index: number): string {
   return [
     `<element index="${index + 1}">`,
     `source: ${loc}`,
+    ...toParentLines(selection),
     `selector: ${selection.selector}`,
     `tag: ${selection.tag}`,
     `text: ${trim(selection.text, 200)}`,

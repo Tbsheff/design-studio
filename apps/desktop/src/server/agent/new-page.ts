@@ -1,12 +1,18 @@
 import { access } from "node:fs/promises";
 import path from "node:path";
 
+import { TOKENS_FILE } from "@design-studio/contracts";
+
 import type { AgentRunContext } from "../../shared/server-ports.js";
+import { isLeanRun } from "./lean-run.js";
 
 type NewPageContext = Pick<
   AgentRunContext,
   "direction" | "project" | "request" | "target"
 >;
+
+type StarterLookContext = NewPageContext &
+  Pick<AgentRunContext, "designSystem">;
 
 const isFilePresent = async (file: string): Promise<boolean> => {
   try {
@@ -42,4 +48,23 @@ const isNewPageRun = async (ctx: NewPageContext): Promise<boolean> => {
   ));
 };
 
-export { isNewPageRun };
+const isStarterLookSource = (ctx: StarterLookContext): boolean =>
+  (ctx.project.imported?.created ?? true) && !ctx.project.appProjectId;
+
+const isStarterLookProject = (ctx: StarterLookContext): boolean =>
+  !ctx.designSystem && !ctx.project.packId && isStarterLookSource(ctx);
+
+const isStarterLookRequest = (ctx: StarterLookContext): boolean =>
+  isStarterLookProject(ctx) &&
+  ctx.request.level !== "wireframe" &&
+  !isLeanRun(ctx.request);
+
+const isStarterLookRun = async (ctx: StarterLookContext): Promise<boolean> => {
+  if (!isStarterLookRequest(ctx) || !(await isNewPageRun(ctx))) {
+    return false;
+  }
+
+  return !(await isFilePresent(path.join(ctx.direction.workTree, TOKENS_FILE)));
+};
+
+export { isNewPageRun, isStarterLookRun };

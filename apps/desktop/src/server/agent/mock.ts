@@ -205,16 +205,16 @@ function landingPage(title: string): string {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${heading}</title>
   <style>
-    :root { --ink: #1c1f23; --muted: #5a6270; --paper: #fbfaf7; --accent: #0f6b5c; --line: #e4e1da; }
+    :root { --ink: var(--fg, #1c1f23); --muted: var(--fg-muted, #5a6270); --paper: var(--bg, #fbfaf7); --cta: var(--primary, #0f6b5c); --line: var(--border, #e4e1da); }
     * { box-sizing: border-box; }
-    body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); background: var(--paper); line-height: 1.5; }
+    body { margin: 0; font-family: var(--font-body, system-ui, -apple-system, "Segoe UI", sans-serif); color: var(--ink); background: var(--paper); line-height: 1.5; }
     main { max-width: 1080px; margin: 0 auto; padding: 64px 24px; }
-    h1 { font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.1; margin: 0 0 16px; }
+    h1 { font-family: var(--font-display, inherit); font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.1; margin: 0 0 16px; }
     .lede { font-size: 1.125rem; color: var(--muted); max-width: 40rem; margin: 0 0 32px; }
-    .cta { display: inline-block; padding: 12px 24px; border: 0; border-radius: 8px; background: var(--accent); color: #fff; font-size: 1rem; cursor: pointer; }
+    .cta { display: inline-block; padding: 12px 24px; border: 0; border-radius: 8px; background: var(--cta); color: var(--primary-fg, #fff); font-size: 1rem; cursor: pointer; }
     .cta:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
     .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; margin-top: 64px; }
-    .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 24px; }
+    .card { background: var(--surface, #fff); border: 1px solid var(--line); border-radius: var(--radius-md, 12px); padding: 24px; }
     .card h2 { font-size: 1.125rem; margin: 0 0 8px; }
     .card p { margin: 0; color: var(--muted); }
   </style>

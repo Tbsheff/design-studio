@@ -16,6 +16,7 @@ import type { ServerConfig } from "../platform/config/index.js";
 import { toMockImportDriver } from "./mock-import-driver.js";
 import { toMockPrototypeDriver } from "./mock-prototype-driver.js";
 import type { StudioRuntime } from "./runtime.js";
+import { toStarterLookDriver } from "./starter-look-driver.js";
 
 type AgentServices = AgentSdkClient | RunRunner;
 
@@ -94,7 +95,7 @@ const bootAgentRunner = (
   runtime: StudioRuntime
 ): ReturnType<typeof createAgentRunner> => {
   const options = toSdkOptions({ ...deps, runtime });
-  const driver = toRunDriver(runtime, options);
+  const driver = toStarterLookDriver(toRunDriver(runtime, options), runtime);
 
   return createAgentRunner(
     { ...deps, runtime },

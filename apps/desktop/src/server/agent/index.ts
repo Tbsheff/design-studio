@@ -133,6 +133,8 @@ export { askQuestions } from "./clarify.js";
 
 export { isLeanRun, leanContext, leanRunConfig } from "./lean-run.js";
 
+export { isStarterLookRun } from "./new-page.js";
+
 export { AgentSdkClient } from "./agent-sdk-client.js";
 
 export { createRunLifecycle } from "./lifecycle.js";

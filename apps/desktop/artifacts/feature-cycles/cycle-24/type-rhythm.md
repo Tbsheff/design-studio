@@ -16,7 +16,7 @@ Branch `feat/type-rhythm`. No new action. A new review kind, `type` ("Type and s
   - Off-scale spacing: a value off the 4 px step that 3 or more elements share (low). Fix: the nearest spacing token, or the nearest 4 px step.
   - Font families: more than 3 (medium, no fix).
 - Runner: `run.ts` runs the type probe together with the layout probe. It passes the hit selectors to the existing review probe, so `source` (also app sources from React fibers) and the classes come from there. `type-drafts.ts` maps the hits to drafts. Type drafts go last in `base`, so the 60-fix dry-run budget serves contrast and tap fixes first. In attached apps each type draft has the `noArbitrary` guard, so `verifyFixes` drops a fix that writes an arbitrary class.
-- `review_frame` description names "type scale, line length, line height and spacing steps" (444 chars). The `prompt.ts` hierarchy line adds "Review lists measured type and spacing findings; fix the medium and high ones." (net 0 lines). `critic.ts`, `final-check.ts`, `polish-loop.ts` and `checks.ts` do not change.
+- `review_frame` description names "type scale, line length, line height and spacing steps" (474 chars). The `prompt.ts` hierarchy line adds "Review lists measured type and spacing findings; fix the medium and high ones." (net 0 lines). `critic.ts`, `final-check.ts`, `polish-loop.ts` and `checks.ts` do not change.
 
 ## Checked
 
@@ -39,3 +39,4 @@ Branch `feat/type-rhythm`. No new action. A new review kind, `type` ("Type and s
 - Bonaparte live Review on a dashboard route: not run (needs the app dev server and a database). The grep shows heavy `text-xs` and `text-[10px]` use. On a dashboard the small-text check will list many low findings. Low findings do not reach the agent, and the cap is 24. Check the noise when a live route is available.
 - Attached app with type tokens: not run live. The `noArbitrary` guard and token steps are in place.
 - When two hits merge on one element, the message repeats the size (for example "13 px" twice).
+- Chat agent: `review_frame` in `agent-tool.ts` passes every kind through, so the agent gets type findings on the same `runReview` path. Not exercised in a run. The in-app tool help text (`agent/tool-help.ts`) still lists only the old checks.

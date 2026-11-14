@@ -9,12 +9,18 @@ import {
 import type { PointerEvent as ReactPointerEvent, RefObject } from "react";
 
 import { observeRulerChanges } from "../../platform/stage-dom.js";
+import { shownFrames } from "./canvas-frame-ops.js";
 import { canvasStore } from "./canvas-frames-model.js";
-import { NO_LINES, snapLineStore } from "./frame-snap-store.js";
+import { NO_LINES, frameSnapStore, snapLineStore } from "./frame-snap-store.js";
 import { RULER_SIZE, viewOf } from "./ruler-draw.js";
-import { toMovedGuides, toWorld } from "./ruler-guide-model.js";
+import {
+  snapGuideToFrames,
+  toMovedGuides,
+  toWorld,
+} from "./ruler-guide-model.js";
 import type { StageView } from "./ruler-guide-model.js";
-import type { Axis } from "./snap-model.js";
+import { snapOff } from "./snap-model.js";
+import type { Axis, Rect } from "./snap-model.js";
 
 const DRAG_THRESHOLD = 3;
 
@@ -130,11 +136,48 @@ const toDragAt = (
 
 interface GuideSession {
   readonly projectId: string;
+  readonly readFrames: () => Rect[];
   readonly readOrigin: () => Origin;
   readonly setDrag: (drag: GuideDrag | null) => void;
   readonly start: DragStart;
   readonly view: StageView;
 }
+
+const toSnappedDrag = (
+  session: GuideSession,
+  drag: GuideDrag,
+  pointer: PointerEvent
+): GuideDrag => {
+  if (drag.isRemoving || snapOff(pointer)) {
+    frameSnapStore.set(null);
+
+    return drag;
+  }
+
+  const snap = snapGuideToFrames(
+    drag.guide,
+    session.readFrames(),
+    session.view.zoom
+  );
+
+  frameSnapStore.set({
+    guides: snap.marks,
+    shift: { x: 0, y: 0 },
+    spacing: [],
+  });
+
+  return { ...drag, guide: { at: snap.at, axis: drag.guide.axis } };
+};
+
+const toFrameRects = (projectId: string): Rect[] => {
+  const layout = canvasStore.get(projectId);
+
+  if (layout === null) {
+    return [];
+  }
+
+  return shownFrames(layout);
+};
 
 const commitGuideDrag = (projectId: string, done: GuideDrag | null): void => {
   if (!done || (done.index === null && done.isRemoving)) {
@@ -186,12 +229,14 @@ const startGuideDrag = (session: GuideSession): void => {
 
     progress.isMoved = true;
     const origin = session.readOrigin();
-    progress.drag = toDragAt(base, session.view, origin, pointer);
+    const raw = toDragAt(base, session.view, origin, pointer);
+    progress.drag = toSnappedDrag(session, raw, pointer);
     session.setDrag(progress.drag);
   };
 
   const end = (): void => {
     abort.abort();
+    frameSnapStore.set(null);
     session.setDrag(null);
     commitGuideDrag(session.projectId, progress.drag);
   };
@@ -230,9 +275,12 @@ const useRulerGuides = (input: RulerGuidesInput): RulerGuides => {
 
       const readOrigin = (): Origin => latest.current.origin;
 
+      const readFrames = (): Rect[] => toFrameRects(projectId);
+
       if (stageView) {
         startGuideDrag({
           projectId,
+          readFrames,
           readOrigin,
           setDrag,
           start,

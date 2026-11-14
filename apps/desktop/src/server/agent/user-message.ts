@@ -24,8 +24,8 @@ import type {
 import { referencePagesBlock } from "../design-system/reference-page.js";
 import { referenceBlock, variationBlock } from "../variations/message.js";
 import { toFocusLines } from "./focus-block.js";
+import { toFrameContextText } from "./guide-text.js";
 import { toImageListLines } from "./image-list.js";
-import { toLayoutGridText } from "./layout-grid-text.js";
 import { layoutLines } from "./layout-region.js";
 import type { RunTarget, TargetFrame } from "./run-target.js";
 import { toSelectedElementsEnd, toStylesText } from "./selected-elements.js";
@@ -191,7 +191,7 @@ function mentionsBlock(
 function frameLine(frame: TargetFrame): string {
   const name = frame.label ? ` "${frame.label}"` : "";
 
-  return `${frame.id}${name}, page ${frame.path ? `/${frame.path}` : "(entry page)"}, ${frame.width}x${frame.height}${toLayoutGridText(frame.layoutGrid ?? null)}`;
+  return `${frame.id}${name}, page ${frame.path ? `/${frame.path}` : "(entry page)"}, ${frame.width}x${frame.height}${toFrameContextText(frame)}`;
 }
 
 function elementLine(

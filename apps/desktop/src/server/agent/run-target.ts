@@ -4,6 +4,7 @@ import type {
   RunCanvasRef,
 } from "@design-studio/contracts";
 import { cleanFramePath } from "@design-studio/contracts/canvas-file";
+import type { CanvasGuide } from "@design-studio/contracts/canvas-file";
 import {
   DEFAULT_FRAME_STATE,
   stateLabel,
@@ -21,6 +22,7 @@ import { listAppRoutes, matchRouteFile } from "../app/routes.js";
 import type { CanvasService } from "../canvas/index.js";
 import { findFrame } from "../canvas/index.js";
 import { withPagePath } from "../export/source.js";
+import { toFrameGuides } from "./guide-text.js";
 import { pageOwner, probeLayout } from "./layout-region.js";
 
 export type { RunTarget, TargetFrame } from "../../shared/run-target.js";
@@ -74,9 +76,11 @@ async function routeFileOf(
 
 function frameOf(
   saved: SavedFrame | null,
-  ref: Pick<RunCanvasRef, "frameId" | "label" | "path" | "width" | "height">
+  ref: Pick<RunCanvasRef, "frameId" | "label" | "path" | "width" | "height">,
+  guides: readonly CanvasGuide[]
 ): TargetFrame {
   return {
+    guides: toFrameGuides(guides, saved),
     height: saved?.height ?? ref.height,
     id: saved?.id ?? ref.frameId,
     label: saved?.label ?? ref.label ?? null,
@@ -88,7 +92,8 @@ function frameOf(
 
 function inViewOf(
   frames: readonly SavedFrame[],
-  ref: RunCanvasRef
+  ref: RunCanvasRef,
+  guides: readonly CanvasGuide[]
 ): TargetFrame[] {
   const ids = (ref.inView ?? [])
     .filter((id) => id !== ref.frameId)
@@ -99,12 +104,16 @@ function inViewOf(
 
     return saved
       ? [
-          frameOf(saved, {
-            frameId: id,
-            height: saved.height,
-            path: "",
-            width: saved.width,
-          }),
+          frameOf(
+            saved,
+            {
+              frameId: id,
+              height: saved.height,
+              path: "",
+              width: saved.width,
+            },
+            guides
+          ),
         ]
       : [];
   });
@@ -129,17 +138,18 @@ export async function resolveRunTarget(
     return null;
   }
 
-  const frames = ((await deps.canvas.read(project).catch(() => null))?.canvas
-    ?.frames ?? []) as SavedFrame[];
+  const canvas = (await deps.canvas.read(project).catch(() => null))?.canvas;
+  const frames = (canvas?.frames ?? []) as SavedFrame[];
+  const guides = canvas?.guides ?? [];
 
   const saved = frames.find((frame) => frame.id === ref.frameId) ?? null;
-  const frame = frameOf(saved, ref);
+  const frame = frameOf(saved, ref, guides);
   const view = await statesOf(deps, project);
   const state = view ? stateOfFrame(view, frame.id) : DEFAULT_FRAME_STATE;
 
   return {
     ...frame,
-    inView: inViewOf(frames, ref),
+    inView: inViewOf(frames, ref, guides),
     routeFile: await routeFileOf(project, direction, frame.path).catch(
       () => null
     ),
@@ -227,12 +237,16 @@ async function namedFrame(
     const view = deps ? await statesOf(deps, ctx.project) : null;
 
     return {
-      frame: frameOf(saved, {
-        frameId: saved.id,
-        height: saved.height,
-        path: "",
-        width: saved.width,
-      }),
+      frame: frameOf(
+        saved,
+        {
+          frameId: saved.id,
+          height: saved.height,
+          path: "",
+          width: saved.width,
+        },
+        []
+      ),
       state: view ? stateOfFrame(view, saved.id) : DEFAULT_FRAME_STATE,
     };
   }

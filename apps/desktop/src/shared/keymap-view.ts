@@ -63,6 +63,7 @@ const VIEW_KEYS = [
     id: "view-layout-grid",
     keys: ["Ctrl+G"],
     label: "Show layout grids",
+    tip: "Skips when a layer is selected",
   },
   {
     group: "Canvas",

@@ -89,6 +89,11 @@ const HEAD_BROKEN = "url(#link-head-broken)";
 const hasOutgoing = (file: LinksFile, frameId: string): boolean =>
   file.links.some((link) => link.from.frame === frameId);
 
+const hasPrototypeStart = (file: LinksFile): boolean =>
+  Boolean(file.start) ||
+  (file.starts?.length ?? 0) > 0 ||
+  file.links.length > 0;
+
 const playStartOf = (
   file: LinksFile,
   frames: readonly CanvasFrame[],
@@ -298,6 +303,7 @@ export {
   frameUnder,
   isSameRect,
   hasOutgoing,
+  hasPrototypeStart,
   playStartOf,
   toArrowStroke,
   toBounds,

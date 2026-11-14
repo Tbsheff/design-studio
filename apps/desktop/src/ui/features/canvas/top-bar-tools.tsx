@@ -4,6 +4,7 @@ import type { ReactElement } from "react";
 import type { KeyId } from "../../../shared/keymap.js";
 import { tipWithKey } from "../../canvas-toolbar-slots.js";
 import { copy } from "./copy.js";
+import { setToolsBar } from "./tools-bar-store.js";
 import type { CanvasTool } from "./top-bar-menu-model.js";
 import { TopBarToolButton } from "./top-bar-tool-button.js";
 import type { ToolId } from "./top-bar-tool-button.js";
@@ -132,7 +133,11 @@ const TopBarTools = ({
   const available = { commentAvailable, vectorAvailable };
 
   return (
-    <fieldset className="ui-tools topbar-tools" aria-label={copy.canvasTools}>
+    <fieldset
+      ref={setToolsBar}
+      className="ui-tools topbar-tools"
+      aria-label={copy.canvasTools}
+    >
       {DRAW_TOOLS.map((spec) => toToolButton(spec, tool, available, onTool))}
       <span className="topbar-tool-sep" aria-hidden="true" />
       {NOTE_TOOLS.map((spec) => toToolButton(spec, tool, available, onTool))}

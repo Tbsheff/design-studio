@@ -16,6 +16,7 @@ const ShortcutEntry = ({
     <span className="keysheet-label">
       {entry.label}
       {entry.hold && <span className="keysheet-hold"> {copy.textHold}</span>}
+      {entry.tip && <span className="keysheet-note">{entry.tip}</span>}
     </span>
     <span className="keysheet-keys">
       {entry.keys.map((keys, index) => (

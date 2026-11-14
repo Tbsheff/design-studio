@@ -4,6 +4,7 @@ import {
   toStageBounds,
   toStageMenuFinding,
   toStageMenuFindings,
+  toToolsCut,
 } from "./probe-menu.ts";
 import {
   hasContainingProps,
@@ -416,6 +417,7 @@ const IN_PAGE = [
   toOverlapFinding,
   toOverlapFindings,
   toPanelCut,
+  toToolsCut,
   toStageBounds,
   toStageMenuFinding,
   toItemFindings,

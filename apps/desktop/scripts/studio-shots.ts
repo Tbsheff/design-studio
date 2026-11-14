@@ -98,7 +98,7 @@ async function main(): Promise<void> {
     await page.mouse.move(820, 420);
     await shot(page, `comment-${theme}`);
     await page.keyboard.press("Escape");
-    await page.locator(".topbar-present").click();
+    await page.locator(".topbar-present-more").click();
     await shot(page, `present-menu-${theme}`);
     await page.keyboard.press("Escape");
     await page.locator('[aria-label="Tweak"]').click();
@@ -129,7 +129,7 @@ async function main(): Promise<void> {
       await shot(page, `edit-after-esc-${theme}`);
       await page.locator('[aria-label="Reload preview"]').click();
       await page.waitForTimeout(800);
-      await page.locator(".topbar-present").click();
+      await page.locator(".topbar-present-more").click();
       await page.getByRole("menuitem", { name: "In this window" }).click();
       await shot(page, `present-${theme}`);
       await page.keyboard.press("Escape");

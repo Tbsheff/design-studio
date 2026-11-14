@@ -10,6 +10,7 @@ const RELOAD_TIMEOUT_MS = 60_000;
 const PANEL_COUNT = 7;
 const MENU_ROLE = '[role="menu"]';
 const SELECT_TOOL = 'fieldset.topbar-tools button[aria-label="Select"]';
+const PRESENT_MENU = "button.topbar-present-more";
 
 const TOOLS = [
   "Select",
@@ -83,7 +84,7 @@ const isPresentItemRun = async (
   item: string,
   shown: string
 ): Promise<boolean> => {
-  if (!(await isClicked(page, "button.topbar-present"))) {
+  if (!(await isClicked(page, PRESENT_MENU))) {
     return (await isPaletteRun(page, item)) && isVisible(page, shown);
   }
 
@@ -151,7 +152,7 @@ const toPanelStates = (): ClipState[] =>
 
 const toTopBarStates = (): ClipState[] => [
   toOverlayState("present menu", async (page) => {
-    const isOpen = await isClicked(page, "button.topbar-present");
+    const isOpen = await isClicked(page, PRESENT_MENU);
 
     return isOpen && isVisible(page, MENU_ROLE);
   }),

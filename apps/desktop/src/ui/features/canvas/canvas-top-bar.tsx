@@ -89,8 +89,9 @@ const CanvasTopBar = (props: Props): ReactElement => {
   const { open: openPort, close: closePort } = port;
   const hasShip = Boolean(props.onShip);
   const openPortDialog = useCallback((): void => openPort(null), [openPort]);
-  const { onPresent } = props;
+  const { canPlay, onPresent } = props;
   const present = useMemo(() => presentItems(onPresent), [onPresent]);
+  const onPlay = useCallback((): void => onPresent("play"), [onPresent]);
 
   const {
     onFit: fit,
@@ -122,7 +123,7 @@ const CanvasTopBar = (props: Props): ReactElement => {
       <>
         {props.matrix}
         <span data-topbar-slot="review" style={CONTENTS_STYLE} />
-        <TopBarPresent present={present} />
+        <TopBarPresent canPlay={canPlay} onPlay={onPlay} present={present} />
         <TopBarConnect />
         <TopBarShare props={props} onPort={onPort} />
         {props.account}

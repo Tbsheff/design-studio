@@ -73,8 +73,13 @@ const useChromeProps = (
   const getStage = useCallback(() => stageRef.current, [stageRef]);
 
   const protoControl = useMemo(
-    () => ({ on: protoOn, play: proto.play, set: setProto }),
-    [protoOn, proto.play, setProto]
+    () => ({
+      canPlay: proto.canPlay,
+      on: protoOn,
+      play: proto.play,
+      set: setProto,
+    }),
+    [proto.canPlay, protoOn, proto.play, setProto]
   );
 
   return useMemo(

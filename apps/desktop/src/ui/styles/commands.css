@@ -299,6 +299,12 @@ body:has(dialog:modal) .keysheet {
   color: var(--text-3);
 }
 
+.keysheet-note {
+  display: block;
+  color: var(--text-3);
+  font-size: var(--t-xs);
+}
+
 .keysheet-keys {
   display: inline-flex;
   align-items: center;

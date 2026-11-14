@@ -8,11 +8,13 @@ import type {
   MenuSize,
   PanelInset,
 } from "./menu-fit-model.js";
+import { toolsBarStore } from "./tools-bar-store.js";
 
 type MenuFitKind = "root" | "submenu";
 
 const STAGE = ".stage";
 const PANEL_OPEN = '[data-inspector="open"]';
+const TOOLS_HOST = ".studio-tools";
 const SUBMENU_GAP = 2;
 const SUBMENU_LIFT = 4;
 const PLACE_X = "--menu-left";
@@ -44,6 +46,26 @@ const toPanelInset = (stage: Element): PanelInset => {
   };
 };
 
+const toToolsCut = (bounds: MenuBox): MenuBox => {
+  const tools = toolsBarStore.get();
+
+  if (tools === null || tools.closest(TOOLS_HOST) === null) {
+    return bounds;
+  }
+
+  const bar = tools.getBoundingClientRect();
+
+  if (bar.width === 0 || bar.height === 0) {
+    return bounds;
+  }
+
+  if (bar.width >= bar.height) {
+    return { ...bounds, bottom: Math.min(bounds.bottom, bar.top) };
+  }
+
+  return { ...bounds, left: Math.max(bounds.left, bar.right) };
+};
+
 const toBounds = (menu: HTMLElement): MenuBox => {
   const stage = menu.closest(STAGE);
   const view = { height: globalThis.innerHeight, width: globalThis.innerWidth };
@@ -52,10 +74,8 @@ const toBounds = (menu: HTMLElement): MenuBox => {
     return toVisibleBounds(null, view, { isOpen: false, width: 0 });
   }
 
-  return toVisibleBounds(
-    stage.getBoundingClientRect(),
-    view,
-    toPanelInset(stage)
+  return toToolsCut(
+    toVisibleBounds(stage.getBoundingClientRect(), view, toPanelInset(stage))
   );
 };
 

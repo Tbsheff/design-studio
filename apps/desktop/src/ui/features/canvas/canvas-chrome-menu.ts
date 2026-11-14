@@ -73,7 +73,12 @@ interface ChromeProps {
   selection: SelectionContext[];
   stage: () => HTMLElement | null;
   view: Omit<ComponentProps<typeof CanvasViewRow>, "viewport">;
-  proto: { on: boolean; set: (on: boolean) => void; play: () => void };
+  proto: {
+    canPlay: boolean;
+    on: boolean;
+    set: (on: boolean) => void;
+    play: () => void;
+  };
 }
 
 const addAndShow = (

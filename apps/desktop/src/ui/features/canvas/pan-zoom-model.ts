@@ -10,6 +10,7 @@ const ROUND_10_000 = 10_000;
 const ZOOM_100 = 100;
 
 const PAD = 24;
+const RAIL_INSET = 24;
 
 const FRAME_LABEL_H = 28;
 
@@ -75,6 +76,7 @@ const blocksZoomKey = (event: KeyboardEvent): boolean => {
 export {
   CLICK_ZOOM,
   LINE_PX,
+  RAIL_INSET,
   SELECTION_PAD,
   WHEEL_IDLE_MS,
   ZOOM_100,

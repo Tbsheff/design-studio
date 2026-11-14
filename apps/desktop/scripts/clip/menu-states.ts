@@ -25,6 +25,7 @@ const EDGE_PX = 40;
 const WHEEL_SPAN = 4;
 const PAN_STEPS = 6;
 const CHIP_ROW = 0.4;
+const LOW_ROW = 0.8;
 const NEAR_PX = 2;
 const NARROW: ViewSize = { height: 700, width: 900 };
 const MORE_CHIP = "button.frame-chip.more";
@@ -112,7 +113,10 @@ const setFit = async (page: Page): Promise<void> => {
   await page.waitForTimeout(HOVER_MS);
 };
 
-const setChipAtEdge = async (page: Page): Promise<string | null> => {
+const setChipAtEdge = async (
+  page: Page,
+  row: number
+): Promise<string | null> => {
   const label = await page.evaluate<string | null>(RIGHTMOST_CHIP);
 
   if (label === null) {
@@ -124,7 +128,7 @@ const setChipAtEdge = async (page: Page): Promise<string | null> => {
     {
       box: toChip(page, label),
       toGoal: (area) => ({
-        height: area.bottom * CHIP_ROW,
+        height: area.bottom * row,
         width: area.right - EDGE_PX,
       }),
     },
@@ -138,8 +142,8 @@ const setChipAtEdge = async (page: Page): Promise<string | null> => {
   return label;
 };
 
-const isFrameMenuOpen = async (page: Page): Promise<boolean> => {
-  const label = await setChipAtEdge(page);
+const isFrameMenuOpen = async (page: Page, row: number): Promise<boolean> => {
+  const label = await setChipAtEdge(page, row);
 
   if (label === null) {
     return false;
@@ -150,8 +154,12 @@ const isFrameMenuOpen = async (page: Page): Promise<boolean> => {
   return isShownSoon(page, FRAME_MENU);
 };
 
-const isRowOpen = async (page: Page, label: string): Promise<boolean> => {
-  if (!(await isFrameMenuOpen(page))) {
+const isRowOpen = async (
+  page: Page,
+  label: string,
+  chipRow: number
+): Promise<boolean> => {
+  if (!(await isFrameMenuOpen(page, chipRow))) {
     return false;
   }
 
@@ -175,13 +183,19 @@ const isRowOpen = async (page: Page, label: string): Promise<boolean> => {
 const isSubmenuOpen = async (page: Page, label: string): Promise<boolean> => {
   await setFit(page);
 
-  return isRowOpen(page, label);
+  return isRowOpen(page, label, CHIP_ROW);
+};
+
+const isToolsArrangeOpen = async (page: Page): Promise<boolean> => {
+  await setFit(page);
+
+  return isRowOpen(page, ARRANGE, LOW_ROW);
 };
 
 const isFitMenuOpen = async (page: Page): Promise<boolean> => {
   await setFit(page);
 
-  return isFrameMenuOpen(page);
+  return isFrameMenuOpen(page, CHIP_ROW);
 };
 
 const isPreviewMenuOpen = async (page: Page): Promise<boolean> => {
@@ -287,7 +301,7 @@ const isPanelArrangeOpen = async (page: Page): Promise<boolean> => {
   await setNarrow(page);
   await setFit(page);
 
-  const label = await setChipAtEdge(page);
+  const label = await setChipAtEdge(page, CHIP_ROW);
 
   if (label === null) {
     return false;
@@ -312,7 +326,7 @@ const isPanelArrangeOpen = async (page: Page): Promise<boolean> => {
     return false;
   }
 
-  return isRowOpen(page, ARRANGE);
+  return isRowOpen(page, ARRANGE, CHIP_ROW);
 };
 
 const toMenuState = (
@@ -345,6 +359,7 @@ const toCanvasMenuStates = (): ClipState[] => [
     toNarrowState(`${label} submenu`, (page) => isSubmenuOpen(page, label))
   ),
   toNarrowState("preview right-click", isPreviewMenuOpen),
+  toNarrowState("Arrange submenu next to the tools bar", isToolsArrangeOpen),
   {
     close: stopNarrow,
     name: "canvas menu Arrange with the inspector open 900x700",

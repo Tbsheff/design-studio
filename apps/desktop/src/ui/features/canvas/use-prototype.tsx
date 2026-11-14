@@ -12,6 +12,7 @@ import { LinkHandle } from "./link-handle.js";
 import { linkOfSelection } from "./link-view.js";
 import { LinkedFramePrompt } from "./linked-frame-prompt.js";
 import { toLinkRectsInput } from "./prototype-links-input.js";
+import { hasPrototypeStart } from "./prototype-model.js";
 import type { PrototypeOptions } from "./prototype-options-model.js";
 import { toFrameTitle, toLinkTitle } from "./prototype-titles-model.js";
 import { useImagePaste } from "./use-image-paste.js";
@@ -34,6 +35,7 @@ type LinkDragState = ReturnType<typeof usePrototypeDrag>;
 
 interface PrototypeParts {
   readonly artboard: ReactNode;
+  readonly canPlay: boolean;
   readonly play: () => void;
   readonly stage: ReactNode;
   readonly viewToggle: ViewToggle | undefined;
@@ -189,7 +191,9 @@ const usePrototype = (options: PrototypeOptions): PrototypeParts => {
 
   const artboard = toArtboardNode(scene);
 
-  return { artboard, play, stage, viewToggle };
+  const canPlay = hasPrototypeStart(prototypeFile.file);
+
+  return { artboard, canPlay, play, stage, viewToggle };
 };
 
 export { usePrototype };

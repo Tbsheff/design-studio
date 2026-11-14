@@ -17,6 +17,7 @@ export interface KeyBinding {
   group: KeyGroup;
   hold?: boolean;
   desktop?: boolean;
+  tip?: string;
 }
 
 export const KEYMAP = [

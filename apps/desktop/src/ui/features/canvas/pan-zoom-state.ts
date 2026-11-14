@@ -4,7 +4,7 @@ import { createLiveStore } from "../../platform/live-store.js";
 import type { LiveStore } from "../../platform/live-store.js";
 import type { ZoomSetting } from "../../platform/storage.js";
 import type { Box } from "./canvas-frames-model.js";
-import { LINE_PX, ZOOM_100, fitTop } from "./pan-zoom-model.js";
+import { LINE_PX, RAIL_INSET, ZOOM_100, fitTop } from "./pan-zoom-model.js";
 import type { PanZoomLayout } from "./pan-zoom-types.js";
 import type { WheelInput } from "./pan-zoom-wheel-types.js";
 
@@ -89,7 +89,7 @@ const toWheelPixels = (wheelInput: WheelInput, pageHeight: number): Point => {
 };
 
 const toNumericBase = (stage: Stage, active: Box, zoom: number): Point => ({
-  x: Math.round((stage.width - active.width * zoom) / 2),
+  x: Math.max(RAIL_INSET, Math.round((stage.width - active.width * zoom) / 2)),
   y: fitTop(stage.height, active.height * zoom),
 });
 

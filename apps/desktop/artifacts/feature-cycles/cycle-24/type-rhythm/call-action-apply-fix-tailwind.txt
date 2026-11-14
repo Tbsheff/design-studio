@@ -1,0 +1,163 @@
+call-action direct-edit.applyReviewFix on http://127.0.0.1:4271. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 10 ms, git spawns: not counted (server side)
+{
+  "applied": [
+    "type-c42803fc50",
+    "type-d315038106"
+  ],
+  "files": [
+    "index.html"
+  ],
+  "skipped": [],
+  "version": {
+    "changedFiles": [
+      "index.html"
+    ],
+    "createdAt": 1794631002062,
+    "directionId": "main",
+    "id": "pending-7faa9a9fcd003131",
+    "meta": {
+      "kind": "manual",
+      "prompt": "Direct edit of index.html:12:183: font-size: 14px\nDirect edit of index.html:10:1: font-size: 14px; add class max-w-prose; add class max-w-prose"
+    },
+    "parentId": "2a673911c1115ccb222d790d307d5a926e96f628",
+    "title": "Edit 2 elements: font-size, classes"
+  }
+}
+
+[mcp] ok, 419 ms, git spawns: not counted (server side)
+{
+  "applied": [],
+  "files": [],
+  "skipped": [
+    {
+      "id": "type-c42803fc50",
+      "reason": "This finding is gone from the latest review. Run the review again."
+    },
+    {
+      "id": "type-d315038106",
+      "reason": "This finding is gone from the latest review. Run the review again."
+    }
+  ],
+  "version": null
+}
+
+[agent] ok, 1 ms, git spawns: not counted (server side)
+{
+  "applied": [],
+  "files": [],
+  "skipped": [
+    {
+      "id": "type-c42803fc50",
+      "reason": "This finding is gone from the latest review. Run the review again."
+    },
+    {
+      "id": "type-d315038106",
+      "reason": "This finding is gone from the latest review. Run the review again."
+    }
+  ],
+  "version": null
+}
+
+diff http -> mcp:
+-   "applied": [
++   "applied": [],
+-     "type-c42803fc50",
++   "files": [],
+-     "type-d315038106"
++   "skipped": [
+-   ],
++     {
+-   "files": [
++       "id": "type-c42803fc50",
+-     "index.html"
++       "reason": "This finding is gone from the latest review. Run the review again."
+-   ],
++     },
+-   "skipped": [],
++     {
+-   "version": {
++       "id": "type-d315038106",
+-     "changedFiles": [
++       "reason": "This finding is gone from the latest review. Run the review again."
+-       "index.html"
++     }
+-     ],
++   ],
+-     "createdAt": 1794631002062,
++   "version": null
+-     "directionId": "main",
++ }
+-     "id": "pending-7faa9a9fcd003131",
++ 
+-     "meta": {
++ 
+-       "kind": "manual",
++ 
+-       "prompt": "Direct edit of index.html:12:183: font-size: 14px\nDirect edit of index.html:10:1: font-size: 14px; add class max-w-prose; add class max-w-prose"
++ 
+-     },
++ 
+-     "parentId": "2a673911c1115ccb222d790d307d5a926e96f628",
++ 
+-     "title": "Edit 2 elements: font-size, classes"
++ 
+-   }
++ 
+- }
++ 
+
+diff http -> agent:
+-   "applied": [
++   "applied": [],
+-     "type-c42803fc50",
++   "files": [],
+-     "type-d315038106"
++   "skipped": [
+-   ],
++     {
+-   "files": [
++       "id": "type-c42803fc50",
+-     "index.html"
++       "reason": "This finding is gone from the latest review. Run the review again."
+-   ],
++     },
+-   "skipped": [],
++     {
+-   "version": {
++       "id": "type-d315038106",
+-     "changedFiles": [
++       "reason": "This finding is gone from the latest review. Run the review again."
+-       "index.html"
++     }
+-     ],
++   ],
+-     "createdAt": 1794631002062,
++   "version": null
+-     "directionId": "main",
++ }
+-     "id": "pending-7faa9a9fcd003131",
++ 
+-     "meta": {
++ 
+-       "kind": "manual",
++ 
+-       "prompt": "Direct edit of index.html:12:183: font-size: 14px\nDirect edit of index.html:10:1: font-size: 14px; add class max-w-prose; add class max-w-prose"
++ 
+-     },
++ 
+-     "parentId": "2a673911c1115ccb222d790d307d5a926e96f628",
++ 
+-     "title": "Edit 2 elements: font-size, classes"
++ 
+-   }
++ 
+- }
++ 
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 0 error results
+
+fix: compare the outputs above, then run call-action again with the id direct-edit.applyReviewFix and the same input

@@ -1,0 +1,549 @@
+call-action direct-edit.runReview on http://127.0.0.1:4271. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 381 ms, git spawns: not counted (server side)
+{
+  "counts": {
+    "high": 5,
+    "low": 4,
+    "medium": 1
+  },
+  "directionId": "main",
+  "findings": [
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (high): This body text is 13 px. Use 14 px or more for text people read. This text is 13 px, 1 of 10 font sizes on this frame (48 px x1, 30 px x1, 26 px x1, 22 px x1, 19 px x1, 17 px x1, 16 px x4, 15 px x1, 13 px x1, 11 px x1). Use 7 sizes or fewer.\nElement: p \"Small grey body text that people still need to read on this \" (at index.html:24:45, selector body > div > div:nth-of-type(1) > p).\nSet body text at 14 px or more. Keep smaller sizes for labels, captions and badges. Use a short type scale: snap each rare font size to a size the frame already uses often, or to a type token.",
+      "element": "p \"Small grey body text that people still need to read on this \"",
+      "fix": {
+        "edit": {
+          "selector": "body > div > div:nth-of-type(1) > p",
+          "source": {
+            "col": 45,
+            "file": "index.html",
+            "line": 24
+          },
+          "style": {
+            "font-size": "14px"
+          },
+          "tag": "p"
+        },
+        "label": "Use 14 px"
+      },
+      "id": "type-520b3d0254",
+      "kind": "type",
+      "message": "This body text is 13 px. Use 14 px or more for text people read. This text is 13 px, 1 of 10 font sizes on this frame (48 px x1, 30 px x1, 26 px x1, 22 px x1, 19 px x1, 17 px x1, 16 px x4, 15 px x1, 13 px x1, 11 px x1). Use 7 sizes or fewer.",
+      "selector": "body > div > div:nth-of-type(1) > p",
+      "severity": "high",
+      "source": "index.html:24:45"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (high): This body text is 11 px. Use 14 px or more for text people read. This text is 11 px, 1 of 10 font sizes on this frame (48 px x1, 30 px x1, 26 px x1, 22 px x1, 19 px x1, 17 px x1, 16 px x4, 15 px x1, 13 px x1, 11 px x1). Use 7 sizes or fewer.\nElement: p \"Even smaller body text that is hard to read for most people \" (at index.html:25:45, selector body > div > div:nth-of-type(2) > p).\nSet body text at 14 px or more. Keep smaller sizes for labels, captions and badges. Use a short type scale: snap each rare font size to a size the frame already uses often, or to a type token.",
+      "element": "p \"Even smaller body text that is hard to read for most people \"",
+      "fix": {
+        "edit": {
+          "selector": "body > div > div:nth-of-type(2) > p",
+          "source": {
+            "col": 45,
+            "file": "index.html",
+            "line": 25
+          },
+          "style": {
+            "font-size": "14px"
+          },
+          "tag": "p"
+        },
+        "label": "Use 14 px"
+      },
+      "id": "type-331983f916",
+      "kind": "type",
+      "message": "This body text is 11 px. Use 14 px or more for text people read. This text is 11 px, 1 of 10 font sizes on this frame (48 px x1, 30 px x1, 26 px x1, 22 px x1, 19 px x1, 17 px x1, 16 px x4, 15 px x1, 13 px x1, 11 px x1). Use 7 sizes or fewer.",
+      "selector": "body > div > div:nth-of-type(2) > p",
+      "severity": "high",
+      "source": "index.html:25:45"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (high): This text is 15 px, 1 of 10 font sizes on this frame (48 px x1, 30 px x1, 26 px x1, 22 px x1, 19 px x1, 17 px x1, 16 px x4, 15 px x1, 13 px x1, 11 px x1). Use 7 sizes or fewer. This text wraps to 2 lines with a line height of 1.10. Use 1.35 or more.\nElement: p \"A calm planner for small teams that keeps every task, note a\" (at index.html:20:1, selector body > section > p:nth-of-type(1)).\nUse a short type scale: snap each rare font size to a size the frame already uses often, or to a type token. Give body text that wraps a line height of about 1.5.",
+      "element": "p \"A calm planner for small teams that keeps every task, note a\"",
+      "fix": {
+        "edit": {
+          "selector": "body > section > p:nth-of-type(1)",
+          "source": {
+            "col": 1,
+            "file": "index.html",
+            "line": 20
+          },
+          "style": {
+            "font-size": "16px",
+            "line-height": "1.5"
+          },
+          "tag": "p"
+        },
+        "label": "Use 16 px; Set line height 1.5"
+      },
+      "id": "type-8ea351295f",
+      "kind": "type",
+      "message": "This text is 15 px, 1 of 10 font sizes on this frame (48 px x1, 30 px x1, 26 px x1, 22 px x1, 19 px x1, 17 px x1, 16 px x4, 15 px x1, 13 px x1, 11 px x1). Use 7 sizes or fewer. This text wraps to 2 lines with a line height of 1.10. Use 1.35 or more.",
+      "selector": "body > section > p:nth-of-type(1)",
+      "severity": "high",
+      "source": "index.html:20:1"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (high): This text is 17 px, 1 of 10 font sizes on this frame (48 px x1, 30 px x1, 26 px x1, 22 px x1, 19 px x1, 17 px x1, 16 px x4, 15 px x1, 13 px x1, 11 px x1). Use 7 sizes or fewer.\nElement: p \"Body copy at seventeen pixels.\" (at index.html:26:45, selector body > div > div:nth-of-type(3) > p:nth-of-type(1)).\nUse a short type scale: snap each rare font size to a size the frame already uses often, or to a type token.",
+      "element": "p \"Body copy at seventeen pixels.\"",
+      "fix": {
+        "edit": {
+          "selector": "body > div > div:nth-of-type(3) > p:nth-of-type(1)",
+          "source": {
+            "col": 45,
+            "file": "index.html",
+            "line": 26
+          },
+          "style": {
+            "font-size": "16px"
+          },
+          "tag": "p"
+        },
+        "label": "Use 16 px"
+      },
+      "id": "type-b82dc25658",
+      "kind": "type",
+      "message": "This text is 17 px, 1 of 10 font sizes on this frame (48 px x1, 30 px x1, 26 px x1, 22 px x1, 19 px x1, 17 px x1, 16 px x4, 15 px x1, 13 px x1, 11 px x1). Use 7 sizes or fewer.",
+      "selector": "body > div > div:nth-of-type(3) > p:nth-of-type(1)",
+      "severity": "high",
+      "source": "index.html:26:45"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (high): This text is 19 px, 1 of 10 font sizes on this frame (48 px x1, 30 px x1, 26 px x1, 22 px x1, 19 px x1, 17 px x1, 16 px x4, 15 px x1, 13 px x1, 11 px x1). Use 7 sizes or fewer.\nElement: p \"Body copy at nineteen pixels.\" (at index.html:26:94, selector body > div > div:nth-of-type(3) > p:nth-of-type(2)).\nUse a short type scale: snap each rare font size to a size the frame already uses often, or to a type token.",
+      "element": "p \"Body copy at nineteen pixels.\"",
+      "fix": null,
+      "id": "type-e91802b1a9",
+      "kind": "type",
+      "message": "This text is 19 px, 1 of 10 font sizes on this frame (48 px x1, 30 px x1, 26 px x1, 22 px x1, 19 px x1, 17 px x1, 16 px x4, 15 px x1, 13 px x1, 11 px x1). Use 7 sizes or fewer.",
+      "selector": "body > div > div:nth-of-type(3) > p:nth-of-type(2)",
+      "severity": "high",
+      "source": "index.html:26:94"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (medium): Lines in this text are about 121 characters long. Keep them at 85 characters or fewer.\nElement: p \"This long paragraph runs across the full width of the frame \" (at index.html:21:1, selector body > section > p:nth-of-type(2)).\nKeep body lines at about 45 to 75 characters, for example with max-width: 65ch or max-w-prose.",
+      "element": "p \"This long paragraph runs across the full width of the frame \"",
+      "fix": {
+        "edit": {
+          "selector": "body > section > p:nth-of-type(2)",
+          "source": {
+            "col": 1,
+            "file": "index.html",
+            "line": 21
+          },
+          "style": {
+            "max-width": "65ch"
+          },
+          "tag": "p"
+        },
+        "label": "Limit line length"
+      },
+      "id": "type-5d7f3783ab",
+      "kind": "type",
+      "message": "Lines in this text are about 121 characters long. Keep them at 85 characters or fewer.",
+      "selector": "body > section > p:nth-of-type(2)",
+      "severity": "medium",
+      "source": "index.html:21:1"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (low): This 48 px text has a line height of 1.60. Use 1.4 or less on large text.\nElement: h1 \"Plan your week with less effort\" (at index.html:19:1, selector body > section > h1).\nGive large headings a tight line height of about 1.1 to 1.25.",
+      "element": "h1 \"Plan your week with less effort\"",
+      "fix": {
+        "edit": {
+          "selector": "body > section > h1",
+          "source": {
+            "col": 1,
+            "file": "index.html",
+            "line": 19
+          },
+          "style": {
+            "line-height": "1.25"
+          },
+          "tag": "h1"
+        },
+        "label": "Set line height 1.25"
+      },
+      "id": "type-c192813aab",
+      "kind": "type",
+      "message": "This 48 px text has a line height of 1.60. Use 1.4 or less on large text.",
+      "selector": "body > section > h1",
+      "severity": "low",
+      "source": "index.html:19:1"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (low): padding 13 px is not on the 4 px spacing scale; 3 elements use it. Use 12px.\nElement: div \"Tasks Small grey body text that people still need to read on\" (at index.html:24:1, selector body > div > div:nth-of-type(1)).\nUse spacing on a 4 px step (4, 8, 12, 16, 24, 32) or a spacing token.",
+      "element": "div \"Tasks Small grey body text that people still need to read on\"",
+      "fix": {
+        "edit": {
+          "selector": "body > div > div:nth-of-type(1)",
+          "source": {
+            "col": 1,
+            "file": "index.html",
+            "line": 24
+          },
+          "style": {
+            "padding-bottom": "12px",
+            "padding-left": "12px",
+            "padding-right": "12px",
+            "padding-top": "12px"
+          },
+          "tag": "div"
+        },
+        "label": "Snap to 12px"
+      },
+      "id": "type-46fa1bce4e",
+      "kind": "type",
+      "message": "padding 13 px is not on the 4 px spacing scale; 3 elements use it. Use 12px.",
+      "selector": "body > div > div:nth-of-type(1)",
+      "severity": "low",
+      "source": "index.html:24:1"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (low): padding 13 px is not on the 4 px spacing scale; 3 elements use it. Use 12px.\nElement: div \"Notes Even smaller body text that is hard to read for most p\" (at index.html:25:1, selector body > div > div:nth-of-type(2)).\nUse spacing on a 4 px step (4, 8, 12, 16, 24, 32) or a spacing token.",
+      "element": "div \"Notes Even smaller body text that is hard to read for most p\"",
+      "fix": {
+        "edit": {
+          "selector": "body > div > div:nth-of-type(2)",
+          "source": {
+            "col": 1,
+            "file": "index.html",
+            "line": 25
+          },
+          "style": {
+            "padding-bottom": "12px",
+            "padding-left": "12px",
+            "padding-right": "12px",
+            "padding-top": "12px"
+          },
+          "tag": "div"
+        },
+        "label": "Snap to 12px"
+      },
+      "id": "type-35c56cd8c5",
+      "kind": "type",
+      "message": "padding 13 px is not on the 4 px spacing scale; 3 elements use it. Use 12px.",
+      "selector": "body > div > div:nth-of-type(2)",
+      "severity": "low",
+      "source": "index.html:25:1"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (low): padding 13 px is not on the 4 px spacing scale; 3 elements use it. Use 12px.\nElement: div \"Dates Body copy at seventeen pixels. Body copy at nineteen p\" (at index.html:26:1, selector body > div > div:nth-of-type(3)).\nUse spacing on a 4 px step (4, 8, 12, 16, 24, 32) or a spacing token.",
+      "element": "div \"Dates Body copy at seventeen pixels. Body copy at nineteen p\"",
+      "fix": {
+        "edit": {
+          "selector": "body > div > div:nth-of-type(3)",
+          "source": {
+            "col": 1,
+            "file": "index.html",
+            "line": 26
+          },
+          "style": {
+            "padding-bottom": "12px",
+            "padding-left": "12px",
+            "padding-right": "12px",
+            "padding-top": "12px"
+          },
+          "tag": "div"
+        },
+        "label": "Snap to 12px"
+      },
+      "id": "type-2ab918cb98",
+      "kind": "type",
+      "message": "padding 13 px is not on the 4 px spacing scale; 3 elements use it. Use 12px.",
+      "selector": "body > div > div:nth-of-type(3)",
+      "severity": "low",
+      "source": "index.html:26:1"
+    }
+  ],
+  "frame": {
+    "height": 900,
+    "width": 1440
+  },
+  "notes": [
+    "This project has no design tokens yet, so Review skips the off-token check."
+  ],
+  "projectId": "pvLCEDnGUo",
+  "ranAt": 1794630909301,
+  "versionId": "7ab7362d5b0b1dffdd1d3481047771df56e4a0a1"
+}
+
+[mcp] ok, 64 ms, git spawns: not counted (server side)
+{
+  "counts": {
+    "high": 5,
+    "low": 4,
+    "medium": 1
+  },
+  "directionId": "main",
+  "findings": [
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (high): This body text is 13 px. Use 14 px or more for text people read. This text is 13 px, 1 of 10 font sizes on this frame (48 px x1, 30 px x1, 26 px x1, 22 px x1, 19 px x1, 17 px x1, 16 px x4, 15 px x1, 13 px x1, 11 px x1). Use 7 sizes or fewer.\nElement: p \"Small grey body text that people still need to read on this \" (at index.html:24:45, selector body > div > div:nth-of-type(1) > p).\nSet body text at 14 px or more. Keep smaller sizes for labels, captions and badges. Use a short type scale: snap each rare font size to a size the frame already uses often, or to a type token.",
+      "element": "p \"Small grey body text that people still need to read on this \"",
+      "fix": {
+        "edit": {
+          "selector": "body > div > div:nth-of-type(1) > p",
+          "source": {
+            "col": 45,
+            "file": "index.html",
+            "line": 24
+          },
+          "style": {
+            "font-size": "14px"
+          },
+          "tag": "p"
+        },
+        "label": "Use 14 px"
+      },
+      "id": "type-520b3d0254",
+      "kind": "type",
+      "message": "This body text is 13 px. Use 14 px or more for text people read. This text is 13 px, 1 of 10 font sizes on this frame (48 px x1, 30 px x1, 26 px x1, 22 px x1, 19 px x1, 17 px x1, 16 px x4, 15 px x1, 13 px x1, 11 px x1). Use 7 sizes or fewer.",
+      "selector": "body > div > div:nth-of-type(1) > p",
+      "severity": "high",
+      "source": "index.html:24:45"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (high): This body text is 11 px. Use 14 px or more for text people read. This text is 11 px, 1 of 10 font sizes on this frame (48 px x1, 30 px x1, 26 px x1, 22 px x1, 19 px x1, 17 px x1, 16 px x4, 15 px x1, 13 px x1, 11 px x1). Use 7 sizes or fewer.\nElement: p \"Even smaller body text that is hard to read for most people \" (at index.html:25:45, selector body > div > div:nth-of-type(2) > p).\nSet body text at 14 px or more. Keep smaller sizes for labels, captions and badges. Use a short type scale: snap each rare font size to a size the frame already uses often, or to a type token.",
+      "element": "p \"Even smaller body text that is hard to read for most people \"",
+      "fix": {
+        "edit": {
+          "selector": "body > div > div:nth-of-type(2) > p",
+          "source": {
+            "col": 45,
+            "file": "index.html",
+            "line": 25
+          },
+          "style": {
+            "font-size": "14px"
+          },
+          "tag": "p"
+        },
+        "label": "Use 14 px"
+      },
+      "id": "type-331983f916",
+      "kind": "type",
+      "message": "This body text is 11 px. Use 14 px or more for text people read. This text is 11 px, 1 of 10 font sizes on this frame (48 px x1, 30 px x1, 26 px x1, 22 px x1, 19 px x1, 17 px x1, 16 px x4, 15 px x1, 13 px x1, 11 px x1). Use 7 sizes or fewer.",
+      "selector": "body > div > div:nth-of-type(2) > p",
+      "severity": "high",
+      "source": "index.html:25:45"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (high): This text is 15 px, 1 of 10 font sizes on this frame (48 px x1, 30 px x1, 26 px x1, 22 px x1, 19 px x1, 17 px x1, 16 px x4, 15 px x1, 13 px x1, 11 px x1). Use 7 sizes or fewer. This text wraps to 2 lines with a line height of 1.10. Use 1.35 or more.\nElement: p \"A calm planner for small teams that keeps every task, note a\" (at index.html:20:1, selector body > section > p:nth-of-type(1)).\nUse a short type scale: snap each rare font size to a size the frame already uses often, or to a type token. Give body text that wraps a line height of about 1.5.",
+      "element": "p \"A calm planner for small teams that keeps every task, note a\"",
+      "fix": {
+        "edit": {
+          "selector": "body > section > p:nth-of-type(1)",
+          "source": {
+            "col": 1,
+            "file": "index.html",
+            "line": 20
+          },
+          "style": {
+            "font-size": "16px",
+            "line-height": "1.5"
+          },
+          "tag": "p"
+        },
+        "label": "Use 16 px; Set line height 1.5"
+      },
+      "id": "type-8ea351295f",
+      "kind": "type",
+      "message": "This text is 15 px, 1 of 10 font sizes on this frame (48 px x1, 30 px x1, 26 px x1, 22 px x1, 19 px x1, 17 px x1, 16 px x4, 15 px x1, 13 px x1, 11 px x1). Use 7 sizes or fewer. This text wraps to 2 lines with a line height of 1.10. Use 1.35 or more.",
+      "selector": "body > section > p:nth-of-type(1)",
+      "severity": "high",
+      "source": "index.html:20:1"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (high): This text is 17 px, 1 of 10 font sizes on this frame (48 px x1, 30 px x1, 26 px x1, 22 px x1, 19 px x1, 17 px x1, 16 px x4, 15 px x1, 13 px x1, 11 px x1). Use 7 sizes or fewer.\nElement: p \"Body copy at seventeen pixels.\" (at index.html:26:45, selector body > div > div:nth-of-type(3) > p:nth-of-type(1)).\nUse a short type scale: snap each rare font size to a size the frame already uses often, or to a type token.",
+      "element": "p \"Body copy at seventeen pixels.\"",
+      "fix": {
+        "edit": {
+          "selector": "body > div > div:nth-of-type(3) > p:nth-of-type(1)",
+          "source": {
+            "col": 45,
+            "file": "index.html",
+            "line": 26
+          },
+          "style": {
+            "font-size": "16px"
+          },
+          "tag": "p"
+        },
+        "label": "Use 16 px"
+      },
+      "id": "type-b82dc25658",
+      "kind": "type",
+      "message": "This text is 17 px, 1 of 10 font sizes on this frame (48 px x1, 30 px x1, 26 px x1, 22 px x1, 19 px x1, 17 px x1, 16 px x4, 15 px x1, 13 px x1, 11 px x1). Use 7 sizes or fewer.",
+      "selector": "body > div > div:nth-of-type(3) > p:nth-of-type(1)",
+      "severity": "high",
+      "source": "index.html:26:45"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (high): This text is 19 px, 1 of 10 font sizes on this frame (48 px x1, 30 px x1, 26 px x1, 22 px x1, 19 px x1, 17 px x1, 16 px x4, 15 px x1, 13 px x1, 11 px x1). Use 7 sizes or fewer.\nElement: p \"Body copy at nineteen pixels.\" (at index.html:26:94, selector body > div > div:nth-of-type(3) > p:nth-of-type(2)).\nUse a short type scale: snap each rare font size to a size the frame already uses often, or to a type token.",
+      "element": "p \"Body copy at nineteen pixels.\"",
+      "fix": null,
+      "id": "type-e91802b1a9",
+      "kind": "type",
+      "message": "This text is 19 px, 1 of 10 font sizes on this frame (48 px x1, 30 px x1, 26 px x1, 22 px x1, 19 px x1, 17 px x1, 16 px x4, 15 px x1, 13 px x1, 11 px x1). Use 7 sizes or fewer.",
+      "selector": "body > div > div:nth-of-type(3) > p:nth-of-type(2)",
+      "severity": "high",
+      "source": "index.html:26:94"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (medium): Lines in this text are about 121 characters long. Keep them at 85 characters or fewer.\nElement: p \"This long paragraph runs across the full width of the frame \" (at index.html:21:1, selector body > section > p:nth-of-type(2)).\nKeep body lines at about 45 to 75 characters, for example with max-width: 65ch or max-w-prose.",
+      "element": "p \"This long paragraph runs across the full width of the frame \"",
+      "fix": {
+        "edit": {
+          "selector": "body > section > p:nth-of-type(2)",
+          "source": {
+            "col": 1,
+            "file": "index.html",
+            "line": 21
+          },
+          "style": {
+            "max-width": "65ch"
+          },
+          "tag": "p"
+        },
+        "label": "Limit line length"
+      },
+      "id": "type-5d7f3783ab",
+      "kind": "type",
+      "message": "Lines in this text are about 121 characters long. Keep them at 85 characters or fewer.",
+      "selector": "body > section > p:nth-of-type(2)",
+      "severity": "medium",
+      "source": "index.html:21:1"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (low): This 48 px text has a line height of 1.60. Use 1.4 or less on large text.\nElement: h1 \"Plan your week with less effort\" (at index.html:19:1, selector body > section > h1).\nGive large headings a tight line height of about 1.1 to 1.25.",
+      "element": "h1 \"Plan your week with less effort\"",
+      "fix": {
+        "edit": {
+          "selector": "body > section > h1",
+          "source": {
+            "col": 1,
+            "file": "index.html",
+            "line": 19
+          },
+          "style": {
+            "line-height": "1.25"
+          },
+          "tag": "h1"
+        },
+        "label": "Set line height 1.25"
+      },
+      "id": "type-c192813aab",
+      "kind": "type",
+      "message": "This 48 px text has a line height of 1.60. Use 1.4 or less on large text.",
+      "selector": "body > section > h1",
+      "severity": "low",
+      "source": "index.html:19:1"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (low): padding 13 px is not on the 4 px spacing scale; 3 elements use it. Use 12px.\nElement: div \"Tasks Small grey body text that people still need to read on\" (at index.html:24:1, selector body > div > div:nth-of-type(1)).\nUse spacing on a 4 px step (4, 8, 12, 16, 24, 32) or a spacing token.",
+      "element": "div \"Tasks Small grey body text that people still need to read on\"",
+      "fix": {
+        "edit": {
+          "selector": "body > div > div:nth-of-type(1)",
+          "source": {
+            "col": 1,
+            "file": "index.html",
+            "line": 24
+          },
+          "style": {
+            "padding-bottom": "12px",
+            "padding-left": "12px",
+            "padding-right": "12px",
+            "padding-top": "12px"
+          },
+          "tag": "div"
+        },
+        "label": "Snap to 12px"
+      },
+      "id": "type-46fa1bce4e",
+      "kind": "type",
+      "message": "padding 13 px is not on the 4 px spacing scale; 3 elements use it. Use 12px.",
+      "selector": "body > div > div:nth-of-type(1)",
+      "severity": "low",
+      "source": "index.html:24:1"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (low): padding 13 px is not on the 4 px spacing scale; 3 elements use it. Use 12px.\nElement: div \"Notes Even smaller body text that is hard to read for most p\" (at index.html:25:1, selector body > div > div:nth-of-type(2)).\nUse spacing on a 4 px step (4, 8, 12, 16, 24, 32) or a spacing token.",
+      "element": "div \"Notes Even smaller body text that is hard to read for most p\"",
+      "fix": {
+        "edit": {
+          "selector": "body > div > div:nth-of-type(2)",
+          "source": {
+            "col": 1,
+            "file": "index.html",
+            "line": 25
+          },
+          "style": {
+            "padding-bottom": "12px",
+            "padding-left": "12px",
+            "padding-right": "12px",
+            "padding-top": "12px"
+          },
+          "tag": "div"
+        },
+        "label": "Snap to 12px"
+      },
+      "id": "type-35c56cd8c5",
+      "kind": "type",
+      "message": "padding 13 px is not on the 4 px spacing scale; 3 elements use it. Use 12px.",
+      "selector": "body > div > div:nth-of-type(2)",
+      "severity": "low",
+      "source": "index.html:25:1"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, type and spacing (low): padding 13 px is not on the 4 px spacing scale; 3 elements use it. Use 12px.\nElement: div \"Dates Body copy at seventeen pixels. Body copy at nineteen p\" (at index.html:26:1, selector body > div > div:nth-of-type(3)).\nUse spacing on a 4 px step (4, 8, 12, 16, 24, 32) or a spacing token.",
+      "element": "div \"Dates Body copy at seventeen pixels. Body copy at nineteen p\"",
+      "fix": {
+        "edit": {
+          "selector": "body > div > div:nth-of-type(3)",
+          "source": {
+            "col": 1,
+            "file": "index.html",
+            "line": 26
+          },
+          "style": {
+            "padding-bottom": "12px",
+            "padding-left": "12px",
+            "padding-right": "12px",
+            "padding-top": "12px"
+          },
+          "tag": "div"
+        },
+        "label": "Snap to 12px"
+      },
+      "id": "type-2ab918cb98",
+      "kind": "type",
+      "message": "padding 13 px is not on the 4 px spacing scale; 3 elements use it. Use 12px.",
+      "selector": "body > div > div:nth-of-type(3)",
+      "severity": "low",
+      "source": "index.html:26:1"
+    }
+  ],
+  "frame": {
+    "height": 900,
+    "width": 1440
+  },
+  "notes": [
+    "This project has no design tokens yet, so Review skips the off-token check."
+  ],
+  "projectId": "pvLCEDnGUo",
+  "ranAt": 1794630909371,
+  "versionId": "7ab7362d5b0b1dffdd1d3481047771df56e4a0a1"
+}
+
+[agent] skipped: agent binding is off (legacy-agent)
+
+diff http -> mcp:
+-   "ranAt": 1794630909301,
++   "ranAt": 1794630909371,
+
+answered approval cards: none
+
+call-action: fail, 2 surfaces ran, 1 diffs, 0 failed surfaces, 0 error results
+
+fix: compare the outputs above, then run call-action again with the id direct-edit.runReview and the same input

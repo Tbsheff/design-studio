@@ -1,3 +1,4 @@
+import type { Direction, Project, RunRequest } from "@design-studio/contracts";
 import type { Hono } from "hono";
 
 import { loadRepoContext, startPortRun } from "../agent/index.js";
@@ -6,7 +7,21 @@ import { registerVariationRoutes } from "../variations/routes.js";
 import type { StartVariations } from "../variations/routes.js";
 import type { AppContext } from "./app-context.js";
 import { optionalString, readBody } from "./app-request.js";
+import { holdEditsForFirstVersion } from "./app-routes.js";
 import { startRunFromCall } from "./app-run-start.js";
+
+const startHeldRun = async (
+  ctx: AppContext,
+  project: Project,
+  direction: Direction,
+  request: RunRequest
+): Promise<string> => {
+  await holdEditsForFirstVersion(ctx, project.id);
+
+  const held = await ctx.loadDirection(project.id, direction.id);
+
+  return ctx.startRun(held.project, held.direction, request);
+};
 
 const bindRuns = (ctx: AppContext, startVariations: StartVariations): void => {
   bindRunLogRuntime({
@@ -22,7 +37,8 @@ const bindRuns = (ctx: AppContext, startVariations: StartVariations): void => {
           isRunning: (projectId, directionId) =>
             ctx.runner.isRunning(projectId, directionId),
           projects: ctx.projects,
-          startRun: ctx.startRun,
+          startRun: (project, direction, request) =>
+            startHeldRun(ctx, project, direction, request),
         },
         call
       ),

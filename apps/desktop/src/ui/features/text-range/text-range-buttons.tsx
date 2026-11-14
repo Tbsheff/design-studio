@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
+import { isStyleOn } from "./text-range-model.js";
 import type { TextRangeView } from "./use-text-range.js";
 
 import styles from "./text-range.module.css";
@@ -22,9 +23,10 @@ const TextRangeButtons = ({
   onColorToggle,
   view,
 }: TextRangeButtonsProps): ReactElement => {
-  const { handleBold, handleItalic, handleLink, isPending, tag } = view;
-  const isBold = tag === "strong" || tag === "b";
-  const isItalic = tag === "em" || tag === "i";
+  const { handleBold, handleItalic, handleLink, isPending } = view;
+  const isBold = isStyleOn("bold", view);
+  const isItalic = isStyleOn("italic", view);
+  const isLink = isStyleOn("link", view);
 
   return (
     <>
@@ -49,7 +51,7 @@ const TextRangeButtons = ({
         {copy.italicGlyph}
       </button>
       <button
-        className={`btn small ghost${toPressed(tag === "a")}`}
+        className={`btn small ghost${toPressed(isLink)}`}
         data-tip={copy.linkTip}
         disabled={isPending}
         onClick={handleLink}

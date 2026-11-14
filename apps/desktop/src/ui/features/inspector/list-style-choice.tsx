@@ -7,6 +7,7 @@ import type { ListType, ListTypeOption } from "./list-style-model.js";
 interface ListStyleChoiceProps {
   readonly isDisabled: boolean;
   readonly onPick: (type: ListType) => void;
+  readonly other: string | null;
   readonly type: ListType | null;
 }
 
@@ -27,6 +28,7 @@ const OPTIONS: readonly ListTypeOption[] = [
 const ListStyleChoice = ({
   isDisabled,
   onPick,
+  other,
   type,
 }: ListStyleChoiceProps): ReactElement => (
   <div className="segmented" role="toolbar" aria-label={textListCopy.typeLabel}>
@@ -39,6 +41,17 @@ const ListStyleChoice = ({
         option={option}
       />
     ))}
+    {other !== null && (
+      <button
+        type="button"
+        className="on"
+        aria-pressed
+        aria-disabled
+        data-tip={textListCopy.otherTip}
+      >
+        {`${textListCopy.other}: ${other}`}
+      </button>
+    )}
   </div>
 );
 

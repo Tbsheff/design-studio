@@ -1,4 +1,4 @@
-import type { SelectionContext } from "@design-studio/contracts";
+import type { SelectionContext, SourceLoc } from "@design-studio/contracts";
 
 import type { StyleValues } from "./css-value-model.js";
 
@@ -7,8 +7,15 @@ type ListType = "decimal" | "disc" | "none";
 type ListPosition = "inside" | "outside";
 
 interface ListStyle {
+  readonly other: string | null;
   readonly position: ListPosition;
   readonly type: ListType | null;
+}
+
+interface ListTarget {
+  readonly selector: string;
+  readonly source: SourceLoc;
+  readonly tag: string;
 }
 
 interface ListClassChange {
@@ -109,13 +116,87 @@ const toListPosition = (
   return toLastOwned(classes, POSITION_BY_CLASS) ?? "outside";
 };
 
+const toListOther = (values: Partial<StyleValues>): string | null => {
+  const raw = (values[TYPE_PROP] ?? "").trim().toLowerCase();
+
+  if (raw === "" || TYPE_BY_VALUE.has(raw)) {
+    return null;
+  }
+
+  return raw;
+};
+
 const toListStyle = (
   values: Partial<StyleValues>,
   classes: readonly string[] | null
 ): ListStyle => ({
+  other: toListOther(values),
   position: toListPosition(values, classes),
   type: toListType(values, classes),
 });
+
+const PARENT_TAG_PATTERN = /^(?<tag>[a-z][a-z0-9-]*)/u;
+
+const LIST_PARENT_TAGS: ReadonlySet<string> = new Set(["ol", "ul"]);
+
+const SELECTOR_JOIN = " > ";
+
+const toParentSelector = (selector: string): string | null => {
+  const cut = selector.lastIndexOf(SELECTOR_JOIN);
+
+  if (cut <= 0) {
+    return null;
+  }
+
+  return selector.slice(0, cut);
+};
+
+const toParentTag = (selection: SelectionContext): string | null => {
+  const tag =
+    PARENT_TAG_PATTERN.exec(selection.ancestors[0] ?? "")?.groups?.tag ?? null;
+
+  if (tag === null || !LIST_PARENT_TAGS.has(tag)) {
+    return null;
+  }
+
+  return tag;
+};
+
+const isSameFileParent = (
+  parentLoc: SourceLoc | null,
+  source: SourceLoc | null
+): parentLoc is SourceLoc => {
+  if (parentLoc === null || source === null) {
+    return false;
+  }
+
+  return (
+    parentLoc.file === source.file &&
+    (parentLoc.line !== source.line || parentLoc.col !== source.col)
+  );
+};
+
+const toParentTarget = (selection: SelectionContext): ListTarget | null => {
+  const source = selection.parentLoc ?? null;
+  const selector = toParentSelector(selection.selector);
+  const tag = toParentTag(selection);
+
+  if (
+    !isSameFileParent(source, selection.source) ||
+    selector === null ||
+    tag === null
+  ) {
+    return null;
+  }
+
+  return { selector, source, tag };
+};
+
+const isParentEditable = (
+  selection: SelectionContext | null,
+  classes: readonly string[] | null
+): boolean =>
+  selection !== null && classes !== null && toParentTarget(selection) !== null;
 
 const toSwapChange = (
   wanted: string,
@@ -152,7 +233,9 @@ const toOtherPosition = (position: ListPosition): ListPosition => {
 export {
   isListItem,
   isListLayer,
+  isParentEditable,
   toListStyle,
+  toParentTarget,
   toOtherPosition,
   toPositionClassChange,
   toPositionStyleChange,
@@ -164,6 +247,7 @@ export type {
   ListClassChange,
   ListPosition,
   ListStyle,
+  ListTarget,
   ListType,
   ListTypeOption,
 };

@@ -1,4 +1,7 @@
-import type { SelectionContext } from "@design-studio/contracts";
+import type {
+  DirectEditRequest,
+  SelectionContext,
+} from "@design-studio/contracts";
 import { startTransition, useCallback, useMemo, useState } from "react";
 
 import { api, errorText } from "../../api.js";
@@ -9,8 +12,10 @@ import type { ElementClasses } from "./element-classes-model.js";
 import {
   isListItem,
   isListLayer,
+  isParentEditable,
   toListStyle,
   toOtherPosition,
+  toParentTarget,
   toPositionClassChange,
   toPositionStyleChange,
   toTypeClassChange,
@@ -51,24 +56,37 @@ const toTailwindClasses = (
   return null;
 };
 
+const toRequestTarget = (
+  selection: SelectionContext
+): DirectEditRequest | null => {
+  if (isListItem(selection)) {
+    return toParentTarget(selection);
+  }
+
+  if (!selection.source) {
+    return null;
+  }
+
+  return {
+    selector: selection.selector,
+    source: selection.source,
+    ...toEditTarget(selection),
+  };
+};
+
 const applyClassChange = async (
   edit: DirectEdit,
   selection: SelectionContext,
   classes: ListClassChange
 ): Promise<void> => {
   const { directionId, projectId } = edit.scope;
-  const { source } = selection;
+  const target = toRequestTarget(selection);
 
-  if (!source || !directionId) {
+  if (target === null || !directionId) {
     return;
   }
 
-  await api.directEdit(projectId, directionId, {
-    classes,
-    selector: selection.selector,
-    source,
-    ...toEditTarget(selection),
-  });
+  await api.directEdit(projectId, directionId, { ...target, classes });
   edit.absorb({});
   edit.reselect();
 };
@@ -81,7 +99,10 @@ const useListStyle = (
   const [message, setMessage] = useState<string | null>(null);
   const tailwind = toTailwindClasses(classes);
   const isReady = classes === null || classes.variants !== null;
-  const isReadOnly = isListItem(selection);
+
+  const isReadOnly =
+    isListItem(selection) && !isParentEditable(selection, tailwind);
+
   const isShown = isListLayer(selection, tailwind);
 
   const style = useMemo(

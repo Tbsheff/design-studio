@@ -1,0 +1,425 @@
+call-action kit-drift.list on http://127.0.0.1:7460. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 5 ms, git spawns: not counted (server side)
+{
+  "items": [
+    {
+      "column": 7,
+      "confidence": "high",
+      "droppedClasses": [
+        "rounded-xl",
+        "border",
+        "bg-card",
+        "shadow-sm"
+      ],
+      "file": "app/status/page.tsx",
+      "id": "1f3b503e26fa181c",
+      "isScriptBuilt": false,
+      "keptClasses": [
+        "p-6"
+      ],
+      "kitComponent": {
+        "importPath": "@/components/ui/card",
+        "name": "Card"
+      },
+      "line": 11,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card",
+      "variant": null
+    },
+    {
+      "column": 9,
+      "confidence": "high",
+      "droppedClasses": [
+        "px-2",
+        "text-xs"
+      ],
+      "file": "app/status/page.tsx",
+      "id": "1f3c195b26fd1e21",
+      "isScriptBuilt": false,
+      "keptClasses": [
+        "rounded-full",
+        "bg-emerald-100",
+        "text-emerald-800"
+      ],
+      "kitComponent": {
+        "importPath": "@/components/ui/badge",
+        "name": "Badge"
+      },
+      "line": 14,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": "default",
+      "tag": "badge",
+      "variant": null
+    },
+    {
+      "column": 11,
+      "confidence": "high",
+      "droppedClasses": [
+        "bg-red-100",
+        "px-2",
+        "text-xs",
+        "text-red-800"
+      ],
+      "file": "app/status/page.tsx",
+      "id": "37ca194e2b18319c",
+      "isScriptBuilt": false,
+      "keptClasses": [
+        "rounded-full"
+      ],
+      "kitComponent": {
+        "importPath": "@/components/ui/badge",
+        "name": "Badge"
+      },
+      "line": 21,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": "destructive",
+      "tag": "badge",
+      "variant": null
+    },
+    {
+      "column": 10,
+      "confidence": "medium",
+      "droppedClasses": [
+        "rounded-xl",
+        "border",
+        "bg-card",
+        "shadow-sm"
+      ],
+      "file": "app/status/page.tsx",
+      "id": "1fa48fbe2a0c2a18",
+      "isScriptBuilt": false,
+      "keptClasses": [
+        "p-6"
+      ],
+      "kitComponent": {
+        "importPath": "@/components/ui/card",
+        "name": "Card"
+      },
+      "line": 4,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card",
+      "variant": null
+    },
+    {
+      "column": 7,
+      "confidence": "medium",
+      "droppedClasses": [
+        "rounded-xl",
+        "border",
+        "bg-card",
+        "shadow-sm"
+      ],
+      "file": "app/status/page.tsx",
+      "id": "1f3c9f6b26ff2221",
+      "isScriptBuilt": false,
+      "keptClasses": [
+        "p-6"
+      ],
+      "kitComponent": {
+        "importPath": "@/components/ui/card",
+        "name": "Card"
+      },
+      "line": 16,
+      "parts": [
+        "CardHeader",
+        "CardContent"
+      ],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card",
+      "variant": null
+    }
+  ],
+  "next": null
+}
+
+[mcp] ok, 10 ms, git spawns: not counted (server side)
+{
+  "items": [
+    {
+      "column": 7,
+      "confidence": "high",
+      "droppedClasses": [
+        "rounded-xl",
+        "border",
+        "bg-card",
+        "shadow-sm"
+      ],
+      "file": "app/status/page.tsx",
+      "id": "1f3b503e26fa181c",
+      "isScriptBuilt": false,
+      "keptClasses": [
+        "p-6"
+      ],
+      "kitComponent": {
+        "importPath": "@/components/ui/card",
+        "name": "Card"
+      },
+      "line": 11,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card",
+      "variant": null
+    },
+    {
+      "column": 9,
+      "confidence": "high",
+      "droppedClasses": [
+        "px-2",
+        "text-xs"
+      ],
+      "file": "app/status/page.tsx",
+      "id": "1f3c195b26fd1e21",
+      "isScriptBuilt": false,
+      "keptClasses": [
+        "rounded-full",
+        "bg-emerald-100",
+        "text-emerald-800"
+      ],
+      "kitComponent": {
+        "importPath": "@/components/ui/badge",
+        "name": "Badge"
+      },
+      "line": 14,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": "default",
+      "tag": "badge",
+      "variant": null
+    },
+    {
+      "column": 11,
+      "confidence": "high",
+      "droppedClasses": [
+        "bg-red-100",
+        "px-2",
+        "text-xs",
+        "text-red-800"
+      ],
+      "file": "app/status/page.tsx",
+      "id": "37ca194e2b18319c",
+      "isScriptBuilt": false,
+      "keptClasses": [
+        "rounded-full"
+      ],
+      "kitComponent": {
+        "importPath": "@/components/ui/badge",
+        "name": "Badge"
+      },
+      "line": 21,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": "destructive",
+      "tag": "badge",
+      "variant": null
+    },
+    {
+      "column": 10,
+      "confidence": "medium",
+      "droppedClasses": [
+        "rounded-xl",
+        "border",
+        "bg-card",
+        "shadow-sm"
+      ],
+      "file": "app/status/page.tsx",
+      "id": "1fa48fbe2a0c2a18",
+      "isScriptBuilt": false,
+      "keptClasses": [
+        "p-6"
+      ],
+      "kitComponent": {
+        "importPath": "@/components/ui/card",
+        "name": "Card"
+      },
+      "line": 4,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card",
+      "variant": null
+    },
+    {
+      "column": 7,
+      "confidence": "medium",
+      "droppedClasses": [
+        "rounded-xl",
+        "border",
+        "bg-card",
+        "shadow-sm"
+      ],
+      "file": "app/status/page.tsx",
+      "id": "1f3c9f6b26ff2221",
+      "isScriptBuilt": false,
+      "keptClasses": [
+        "p-6"
+      ],
+      "kitComponent": {
+        "importPath": "@/components/ui/card",
+        "name": "Card"
+      },
+      "line": 16,
+      "parts": [
+        "CardHeader",
+        "CardContent"
+      ],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card",
+      "variant": null
+    }
+  ],
+  "next": null
+}
+
+[agent] ok, 8 ms, git spawns: not counted (server side)
+{
+  "items": [
+    {
+      "column": 7,
+      "confidence": "high",
+      "droppedClasses": [
+        "rounded-xl",
+        "border",
+        "bg-card",
+        "shadow-sm"
+      ],
+      "file": "app/status/page.tsx",
+      "id": "1f3b503e26fa181c",
+      "isScriptBuilt": false,
+      "keptClasses": [
+        "p-6"
+      ],
+      "kitComponent": {
+        "importPath": "@/components/ui/card",
+        "name": "Card"
+      },
+      "line": 11,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card",
+      "variant": null
+    },
+    {
+      "column": 9,
+      "confidence": "high",
+      "droppedClasses": [
+        "px-2",
+        "text-xs"
+      ],
+      "file": "app/status/page.tsx",
+      "id": "1f3c195b26fd1e21",
+      "isScriptBuilt": false,
+      "keptClasses": [
+        "rounded-full",
+        "bg-emerald-100",
+        "text-emerald-800"
+      ],
+      "kitComponent": {
+        "importPath": "@/components/ui/badge",
+        "name": "Badge"
+      },
+      "line": 14,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": "default",
+      "tag": "badge",
+      "variant": null
+    },
+    {
+      "column": 11,
+      "confidence": "high",
+      "droppedClasses": [
+        "bg-red-100",
+        "px-2",
+        "text-xs",
+        "text-red-800"
+      ],
+      "file": "app/status/page.tsx",
+      "id": "37ca194e2b18319c",
+      "isScriptBuilt": false,
+      "keptClasses": [
+        "rounded-full"
+      ],
+      "kitComponent": {
+        "importPath": "@/components/ui/badge",
+        "name": "Badge"
+      },
+      "line": 21,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": "destructive",
+      "tag": "badge",
+      "variant": null
+    },
+    {
+      "column": 10,
+      "confidence": "medium",
+      "droppedClasses": [
+        "rounded-xl",
+        "border",
+        "bg-card",
+        "shadow-sm"
+      ],
+      "file": "app/status/page.tsx",
+      "id": "1fa48fbe2a0c2a18",
+      "isScriptBuilt": false,
+      "keptClasses": [
+        "p-6"
+      ],
+      "kitComponent": {
+        "importPath": "@/components/ui/card",
+        "name": "Card"
+      },
+      "line": 4,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card",
+      "variant": null
+    },
+    {
+      "column": 7,
+      "confidence": "medium",
+      "droppedClasses": [
+        "rounded-xl",
+        "border",
+        "bg-card",
+        "shadow-sm"
+      ],
+      "file": "app/status/page.tsx",
+      "id": "1f3c9f6b26ff2221",
+      "isScriptBuilt": false,
+      "keptClasses": [
+        "p-6"
+      ],
+      "kitComponent": {
+        "importPath": "@/components/ui/card",
+        "name": "Card"
+      },
+      "line": 16,
+      "parts": [
+        "CardHeader",
+        "CardContent"
+      ],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card",
+      "variant": null
+    }
+  ],
+  "next": null
+}
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

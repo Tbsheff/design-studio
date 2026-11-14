@@ -215,3 +215,12 @@ Real-model checks (local Claude Code sign-in, short runs): pick 1 (2 runs: final
 10. "App now" label on `page.importSource` frames (route-sync left out since cycle 16).
 
 Sources: [mcp.directory 2026 comparison](https://mcp.directory/blog/claude-design-vs-stitch-vs-v0-vs-lovable-vs-figma-make-2026), [konigi.com Claude Design](https://konigi.com/articles/claude-design-has-the-incumbents-scrambling/), [monkfrom.earth Claude Design vs Figma, Lovable, v0](https://monkfrom.earth/blogs/claude-design-vs-figma-lovable-v0), [agentwiki comparison](https://agentwiki.org/_export/raw/claude_design_vs_figma_vs_lovable_vs_bolt_vs_v0).
+
+## Results
+
+- Merged with no conflicts, in order: prototype-check, interaction-check, draft-first, data-states, multi-rotate. Main at 4840c7267.
+- Real-model session on merged main (`artifacts/real-runs/report-2.md`, 2 runs, $0.36): first draft 3.5 s (target 5 s, was 7.7-8.6 s); the studio check fired on an HTML prototype with 4 medium findings (one hover) and one fix loop fixed all 4; context 69k tokens of a 1M window after 2 runs.
+- That session found 4 bugs, fixed in fix/run-log-bugs (main at c16cd9b06): the "Studio check:" line is kept in the run log; the screen check dedupes and skips screens the agent already shot; the 1M window survives a reload; replace_all edit drafts are full.
+- Checks: gen-routes --check pass, typecheck 0 errors, lint:gate pass (59603, baseline 89733), build:ui pass, check:clip 0 findings (before the fix merge), desktop:pack pass.
+- Installed app: :4570 returns 200. Server idle CPU 0.02 CPU-s/min over 60 s.
+- Open: the screen check lost one image of a screen in one run. No shared-center group rotate. Tailwind writes rotate-[15deg], not rotate-15. Esc deselects but leaves a forced state on the frame. Screenshot token cut not built (breaks the prompt cache). MCP snapshots not refreshed (user decision).

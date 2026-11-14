@@ -16,6 +16,7 @@ interface NumberSpec {
   readonly edit: DirectEdit;
   readonly unit?: string;
   readonly step?: number;
+  readonly shiftStep?: number;
   readonly min?: number;
   readonly max?: number;
   readonly targets?: DirectStyleProperty[];
@@ -97,7 +98,7 @@ const toStep = (
   const base = spec.step ?? 1;
 
   if (event.shiftKey) {
-    return base * SHIFT_FACTOR;
+    return spec.shiftStep ?? base * SHIFT_FACTOR;
   }
 
   if (event.altKey) {
@@ -134,6 +135,7 @@ const isSameSpec = (first: NumberSpec, second: NumberSpec): boolean => {
 
   const hasSameRange =
     first.step === second.step &&
+    first.shiftStep === second.shiftStep &&
     first.min === second.min &&
     first.max === second.max;
 

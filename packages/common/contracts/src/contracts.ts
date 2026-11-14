@@ -13,6 +13,7 @@ import type {
   StyleQuery,
   StyleScanResult,
 } from "@design-studio/contracts/style-search";
+import { TRANSFORM_STYLE_PROPERTIES } from "@design-studio/contracts/transform-style-properties";
 import type { EditScope } from "@design-studio/contracts/usage-scope";
 
 export type LegacyBinding<T> = T;
@@ -2006,7 +2007,7 @@ export const DIRECT_STYLE_PROPERTIES = [
   "text-transform",
   "overflow",
   "text-shadow",
-  "transform",
+  ...TRANSFORM_STYLE_PROPERTIES,
   "position",
   "top",
   "right",

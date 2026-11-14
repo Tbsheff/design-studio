@@ -63,7 +63,7 @@ const editFields = z.strictObject({
   style: style
     .optional()
     .describe(
-      "CSS properties to set, as kebab-case (margin-left) or camelCase (marginLeft) keys. null removes the property. In a Tailwind project the server writes theme classes (p-6, bg-primary, rounded-lg) instead of inline style, and an arbitrary value only when no theme step fits."
+      "CSS properties to set, as kebab-case (margin-left) or camelCase (marginLeft) keys. null removes the property. In a Tailwind project the server writes theme classes (p-6, bg-primary, rounded-lg) instead of inline style, and an arbitrary value only when no theme step fits. Use rotate (45deg writes rotate-45) and scale (-1 1 flips horizontally to -scale-x-100, 1 -1 flips vertically)."
     ),
   target: z
     .enum(EDIT_TARGETS)

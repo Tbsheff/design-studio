@@ -58,7 +58,7 @@ const agentEditElementSdkFields = toSdkFieldSet({
   ...editElementFields,
   style: toOptional(
     StyleRecord,
-    "CSS properties to set, kebab-case or camelCase keys; null removes one. Tailwind projects get theme classes."
+    "CSS properties to set, kebab-case or camelCase keys; null removes one. Tailwind projects get theme classes. Use rotate (45deg writes rotate-45) and scale (-1 1 flips horizontally to -scale-x-100, 1 -1 flips vertically)."
   ),
 });
 

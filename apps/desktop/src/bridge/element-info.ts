@@ -5,6 +5,7 @@ import { USED_AT_ATTR, appSourceFor, componentUseOf } from "./app-source.js";
 import type { Rect } from "./bridge-types.js";
 import { componentOwners } from "./component-owner.js";
 import { layoutStyles } from "./inlineStyle.js";
+import { toRotateText } from "./rotate-style.js";
 import { APP_MODE } from "./session.js";
 
 const STYLE_KEYS = [
@@ -37,6 +38,7 @@ const STYLE_KEYS = [
   "overflow",
   "text-shadow",
   "transform",
+  "scale",
   "opacity",
   "border-width",
   "border-top-width",
@@ -249,6 +251,8 @@ const stylesOf = (element: Element): Record<string, string> => {
   for (const key of STYLE_KEYS) {
     styles[key] = computed.getPropertyValue(key);
   }
+
+  styles.rotate = toRotateText(computed);
 
   return { ...styles, ...layoutStyles(element, computed) };
 };

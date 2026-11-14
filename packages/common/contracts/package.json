@@ -53,6 +53,7 @@
     "./style-search": "./src/style-search.ts",
     "./text-search": "./src/text-search.ts",
     "./text-styles": "./src/text-styles.ts",
+    "./transform-style-properties": "./src/transform-style-properties.ts",
     "./usage-scope": "./src/usage-scope.ts"
   }
 }

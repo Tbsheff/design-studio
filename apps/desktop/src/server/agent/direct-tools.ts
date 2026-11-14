@@ -104,7 +104,7 @@ export const editElementFields = {
   ),
   style: toOptional(
     Schema.Struct(styleFields),
-    "CSS properties to set inline, as kebab-case (margin-left) or camelCase (marginLeft) keys. null removes the property."
+    "CSS properties to set inline, as kebab-case (margin-left) or camelCase (marginLeft) keys. null removes the property. Use rotate (45deg writes rotate-45) and scale (-1 1 flips horizontally to -scale-x-100, 1 -1 flips vertically)."
   ),
   text: toOptional(
     Schema.String.check(Schema.isMaxLength(5000)),

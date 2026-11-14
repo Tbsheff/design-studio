@@ -37,7 +37,11 @@ import type { LayerEdits } from "../versions-layers-tokens/use-layer-edits.js";
 import { toLayerPickItems } from "./layer-pick-menu.js";
 import { toAfterSelectChild } from "./layer-pick-model.js";
 import type { MenuAnchor } from "./layer-pick-model.js";
-import { createItem, disabledBy } from "./preview-menu-create.js";
+import {
+  createItem,
+  disabledBy,
+  toTransformMenuItems,
+} from "./preview-menu-create.js";
 import { PreviewMenu } from "./preview-menu.js";
 import type { PreviewMenuItem } from "./preview-menu.js";
 import { toValueOr } from "./settle-model.js";
@@ -198,6 +202,7 @@ const menuItems = (
     run: () => uiStore.set({ layersOpen: true }),
   },
   ...structureItems(options5),
+  ...toTransformMenuItems(),
   ...pasteItem(options5, target),
   ...iconItems(target),
   ...createItem(options5, openCreate),

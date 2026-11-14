@@ -10,6 +10,8 @@ import { editsText } from "../../platform/typing-target.js";
 
 const PREVIEW_HISTORY_EVENT = "studio:preview-history";
 
+const PREVIEW_TEXT_UNDO_EVENT = "studio:preview-text-undo";
+
 type HistoryKind = "undo" | "redo";
 
 interface RedoShortcut {
@@ -43,6 +45,17 @@ const historyKeyOf = (
 
   return "undo";
 };
+
+const isFrameTextUndo = (kind: HistoryKind): boolean =>
+  !globalThis.dispatchEvent(
+    new CustomEvent(PREVIEW_TEXT_UNDO_EVENT, {
+      cancelable: true,
+      detail: { redo: kind === "redo" },
+    })
+  );
+
+const isAnswerEvent = (event: Event): boolean =>
+  (event as CustomEvent<{ isAnswer?: unknown }>).detail?.isAnswer === true;
 
 const modalOpen = (): boolean =>
   findElement(document.body, '[role="dialog"][aria-modal="true"]') !== null;
@@ -109,7 +122,7 @@ const useUndoShortcut = (
         kind = "redo";
       }
 
-      if (recentDesktopCommand(kind)) {
+      if (!isAnswerEvent(event) && recentDesktopCommand(kind)) {
         return;
       }
 
@@ -133,12 +146,17 @@ const useUndoShortcut = (
       return false;
     }
 
+    if (isFrameTextUndo(command.type)) {
+      return true;
+    }
+
     return routeHistoryCommand(command.type, state.current);
   });
 };
 
 export {
   PREVIEW_HISTORY_EVENT,
+  PREVIEW_TEXT_UNDO_EVENT,
   historyKeyOf,
   routeHistoryCommand,
   undoAllowed,

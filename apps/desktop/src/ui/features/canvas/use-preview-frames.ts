@@ -31,6 +31,7 @@ import {
 import type { HoverBox } from "./preview-rect-model.js";
 import type { NodeMap } from "./preview-selection-model.js";
 import type { PreviewSlot } from "./preview-slot-model.js";
+import { useFrameTextUndo } from "./use-frame-text-undo.js";
 import { usePreviewEffects } from "./use-preview-effects.js";
 
 interface PreviewFrames extends PreviewApi {
@@ -143,6 +144,7 @@ const usePreviewFrames = (options: PreviewOptions): PreviewFrames => {
   );
 
   useBridge(getFrames, onMessage);
+  useFrameTextUndo(getFrames);
 
   const { elements, hover, picked } = state;
 

@@ -11,7 +11,7 @@ import { eventElement, rootElementOf } from "./dom-input.js";
 import { selectorFor, sourceStrings } from "./element-info.js";
 import { createForceState } from "./force-state.js";
 import { forceStateFromUrl } from "./forced-boot.js";
-import { forwardHistoryKeys } from "./history-key.js";
+import { forwardHistoryKeys, noteHistoryKeys } from "./history-key.js";
 import { installHoverSelect } from "./hover-select.js";
 import { createPostNudge, installKeyboard } from "./keyboard.js";
 import { createLayerIndex } from "./layers.js";
@@ -152,6 +152,7 @@ const startBridge = (session: BridgeSession): void => {
   context.triggers.install();
   installPointerDrag(context);
   installHoverSelect(context);
+  noteHistoryKeys(context.post);
   installKeyboard(context, postNudge);
   forwardZoomInput(context.post);
   forwardHistoryKeys(context.post);

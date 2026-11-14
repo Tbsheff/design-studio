@@ -366,7 +366,7 @@ export function createTextEditor(deps: TextEditDeps): TextEditor {
       current.isRangeMode ||
       plainText(current.element) === current.original
     ) {
-      deps.post({ redo: event.shiftKey, type: "history-key" });
+      deps.post({ isNotice: false, redo: event.shiftKey, type: "history-key" });
     } else if (event.shiftKey) {
       document.execCommand("redo");
     } else {

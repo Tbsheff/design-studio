@@ -1357,7 +1357,13 @@ export type BridgeToParent =
       source: SourceLoc | null;
       layer: TextRangeLayer;
     }
-  | { ns: "studio"; token: string; type: "history-key"; redo: boolean }
+  | {
+      ns: "studio";
+      token: string;
+      type: "history-key";
+      redo: boolean;
+      isNotice: boolean;
+    }
   | { ns: "studio"; token: string; type: "layout-key" }
   | { ns: "studio"; token: string; type: "app-key"; id: AppKey }
   | { ns: "studio"; token: string; type: "context-menu"; x: number; y: number }
@@ -1883,6 +1889,7 @@ export type ParentToBridge =
     }
   | { ns: "studio"; token: string; type: "text-edit-allowed"; allowed: boolean }
   | { ns: "studio"; token: string; type: "text-edit-stop" }
+  | { ns: "studio"; token: string; type: "text-undo"; redo: boolean }
   | { ns: "studio"; token: string; type: "text-edit-start"; selector: string }
   | ({
       ns: "studio";

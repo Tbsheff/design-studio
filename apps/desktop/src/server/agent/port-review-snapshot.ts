@@ -36,10 +36,9 @@ interface StoreAge {
   readonly dir: string;
 }
 
-interface ObjectEnv {
-  readonly GIT_ALTERNATE_OBJECT_DIRECTORIES: string;
-  readonly GIT_OBJECT_DIRECTORY: string;
-}
+type ObjectEnvKey = "GIT_ALTERNATE_OBJECT_DIRECTORIES" | "GIT_OBJECT_DIRECTORY";
+
+type ObjectEnv = Readonly<Record<ObjectEnvKey, string>>;
 
 const ADD_TIMEOUT_MS = 60_000;
 

@@ -213,3 +213,11 @@ All 5 can run at once. Merge 5 (guide-context, agent text and guide snap only), 
 10. Touch pointer in Play on phone frames (round 28 pick 5); UI only, low on headless.
 
 Sources: [mcp.directory 2026 comparison](https://mcp.directory/blog/claude-design-vs-stitch-vs-v0-vs-lovable-vs-figma-make-2026), [monkfrom.earth Claude Design vs Figma, Lovable, v0](https://monkfrom.earth/blogs/claude-design-vs-figma-lovable-v0), [konigi.com Claude Design](https://konigi.com/articles/claude-design-has-the-incumbents-scrambling/), [VentureBeat Figma Make GitHub](https://venturebeat.com/technology/are-designers-the-new-swes-figma-makes-new-two-way-github-integration-turns-designs-into-live-production-code-with-built-in-governance), [Figma news November 2026](https://blog.mean.ceo/figma-news-november-2026/), [Bolt release notes](https://support.bolt.new/release-notes), [Bolt 2026.10.12](https://www.havoptic.com/r/bolt-2026-10-12).
+
+## Results
+
+- Merged in order: guide-context, space-stack, stroke-position, open-states, polish-22, then fix/state-fill. Main at aaf94b9b0.
+- Conflict: stroke-position vs space-stack in `inspector/copy.ts` (two new blocks and the export line). Kept both, formatted, then gen-routes.
+- open-states found that Fill Apply in a style state (Hover, Open, Checked, Selected) wrote the base `bg-*`. fix/state-fill adds `variant` to `fill.set` and `fill.get` (default base, same tool names), checked in the app and over MCP.
+- Checks: gen-routes --check pass, typecheck 0 errors, lint:gate pass (59617, baseline 89733), build:ui pass, check:clip 0 findings, desktop:pack pass.
+- Open: Effect, saved layer and text styles, and the Border Inside/Outside switch still ignore the picked state. A layer with both space-y and space-x converts one axis. Switching stroke away from Inside moves content 2px. group-data-* and has-data-* not read. MCP snapshots for edit_element, batch_edit, set_state_style, list_state_styles, set_forced_state, set_fill and get_fill not refreshed (user decision).

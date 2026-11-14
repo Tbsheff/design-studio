@@ -1,6 +1,6 @@
 # Cycle 27 pick 3: starter-look
 
-Branch `feat/starter-look`. Commits `0f49054dd` (theme), `f1e3a232b` (agent run), `5d06752c7` (chat), plus this report.
+Branch `feat/starter-look`. Commits `0f49054dd` (theme), `f1e3a232b` (agent run), `5d06752c7` (chat), the Look sync fix, and this report.
 
 ## What changed
 
@@ -11,20 +11,21 @@ Branch `feat/starter-look`. Commits `0f49054dd` (theme), `f1e3a232b` (agent run)
   - Before the first turn, it writes the starter and reloads `designSystem` for the prompt.
   - The agent therefore gets the standard design-system rules and the token list. No new prompt line was needed.
   - After a completed run, it records the "Look" choice through `create_decision_run`, so the `action.done` event refreshes the chat.
-- `ui/features/chat/use-decision-row.ts`: a pick on the "Look" chip calls `theme.apply` with the stored theme that has the same name. It makes no model call and no follow-up run. The chip hides while its run is running. `copy.ts`: `decisionLook: "Look"`. `decision-row-chip.tsx` needed no change.
+- `ui/features/chat/use-decision-row.ts`: a pick on the "Look" chip calls `theme.apply` with the stored theme that has the same name. It makes no model call and no follow-up run. Every pick applies. The answer "The token values are already set" counts as success, so the chip cannot stick after Cmd+Z or a reload. The chip hides while its run is running. `copy.ts`: `decisionLook: "Look"`. `decision-row-chip.tsx` needed no change.
 - `agent/mock.ts`: the mock landing page reads `--bg`, `--fg`, `--primary` and the other role tokens, with its old values as fallbacks. Without this, a click on Look did not change the mock page.
 
 ## Checked
 
 - Mock run, blank "bakery landing page":
   - The starter files landed 26 to 34 ms after run start.
-  - First `write.delta` was at 0.37 s. The mock run before this branch was also at 0.4 s.
+  - First `write.delta` was at 0.37 s. A mock run with no starter was also at 0.4 s.
   - One run version holds `index.html` and the 3 design-system files.
   - The Look row shows "Amber Sans | Teal Serif | Indigo Sans".
 - Click on option 2:
   - It made 1 version through `themes/apply`.
   - The page background changed from hue 48 to hue 170, and the CTA color changed.
   - Cmd+Z (`edit-history/undo`) restored the exact old colors.
+  - After the undo, a pick on option 2 and then on option 1 changed the colors each time, with no error text.
 - The cases where the starter must stay off:
   - Design-system project (`modern-minimal`): no Look record, no themes file, `packId` stays `modern-minimal`.
   - Wireframe run: no starter.
@@ -57,7 +58,7 @@ The run log has no `firstDraftMs` field, so the table uses the first `write.delt
 
 ## Left out and open
 
-- In the dark shot, the frame showed light values after `theme.apply`. `tokens.css` still has its `.dark` and `prefers-color-scheme` blocks. The frame keeps no `.dark` class and gets its dark values from the media query. I did not trace why the frame reload drops the dark scheme.
+- In the dark shot, the frame showed light values after `theme.apply`. `tokens.css` still has its dark blocks. This bug is older than this branch: `theme.apply` on a `modern-minimal` project also turns the dark frame light (body background lightness 0.17 before, 0.99 after). It is a runner-up, not part of this pick.
 - The engine fonts are system stacks (no Google Fonts), and the radius is fixed at 10px.
 - A run may record at most 3 choices. If the agent records 3, the Look choice is not recorded, and the starter tokens stay.
 - After a starter run, `pack.json` id `starter-look` is on disk. `packId` stayed unset in the checks. The design-system panel was not checked with this pack.

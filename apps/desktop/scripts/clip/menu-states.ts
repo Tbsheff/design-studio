@@ -229,6 +229,8 @@ const isPreviewMenuOpen = async (page: Page): Promise<boolean> => {
 };
 
 const isFrameSelectOpen = async (page: Page): Promise<boolean> => {
+  await setFit(page);
+
   const names = page.locator("button.frame-name");
 
   const [first, second] = await Promise.all([

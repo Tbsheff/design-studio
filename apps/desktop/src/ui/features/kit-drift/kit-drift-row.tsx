@@ -2,7 +2,15 @@ import { useCallback } from "react";
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
-import { toDetail, toPlace, toSelector, toTone } from "./kit-drift-model.js";
+import {
+  isSwappable,
+  toDetail,
+  toPlace,
+  toSelector,
+  toSwapTip,
+  toTagText,
+  toTone,
+} from "./kit-drift-model.js";
 import type { KitDriftView } from "./kit-drift-model.js";
 
 interface KitDriftRowProps {
@@ -35,15 +43,15 @@ const KitDriftRow = ({
         type="button"
       >
         <span className={`review-sev ${toTone(item)}`} />
-        <span className="truncate">{`${item.tag} ${copy.arrow} ${toDetail(item)}`}</span>
+        <span className="truncate">{`${toTagText(item)} ${copy.arrow} ${toDetail(item)}`}</span>
       </button>
       <div className="review-actions">
         <code className="review-src truncate">{toPlace(item)}</code>
         <button
           className="btn small"
-          data-tip={copy.swapTip}
+          data-tip={toSwapTip(item)}
           data-tip-align="end"
-          disabled={isBusy}
+          disabled={isBusy || !isSwappable(item)}
           onClick={swapItem}
           type="button"
         >

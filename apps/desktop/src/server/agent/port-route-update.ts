@@ -91,6 +91,8 @@ const RULE_LINES = [
   "Replace the markup and the classes with the prototype design. Map them to the app tokens and kit as the port plan says.",
   "Also restyle the components that the route imports from its own folder. Keep their data reads (hooks, queries) and exports.",
   "Bind the design to the route's own data. The prototype rows are sample data: do not write a sample row into the app.",
+  "Change the route files only with the Edit or Write tool. Do not change them with Bash: sed -i fails on macOS.",
+  "To write the measured prototype values (spacing, size, gap) into the route, call the tool mcp__studio__apply_port with routePath. Load it with ToolSearch first.",
 ];
 
 const RouteFileSchema = Schema.Struct({ file: Schema.String });

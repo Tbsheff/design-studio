@@ -7,8 +7,10 @@ import type {
   SelectionContext,
   SourceLoc,
 } from "@design-studio/contracts";
+import { PORT_TASK } from "@design-studio/contracts/port";
 
 import type { ResolvedRunConfig } from "../../shared/run-levels.js";
+import type { AgentRunContext } from "../../shared/server-ports.js";
 import { loadAppTokens } from "../design-system/app-tokens/source.js";
 import type { AppToken } from "../design-system/app-tokens/tokens.js";
 import { dropSecretLines, loadRepoContextOutline } from "./repo-context.js";
@@ -44,6 +46,23 @@ export function isLeanRun(request: LeanRequest): boolean {
     (request.attachmentIds?.length ?? 0) === 0 &&
     request.prompt.trim().length < LEAN_PROMPT_MAX_CHARS
   );
+}
+
+export function toDriverContext(
+  ctx: AgentRunContext,
+  isLean: boolean
+): AgentRunContext {
+  if (!isLean && ctx.request.task !== PORT_TASK) {
+    return ctx;
+  }
+
+  const direction = { ...ctx.direction, sessionId: null };
+
+  if (!isLean) {
+    return { ...ctx, direction };
+  }
+
+  return { ...ctx, designMd: null, direction };
 }
 
 export function leanRunConfig(config: ResolvedRunConfig): ResolvedRunConfig {

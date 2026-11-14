@@ -56,7 +56,7 @@ import { scopeProblem } from "../variations/scope-check.js";
 import { createBashEditTracker, fileDiff, readFileText } from "./bash-edits.js";
 import type { BashEditResult, BashWriteCheck, FileText } from "./bash-edits.js";
 import { createCutWriteGuard } from "./cut-writes.js";
-import { isLeanRun } from "./lean-run.js";
+import { isLeanRun, toDriverContext } from "./lean-run.js";
 import { EDIT_TOOL_NAMES } from "./permissions.js";
 import type { RunFibers } from "./run-runner.js";
 import { createTodoTracker, evidenceOf } from "./todo-tracker.js";
@@ -301,14 +301,6 @@ export function toolDiff(before: Before): ToolDiff | null {
   );
 }
 
-async function priorSessionFor(
-  lean: boolean,
-  runsDir: string,
-  direction: Direction
-): Promise<PriorSession | null> {
-  return lean ? null : loadPriorSession(runsDir, direction);
-}
-
 function savesVersion(
   status: RunStatus,
   request: AgentRunContext["request"]
@@ -321,14 +313,6 @@ function versionTitle(status: RunStatus, prompt: string): string {
   const title = runTitle(prompt);
   if (status === "completed") return title;
   return `${title} (${status === "canceled" ? "stopped" : status === "failed" ? "failed" : "limit reached"})`;
-}
-
-function leanDriverContext(ctx: AgentRunContext): AgentRunContext {
-  return {
-    ...ctx,
-    designMd: null,
-    direction: { ...ctx.direction, sessionId: null },
-  };
 }
 
 function sessionNoteOf(direction: Direction): { sessionNote?: string } {
@@ -395,7 +379,7 @@ export function createRunLifecycle(
     let driverSettled = false;
     const runsDir = path.join(deps.projects.projectDir(projectId), "runs");
     const lean = isLeanRun(ctx.request);
-    const driverCtx = lean ? leanDriverContext(ctx) : ctx;
+    const driverCtx = toDriverContext(ctx, lean);
     const eventsPath = path.join(runsDir, `${runId}.jsonl`);
     const summaryPath = path.join(runsDir, `${runId}.json`);
     const telemetryPath = path.join(
@@ -568,7 +552,7 @@ export function createRunLifecycle(
     const cutWrites = createCutWriteGuard();
     let toolMs = 0;
     let lastText = "";
-    let sessionId: string | null = lean ? null : ctx.direction.sessionId;
+    let sessionId: string | null = driverCtx.direction.sessionId;
     let direction: Direction = ctx.direction;
     const bashEdits = createBashEditTracker({
       workTree: ctx.direction.workTree,
@@ -948,7 +932,7 @@ export function createRunLifecycle(
       let outcome: DriverOutcome | null = null;
       let failure: string | null = null;
       try {
-        const prior = await priorSessionFor(lean, runsDir, ctx.direction);
+        const prior = await loadPriorSession(runsDir, driverCtx.direction);
         const devicePolicy = toDevicePolicy(await policyRead);
         outcome = await driver({
           ctx: driverCtx,

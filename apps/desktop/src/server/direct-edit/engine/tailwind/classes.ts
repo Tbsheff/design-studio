@@ -8,6 +8,8 @@ import { KEYWORD_GROUPS } from "./keyword-groups.js";
 import { SINGLE_PROPS } from "./map.js";
 import { toOutlineClass } from "./outline.js";
 import type { OutlineGroup } from "./outline.js";
+import { toRotateScaleClass } from "./rotate-scale.js";
+import type { RotateScaleGroup } from "./rotate-scale.js";
 import type { TailwindTheme } from "./theme-model.js";
 import { lengthToPx } from "./units.js";
 
@@ -74,7 +76,8 @@ export type SingleGroup =
   | "bg-position"
   | "bg-repeat"
   | "text-wrap"
-  | OutlineGroup;
+  | OutlineGroup
+  | RotateScaleGroup;
 
 export type Group = SidedGroup | SingleGroup;
 
@@ -570,10 +573,7 @@ const PREFIX_RULES: Record<string, PrefixRule> = {
     ].map((name) => [name, always("filter")])
   ),
   ...Object.fromEntries(
-    ["translate", "rotate", "scale", "skew"].map((name) => [
-      name,
-      always("transform"),
-    ])
+    ["translate", "scale", "skew"].map((name) => [name, always("transform")])
   ),
 };
 
@@ -615,7 +615,7 @@ export function classify(
     return single("filter");
   }
 
-  const outline = toOutlineClass(utility);
+  const outline = toOutlineClass(utility) ?? toRotateScaleClass(utility);
 
   if (outline) {
     return outline;

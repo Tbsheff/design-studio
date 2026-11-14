@@ -18,6 +18,12 @@ import type { ParsedColor } from "./color.js";
 import { toFilterToken } from "./filter-token.js";
 import { toKeywordClass } from "./keyword-classes.js";
 import { OUTLINE_PROPS, toOutlineToken } from "./outline.js";
+import {
+  ROTATE_SCALE_PROPS,
+  toPropGroup,
+  toRotateScaleEdits,
+  toRotateScaleToken,
+} from "./rotate-scale.js";
 import type { TailwindTheme, ThemeNamespace } from "./theme-model.js";
 import { emValue, lengthToPx, percent, plainNumber } from "./units.js";
 
@@ -89,7 +95,7 @@ export const SINGLE_PROPS: Record<string, SingleGroup> = {
   "text-wrap": "text-wrap",
   overflow: "overflow",
   "text-shadow": "text-shadow",
-  transform: "transform",
+  ...ROTATE_SCALE_PROPS,
   position: "position",
   "justify-items": "justify-items",
   "object-fit": "object-fit",
@@ -734,7 +740,8 @@ function singleToken(
     return image(value);
   }
 
-  const outline = toOutlineToken(prop, value, theme);
+  const outline =
+    toOutlineToken(prop, value, theme) ?? toRotateScaleToken(prop, value);
 
   if (outline) {
     return outline;
@@ -779,11 +786,6 @@ function singleToken(
     }
     case "filter": {
       return toFilterToken(value, theme);
-    }
-    case "transform": {
-      return value.trim() === "none"
-        ? "transform-none"
-        : `[transform:${arbitrary(value).slice(1, -1)}]`;
     }
     default: {
       return `[${prop}:${arbitrary(value).slice(1, -1)}]`;
@@ -882,10 +884,11 @@ export function cssEdits(
   value: string | null,
   theme: TailwindTheme
 ): CssEdit[] | null {
-  const border = toBorderEdits(prop, value, theme);
+  const special =
+    toBorderEdits(prop, value, theme) ?? toRotateScaleEdits(prop, value);
 
-  if (border) {
-    return border;
+  if (special) {
+    return special;
   }
 
   const box = BOX_PROPS[prop];
@@ -977,6 +980,6 @@ export function classProps(cls: Classified): string[] {
   }
 
   return Object.entries(SINGLE_PROPS)
-    .filter(([, group]) => group === cls.group)
+    .filter(([, group]) => group === toPropGroup(cls.group))
     .map(([prop]) => prop);
 }

@@ -153,7 +153,7 @@ const isMarkedMiss = (source: string, slot: PhotoSlot): boolean => {
   );
 };
 
-const RETRY_HINT = `To search a missed slot again, change its ${PHOTO_ATTR} words or remove ${MISSED_ATTR}.`;
+const RETRY_HINT = `To search a missed slot again, pass its words in slots, change its ${PHOTO_ATTR} words or remove ${MISSED_ATTR}.`;
 
 const toSkipNote = (skipped: number): string | null => {
   if (skipped === 0) {

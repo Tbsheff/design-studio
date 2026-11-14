@@ -52,6 +52,14 @@ const toHref = (tag: string): string => {
   return tag.slice(from, end);
 };
 
+const toDistinctAccent = (accent: string, primary: string): string => {
+  if (accent.toLowerCase() !== primary.toLowerCase()) {
+    return accent;
+  }
+
+  return FALLBACK_COLORS.accent;
+};
+
 const toStyleBlocks = (source: string): readonly string[] =>
   source
     .split(STYLE_OPEN)
@@ -183,20 +191,33 @@ const toColor = (
   return fallback;
 };
 
+const TOKEN_FILES = ["design-system/tokens.css", "tokens.css"];
+
 const toArtColors = async (
   workTree: string,
   page: PhotoPage
 ): Promise<PhotoArtColors> => {
-  const linked = await toLinkedCss(workTree, page);
+  const [tokens, linked] = await Promise.all([
+    Promise.all(
+      TOKEN_FILES.map((name) => toReadText(path.join(workTree, name)))
+    ),
+    toLinkedCss(workTree, page),
+  ]);
 
-  const inline = toStyleBlocks(page.source);
+  const variables = toVariables([
+    ...tokens,
+    ...linked,
+    ...toStyleBlocks(page.source),
+  ]);
 
-  const variables = toVariables([...linked, ...inline]);
+  const main = toColor(variables, COLOR_NAMES.primary, FALLBACK_COLORS.primary);
+
+  const accent = toColor(variables, COLOR_NAMES.accent, FALLBACK_COLORS.accent);
 
   return {
-    accent: toColor(variables, COLOR_NAMES.accent, FALLBACK_COLORS.accent),
+    accent: toDistinctAccent(accent, main),
     ink: toColor(variables, COLOR_NAMES.ink, FALLBACK_COLORS.ink),
-    primary: toColor(variables, COLOR_NAMES.primary, FALLBACK_COLORS.primary),
+    primary: main,
     surface: toColor(variables, COLOR_NAMES.surface, FALLBACK_COLORS.surface),
   };
 };

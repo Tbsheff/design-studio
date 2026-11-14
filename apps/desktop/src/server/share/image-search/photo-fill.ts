@@ -410,6 +410,10 @@ const toArtNote = (count: number, relative: string): string => {
     return `Image search is off. ${relative} has no plain ${PHOTO_ATTR} slot, so nothing changed.`;
   }
 
+  if (count === 1) {
+    return "Image search is off. The studio painted 1 art slot.";
+  }
+
   return `Image search is off. The studio painted ${count} art slots.`;
 };
 

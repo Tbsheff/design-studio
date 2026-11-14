@@ -1,0 +1,13 @@
+finds: 3
+- Kit: app/crew/page.tsx line 11 has a raw <button> with button classes. Use Button from @/components/ui/button. Swap it with apply_kit_drift (id 08699cde124ca681). Check it first: the match is medium.
+- Kit: app/crew/page.tsx line 16 is a hand-made card (border, radius, background, padding). Use Card from @/components/ui/card.
+- Kit: app/crew/page.tsx line 19 is a hand-made badge (radius, fill or border, side padding, small text). Use Badge from @/components/ui/badge.
+kit gap: true fix needed: true
+--- fix lines ---
+The studio checked the new route /crew (http://localhost/crew) against the prototype after your last edit.
+- Render: route renders.
+- Port match against the prototype crew.html: score 95. The bar is 80.
+- Kit: app/crew/page.tsx line 11 has a raw <button> with button classes. Use Button from @/components/ui/button. Swap it with apply_kit_drift (id 08699cde124ca681). Check it first: the match is medium.
+- Kit: app/crew/page.tsx line 16 is a hand-made card (border, radius, background, padding). Use Card from @/components/ui/card.
+- Kit: app/crew/page.tsx line 19 is a hand-made badge (radius, fill or border, side padding, small text). Use Badge from @/components/ui/badge.
+note:  Kit: 3 raw elements found, 3 left.

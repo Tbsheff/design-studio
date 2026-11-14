@@ -18,12 +18,9 @@ interface RotateLabel {
   readonly y: number;
 }
 
-interface RotateStyle {
-  readonly left?: string;
-  readonly rotate?: string;
-  readonly top?: string;
-  readonly translate?: string;
-}
+type RotateStyle = Readonly<
+  Partial<Record<"left" | "rotate" | "top" | "translate", string>>
+>;
 
 interface RotateLayer {
   readonly center: RotatePoint;

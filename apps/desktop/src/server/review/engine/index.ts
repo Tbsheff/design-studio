@@ -8,6 +8,8 @@ export { toTypeHits } from "./type-rhythm.js";
 
 export { toInteractionHits } from "./interaction.js";
 
+export { toAlignHits } from "./align.js";
+
 export type {
   CritiqueDraft,
   CritiqueDraftIssue,
@@ -20,6 +22,8 @@ export type {
 export type { PromptInput, PromptLayer } from "./critique-prompt.js";
 
 export type { InteractionHit, InteractionProbeResult } from "./interaction.js";
+
+export type { AlignFix, AlignHit, AlignProbeResult } from "./align.js";
 
 export type {
   TypeFix,

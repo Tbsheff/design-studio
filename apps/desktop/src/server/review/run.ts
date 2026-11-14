@@ -32,6 +32,11 @@ import {
 } from "../preview/layout-probe.js";
 import { waitForPage } from "../preview/page-capture/index.js";
 import {
+  toAlignDrafts,
+  toAlignExpression,
+  toAlignSelectors,
+} from "./align-drafts.js";
+import {
   axeDrafts,
   axeSelector,
   groupKitTokens,
@@ -43,8 +48,11 @@ import {
   type Draft,
 } from "./checks.js";
 import {
+  toAlignHits,
   toInteractionHits,
   toTypeHits,
+  type AlignHit,
+  type AlignProbeResult,
   type InteractionHit,
   type InteractionProbeResult,
   type TypeHit,
@@ -57,12 +65,10 @@ import {
 } from "./interaction-drafts.js";
 import { reviewProbeExpression, type ProbeResult } from "./probe.js";
 import { markShared, pageOwnDir } from "./shared-files.js";
-import { toTypeDrafts, toTypeSteps } from "./type-drafts.js";
-import { toTypeProbeExpression } from "./type-probe.js";
+import { toTypeDrafts, toTypeExpression, toTypeSteps } from "./type-drafts.js";
 
 const LAYOUT_CAP = 12;
 const TOKEN_CAP = 60;
-const TYPE_CAP = 800;
 
 const SEVERITY_RANK: Record<ReviewSeverity, number> = {
   high: 0,
@@ -80,6 +86,7 @@ interface PageFacts {
   type: TypeProbeResult;
   typeHits: TypeHit[];
   interactionHits: InteractionHit[];
+  alignHits: AlignHit[];
 }
 
 async function ownAxe(
@@ -122,13 +129,15 @@ async function readPage(
       ? pickRules((await page.axe()) as AxeViolation[], REVIEW_AXE_RULES)
       : await ownAxe(page, context);
 
-  const [layout, type, interaction] = await Promise.all([
+  const [layout, type, interaction, align] = await Promise.all([
     page.evaluate<LayoutProbeResult>(layoutProbeExpression(LAYOUT_CAP)),
-    page.evaluate<TypeProbeResult>(toTypeProbeExpression(TYPE_CAP)),
+    page.evaluate<TypeProbeResult>(toTypeExpression()),
     page.evaluate<InteractionProbeResult>(toInteractionExpression()),
+    page.evaluate<AlignProbeResult>(toAlignExpression()),
   ]);
 
   const interactionHits = toInteractionHits(interaction);
+  const alignHits = toAlignHits(align);
 
   const typeHits = toTypeHits({
     facts: type,
@@ -143,6 +152,7 @@ async function readPage(
         .filter((selector): selector is string => selector !== null),
       ...typeHits.map((hit) => hit.selector),
       ...interactionHits.map((hit) => hit.selector),
+      ...toAlignSelectors(alignHits),
     ]),
   ];
 
@@ -158,6 +168,7 @@ async function readPage(
     type,
     typeHits,
     interactionHits,
+    alignHits,
   };
 }
 
@@ -366,6 +377,11 @@ export async function runReview(
           hits: read.interactionHits,
           isApp: Boolean(project.app),
           isTailwind: read.type.isTailwind,
+        }),
+        ...toAlignDrafts({
+          elements: read.probe.elements,
+          hits: read.alignHits,
+          isApp: Boolean(project.app),
         }),
       ];
 

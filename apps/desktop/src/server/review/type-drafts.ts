@@ -10,6 +10,7 @@ import { parseLoc } from "./checks.js";
 import type { Draft } from "./checks.js";
 import type { TypeFix, TypeHit, TypeStep } from "./engine/index.js";
 import type { ProbeElement } from "./probe.js";
+import { toTypeProbeExpression } from "./type-probe.js";
 
 interface TypeDraftInput {
   readonly elements: Readonly<Record<string, ProbeElement | null>>;
@@ -19,6 +20,10 @@ interface TypeDraftInput {
 }
 
 const MAX_WIDTH_CLASS = /^max-w-/u;
+
+const TYPE_CAP = 800;
+
+const toTypeExpression = (): string => toTypeProbeExpression(TYPE_CAP);
 
 const toTypeSteps = (
   entries: CompiledTokenEntry[],
@@ -126,4 +131,4 @@ const toTypeDraft = (hit: TypeHit, input: TypeDraftInput): Draft => {
 const toTypeDrafts = (input: TypeDraftInput): Draft[] =>
   input.hits.map((hit) => toTypeDraft(hit, input));
 
-export { toTypeDrafts, toTypeSteps };
+export { toTypeDrafts, toTypeExpression, toTypeSteps };

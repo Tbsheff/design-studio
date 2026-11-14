@@ -34,7 +34,7 @@ const startRun = defineAction({
   agent: { off: "run-control" },
   confirm: "none",
   description:
-    "Start one studio agent run in a direction of a project with a prompt. Returns the run id. Read its state with get_run, and stop it with stop_run. Each run saves its edits as one version, so undo takes the run back. Fails when a run is already active in that direction.",
+    "Start one studio agent run in a direction of a project with a prompt. Returns the run id. Read its state with get_run and waitSeconds, and stop it with stop_run. Each run saves its edits as one version, so undo takes the run back. Fails when a run is already active in that direction.",
   errors: [BadRequest, Conflict, NotFound],
   http: {
     method: "POST",

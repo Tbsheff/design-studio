@@ -76,6 +76,10 @@ const RunSentSchema = Schema.Struct({
 
 const RunDetailSchema = Schema.Struct({
   decisions: Schema.Array(DecisionSchema),
+  eventCount: Schema.Int.annotate({
+    description:
+      "The number of events in the run so far. Pass it as afterEvent in the next get_run call to get only the new events.",
+  }),
   events: Schema.Array(RunEventSchema),
   selectionPicture: Schema.NullOr(Schema.String).annotate({
     description:

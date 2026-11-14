@@ -20,6 +20,7 @@ import {
 } from "./engine/stacking-write.js";
 import type { ClassChanges } from "./engine/stacking-write.js";
 import { StackingError } from "./errors.js";
+import { toLayerFiles, toLayersTitle } from "./set-layers.js";
 import { loadStackingTarget } from "./site.js";
 import type { StackingTargetSite } from "./site.js";
 
@@ -32,6 +33,12 @@ interface StackingTarget {
 interface StackingSetRequest {
   readonly input: StackingInput;
   readonly target: StackingTarget;
+}
+
+interface LayerPlan {
+  readonly edit: DirectEditRequest;
+  readonly parts: EditParts;
+  readonly target: StackingTargetSite;
 }
 
 interface StackingPlan {
@@ -131,10 +138,10 @@ const toEditRequest = (
   return request;
 };
 
-const toPlanStacking = async (
+const toLayerPlan = async (
   scope: StackingScope,
   request: StackingSetRequest
-): Promise<StackingPlan> => {
+): Promise<LayerPlan> => {
   const target = await loadStackingTarget(
     scope,
     request.target.source,
@@ -143,42 +150,116 @@ const toPlanStacking = async (
 
   const parts = toPartsOf(target, request.input);
 
-  const planned = await planDirectEdit(
-    scope.workTree,
-    toEditRequest(request.target, parts, target.prefix),
-    null,
-    { projectKind: scope.project.kind }
-  );
+  return {
+    edit: toEditRequest(request.target, parts, target.prefix),
+    parts,
+    target,
+  };
+};
+
+const toStackingPlan = (
+  request: StackingSetRequest,
+  layer: LayerPlan,
+  written: WrittenFile[],
+  layers: number
+): StackingPlan => {
+  const title = toTitleOf(request.input);
+
+  return {
+    classes: layer.parts.classes,
+    input: request.input,
+    mode: layer.target.mode,
+    prefix: layer.target.prefix,
+    style: layer.parts.style,
+    title: toLayersTitle(title, layers),
+    written,
+  };
+};
+
+const toPlanStacking = async (
+  scope: StackingScope,
+  request: StackingSetRequest
+): Promise<StackingPlan> => {
+  const layer = await toLayerPlan(scope, request);
+
+  const planned = await planDirectEdit(scope.workTree, layer.edit, null, {
+    projectKind: scope.project.kind,
+  });
 
   if (planned.patch.code === planned.original) {
     throw new StackingError(SAME);
   }
 
-  return {
-    classes: parts.classes,
-    input: request.input,
-    mode: target.mode,
-    prefix: target.prefix,
-    style: parts.style,
-    title: toTitleOf(request.input),
-    written: [
-      {
-        code: planned.patch.code,
-        original: planned.original,
-        target: planned.target,
-      },
-    ],
-  };
+  const written: WrittenFile[] = [
+    {
+      code: planned.patch.code,
+      original: planned.original,
+      target: planned.target,
+    },
+  ];
+
+  return toStackingPlan(request, layer, written, 1);
+};
+
+const toOtherEdit = async (
+  scope: StackingScope,
+  request: StackingSetRequest
+): Promise<DirectEditRequest | null> => {
+  try {
+    const layer = await toLayerPlan(scope, request);
+
+    return layer.edit;
+  } catch (error) {
+    if (error instanceof StackingError && error.message === SAME) {
+      return null;
+    }
+
+    throw error;
+  }
+};
+
+const toPlanStackingMany = async (
+  scope: StackingScope,
+  request: StackingSetRequest,
+  others: readonly StackingSetRequest[]
+): Promise<StackingPlan> => {
+  const [layer, rest] = await Promise.all([
+    toLayerPlan(scope, request),
+    Promise.all(others.map((other) => toOtherEdit(scope, other))),
+  ]);
+
+  const edits = [layer.edit, ...rest.filter((edit) => edit !== null)];
+
+  const written = await toLayerFiles(scope, edits);
+
+  if (written.length === 0) {
+    throw new StackingError(SAME);
+  }
+
+  return toStackingPlan(request, layer, written, edits.length);
+};
+
+const toPlanFor = (
+  scope: StackingScope,
+  request: StackingSetRequest,
+  others: readonly StackingSetRequest[]
+): Promise<StackingPlan> => {
+  if (others.length === 0) {
+    return toPlanStacking(scope, request);
+  }
+
+  return toPlanStackingMany(scope, request, others);
 };
 
 const applyStacking = async (
   deps: DirectEditDeps,
   scope: StackingScope,
-  request: StackingSetRequest
+  request: StackingSetRequest,
+  others: readonly StackingSetRequest[]
 ): Promise<StackingDone> => {
   guardStackingEdit(deps, scope);
 
-  const plan = await toPlanStacking(scope, request);
+  const plan = await toPlanFor(scope, request, others);
 
   const version = await commitStackingEdit(
     deps,

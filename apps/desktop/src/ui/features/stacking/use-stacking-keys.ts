@@ -15,8 +15,8 @@ import type {
   SelectionContext,
   StackingKeyDetail,
 } from "./deps.js";
-import { writeStacking } from "./stacking-api.js";
-import type { StackingIds } from "./stacking-api.js";
+import { writeZOrder } from "./stacking-api.js";
+import type { StackingIds, ZTargetEdit } from "./stacking-api.js";
 import { breakpointOf } from "./stacking-model.js";
 import type { StackingEdit } from "./stacking-model.js";
 import { toZPlan } from "./z-order-model.js";
@@ -41,11 +41,6 @@ interface StepRun {
 }
 
 type StepStop = ZStop | "no-read";
-
-interface StepResult {
-  readonly stop: StepStop | null;
-  readonly wrote: number;
-}
 
 const IS_MAC = isMacPlatform();
 
@@ -92,62 +87,73 @@ const toZEdit = (write: ZWrite): StackingEdit => {
   return { position: write.position, zIndex: write.zIndex };
 };
 
-const runOneStep = async (
+interface StepPlan {
+  readonly stop: StepStop | null;
+  readonly write: ZTargetEdit | null;
+}
+
+const toSourceKey = (layer: ZTargetEdit): string => {
+  const { source } = layer.target;
+
+  if (source === null) {
+    return layer.target.selector;
+  }
+
+  return `${source.file}:${source.line}:${source.col}`;
+};
+
+const toStepPlan = async (
   run: StepRun,
   target: SelectionContext
-): Promise<StepStop | null> => {
+): Promise<StepPlan> => {
   const stack = await readStack(run.options.port?.current ?? null, target);
 
   if (stack === null) {
-    return "no-read";
+    return { stop: "no-read", write: null };
   }
 
   const plan = toZPlan(stack, run.step);
 
   if (plan.kind === "stop") {
-    return plan.stop;
+    return { stop: plan.stop, write: null };
   }
 
-  await writeStacking(
-    run.ids,
-    toTarget(plan.write),
-    run.breakpoint,
-    toZEdit(plan.write)
-  );
-
-  return null;
+  return {
+    stop: null,
+    write: { edit: toZEdit(plan.write), target: toTarget(plan.write) },
+  };
 };
 
-const runSteps = async (
-  run: StepRun,
-  targets: readonly SelectionContext[],
-  done: StepResult
-): Promise<StepResult> => {
-  const target = targets.at(0) ?? null;
+const toUniqueWrites = (plans: readonly StepPlan[]): ZTargetEdit[] => {
+  const seen = new Map<string, ZTargetEdit>();
 
-  if (target === null) {
-    return done;
+  for (const plan of plans) {
+    if (plan.write !== null && !seen.has(toSourceKey(plan.write))) {
+      seen.set(toSourceKey(plan.write), plan.write);
+    }
   }
 
-  const stop = await runOneStep(run, target);
-
-  const next: StepResult = {
-    stop: done.stop ?? stop,
-    wrote: done.wrote + Number(stop === null),
-  };
-
-  return runSteps(run, targets.slice(1), next);
+  return [...seen.values()];
 };
 
 const runZStep = async (run: StepRun): Promise<void> => {
   try {
-    const result = await runSteps(run, toDomOrder(run.options.selection), {
-      stop: null,
-      wrote: 0,
-    });
+    const plans = await Promise.all(
+      toDomOrder(run.options.selection).map((target) => toStepPlan(run, target))
+    );
 
-    if (result.wrote === 0 && result.stop !== null) {
-      run.options.notify(toStopText(result.stop, run.step));
+    const writes = toUniqueWrites(plans);
+
+    if (writes.length > 0) {
+      await writeZOrder(run.ids, writes, run.breakpoint);
+
+      return;
+    }
+
+    const stop = plans.find((plan) => plan.stop !== null)?.stop ?? null;
+
+    if (stop !== null) {
+      run.options.notify(toStopText(stop, run.step));
     }
   } catch (error) {
     run.options.notify(insertError(error));

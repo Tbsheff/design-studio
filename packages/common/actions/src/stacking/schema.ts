@@ -5,6 +5,7 @@ import {
 } from "@design-studio/contracts/stacking";
 import { Effect, Schema } from "effect";
 
+import { ElementTargetSchema } from "../_core/element-target.js";
 import { DirectionIdSchema, ProjectIdSchema } from "../_core/ids.js";
 
 const BREAKPOINT_PATTERN = /^(?:base|[a-z0-9][a-z0-9-]{0,30})$/u;
@@ -101,6 +102,18 @@ const StackingChangeSchema = Schema.Struct({
   versionId: Schema.NullOr(Schema.String),
 });
 
+const STACKING_OTHERS_MAX = 20;
+
+const StackingLayerChangeSchema = Schema.Struct({
+  position: StackingPositionSchema,
+  target: ElementTargetSchema,
+  zIndex: StackingOffsetSchema,
+});
+
+const StackingOthersSchema = Schema.Array(StackingLayerChangeSchema)
+  .check(Schema.isMaxLength(STACKING_OTHERS_MAX))
+  .pipe(Schema.withDecodingDefaultKey(Effect.succeed([])));
+
 const StackingTargetFields = {
   directionId: DirectionIdSchema,
   projectId: ProjectIdSchema,
@@ -111,5 +124,7 @@ export {
   StackingChangeFields,
   StackingChangeSchema,
   StackingInfoSchema,
+  StackingLayerChangeSchema,
+  StackingOthersSchema,
   StackingTargetFields,
 };

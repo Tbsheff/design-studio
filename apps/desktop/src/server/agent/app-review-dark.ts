@@ -13,15 +13,15 @@ import { toAppSourceBody } from "../page-probe/index.js";
 import { logInfo } from "../platform/logger/index.js";
 import { toSchemedPreview } from "../preview/page-capture/index.js";
 import { isNearChanged } from "./app-review-kit.js";
-import { listContrastMisses } from "./prototype-dark-review.js";
+import { listContrastMisses, toPhotoLine } from "./prototype-dark-review.js";
+import type { DarkMiss } from "./prototype-dark-review.js";
 import { toChangedEntry } from "./screens.js";
 import type { ChangedFile } from "./screens.js";
 
 type AppDarkContext = Pick<AgentRunContext, "direction" | "project">;
 
-interface AppDarkItem {
+interface AppDarkItem extends DarkMiss {
   readonly line: number | null;
-  readonly ratio: number | null;
   readonly source: string | null;
 }
 
@@ -43,14 +43,6 @@ const RENDER_TIMEOUT_MS = 12_000;
 const LISTED_LINES = 6;
 
 const RATIO_STEP = 10;
-
-const STILL_EXPRESSION = `(async () => {
-    const style = document.createElement('style');
-    style.textContent = '*, *::before, *::after { transition: none !important; animation: none !important; }';
-    document.head.append(style);
-    await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
-    return true;
-  })()`;
 
 const NOT_RENDERED: AppDarkCheck = { count: null, lines: [], oldCode: 0 };
 
@@ -82,8 +74,6 @@ const hasAppDarkValues = async (ctx: AppDarkContext): Promise<boolean> => {
 };
 
 const listPageItems = async (page: RenderPage): Promise<AppDarkItem[]> => {
-  await page.evaluate(STILL_EXPRESSION);
-
   const misses = await listContrastMisses(page);
 
   const sources = await page.evaluate<(string | null)[]>(
@@ -91,8 +81,12 @@ const listPageItems = async (page: RenderPage): Promise<AppDarkItem[]> => {
   );
 
   return misses.map((miss, index) => ({
+    kind: miss.kind,
     line: null,
+    need: miss.need,
+    part: miss.part,
     ratio: miss.ratio,
+    selector: miss.selector,
     source: sources[index] ?? null,
   }));
 };
@@ -162,7 +156,7 @@ const toFirstText = (group: AppDarkFile): string => {
   return ` (first: line ${first.line}${toRatioText(first)})`;
 };
 
-const toDarkLine = (group: AppDarkFile): string => {
+const toContrastLine = (group: AppDarkFile): string => {
   const count = group.items.length;
   let head = `${count} text items in ${group.file} are`;
 
@@ -174,13 +168,37 @@ const toDarkLine = (group: AppDarkFile): string => {
 };
 
 const toRestLine = (count: number): string =>
-  `- Dark: ${count} more files have text under AA contrast in dark. Take get_screenshot with colorScheme dark to see them all.`;
+  `- Dark: ${count} more dark lines are not shown. Take get_screenshot with colorScheme dark to see them all.`;
+
+const toPhotoPlace = (file: string, item: AppDarkItem): string => {
+  if (item.line === null) {
+    return `in ${file}`;
+  }
+
+  return `in ${file} (line ${item.line})`;
+};
+
+const toGroupLines = (group: AppDarkFile): string[] => {
+  const contrast = group.items.filter((item) => item.kind === "contrast");
+  const photo = group.items.filter((item) => item.kind === "photo");
+
+  const lines = photo.map((item) =>
+    toPhotoLine(item, toPhotoPlace(group.file, item))
+  );
+
+  if (contrast.length > 0) {
+    lines.unshift(toContrastLine({ file: group.file, items: contrast }));
+  }
+
+  return lines;
+};
 
 const listGroupLines = (groups: readonly AppDarkFile[]): string[] => {
-  const lines = groups.slice(0, LISTED_LINES).map((group) => toDarkLine(group));
+  const all = groups.flatMap((group) => toGroupLines(group));
+  const lines = all.slice(0, LISTED_LINES);
 
-  if (groups.length > LISTED_LINES) {
-    lines.push(toRestLine(groups.length - LISTED_LINES));
+  if (all.length > LISTED_LINES) {
+    lines.push(toRestLine(all.length - LISTED_LINES));
   }
 
   return lines;

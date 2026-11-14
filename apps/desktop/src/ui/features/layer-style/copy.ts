@@ -1,9 +1,17 @@
+const toCopiedText = (tag: string): string => {
+  if (tag === "") {
+    return "Style copied";
+  }
+
+  return `Copied style of ${tag}`;
+};
+
 const copy = {
   apply: "Paste",
   applying: "Pasting…",
   cancel: "Cancel",
   close: "Close",
-  copied: "Style copied",
+  copied: toCopiedText,
   copy: "Copy style",
   failed: "Could not paste the style. Try again.",
   groupBorder: "Border",

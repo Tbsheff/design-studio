@@ -1,0 +1,33 @@
+call-action text.applyRange on http://127.0.0.1:6910. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 8 ms, git spawns: not counted (server side)
+{
+  "file": "app/crew/page.tsx",
+  "versionId": "pending-a51aee76bfb4d1d7"
+}
+
+[mcp] ok, 100 ms, git spawns: not counted (server side)
+{
+  "file": "app/crew/page.tsx",
+  "versionId": "pending-a24fb3db4fcc52c3"
+}
+
+[agent] ok, 5 ms, git spawns: not counted (server side)
+{
+  "file": "app/crew/page.tsx",
+  "versionId": "pending-b7fb44f180be5a54"
+}
+
+diff http -> mcp:
+-   "versionId": "pending-a51aee76bfb4d1d7"
++   "versionId": "pending-a24fb3db4fcc52c3"
+
+diff http -> agent:
+-   "versionId": "pending-a51aee76bfb4d1d7"
++   "versionId": "pending-b7fb44f180be5a54"
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 0 error results
+
+fix: compare the outputs above, then run call-action again with the id text.applyRange and the same input

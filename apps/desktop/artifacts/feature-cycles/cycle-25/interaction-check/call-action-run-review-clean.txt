@@ -1,0 +1,55 @@
+call-action direct-edit.runReview on http://127.0.0.1:47930. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 502 ms, git spawns: not counted (server side)
+{
+  "counts": {
+    "high": 0,
+    "low": 0,
+    "medium": 0
+  },
+  "directionId": "main",
+  "findings": [],
+  "frame": {
+    "height": 900,
+    "width": 1440
+  },
+  "notes": [
+    "This project has no design tokens yet, so Review skips the off-token check."
+  ],
+  "projectId": "pn8P4kkjbt",
+  "ranAt": 1794635146928,
+  "versionId": null
+}
+
+[mcp] ok, 330 ms, git spawns: not counted (server side)
+{
+  "counts": {
+    "high": 0,
+    "low": 0,
+    "medium": 0
+  },
+  "directionId": "main",
+  "findings": [],
+  "frame": {
+    "height": 900,
+    "width": 1440
+  },
+  "notes": [
+    "This project has no design tokens yet, so Review skips the off-token check."
+  ],
+  "projectId": "pn8P4kkjbt",
+  "ranAt": 1794635147261,
+  "versionId": null
+}
+
+[agent] skipped: agent binding is off (legacy-agent)
+
+diff http -> mcp:
+-   "ranAt": 1794635146928,
++   "ranAt": 1794635147261,
+
+answered approval cards: none
+
+call-action: fail, 2 surfaces ran, 1 diffs, 0 failed surfaces, 0 error results
+
+fix: compare the outputs above, then run call-action again with the id direct-edit.runReview and the same input

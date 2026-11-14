@@ -1,0 +1,167 @@
+call-action direct-edit.runReview on http://127.0.0.1:47930. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 52 ms, git spawns: not counted (server side)
+{
+  "counts": {
+    "high": 3,
+    "low": 1,
+    "medium": 1
+  },
+  "directionId": "main",
+  "findings": [
+    {
+      "ask": "Review finding in frame 1440x900, hover and focus (high): Focus removed: the rules set outline: none and the element looks the same when it has keyboard focus. Add a focus-visible ring.\nElement: button \"No focus ring\" (at index.html:22:3, selector #no-focus).\nAdd a focus-visible ring: a :focus-visible rule with an outline or box-shadow, or focus-visible:ring classes in Tailwind. Do not remove the outline with no replacement.",
+      "element": "button \"No focus ring\"",
+      "fix": null,
+      "id": "interaction-14cc8e5cbc",
+      "kind": "interaction",
+      "message": "Focus removed: the rules set outline: none and the element looks the same when it has keyboard focus. Add a focus-visible ring.",
+      "selector": "#no-focus",
+      "severity": "high",
+      "source": "index.html:22:3"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, hover and focus (medium): This control has no hover style. No stylesheet rule styles it under :hover and it has no hover: class.\nElement: button \"No hover\" (at index.html:21:3, selector #no-hover).\nAdd a :hover rule (or a hover: class) that changes the fill, color or underline, so the pointer shows the control reacts.",
+      "element": "button \"No hover\"",
+      "fix": null,
+      "id": "interaction-0a8d413b0b",
+      "kind": "interaction",
+      "message": "This control has no hover style. No stylesheet rule styles it under :hover and it has no hover: class.",
+      "selector": "#no-hover",
+      "severity": "medium",
+      "source": "index.html:21:3"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, hover and focus (low): The emoji 🔍 is used as an icon. Emoji render differently on each system and do not take the text color.\nElement: button \"🔍\" (at index.html:24:3, selector #emoji).\nReplace the emoji with an SVG icon from the project icon set (list_icons), sized and colored with the text.",
+      "element": "button \"🔍\"",
+      "fix": null,
+      "id": "interaction-e7624cf2c1",
+      "kind": "interaction",
+      "message": "The emoji 🔍 is used as an icon. Emoji render differently on each system and do not take the text color.",
+      "selector": "#emoji",
+      "severity": "low",
+      "source": "index.html:24:3"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, broken images (high): Image missing.png did not load, so the page shows an empty or broken box. Use set_image, or search_images to find a real image.\nElement: img \"Missing photo\" (at index.html:25:3, selector #missing).\nReplace the image with a file that exists: use set_image with a project file or an https url, or find one with search_images.",
+      "element": "img \"Missing photo\"",
+      "fix": null,
+      "id": "broken-image-9d76a1c186",
+      "kind": "broken-image",
+      "message": "Image missing.png did not load, so the page shows an empty or broken box. Use set_image, or search_images to find a real image.",
+      "selector": "#missing",
+      "severity": "high",
+      "source": "index.html:25:3"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, broken images (high): Background image gone.jpg did not load, so the page shows an empty or broken box. Use set_image, or search_images to find a real image.\nElement: div (at index.html:26:3, selector #hero).\nReplace the image with a file that exists: use set_image with a project file or an https url, or find one with search_images.",
+      "element": "div",
+      "fix": null,
+      "id": "broken-image-9d6070755f",
+      "kind": "broken-image",
+      "message": "Background image gone.jpg did not load, so the page shows an empty or broken box. Use set_image, or search_images to find a real image.",
+      "selector": "#hero",
+      "severity": "high",
+      "source": "index.html:26:3"
+    }
+  ],
+  "frame": {
+    "height": 900,
+    "width": 1440
+  },
+  "notes": [
+    "This project has no design tokens yet, so Review skips the off-token check."
+  ],
+  "projectId": "YlSVkBdB16",
+  "ranAt": 1794635144839,
+  "versionId": "9f2d0c74beceb226178e819ad559b6363363bac9"
+}
+
+[mcp] ok, 328 ms, git spawns: not counted (server side)
+{
+  "counts": {
+    "high": 3,
+    "low": 1,
+    "medium": 1
+  },
+  "directionId": "main",
+  "findings": [
+    {
+      "ask": "Review finding in frame 1440x900, hover and focus (high): Focus removed: the rules set outline: none and the element looks the same when it has keyboard focus. Add a focus-visible ring.\nElement: button \"No focus ring\" (at index.html:22:3, selector #no-focus).\nAdd a focus-visible ring: a :focus-visible rule with an outline or box-shadow, or focus-visible:ring classes in Tailwind. Do not remove the outline with no replacement.",
+      "element": "button \"No focus ring\"",
+      "fix": null,
+      "id": "interaction-14cc8e5cbc",
+      "kind": "interaction",
+      "message": "Focus removed: the rules set outline: none and the element looks the same when it has keyboard focus. Add a focus-visible ring.",
+      "selector": "#no-focus",
+      "severity": "high",
+      "source": "index.html:22:3"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, hover and focus (medium): This control has no hover style. No stylesheet rule styles it under :hover and it has no hover: class.\nElement: button \"No hover\" (at index.html:21:3, selector #no-hover).\nAdd a :hover rule (or a hover: class) that changes the fill, color or underline, so the pointer shows the control reacts.",
+      "element": "button \"No hover\"",
+      "fix": null,
+      "id": "interaction-0a8d413b0b",
+      "kind": "interaction",
+      "message": "This control has no hover style. No stylesheet rule styles it under :hover and it has no hover: class.",
+      "selector": "#no-hover",
+      "severity": "medium",
+      "source": "index.html:21:3"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, hover and focus (low): The emoji 🔍 is used as an icon. Emoji render differently on each system and do not take the text color.\nElement: button \"🔍\" (at index.html:24:3, selector #emoji).\nReplace the emoji with an SVG icon from the project icon set (list_icons), sized and colored with the text.",
+      "element": "button \"🔍\"",
+      "fix": null,
+      "id": "interaction-e7624cf2c1",
+      "kind": "interaction",
+      "message": "The emoji 🔍 is used as an icon. Emoji render differently on each system and do not take the text color.",
+      "selector": "#emoji",
+      "severity": "low",
+      "source": "index.html:24:3"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, broken images (high): Image missing.png did not load, so the page shows an empty or broken box. Use set_image, or search_images to find a real image.\nElement: img \"Missing photo\" (at index.html:25:3, selector #missing).\nReplace the image with a file that exists: use set_image with a project file or an https url, or find one with search_images.",
+      "element": "img \"Missing photo\"",
+      "fix": null,
+      "id": "broken-image-9d76a1c186",
+      "kind": "broken-image",
+      "message": "Image missing.png did not load, so the page shows an empty or broken box. Use set_image, or search_images to find a real image.",
+      "selector": "#missing",
+      "severity": "high",
+      "source": "index.html:25:3"
+    },
+    {
+      "ask": "Review finding in frame 1440x900, broken images (high): Background image gone.jpg did not load, so the page shows an empty or broken box. Use set_image, or search_images to find a real image.\nElement: div (at index.html:26:3, selector #hero).\nReplace the image with a file that exists: use set_image with a project file or an https url, or find one with search_images.",
+      "element": "div",
+      "fix": null,
+      "id": "broken-image-9d6070755f",
+      "kind": "broken-image",
+      "message": "Background image gone.jpg did not load, so the page shows an empty or broken box. Use set_image, or search_images to find a real image.",
+      "selector": "#hero",
+      "severity": "high",
+      "source": "index.html:26:3"
+    }
+  ],
+  "frame": {
+    "height": 900,
+    "width": 1440
+  },
+  "notes": [
+    "This project has no design tokens yet, so Review skips the off-token check."
+  ],
+  "projectId": "YlSVkBdB16",
+  "ranAt": 1794635145171,
+  "versionId": "9f2d0c74beceb226178e819ad559b6363363bac9"
+}
+
+[agent] skipped: agent binding is off (legacy-agent)
+
+diff http -> mcp:
+-   "ranAt": 1794635144839,
++   "ranAt": 1794635145171,
+
+answered approval cards: none
+
+call-action: fail, 2 surfaces ran, 1 diffs, 0 failed surfaces, 0 error results
+
+fix: compare the outputs above, then run call-action again with the id direct-edit.runReview and the same input

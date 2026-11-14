@@ -5,6 +5,9 @@ import { COPY } from "./copy.js";
 import { toWritesText } from "./port-model.js";
 import type { PortForm } from "./use-port-form.js";
 
+const toUpdatedCount = (form: PortForm): number =>
+  form.pages.picked.filter((page) => page.routeExists).length;
+
 const FormFoot = ({
   form,
   isBusy,
@@ -24,7 +27,7 @@ const FormFoot = ({
     <div className="modal-foot">
       {!noApp && form.chosenApp && (
         <span className="port-foot-note">
-          {toWritesText(count, appName, form.update)}
+          {toWritesText(count, appName, form.update, toUpdatedCount(form))}
         </span>
       )}
       <span className="port-spacer" />

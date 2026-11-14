@@ -71,6 +71,7 @@ const COPY = {
   textAddWhatYouHave:
     "Add what you have. The studio opens the draft at once, reads each source while you watch, then Claude finishes it.",
   textAdvanced: "Advanced",
+  textAndWrites: "and writes ",
   textAppFolder: "App folder",
   textAppInThisFolder: "App in this folder",
   textApplyToCurrentProject: "Apply to current project",
@@ -114,7 +115,6 @@ const COPY = {
     "Drop screenshots, a logo, a tokens file or a DESIGN.md",
   textDuplicate: "Duplicate",
   textEdit: "Edit",
-  textExists: "Exists",
   textExport: "Export",
   textFigmaVariablesJsonWith:
     "Figma variables JSON (with Light and Dark modes), DTCG or Tokens Studio JSON, or CSS custom properties. It wins over every other source.",
@@ -167,6 +167,7 @@ const COPY = {
   textOf: "of ",
   textOneImageForAi: "1 image, for Claude",
   textOneNewRouteFile: "one new route file",
+  textOneRouteFileInPlace: "one route file in place",
   textOpen: "Open ",
   textOpenDesignMd: "Open DESIGN.md",
   textOpenInEditor: "Open in editor",
@@ -185,6 +186,7 @@ const COPY = {
   textReplace: "Replace",
   textRestartDevServer: "Restart dev server",
   textRouteChanged: "The app route changed since the copy",
+  textRouteFilesInPlace: "route files in place",
   textRoutePath: "Route path",
   textRunIn: "run in ",
   textS: "S",

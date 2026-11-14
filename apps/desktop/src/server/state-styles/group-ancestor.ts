@@ -1,4 +1,8 @@
+import { parse } from "parse5";
+import type { DefaultTreeAdapterMap } from "parse5";
+
 import {
+  findElementAt,
   findJsxElement,
   fromGroupClass,
   jsxAncestors,
@@ -111,12 +115,64 @@ const toJsxGroupAncestor = (
   return null;
 };
 
+type HtmlNode = DefaultTreeAdapterMap["parentNode"];
+
+const toHtmlGroup = (node: HtmlNode): GroupAncestor | null => {
+  if (!("attrs" in node)) {
+    return null;
+  }
+
+  const classText =
+    node.attrs.find((entry) => entry.name === "class")?.value ?? "";
+
+  for (const token of classText.split(/\s+/u)) {
+    const hit = fromGroupClass(token);
+
+    if (hit !== null) {
+      return {
+        hasDataState: node.attrs.some(
+          (entry) => entry.name === DATA_STATE_ATTR
+        ),
+        name: hit.name,
+      };
+    }
+  }
+
+  return null;
+};
+
+const toHtmlGroupAncestor = (
+  code: string,
+  loc: SourceLoc
+): GroupAncestor | null => {
+  const document = parse(code, { sourceCodeLocationInfo: true });
+  const element = findElementAt(document, { col: loc.col, line: loc.line });
+
+  for (
+    let node: HtmlNode | null = element?.parentNode ?? null;
+    node !== null;
+    node = ("parentNode" in node && node.parentNode) || null
+  ) {
+    const group = toHtmlGroup(node);
+
+    if (group !== null) {
+      return group;
+    }
+  }
+
+  return null;
+};
+
 const toGroupAncestor = (
   site: StyleSite,
   loc: SourceLoc
 ): GroupAncestor | null => {
-  if (site.html || site.theme === null) {
+  if (site.theme === null) {
     return null;
+  }
+
+  if (site.html) {
+    return toHtmlGroupAncestor(site.code, loc);
   }
 
   return toJsxGroupAncestor(site.code, loc, TS_FILE.test(site.relative));

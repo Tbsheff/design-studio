@@ -43,7 +43,7 @@ const toGroupNameFor = async (
     return null;
   }
 
-  if (site.html || site.theme === null) {
+  if (site.theme === null) {
     throw new StateStyleError(NEEDS_CLASSES);
   }
 

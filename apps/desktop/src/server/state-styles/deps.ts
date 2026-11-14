@@ -10,6 +10,7 @@ export { findFrame } from "../canvas/index.js";
 export { elementClassInfo } from "../direct-edit/commit/index.js";
 
 export {
+  findElementAt,
   findJsxElement,
   htmlVariantProps,
   jsxAncestors,

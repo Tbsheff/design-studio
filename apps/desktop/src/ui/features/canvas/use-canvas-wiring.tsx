@@ -56,13 +56,15 @@ const useCanvasWiring = (
   const { setSelection } = props;
   const selectionCount = props.selection.length;
 
+  const selectSiblings = (): void =>
+    pv.frames.selectRelative(props.selection[0]?.selector ?? "", "siblings");
+
   useFrameSelectionKeys({
     clearLayers: () => setSelection(() => []),
     frames: canvasFrames,
     isBlocked: text.protoOn || text.draw.on,
     removeFramesAt,
-    selectSiblings: () =>
-      pv.frames.selectRelative(props.selection[0]?.selector ?? "", "siblings"),
+    selectSiblings,
     selectionCount,
   });
 

@@ -1,0 +1,8 @@
+{"filled":[{"photoId":"3f5351dd-c206-4a48-8110-efd5d87ca9a7","query":"coffee cart street","selector":"[style*=\"assets/6332446581-90a5135301-b-bd13ed481c.jpg\"]"},{"photoId":"9d4a92a0-b0c8-4858-a2b9-d7c010e0acf9","query":"latte art cup","selector":"img[src=\"assets/50520306126-56c9d9939e-b-18333993dd.jpg\"]"},{"photoId":"a75f8fce-0072-419d-8240-40d5848190e7","query":"croissant pastry","selector":"img[src=\"assets/3493579401-0b22ba747c-b-708fb5535c.jpg\"]"}],"missed":[],"note":null,"versionId":"pending-3237e6f7b8464d0d"}real 11.73
+user 0.00
+sys 0.00
+
+{"filled":[],"missed":[],"note":"index.html has no data-photo slot left, so nothing changed and no search ran. Do not call apply_image_search again on this page. To add a photo, write an img or element with data-photo=\"<2 to 6 search words>\".","versionId":null}real 0.02
+user 0.00
+sys 0.00
+

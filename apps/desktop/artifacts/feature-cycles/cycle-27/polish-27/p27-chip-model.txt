@@ -1,0 +1,1 @@
+[{"added":96,"created":true,"path":"new.html","removed":0},{"added":2,"created":false,"path":"index.html","removed":1}]

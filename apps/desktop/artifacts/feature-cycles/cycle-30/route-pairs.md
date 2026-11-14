@@ -40,10 +40,10 @@ Real model, 2 runs (local sign-in, Sonnet 5.5), Move to app of the copy onto `/p
 
 | Run | App | First studio score | Loops | After loops | Kept text edited | Data reads kept | Sample rows in `app/` | Time | Cost |
 |---|---|---|---|---|---|---|---|---|---|
-| 1 | rf-next | 99 | 0 | 99 | no (it added a class only) | yes (2) | 0 | 39 s | $0.139 |
-| 2 | rf-next-tw | 65 | 2 | 69, then 65 | no (it added classes only) | yes (2) | 0 | 34 s | $0.167 |
+| 1 | rf-next | 99 | 0 | 99 | text unchanged; margins changed (new class `lead`, `margin: 0 0 24px`) | yes (2) | 0 | 39 s | $0.139 |
+| 2 | rf-next-tw | 65 | 2 | 69, then 65 | text unchanged; margins changed (`mb-4` to `mb-6`, in its first `Write`, before any fix prompt) | yes (2) | 0 | 34 s | $0.167 |
 
-- **Run 1.** The agent's own `inspect_port` call returned the pairs. It then changed `.title` margin from `0 0 8px` to `0 0 24px`, which is the cycle-29 run 2 fault, and scored 99 before the studio check. Files: `real-run-1-rf-next/`.
+- **Run 1.** The agent called `inspect_port` itself (the run events keep only a summary, so its output is not on record). After that call it changed `.title` margin from `0 0 8px` to `0 0 24px`, which is the cycle-29 run 2 fault. The studio check then scored 99. Files: `real-run-1-rf-next/`.
 - **Run 2: under 80.** The fix prompts are in `real-run-2-fix-prompts.txt`. The cause, from its `diffs`:
   - `h1` margin-bottom app 8px against 24px. The agent did not change it in either loop.
   - The table font-size is 16px against 15px, with line-height 20px against normal.
@@ -65,4 +65,6 @@ Real model, 2 runs (local sign-in, Sonnet 5.5), Move to app of the copy onto `/p
 - **Fixture copy.** Both real runs used a plain route copy (with `.db-ok` present), not a fixture copy.
 - **Sibling order.** Structural pairing uses tag order in the whole page, not order among siblings under the paired parent. Text pairs cover the test pages.
 - **Duplicate text.** The h1 can show in `firstShift` and as a named element in its area. The area entry then has no diffs, so the prompt shows the values once.
+- **Kept-line margins.** Both agents restyled the kept line's margins in their first write, before any fix prompt. No fix loop edited it after the "Do not edit the kept app text or its margins" line.
+- **Fake apps.** `ds-wt/rf-next` and `ds-wt/rf-next-tw` are reset to their "app change: ward line and new data" commits, ready for the merged-session run.
 - `.claude/goal/roadmap.md` is not in the worktree, so no Appendix A globs were added. New files: `review/port-check/{port-pairs.ts,port-pairs-probe.ts,port-pair-values.ts}`. `port-pair-values.ts` is a third new file, split out to keep `port-pairs.ts` under 500 lines.

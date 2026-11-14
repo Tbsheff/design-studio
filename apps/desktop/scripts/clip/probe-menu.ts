@@ -22,6 +22,22 @@ const toPanelCut = (bounds: Edges): Edges => {
   return { ...bounds, right: Math.min(bounds.right, left) };
 };
 
+const toToolsCut = (bounds: Edges): Edges => {
+  const tools = document.querySelector(".studio-tools > .topbar-tools");
+
+  if (tools === null || !isShown(tools)) {
+    return bounds;
+  }
+
+  const bar = tools.getBoundingClientRect();
+
+  if (bar.width >= bar.height) {
+    return { ...bounds, bottom: Math.min(bounds.bottom, bar.top) };
+  }
+
+  return { ...bounds, left: Math.max(bounds.left, bar.right) };
+};
+
 const toStageBounds = (stage: Element): Edges | null => {
   const bounds = toIntersection(toEdges(stage.getBoundingClientRect()), {
     bottom: innerHeight,
@@ -34,7 +50,7 @@ const toStageBounds = (stage: Element): Edges | null => {
     return null;
   }
 
-  return toPanelCut(bounds);
+  return toToolsCut(toPanelCut(bounds));
 };
 
 const toStageMenuFinding = (
@@ -99,4 +115,5 @@ export {
   toStageBounds,
   toStageMenuFinding,
   toStageMenuFindings,
+  toToolsCut,
 };

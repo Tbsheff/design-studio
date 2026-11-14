@@ -93,7 +93,7 @@ const RULE_LINES = [
   "Also restyle the components that the route imports from its own folder. Keep their data reads (hooks, queries) and exports.",
   "Bind the design to the route's own data. The prototype rows are sample data: do not write a sample row into the app.",
   "Change the route files only with the Edit or Write tool. Do not change them with Bash: sed -i fails on macOS.",
-  "To write the measured prototype values (spacing, size, gap) into the route, call the tool mcp__studio__apply_port with routePath. Load it with ToolSearch first.",
+  "First, before any other route write, call the tool mcp__studio__apply_port with only routePath (load it with ToolSearch). It writes the measured prototype values (spacing, size, gap) into the route files. Then make the other changes with Edit.",
 ];
 
 const RouteFileSchema = Schema.Struct({ file: Schema.String });

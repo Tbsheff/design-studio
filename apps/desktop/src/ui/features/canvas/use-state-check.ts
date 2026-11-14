@@ -13,7 +13,7 @@ import {
 
 import { selectionRun } from "../../platform/ask-chat.js";
 import { useLive } from "../../platform/live-store.js";
-import { useAction } from "../../platform/query.js";
+import { subscribeDone, useAction } from "../../platform/query.js";
 import { canvasStore } from "./canvas-frames-model.js";
 import {
   isStateBoardSection,
@@ -86,17 +86,25 @@ const useVersionRecheck = (
   }, [headVersionId, refetch]);
 };
 
+const START_STATES_ID = runRoutes.startStatesRun.id;
+
 const useSeenSequence = (
-  sectionId: string,
-  isRunning: boolean
+  projectId: string,
+  sectionId: string
 ): [boolean, (seenId: string) => void] => {
   const [seenId, setSeenId] = useState<string | null>(null);
 
-  if (isRunning && seenId !== sectionId) {
-    setSeenId(sectionId);
-  }
+  useEffect(
+    () =>
+      subscribeDone((done) => {
+        if (done.actionId === START_STATES_ID && done.projectId === projectId) {
+          setSeenId(sectionId);
+        }
+      }),
+    [projectId, sectionId]
+  );
 
-  return [isRunning || seenId === sectionId, setSeenId];
+  return [seenId === sectionId, setSeenId];
 };
 
 const useStateSequence = (
@@ -109,8 +117,7 @@ const useStateSequence = (
   const { run: runStart } = start;
   const { run: runStop } = stop;
   const sectionId = section.id;
-  const isRunning = useLive(selectionRun);
-  const [hasSequence, setSeenId] = useSeenSequence(sectionId, isRunning);
+  const [hasSequence, setSeenId] = useSeenSequence(projectId, sectionId);
 
   const sequenceQuery = useMemo(() => {
     if (!hasSequence) {

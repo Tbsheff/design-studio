@@ -185,6 +185,7 @@ const toShot = (
       rect: reading.rect,
       source: null,
       start: reading.start,
+      tag: reading.target.tag,
     };
   }
 

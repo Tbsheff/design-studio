@@ -1,5 +1,5 @@
 import { markupAttribute } from "./encode.js";
-import { HTML_FILE, layerExtent } from "./range-extent.js";
+import { HTML_FILE, toStyledExtent } from "./range-extent.js";
 import type { Segment } from "./segment.js";
 import { toSplitOuter } from "./split-inner.js";
 
@@ -399,19 +399,21 @@ const toUnwrapped = (
   ends: RawEnds,
   spec: RangeSpec
 ): RangeOutcome => {
-  const extent = layerExtent(file, source, spec.line, spec.column);
+  const extent = toStyledExtent(file, source, {
+    column: spec.column,
+    end: ends.end,
+    isMatch: (tag, open) => isStyledTag(spec, tag, open),
+    line: spec.line,
+    start: ends.start,
+  });
 
   if (extent === null) {
-    return toFail("This layer has no closing tag, so no style can be removed.");
-  }
-
-  const open = source.slice(extent.openStart, extent.openEnd);
-
-  if (!isStyledTag(spec, extent.tag, open)) {
     return toFail(
       "This layer does not have that style. Select the styled text."
     );
   }
+
+  const open = source.slice(extent.openStart, extent.openEnd);
 
   const split = toSplitOuter({
     after: source.slice(ends.end, extent.closeStart),

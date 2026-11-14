@@ -69,7 +69,14 @@ const BATCH_FRAME_MS = 100;
 
 const EMPTY_RUNS: RunMap = {};
 
+const isLiveFed = (known: RunView | null): known is RunView =>
+  known !== null && known.summary === null;
+
 const toSummaryRun = (known: RunView | null, summary: RunSummary): RunView => {
+  if (summary.status === "running" && isLiveFed(known)) {
+    return known;
+  }
+
   if (!known?.summary) {
     return runFromSummary(summary);
   }
@@ -92,6 +99,12 @@ const toMergedSummaries = (previous: RunMap, list: RunSummary[]): RunMap => {
 };
 
 const toRunsWithEvents = (previous: RunMap, events: StudioEvent[]): RunMap => {
+  const [first] = events;
+
+  if (first && "runId" in first && isLiveFed(previous[first.runId] ?? null)) {
+    return previous;
+  }
+
   let runs = previous;
 
   for (const event of events) {

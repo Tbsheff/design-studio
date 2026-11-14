@@ -714,7 +714,24 @@ export interface RunSummary {
   parts?: RunPart[];
   todos?: TodoItem[];
   contextTokens?: number;
+  contextWindow?: number;
   title?: string;
+}
+
+export function toContextUsage(
+  summary: Pick<RunSummary, "contextTokens" | "contextWindow">,
+  contextTokens: number,
+  contextWindow: number | null
+): Pick<RunSummary, "contextTokens" | "contextWindow"> | null {
+  if (!Number.isFinite(contextTokens) || contextTokens <= 0) {
+    return null;
+  }
+
+  if (!contextWindow) {
+    return contextTokens === summary.contextTokens ? null : { contextTokens };
+  }
+
+  return { contextTokens, contextWindow };
 }
 
 interface EventBase {

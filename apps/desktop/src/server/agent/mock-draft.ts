@@ -149,7 +149,7 @@ const runDraftStream = async (
   );
   await wait(DRAFT_STEP_MS, null, { signal: input.signal });
 
-  stopDraft(target, key.toolUseId);
+  stopDraft(target, key.toolUseId, false);
 };
 
 const runDraftEdit = async (

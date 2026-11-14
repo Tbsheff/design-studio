@@ -190,6 +190,7 @@ const runFromSummary = (summary: RunSummary): RunView => ({
     summary.request
   ),
   contextTokens: summary.contextTokens ?? null,
+  contextWindow: summary.contextWindow ?? null,
   hasStarted: isRecentStart(summary.startedAt),
   parts: summary.parts ?? legacyParts(summary),
   status: summary.status,

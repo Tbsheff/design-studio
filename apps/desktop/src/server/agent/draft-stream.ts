@@ -40,6 +40,8 @@ const KEY_OF_KIND: Record<DraftKind, string> = {
 
 const OLD_STRING = /"old_string"\s*:\s*"/u;
 
+const REPLACE_ALL = /"replace_all"\s*:\s*true/u;
+
 const UNICODE_ESCAPE_SIZE = 6;
 
 const SHORT_ESCAPE_SIZE = 2;
@@ -292,7 +294,7 @@ const stopBlock = (input: DriverInput, event: StreamEvent): void => {
   }
 
   blocks.delete(event.index);
-  stopDraft(toTarget(input), block.toolUseId);
+  stopDraft(toTarget(input), block.toolUseId, REPLACE_ALL.test(block.json));
 };
 
 const applyDraftMessage = (

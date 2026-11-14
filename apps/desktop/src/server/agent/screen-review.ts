@@ -57,6 +57,22 @@ function shotOf(run: RunToolState, screen: RunScreen, after: number): boolean {
   );
 }
 
+function toDistinctScreens(screens: RunScreen[]): RunScreen[] {
+  const seen = new Set<string>();
+
+  return screens.filter((screen) => {
+    const key = `${screen.label}|${screen.url}`;
+
+    if (seen.has(key)) {
+      return false;
+    }
+
+    seen.add(key);
+
+    return true;
+  });
+}
+
 export async function unseenScreens(
   input: Pick<ScreenReviewInput, "preview" | "ctx" | "run">
 ): Promise<RunScreen[]> {
@@ -66,20 +82,20 @@ export async function unseenScreens(
     return [];
   }
 
-  const firstEdit = (run.log?.toolOrder ?? []).findIndex((name) =>
+  const lastEdit = (run.log?.toolOrder ?? []).findLastIndex((name) =>
     EDIT_TOOL_NAMES.has(name)
   );
 
-  if (firstEdit === -1) {
+  if (lastEdit === -1) {
     return [];
   }
 
-  const screens = await runScreens(input.preview, ctx, run.config, run).catch(
-    () => []
+  const screens = toDistinctScreens(
+    await runScreens(input.preview, ctx, run.config, run).catch(() => [])
   );
 
   return screens.length > 1
-    ? screens.filter((screen) => !shotOf(run, screen, firstEdit))
+    ? screens.filter((screen) => !shotOf(run, screen, lastEdit))
     : [];
 }
 

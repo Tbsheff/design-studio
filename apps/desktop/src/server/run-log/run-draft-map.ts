@@ -5,6 +5,7 @@ type DraftKind = RunDraft["kind"];
 
 interface DraftEntry {
   readonly isComplete: boolean;
+  readonly isReplaceAll: boolean;
   readonly kind: DraftKind;
   readonly oldString: string | null;
   readonly pageText: string | null;
@@ -127,7 +128,7 @@ const toEditText = (runId: string, entry: DraftEntry): string | null => {
 
   const at = base.indexOf(old);
 
-  if (at === -1 || base.lastIndexOf(old) !== at) {
+  if (at === -1) {
     return null;
   }
 
@@ -135,6 +136,14 @@ const toEditText = (runId: string, entry: DraftEntry): string | null => {
 
   if (!entry.isComplete) {
     middle = toClosedPartial(entry.text);
+  }
+
+  if (entry.isReplaceAll) {
+    return base.replaceAll(old, () => middle);
+  }
+
+  if (base.lastIndexOf(old) !== at) {
+    return null;
   }
 
   return `${base.slice(0, at)}${middle}${base.slice(at + old.length)}`;
@@ -222,6 +231,7 @@ const setDraftText = (chunk: DraftChunk): void => {
   drafts.delete(chunk.runId);
   drafts.set(chunk.runId, {
     isComplete: false,
+    isReplaceAll: false,
     kind: chunk.kind,
     oldString: chunk.oldString,
     pageText: null,
@@ -233,14 +243,18 @@ const setDraftText = (chunk: DraftChunk): void => {
   deleteOldest();
 };
 
-const setDraftComplete = (runId: string, toolUseId: string): void => {
+const setDraftComplete = (
+  runId: string,
+  toolUseId: string,
+  isReplaceAll: boolean
+): void => {
   const entry = drafts.get(runId) ?? null;
 
   if (entry === null || entry.toolUseId !== toolUseId) {
     return;
   }
 
-  const done = { ...entry, isComplete: true };
+  const done = { ...entry, isComplete: true, isReplaceAll };
   const text = toPageText(runId, done);
 
   drafts.set(runId, { ...done, pageText: text });

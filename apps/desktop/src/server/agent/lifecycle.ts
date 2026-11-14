@@ -20,6 +20,7 @@ import type {
   TelemetrySample,
   ToolCallRecord,
 } from "@design-studio/contracts";
+import { toContextUsage } from "@design-studio/contracts";
 import { nanoid } from "nanoid";
 
 import {
@@ -701,9 +702,9 @@ export function createRunLifecycle(
           );
       },
       usage(contextTokens, contextWindow) {
-        if (!Number.isFinite(contextTokens) || contextTokens <= 0) return;
-        if (contextTokens === summary.contextTokens && !contextWindow) return;
-        summary.contextTokens = contextTokens;
+        const next = toContextUsage(summary, contextTokens, contextWindow);
+        if (!next) return;
+        Object.assign(summary, next);
         emitRun({ type: "run.usage", contextTokens, contextWindow });
       },
       retry(attempt, max, delayMs, error) {

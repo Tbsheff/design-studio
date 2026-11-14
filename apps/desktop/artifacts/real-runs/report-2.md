@@ -65,3 +65,18 @@ Total: $0.36.
 - `r1-live-8s.png`: run 1 at 8 s, draft bar "Writing index.html · 1 KB", head and styles only so far.
 - `r1-end-dark.png`: run 1 end, only the "Studio screen check" line, duplicate screen label, "+96 -10" on a created file.
 - `r2-end-light.png`: run 2 end, "4 changes" pill, screen check note after a run where the agent took a screenshot.
+
+## Fixes
+
+Branch `fix/run-log-bugs`. Checked on a server from the worktree (port 5680, data in `ds-wt/run-log-fixes-data`) with 2 short real runs on a new HTML project `lCWQ8h7fNJ` ("Bakery", 2 views: "Today's Menu" and "Place an Order"). Total cost $0.17.
+
+| Bug | Fix | Check |
+|---|---|---|
+| 1. "Studio check:" line lost | `sdk-driver.ts`: each check (loop report, studio check, screen check, reference) adds its note to the attempt; the notes join after the agent's last reply at the end (`run-notes.ts`). | Run `nJEkLNRzR8jjg_Kf-Oxlz` (67 s): `finalText` and the chat have both "Studio check: ... pass 1: 2 finding(s) ... a fix loop ran" and "Studio screen check: ... 2 screen(s) (Today's Menu, Place an Order)". Screenshot `fix1-r1-end-dark.png`. |
+| 2. Screen listed twice, check runs after agent shot | `screen-review.ts`: drop screens with the same label and URL; a screen counts as seen only when the agent shot it after its last edit. The note says "one fix loop ran" only when the agent edited in that loop. | Run 1: 2 distinct labels, no duplicate. Run `WdRQ-1l9QjrQCTbGUvHCA` (14 s): the agent shot screen 1 and 2 after its edit; no screen check ran (no "Studio screen check" line, no extra turn). Screenshot `fix2-r2-end-light.png`. From the run 2 data of this report: the 2 listed screens were click states of the same page with the same h1 label (3 render_check results, 1 label); dedupe removes them. |
+| 3. Meter window falls back to 200k | `RunSummary.contextWindow`; `toContextUsage` (contracts) saves the reported window with the usage; `runFromSummary` reads it. | Run 1 summary: `contextWindow: 1000000`. After a page reload the prompt toolbar gets `window: 1000000` (React props read with playwright). The meter stays hidden: 31,552 tokens is under the 50% show line. |
+| 4. `replace_all` edit draft has empty html | `draft-stream.ts` reads `replace_all: true` from the tool input; `run-draft-map.ts` replaces every match in the draft. | Run 2: `Edit` with `replace_all: true` ("pastry" to "bake", 3 matches): `get_draft_run` gave `kind: edit`, html 4276 chars (4282 - 3 x 2), `isComplete: true`. |
+
+Gates: `pnpm run typecheck` pass, `pnpm run lint:gate` pass (59603, baseline 89733), `pnpm run build:ui` pass.
+
+Not fixed (seen in run 1): the screen check sent 2 images for 2 screens, not 4. The desktop shot of screen 2 is missing from the runs folder, and `studioScreenReview` drops every image of a screen when one size fails (`.catch(() => [])`), so screen 2 sent no image.

@@ -95,6 +95,7 @@ import {
   wantsRegressionCheck,
 } from "./regression.js";
 import { withRunLevel } from "./run-level.js";
+import { toEditCount, toNotedOutcome } from "./run-notes.js";
 import { describeTargetLayout } from "./run-target.js";
 import {
   toContextTokens,
@@ -655,6 +656,7 @@ interface AttemptSegment {
   promptHash: string;
   spentUsd: number;
   sessionId?: string | null;
+  notes: string[];
 }
 
 function sumRunUsage(a: RunUsage, b: RunUsage): RunUsage {
@@ -689,10 +691,11 @@ function mergeOutcomes(
 
 function withLoopReport(
   outcome: DriverOutcome,
-  run: RunToolState,
+  segment: AttemptSegment,
   reason: StopReason | null,
   continuations: number
 ): DriverOutcome {
+  const { run } = segment.setup;
   if (!run.log) return outcome;
   const steps = checkSteps(run.log).map((step) => ({
     loop: step.loop,
@@ -704,9 +707,9 @@ function withLoopReport(
   ]
     .filter(Boolean)
     .join(" ");
+  segment.notes.push(report);
   return {
     ...outcome,
-    finalText: `${outcome.finalText}\n\n${report}`,
     loop: {
       loops: loopsDone(run.log),
       continuations,
@@ -1379,13 +1382,8 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
       if (!step.record.fixLoop) break;
     }
     if (records.length === 0) return { outcome, record: null };
-    return {
-      outcome: {
-        ...outcome,
-        finalText: `${outcome.finalText}\n\n${toReviewNote(input.ctx, records)}`,
-      },
-      record: mergeAppReviews(records),
-    };
+    segment.notes.push(toReviewNote(input.ctx, records));
+    return { outcome, record: mergeAppReviews(records) };
   }
 
   async function continueScreenReview(
@@ -1419,11 +1417,10 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
     );
     const text = screenReviewPrompt(review);
     const sessionId = segment.sessionId;
-    if (!text || !sessionId || !roomForFixLoop(total) || input.signal.aborted)
-      return {
-        ...total,
-        finalText: `${total.finalText}\n\n${screenReviewNote(review, false)}`,
-      };
+    if (!text || !sessionId || !roomForFixLoop(total) || input.signal.aborted) {
+      segment.notes.push(screenReviewNote(review, false));
+      return total;
+    }
     input.sink.sent({
       text,
       imageCount: review.images.length,
@@ -1442,17 +1439,17 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
       costUsd: total.sessionTotals?.costUsd ?? 0,
       apiMs: total.sessionTotals?.apiMs ?? null,
     };
+    const editsBefore = toEditCount(run);
     const next = await runSegment(
       input,
       segment,
       { text, images: review.images },
       prior
     );
-    const merged = mergeOutcomes(total, next.outcome);
-    return {
-      ...merged,
-      finalText: `${merged.finalText}\n\n${screenReviewNote(review, true)}`,
-    };
+    segment.notes.push(
+      screenReviewNote(review, toEditCount(run) > editsBefore)
+    );
+    return mergeOutcomes(total, next.outcome);
   }
 
   async function continueReference(
@@ -1502,13 +1499,8 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
       continueWith,
     });
     if (!record) return { outcome: total, record: null };
-    return {
-      outcome: {
-        ...merged,
-        finalText: `${merged.finalText}\n\n${referenceNote(record)}`,
-      },
-      record,
-    };
+    segment.notes.push(referenceNote(record));
+    return { outcome: merged, record };
   }
 
   async function attempt(
@@ -1547,6 +1539,7 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
       sdkOptions,
       promptHash,
       spentUsd: 0,
+      notes: [],
     };
     const first = await runSegment(input, segment, sent, prior);
     const looped = wantsLoop(setup.config, input.ctx.request.mode)
@@ -1561,7 +1554,7 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
       looped
         ? withLoopReport(
             looped.outcome,
-            setup.run,
+            segment,
             looped.reason,
             looped.continuations
           )
@@ -1572,7 +1565,7 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
       segment,
       await continueScreenReview(input, segment, reviewed.outcome)
     );
-    const outcome = referenced.outcome;
+    const outcome = toNotedOutcome(referenced.outcome, segment.notes);
     addCriticCost(outcome, setup.run.criticCostUsd);
     if (!signal.aborted)
       await attachFinalCheck(

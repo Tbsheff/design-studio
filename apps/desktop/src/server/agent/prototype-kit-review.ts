@@ -1,6 +1,9 @@
 import type { AppReviewRecord } from "@design-studio/contracts";
 
-import type { AgentRunContext } from "../../shared/server-ports.js";
+import type {
+  AgentRunContext,
+  PreviewService,
+} from "../../shared/server-ports.js";
 import type {
   DriftTag,
   MarkupDrift,
@@ -10,6 +13,7 @@ import {
   isKitPrototype,
   listPrototypeDrift,
 } from "../components/kit-drift/kit-drift-prototype.js";
+import type { PrototypeDrift } from "../components/kit-drift/kit-drift-prototype.js";
 import type { AppReviewGaps } from "./final-check.js";
 
 interface KitGroup {
@@ -28,6 +32,9 @@ type KitContext = Pick<AgentRunContext, "direction" | "project" | "request">;
 const KIT_COUNTS = new WeakMap<KitContext, number[]>();
 
 const LISTED_LINES = 6;
+
+const RENDER_SKIPPED_LINE =
+  "- The studio could not render the pages, so it skipped the rendered scan and checked the static HTML only.";
 
 const MOBILE_RAN =
   "a mobile screenshot at 390 px wide, 2400 px tall so content in inner scroll areas shows (attached)";
@@ -69,7 +76,7 @@ const toGroups = (finds: readonly MarkupDrift[]): KitGroup[] => {
   const groups = new Map<string, MarkupDrift[]>();
 
   for (const find of finds) {
-    const key = `${find.tag}|${find.recipe.component.name}`;
+    const key = `${find.tag}|${find.recipe.component.name}|${String(find.isScriptBuilt)}`;
 
     groups.set(key, [...(groups.get(key) ?? []), find]);
   }
@@ -78,9 +85,8 @@ const toGroups = (finds: readonly MarkupDrift[]): KitGroup[] => {
 };
 
 const toPlaces = (finds: readonly MarkupDrift[]): string =>
-  finds
+  [...new Set(finds.map((find) => `${find.file}:${find.line}`))]
     .slice(0, LISTED_LINES)
-    .map((find) => `${find.file}:${find.line}`)
     .join(", ");
 
 const toCount = (group: KitGroup, tag: DriftTag): string => {
@@ -142,9 +148,14 @@ const toVariantClasses = (recipe: PackRecipe, variant: string): string =>
 const toBadgeLine = (group: KitGroup, first: MarkupDrift): string => {
   const variants = listBadgeVariants(group);
 
-  const places = group.finds
+  const places = [
+    ...new Set(
+      group.finds.map(
+        (find) => `${find.file}:${find.line} ${find.variant ?? "default"}`
+      )
+    ),
+  ]
     .slice(0, LISTED_LINES)
-    .map((find) => `${find.file}:${find.line} ${find.variant ?? "default"}`)
     .join(", ");
 
   const classes = variants
@@ -162,7 +173,23 @@ const toBadgeLine = (group: KitGroup, first: MarkupDrift): string => {
   return `- ${toCount(group, "badge")} hand-styled (${places}). Replace the hand-styled badge with the app Badge (variant ${name}); keep the text. Give each one ${toRecipeText(first.recipe)} and the classes of its variant: ${classes}. Move to app then maps it to Badge.`;
 };
 
-const toKitLine = (group: KitGroup): string => {
+const toScriptClause = (group: KitGroup): string => {
+  const first = group.finds.find((find) => find.isScriptBuilt);
+
+  if (!first) {
+    return "";
+  }
+
+  let search = "";
+
+  if (first.scriptText !== null) {
+    search = ` (search for '${first.scriptText}')`;
+  }
+
+  return ` This markup is built by a script: change the template in the <script> of ${first.file}${search}.`;
+};
+
+const toPartLine = (group: KitGroup): string => {
   const [first] = group.finds;
 
   if (!first) {
@@ -200,26 +227,46 @@ const toKitLine = (group: KitGroup): string => {
   return `- ${count} ${word} ${verb} hand-styled (${toPlaces(group.finds)}). Use the ${component.name} recipe: \`${component.base.join(" ")}\`${variant}. Add these classes${slotText} to each one and keep the page CSS for the look, so Move to app maps it to ${component.name}.`;
 };
 
+const toKitLine = (group: KitGroup): string =>
+  `${toPartLine(group)}${toScriptClause(group)}`;
+
 const setKitCount = (ctx: KitContext, count: number): void => {
   KIT_COUNTS.set(ctx, [...(KIT_COUNTS.get(ctx) ?? []), count]);
 };
 
-const listKitLines = async (ctx: KitContext): Promise<string[]> => {
+const listKitLines = async (
+  ctx: KitContext,
+  preview: PreviewService
+): Promise<string[]> => {
   if (!isKitRun(ctx)) {
     return [];
   }
 
-  let finds: MarkupDrift[] = [];
+  let drift: PrototypeDrift = { finds: [], isRenderSkipped: false };
 
   try {
-    finds = await listPrototypeDrift(ctx.project, ctx.direction.workTree, null);
+    drift = await listPrototypeDrift(
+      ctx.project,
+      ctx.direction.workTree,
+      null,
+      {
+        direction: ctx.direction,
+        preview,
+      }
+    );
   } catch {
-    finds = [];
+    drift = { finds: [], isRenderSkipped: false };
   }
 
-  setKitCount(ctx, finds.length);
+  setKitCount(ctx, drift.finds.length);
 
-  return toGroups(finds).map((group) => toKitLine(group));
+  const lines = toGroups(drift.finds).map((group) => toKitLine(group));
+
+  if (drift.isRenderSkipped && lines.length > 0) {
+    return [...lines, RENDER_SKIPPED_LINE];
+  }
+
+  return lines;
 };
 
 const toKitGaps = (ctx: KitContext, hasEdit: boolean): AppReviewGaps | null => {
@@ -250,7 +297,7 @@ const toReviewOpening = (gaps: AppReviewGaps, pass: number): string | null => {
       return null;
     }
 
-    return "You finished a prototype of an app, so the studio checked its controls against the app kit recipes.";
+    return "You finished a prototype of an app, so the studio checked its parts against the app kit recipes.";
   }
 
   const ran = toRanList(gaps);
@@ -288,7 +335,7 @@ const toKitClause = (
   tally: KitTally,
   records: readonly AppReviewRecord[]
 ): string => {
-  const head = `${tally.first} controls did not use the app kit`;
+  const head = `${tally.first} parts did not use the app kit`;
 
   if (!records.some((record) => record.fixLoop)) {
     return `${head}; no fix loop ran`;
@@ -302,7 +349,7 @@ const toKitClause = (
 };
 
 const toKitAfterClause = (tally: KitTally): string => {
-  const head = `${tally.first} controls did not use the app kit`;
+  const head = `${tally.first} parts did not use the app kit`;
 
   if (tally.passes < 2) {
     return head;

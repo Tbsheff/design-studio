@@ -1,5 +1,6 @@
 import { Context, Effect, Layer } from "effect";
 
+import { viewportRuntime } from "./deps.js";
 import type { KnownFailure } from "./deps.js";
 import type { KitDriftPage, ListKitDriftCommand } from "./kit-drift-list.js";
 import { runKitDriftListEffect } from "./kit-drift-run.js";
@@ -21,7 +22,9 @@ class KitDriftStore extends Context.Service<KitDriftStore, KitDriftStoreApi>()(
       list: Effect.fn("KitDriftStore.list")(function* run(
         command: ListKitDriftCommand
       ) {
-        return yield* runKitDriftListEffect(command);
+        const runtime = yield* viewportRuntime;
+
+        return yield* runKitDriftListEffect(command, runtime.preview);
       }),
     })
   );

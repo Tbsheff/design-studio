@@ -4,8 +4,10 @@ import path from "node:path";
 import { directEditRuntimeOf, getComponentsMd } from "./deps.js";
 import type { Project } from "./deps.js";
 import { toMarkupDrift, toPackRecipes } from "./engine/index.js";
-import type { MarkupDrift } from "./engine/index.js";
+import type { MarkupDrift, PackRecipe } from "./engine/index.js";
 import { KitDriftError } from "./errors.js";
+import { listRenderedDrift } from "./kit-drift-render.js";
+import type { RenderSource } from "./kit-drift-render.js";
 import { listPageFiles } from "./source-files.js";
 
 const COMPONENTS_FILE = "design-system/components.md";
@@ -16,6 +18,16 @@ const STYLESHEET_PATTERN = /\brel\s*=\s*["']?stylesheet\b/iu;
 const HREF_PATTERN = /\bhref\s*=\s*["']?(?<href>[^"'\s>]+)/iu;
 const REMOTE_PATTERN = /^(?:[a-z]+:|\/\/)/iu;
 const MAX_SHEETS = 8;
+
+interface PrototypeDrift {
+  readonly finds: readonly MarkupDrift[];
+  readonly isRenderSkipped: boolean;
+}
+
+interface PageDrift {
+  readonly finds: readonly MarkupDrift[];
+  readonly isSkipped: boolean;
+}
 
 const isKitPrototype = (project: Project): boolean =>
   (project.appProjectId ?? "") !== "" && !project.app;
@@ -141,38 +153,61 @@ const getRecipeText = async (
   return (await getComponentsMd(appTree)) ?? "";
 };
 
+const listPageDrift = async (
+  scope: { readonly project: Project; readonly workTree: string },
+  render: RenderSource | null,
+  recipes: readonly PackRecipe[],
+  absolute: string
+): Promise<PageDrift> => {
+  const html = (await getText(absolute)) ?? "";
+
+  const page = {
+    css: await getPageCss(scope.workTree, absolute, html),
+    file: toRelative(scope.workTree, absolute),
+    html,
+    recipes,
+  };
+
+  const rendered = await listRenderedDrift(render, scope.project, page);
+
+  return {
+    finds: [...toMarkupDrift(page), ...rendered.finds],
+    isSkipped: rendered.isSkipped,
+  };
+};
+
 const listPrototypeDrift = async (
   project: Project,
   workTree: string,
-  page: string | null
-): Promise<MarkupDrift[]> => {
+  page: string | null,
+  render: RenderSource | null
+): Promise<PrototypeDrift> => {
   const recipes = toPackRecipes(await getRecipeText(project, workTree));
   const targets = await listTargets(workTree, page);
 
   if (recipes.length === 0) {
-    return [];
+    return { finds: [], isRenderSkipped: false };
+  }
+
+  if (page !== null && (await getText(targets[0] ?? "")) === null) {
+    throw new KitDriftError(
+      `The page ${page} is not an HTML page of this prototype.`
+    );
   }
 
   const scanned = await Promise.all(
-    targets.map(async (absolute) => {
-      const html = await getText(absolute);
-
-      if (html === null && page !== null) {
-        throw new KitDriftError(
-          `The page ${page} is not an HTML page of this prototype.`
-        );
-      }
-
-      return toMarkupDrift({
-        css: await getPageCss(workTree, absolute, html ?? ""),
-        file: toRelative(workTree, absolute),
-        html: html ?? "",
-        recipes,
-      });
-    })
+    targets.map(
+      async (absolute) =>
+        await listPageDrift({ project, workTree }, render, recipes, absolute)
+    )
   );
 
-  return scanned.flat();
+  return {
+    finds: scanned.flatMap((entry) => entry.finds),
+    isRenderSkipped: scanned.some((entry) => entry.isSkipped),
+  };
 };
 
 export { isKitPrototype, listPrototypeDrift };
+
+export type { PrototypeDrift };

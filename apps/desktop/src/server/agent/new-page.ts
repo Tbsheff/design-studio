@@ -29,20 +29,12 @@ const isPlainRequest = (ctx: NewPageContext): boolean =>
 const isPlainEditRun = (ctx: NewPageContext): boolean =>
   isPlainProject(ctx) && isPlainRequest(ctx);
 
-const isBlankTemplate = (ctx: NewPageContext): boolean =>
-  ctx.direction.headVersionId === null &&
-  (ctx.project.imported === null || ctx.project.imported.created === true);
-
 const toTargetFile = (ctx: NewPageContext): string =>
   ctx.target?.routeFile ?? ctx.project.entry;
 
 const isNewPageRun = async (ctx: NewPageContext): Promise<boolean> => {
-  if (!isPlainEditRun(ctx)) {
+  if (!isPlainEditRun(ctx) || ctx.project.kind !== "html") {
     return false;
-  }
-
-  if (ctx.project.kind === "react") {
-    return isBlankTemplate(ctx);
   }
 
   return !(await isFilePresent(

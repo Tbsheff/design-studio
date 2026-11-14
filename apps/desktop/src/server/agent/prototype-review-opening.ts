@@ -5,6 +5,18 @@ interface LineCounts {
   readonly phone: number;
 }
 
+interface AppLineCounts {
+  readonly dark: number | null;
+  readonly kit: number;
+  readonly kitHigh: number;
+}
+
+const APP_KIT_RULE =
+  "Use the app kit parts (Button, Badge, Card and the rest) on the lines you changed, and never edit lines you did not touch.";
+
+const APP_DARK_RULE =
+  "The app has dark values, so text on the lines you changed must keep AA contrast in dark too.";
+
 const FLOW_RULE =
   "Each page must keep the same header, nav, footer, :root values and style sheets.";
 
@@ -96,6 +108,57 @@ const toCheckOpening = (counts: LineCounts, pass: number): string | null => {
   return `You edited again after the studio checks, so the studio checked ${toWordList(listCheckedWords(counts))} once more. These gaps are left.`;
 };
 
-export { toCheckOpening };
+const hasAppGap = (counts: AppLineCounts): boolean =>
+  counts.kitHigh > 0 || (counts.dark ?? 0) > 0;
 
-export type { LineCounts };
+const listAppRules = (counts: AppLineCounts): string[] => {
+  const rules: string[] = [];
+
+  if (counts.kit > 0) {
+    rules.push(APP_KIT_RULE);
+  }
+
+  if ((counts.dark ?? 0) > 0) {
+    rules.push(APP_DARK_RULE);
+  }
+
+  return rules;
+};
+
+const toAppCheckedText = (counts: AppLineCounts): string => {
+  if (counts.dark === null) {
+    return "against the app kit";
+  }
+
+  return "against the app kit and in dark";
+};
+
+const toAppOpening = (
+  counts: AppLineCounts,
+  ran: string,
+  pass: number
+): string | null => {
+  if (ran !== "" && pass > 1) {
+    return `You edited again after the studio checks, so the studio ran ${ran} once more.`;
+  }
+
+  if (ran !== "") {
+    return [
+      `You finished an app run without ${ran}, so the studio ran them. It also checked the lines you changed ${toAppCheckedText(counts)}.`,
+      ...listAppRules(counts),
+    ].join(" ");
+  }
+
+  if (pass > 1 || !hasAppGap(counts)) {
+    return null;
+  }
+
+  return [
+    `You finished an app edit, so the studio checked the lines you changed ${toAppCheckedText(counts)}.`,
+    ...listAppRules(counts),
+  ].join(" ");
+};
+
+export { toAppOpening, toCheckOpening };
+
+export type { AppLineCounts, LineCounts };

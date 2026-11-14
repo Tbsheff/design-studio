@@ -286,4 +286,4 @@ const listDarkLines = async (
   return lines;
 };
 
-export { listDarkLines };
+export { listContrastMisses, listDarkLines };

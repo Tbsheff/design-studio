@@ -1,6 +1,7 @@
 import type { AppReviewRecord } from "@design-studio/contracts";
 
 import type { AgentRunContext } from "../../shared/server-ports.js";
+import { toAppCheckClause, toAppCheckGaps } from "./app-review-lines.js";
 import { appReviewGaps } from "./final-check.js";
 import type { AppReviewGaps } from "./final-check.js";
 import { EDIT_TOOL_NAMES } from "./permissions.js";
@@ -85,7 +86,7 @@ const toReviewGaps = (
   run: RunToolState,
   toolOrder: readonly string[]
 ): AppReviewGaps | null =>
-  appReviewGaps(ctx, run, toolOrder) ??
+  toAppCheckGaps(ctx, run, appReviewGaps(ctx, run, toolOrder), toolOrder) ??
   toPrototypeReviewGaps(ctx, run, toolOrder) ??
   toKitReviewGaps(ctx, run, toolOrder) ??
   toFlowReviewGaps(ctx, run, toolOrder);
@@ -122,8 +123,13 @@ const toRanText = (record: AppReviewRecord): string => {
 
 const toKitOnlyNote = (
   tally: KitTally | null,
-  records: readonly AppReviewRecord[]
+  records: readonly AppReviewRecord[],
+  app: string | null
 ): string => {
+  if (app !== null) {
+    return `Studio app check: ${app}.`;
+  }
+
   if (tally === null) {
     return "";
   }
@@ -136,11 +142,12 @@ const toReviewNote = (
   records: readonly AppReviewRecord[]
 ): string => {
   const tally = toKitTally(ctx);
+  const app = toAppCheckClause(ctx);
   const ran = records.filter((record) => isStudioRan(record));
   const [first] = ran;
 
   if (!first) {
-    return toKitOnlyNote(tally, records);
+    return toKitOnlyNote(tally, records, app);
   }
 
   let label = "Studio check";
@@ -158,6 +165,10 @@ const toReviewNote = (
 
   if (tally !== null) {
     parts.push(toKitAfterClause(tally));
+  }
+
+  if (app !== null) {
+    parts.push(app);
   }
 
   return `${parts.join("; ")}.`;

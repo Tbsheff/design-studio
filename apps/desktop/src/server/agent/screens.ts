@@ -118,7 +118,7 @@ export async function changedSince(
   const changed: string[] = [];
   await walk(
     workTree,
-    dir.replaceAll(/^\/+|\/+$/g, ""),
+    dir.replaceAll(/^(?:\.?\/)+|\/+$|^\.$/g, ""),
     (file, _size, mtimeMs) => mtimeMs >= since && changed.push(file),
     { left: WALK_CAP }
   );
@@ -131,6 +131,44 @@ export interface ChangedFile {
 }
 
 export type BaseFile = (relative: string) => Promise<Uint8Array | null>;
+
+export interface ChangedHit {
+  readonly entry: ChangedFile;
+  readonly line: number | null;
+}
+
+export const NEAR_LINES = 3;
+
+const SOURCE_PARTS = /^(?<file>.*?)(?::(?<line>\d+))?(?::\d+)?$/u;
+
+const toLine = (text: string | null): number | null => {
+  if (text === null) {
+    return null;
+  }
+
+  return Number(text);
+};
+
+const isSameFile = (item: ChangedFile, file: string): boolean =>
+  item.file === file ||
+  item.file.endsWith(`/${file}`) ||
+  file.endsWith(`/${item.file}`);
+
+export const toChangedEntry = (
+  source: string | null,
+  changed: readonly ChangedFile[]
+): ChangedHit | null => {
+  const groups = SOURCE_PARTS.exec(source ?? "")?.groups ?? null;
+  const file = groups?.file ?? "";
+  const line = groups?.line ?? null;
+  const entry = changed.find((item) => isSameFile(item, file)) ?? null;
+
+  if (file === "" || entry === null) {
+    return null;
+  }
+
+  return { entry, line: toLine(line) };
+};
 
 async function changedLines(
   workTree: string,

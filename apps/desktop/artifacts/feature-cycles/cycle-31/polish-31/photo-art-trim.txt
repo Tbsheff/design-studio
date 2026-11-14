@@ -1,0 +1,27 @@
+HTML page after photo fill (search on), art painted before in 2 slots:
+0
+<style>body { font-family: system-ui; margin: 0; background: #faf7f2; color: #2b2118; } .hero { height: 320px; display: flex; align-items: center; justify-conte
+</head>
+<body>
+<div style="background-image: url(assets/6332446581-90a5135301-b-bd13ed481c.jpg); background-size: cover; background-position: center" role="img" aria-label="He
+<h1>Corner Coffee Cart</h1>
+<div class="cards">
+<img src="assets/50520306126-56c9d9939e-b-18333993dd.jpg" alt="Latte" width="240" height="180">
+</div>
+</body>
+
+JSX page after photo fill:
+import "./App.css";
+import "./photo-art.css";
+
+export function App() {
+  return (
+    <main>
+      <h1>Corner Coffee Cart</h1>
+      <img alt="Cart" width={480} height={320} src="/6332446581-90a5135301-b-bd13ed481c.jpg" />
+      <img alt="Latte" width={240} height={180} src="/50520306126-56c9d9939e-b-18333993dd.jpg" />
+    </main>
+  );
+}
+photo-art.css lines: 0
+Undo restores the art (8 HTML matches, 4 sheet lines); redo removes it again.

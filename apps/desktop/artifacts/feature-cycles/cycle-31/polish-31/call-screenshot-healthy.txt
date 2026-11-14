@@ -1,0 +1,41 @@
+call-action workspace.getScreenshot on http://127.0.0.1:5890. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 683 ms, git spawns: not counted (server side)
+{
+  "mimeType": "image/png",
+  "text": "800 × 600 px of the live app."
+}
+
+[mcp] ok, 110 ms, git spawns: not counted (server side)
+"800 × 600 px of the live app."
+
+[agent] ok, 113 ms, git spawns: not counted (server side)
+"800 × 600 px of the live app."
+
+diff http -> mcp:
+- {
++ "800 × 600 px of the live app."
++ 
+-   "mimeType": "image/png",
++ 
+-   "text": "800 × 600 px of the live app."
++ 
+- }
++ 
+
+diff http -> agent:
+- {
++ "800 × 600 px of the live app."
++ 
+-   "mimeType": "image/png",
++ 
+-   "text": "800 × 600 px of the live app."
++ 
+- }
++ 
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 0 error results
+
+fix: compare the outputs above, then run call-action again with the id workspace.getScreenshot and the same input

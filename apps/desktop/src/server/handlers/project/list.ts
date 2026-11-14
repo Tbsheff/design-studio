@@ -1,7 +1,7 @@
-import { Effect } from "effect";
-
 import type { Input } from "@design-studio/actions/_core/action";
 import type { listProject } from "@design-studio/actions/project/list";
+import { Effect } from "effect";
+
 import { toPage } from "../../platform/page/index.js";
 import { ProjectStore } from "../../store/index.js";
 import type { Handle } from "../_core/handler.js";

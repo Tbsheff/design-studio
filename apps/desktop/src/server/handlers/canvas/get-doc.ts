@@ -1,7 +1,7 @@
-import { Effect } from "effect";
-
 import type { Input } from "@design-studio/actions/_core/action";
 import type { getDocCanvas } from "@design-studio/actions/canvas/get-doc";
+import { Effect } from "effect";
+
 import { CanvasStore } from "../../canvas/index.js";
 import type { Handle } from "../_core/handler.js";
 

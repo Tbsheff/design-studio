@@ -1,7 +1,7 @@
-import { Effect } from "effect";
-
 import type { Input } from "@design-studio/actions/_core/action";
 import type { setStartLinkCanvas } from "@design-studio/actions/canvas/set-start-link";
+import { Effect } from "effect";
+
 import { LinkWriter } from "../../canvas/index.js";
 import type { Handle } from "../_core/handler.js";
 

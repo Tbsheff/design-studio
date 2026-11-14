@@ -1,7 +1,7 @@
-import { Effect } from "effect";
-
 import type { Input } from "@design-studio/actions/_core/action";
 import type { createGallery } from "@design-studio/actions/gallery/create";
+import { Effect } from "effect";
+
 import { GalleryWriter } from "../../gallery/index.js";
 import type { Handle } from "../_core/handler.js";
 

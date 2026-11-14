@@ -1,6 +1,6 @@
+import type { getStatusConnection } from "@design-studio/actions/connection/get-status";
 import { Effect } from "effect";
 
-import type { getStatusConnection } from "@design-studio/actions/connection/get-status";
 import { McpSettingsStore } from "../../mcp-life/index.js";
 import type { Handle } from "../_core/handler.js";
 

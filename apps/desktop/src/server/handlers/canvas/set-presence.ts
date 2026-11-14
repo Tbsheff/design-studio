@@ -1,7 +1,7 @@
-import { Effect } from "effect";
-
 import type { Input } from "@design-studio/actions/_core/action";
 import type { setPresenceCanvas } from "@design-studio/actions/canvas/set-presence";
+import { Effect } from "effect";
+
 import { CanvasWriter } from "../../canvas/index.js";
 import type { Handle } from "../_core/handler.js";
 import { toWritable } from "../_core/writable.js";

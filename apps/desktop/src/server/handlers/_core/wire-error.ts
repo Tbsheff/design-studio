@@ -1,10 +1,9 @@
-import { Cause, Exit } from "effect";
-
 import type { StudioError } from "@design-studio/actions/_core/errors/all";
 import type { HttpStatus } from "@design-studio/actions/_core/errors/http-status-codes";
 import { statusOf } from "@design-studio/actions/_core/http-status";
 import { toWire } from "@design-studio/actions/_core/wire";
 import type { WireBody, WireData } from "@design-studio/actions/_core/wire";
+import { Cause, Exit } from "effect";
 
 interface WireError {
   readonly body: WireBody & WireData;

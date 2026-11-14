@@ -1,7 +1,7 @@
-import { Effect } from "effect";
-
 import type { Input } from "@design-studio/actions/_core/action";
 import type { runViewport } from "@design-studio/actions/viewport/run";
+import { Effect } from "effect";
+
 import { ViewportRunner } from "../../viewport/index.js";
 import type { Handle } from "../_core/handler.js";
 

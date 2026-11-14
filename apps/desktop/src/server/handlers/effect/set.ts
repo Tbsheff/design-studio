@@ -22,6 +22,7 @@ const handle = Effect.fn("effect.set")(function* run(input: SetEffectInput) {
       source: target.source,
       tag: target.tag ?? null,
     },
+    variant: input.variant,
   });
 }) satisfies Handle<typeof setEffect>;
 

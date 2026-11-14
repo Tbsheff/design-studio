@@ -1,7 +1,7 @@
-import { Effect } from "effect";
-
 import type { Input } from "@design-studio/actions/_core/action";
 import type { renameVersion } from "@design-studio/actions/version/rename";
+import { Effect } from "effect";
+
 import { VersionWriter } from "../../store/index.js";
 import type { Handle } from "../_core/handler.js";
 

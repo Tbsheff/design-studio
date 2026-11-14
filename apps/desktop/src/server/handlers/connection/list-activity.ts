@@ -1,7 +1,7 @@
-import { Effect } from "effect";
-
 import type { Input } from "@design-studio/actions/_core/action";
 import type { listActivityConnection } from "@design-studio/actions/connection/list-activity";
+import { Effect } from "effect";
+
 import { McpActivityLog } from "../../mcp-life/index.js";
 import type { Handle } from "../_core/handler.js";
 

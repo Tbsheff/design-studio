@@ -1,7 +1,7 @@
-import { Effect } from "effect";
-
 import type { Input } from "@design-studio/actions/_core/action";
 import type { applyContent } from "@design-studio/actions/content/apply";
+import { Effect } from "effect";
+
 import { ContentWriter } from "../../content/index.js";
 import type { Handle } from "../_core/handler.js";
 

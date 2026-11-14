@@ -6,6 +6,7 @@ import type { FrameMenuEntry } from "./frame-menu-item.js";
 import { toMenuItems } from "./menu-items-model.js";
 import { toNextIndex } from "./preview-menu-model.js";
 import { SubmenuContext } from "./submenu-context.js";
+import { useMenuFit } from "./use-menu-fit.js";
 
 interface FrameSubmenuProps {
   readonly close: (refocus: boolean) => void;
@@ -22,6 +23,7 @@ const FrameSubmenu = ({
   label,
 }: FrameSubmenuProps): ReactElement => {
   const root = useRef<HTMLDivElement>(null);
+  const fitMenu = useMenuFit("submenu", root);
   const { focusTick, onExit } = useContext(SubmenuContext);
 
   useEffect(() => {
@@ -54,7 +56,7 @@ const FrameSubmenu = ({
 
   return (
     <div
-      ref={root}
+      ref={fitMenu}
       className="project-menu preview-submenu frame-submenu"
       role="menu"
       tabIndex={-1}

@@ -7,6 +7,7 @@ import { openPortDialog, portAvailable } from "../design-system/port-api.js";
 import { menuKeys, toRootMenuItems, useMenu } from "./frame-menu-model.js";
 import { FrameMenuRows } from "./frame-menu-rows.js";
 import { useFrameMenuRows } from "./use-frame-menu-rows.js";
+import { useMenuFit } from "./use-menu-fit.js";
 import { usePortEntry } from "./use-port-entry.js";
 import { stop } from "./variation-model.js";
 
@@ -28,6 +29,7 @@ const FrameMoreMenu = ({
   path: string | null;
 }): ReactElement | null => {
   const menu = useMenu();
+  const fitMenu = useMenuFit("root", null);
   const { close, root, setOpen, trigger } = menu;
   const toggle = useCallback(() => setOpen((value) => !value), [setOpen]);
 
@@ -74,6 +76,7 @@ const FrameMoreMenu = ({
       </button>
       {menu.open && (
         <div
+          ref={fitMenu}
           className="ui-menu project-menu canvas-menu frame-menu"
           role="menu"
           tabIndex={-1}

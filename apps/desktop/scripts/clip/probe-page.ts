@@ -1,4 +1,11 @@
 import {
+  toItemFindings,
+  toPanelCut,
+  toStageBounds,
+  toStageMenuFinding,
+  toStageMenuFindings,
+} from "./probe-menu.ts";
+import {
   hasContainingProps,
   isClipValue,
   isContainingBlock,
@@ -288,7 +295,7 @@ const inspectPage = (limits: Limits): PageFinding[] => {
   }
 
   if (limits.scope === null) {
-    findings.push(...toOverlapFindings(limits));
+    findings.push(...toOverlapFindings(limits), ...toStageMenuFindings(limits));
   }
 
   return findings;
@@ -408,6 +415,11 @@ const IN_PAGE = [
   isHitTarget,
   toOverlapFinding,
   toOverlapFindings,
+  toPanelCut,
+  toStageBounds,
+  toStageMenuFinding,
+  toItemFindings,
+  toStageMenuFindings,
   isCandidate,
   toCandidates,
   inspectPage,

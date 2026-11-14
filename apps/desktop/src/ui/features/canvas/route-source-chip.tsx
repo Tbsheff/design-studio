@@ -7,6 +7,7 @@ import { copy } from "./copy.js";
 import { FrameMenuItemButton } from "./frame-menu-item.js";
 import { menuKeys, useMenu } from "./frame-menu-model.js";
 import { toRouteSourceEntries } from "./route-source-model.js";
+import { useMenuFit } from "./use-menu-fit.js";
 import { useRouteMerge, useRouteSource } from "./use-route-source.js";
 import { stop } from "./variation-model.js";
 
@@ -23,6 +24,7 @@ const RouteSourceChip = (props: RouteSourceChipProps): ReactElement | null => {
   const source = useRouteSource(props);
   const merge = useRouteMerge(source.input);
   const menu = useMenu();
+  const fitMenu = useMenuFit("root", null);
   const { close, root, setOpen, trigger } = menu;
   const toggle = useCallback(() => setOpen((value) => !value), [setOpen]);
   const isCopyShown = source.copyFrame !== null;
@@ -81,6 +83,7 @@ const RouteSourceChip = (props: RouteSourceChipProps): ReactElement | null => {
       </button>
       {menu.open && (
         <div
+          ref={fitMenu}
           className="ui-menu project-menu canvas-menu frame-menu"
           role="menu"
           tabIndex={-1}

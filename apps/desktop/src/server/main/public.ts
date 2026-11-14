@@ -13,7 +13,7 @@ import {
 } from "../direct-edit/commit/index.js";
 import { openEventBus } from "../events/index.js";
 import type { EventBus, FlushableEventBus } from "../events/index.js";
-import { createApp } from "../http/app.js";
+import { createAppParts } from "../http/app.js";
 import { eventRunner, toThumbnailNotice } from "../main/event-runner.js";
 import { McpListenerRunner } from "../mcp-life/index.js";
 import type { McpListenerRunnerApi } from "../mcp-life/index.js";
@@ -30,7 +30,7 @@ import { handleSignals, prepareDataDir, stopStaleRuns } from "./lifecycle.js";
 import { buildRuntime } from "./runtime.js";
 import type { StudioRuntime } from "./runtime.js";
 
-type AppDeps = Parameters<typeof createApp>[0];
+type AppDeps = Parameters<typeof createAppParts>[0];
 
 type Thumbnails = NonNullable<AppDeps["thumbnails"]>;
 
@@ -75,7 +75,8 @@ interface LiveParts {
 }
 
 interface BuiltApp {
-  app: ReturnType<typeof createApp>;
+  app: ReturnType<typeof createAppParts>["app"];
+  flushLayoutVersions: () => Promise<void>;
   preview: Preview;
 }
 
@@ -231,7 +232,7 @@ const buildApp = (
     }
   });
 
-  const app = createApp({
+  const { app, flushLayoutVersions } = createAppParts({
     bus,
     canvas,
     comments,
@@ -248,7 +249,7 @@ const buildApp = (
     versions,
   });
 
-  return { app, preview };
+  return { app, flushLayoutVersions, preview };
 };
 
 const createServer = async (
@@ -268,10 +269,15 @@ const createServer = async (
     stopStaleRuns(config),
   ]);
 
-  const { app, preview } = buildApp(config, options, stores, {
-    mcpListener,
-    runtime,
-  });
+  const { app, flushLayoutVersions, preview } = buildApp(
+    config,
+    options,
+    stores,
+    {
+      mcpListener,
+      runtime,
+    }
+  );
 
   const server = serve(
     { fetch: app.fetch, hostname: "127.0.0.1", port: config.studioPort },
@@ -287,6 +293,7 @@ const createServer = async (
 
   return handleSignals(server, {
     baseBus: stores.baseBus,
+    flushLayoutVersions,
     preview,
     runtime,
   });

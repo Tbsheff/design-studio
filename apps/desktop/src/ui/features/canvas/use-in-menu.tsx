@@ -4,6 +4,7 @@ import type { KeyboardEvent, MouseEvent, ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { menuKeys, useMenu } from "./frame-menu-model.js";
+import { useMenuFit } from "./use-menu-fit.js";
 import { stop } from "./variation-model.js";
 import type { Sibling } from "./variation-model.js";
 
@@ -64,6 +65,7 @@ const UseInMenu = ({
   onPick,
 }: UseInMenuProps): ReactElement => {
   const { close, open, root, setOpen, trigger } = useMenu();
+  const fitMenu = useMenuFit("root", null);
 
   const focusOnMount = useCallback(
     (element: HTMLButtonElement | null): void => {
@@ -108,6 +110,7 @@ const UseInMenu = ({
       </button>
       {open && (
         <div
+          ref={fitMenu}
           className="project-menu canvas-menu frame-menu"
           role="menu"
           tabIndex={-1}

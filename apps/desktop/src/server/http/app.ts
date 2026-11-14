@@ -18,6 +18,7 @@ import { toErrorReply } from "./app-errors.js";
 import { registerEventsRoutes } from "./app-events-routes.js";
 import { registerAppExportRoutes } from "./app-export-routes.js";
 import { startLayoutVersions } from "./app-layout-versions.js";
+import type { LayoutVersions } from "./app-layout-versions.js";
 import { createMcpSlot, registerAppMcpRoutes } from "./app-mcp-routes.js";
 import { registerAppPacksRoutes } from "./app-packs-routes.js";
 import {
@@ -38,9 +39,11 @@ import { registerLoopbackGuard } from "./loopback-guard.js";
 import { renderIndexHtml, serveStatic } from "./static.js";
 import { isTrustedUi } from "./ui-trust.js";
 
-export { isRunSummary };
+interface AppParts extends LayoutVersions {
+  readonly app: Hono;
+}
 
-export function createApp(deps: AppDeps): Hono {
+const createAppParts = (deps: AppDeps): AppParts => {
   const ctx = createAppContext(deps);
   const { config, uiDir } = ctx;
   const app = new Hono();
@@ -51,7 +54,7 @@ export function createApp(deps: AppDeps): Hono {
   });
 
   registerSessionRoutes(app, ctx);
-  startLayoutVersions(ctx);
+  const { flushLayoutVersions } = startLayoutVersions(ctx);
 
   registerLoopbackGuard(app, ctx);
 
@@ -91,5 +94,9 @@ export function createApp(deps: AppDeps): Hono {
     return c.html(html);
   });
 
-  return app;
-}
+  return { app, flushLayoutVersions };
+};
+
+const createApp = (deps: AppDeps): Hono => createAppParts(deps).app;
+
+export { createApp, createAppParts, isRunSummary };

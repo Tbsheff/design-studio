@@ -12,7 +12,11 @@ const LAYOUT_VERSION_SOURCES = new Set<CanvasWriteSource>([
   "restore",
 ]);
 
-const startLayoutVersions = (ctx: AppContext): void => {
+interface LayoutVersions {
+  readonly flushLayoutVersions: () => Promise<void>;
+}
+
+const startLayoutVersions = (ctx: AppContext): LayoutVersions => {
   const { canvas, runner } = ctx;
 
   const queue = createLayoutVersionQueue({
@@ -32,6 +36,10 @@ const startLayoutVersions = (ctx: AppContext): void => {
       queue.note(project, layoutLabel(change));
     }
   });
+
+  return { flushLayoutVersions: queue.flushAll };
 };
 
 export { startLayoutVersions };
+
+export type { LayoutVersions };

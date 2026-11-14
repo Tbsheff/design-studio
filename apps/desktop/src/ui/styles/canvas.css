@@ -1604,6 +1604,37 @@ dialog.canvas-menu {
   display: grid;
 }
 
+@property --menu-shift-x {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --menu-shift-y {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+[data-menu-fit] {
+  margin-top: var(--menu-shift-y);
+  margin-right: calc(var(--menu-shift-x) * -1);
+  margin-left: var(--menu-shift-x);
+}
+
+.project-menu.preview-submenu[data-side="left"] {
+  right: calc(100% + 2px);
+  left: auto;
+}
+
+.preview-menu.scrolls .project-menu.preview-submenu {
+  position: fixed;
+  top: var(--menu-top, 0px);
+  left: var(--menu-left, 0px);
+  right: auto;
+  margin: 0;
+}
+
 .preview-submenu-tag {
   margin-left: auto;
   padding-left: var(--s-3);

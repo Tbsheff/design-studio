@@ -9,6 +9,7 @@ import { toChipClass, toChipTip } from "./frame-page-chip-model.js";
 import { FramePageForm } from "./frame-page-form.js";
 import { FramePageList } from "./frame-page-list.js";
 import { pageName } from "./page-name-model.js";
+import { useMenuFit } from "./use-menu-fit.js";
 import { stop } from "./variation-model.js";
 
 const FramePageMenu = ({
@@ -23,6 +24,7 @@ const FramePageMenu = ({
   routes?: boolean;
 }): ReactElement => {
   const menu = useMenu();
+  const fitMenu = useMenuFit<HTMLDialogElement>("root", null);
   const { close, root, setOpen, trigger } = menu;
 
   const toggle = useCallback(() => setOpen((isOpen) => !isOpen), [setOpen]);
@@ -61,6 +63,7 @@ const FramePageMenu = ({
       </button>
       {menu.open && (
         <dialog
+          ref={fitMenu}
           open
           className="project-menu canvas-menu frame-menu frame-page-menu"
           aria-label={copy.framePage}

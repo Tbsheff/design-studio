@@ -1,5 +1,6 @@
 import type { Page } from "playwright-core";
 
+import { toCanvasMenuStates } from "./menu-states.ts";
 import { stopOverlays } from "./session.ts";
 import type { ClipState } from "./types.ts";
 
@@ -225,6 +226,7 @@ const toEditorStates = (): ClipState[] => [
   ...TOOLS.map((label) => toToolState(label)),
   ...toTopBarStates(),
   ...toComposerStates(),
+  ...toCanvasMenuStates(),
 ];
 
 export { setEditorReady, toEditorStates };

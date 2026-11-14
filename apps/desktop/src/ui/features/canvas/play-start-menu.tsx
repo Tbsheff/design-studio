@@ -5,6 +5,7 @@ import type { KeyboardEvent, MouseEvent, ReactElement } from "react";
 
 import { startCopy } from "./copy.js";
 import { toCurrentStartName } from "./start-points-model.js";
+import { useMenuFit } from "./use-menu-fit.js";
 import { usePanelMenu } from "./use-panel-menu.js";
 import type { PlayStart } from "./use-start-points.js";
 
@@ -40,6 +41,7 @@ const toItemNode = (
 const PlayStartMenu = ({ start }: PlayStartMenuProps): ReactElement | null => {
   const { currentId, onPick, points } = start;
   const menu = usePanelMenu();
+  const fitMenu = useMenuFit("root", null);
   const { close, root, setOpen, trigger } = menu;
 
   const onToggle = useCallback(
@@ -79,6 +81,7 @@ const PlayStartMenu = ({ start }: PlayStartMenuProps): ReactElement | null => {
       </button>
       {menu.open && (
         <div
+          ref={fitMenu}
           className="ui-menu start-menu is-below"
           role="menu"
           tabIndex={-1}

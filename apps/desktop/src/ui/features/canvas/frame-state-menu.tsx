@@ -7,6 +7,7 @@ import { stop } from "./frame-state-ui-model.js";
 import { frameStateOf, useCurrentFrameStates } from "./frame-states-model.js";
 import { MenuBody } from "./menu-body.js";
 import { missedSteps, toMissedText } from "./open-steps-model.js";
+import { useMenuFit } from "./use-menu-fit.js";
 import { usePanelMenu } from "./use-panel-menu.js";
 
 const STATE_TIP =
@@ -52,6 +53,7 @@ const FrameStateMenu = ({
 }): ReactElement | null => {
   const states = useCurrentFrameStates();
   const menu = usePanelMenu();
+  const fitMenu = useMenuFit("root", null);
   const { root, setOpen, trigger } = menu;
   const [error, setError] = useState<string | null>(null);
   const allMissed = useLive(missedSteps);
@@ -87,6 +89,7 @@ const FrameStateMenu = ({
       </button>
       {menu.open && (
         <div
+          ref={fitMenu}
           className="ui-menu project-menu canvas-menu frame-menu frame-state-menu"
           role="presentation"
           onKeyDown={stopKeys}

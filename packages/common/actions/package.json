@@ -103,6 +103,7 @@
     "./canvas/schema": "./src/canvas/schema.ts",
     "./canvas/section/schema": "./src/canvas/section/schema.ts",
     "./canvas/set-doc": "./src/canvas/set-doc.ts",
+    "./canvas/set-frame-heights": "./src/canvas/set-frame-heights.ts",
     "./canvas/set-frame-state": "./src/canvas/set-frame-state.ts",
     "./canvas/set-guides": "./src/canvas/set-guides.ts",
     "./canvas/set-layout-grid": "./src/canvas/set-layout-grid.ts",

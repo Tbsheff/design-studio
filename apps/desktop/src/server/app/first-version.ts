@@ -123,6 +123,10 @@ export async function waitForFirstVersion(
   return finished;
 }
 
+export function toFirstPrototypeVersionText(): string {
+  return "This prototype has no saved version yet. Save a version with create_version, or let a run finish, then call this tool again.";
+}
+
 export function firstVersionWaitText(projectId: string): string {
   const state = firstVersionState(projectId);
 

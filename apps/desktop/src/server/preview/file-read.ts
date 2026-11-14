@@ -9,7 +9,7 @@ import type {
   PreviewService,
   VersionStore,
 } from "../../shared/server-ports.js";
-import { firstVersionWaitText } from "../app/first-version.js";
+import { toFirstPrototypeVersionText } from "../app/first-version.js";
 import { ConflictError, NotFoundError } from "../platform/errors/index.js";
 import { resolveSource } from "../project-source/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
@@ -130,7 +130,7 @@ const resolveFileSource = async (
   }
 
   if (!direction.headVersionId) {
-    throw new ConflictError(firstVersionWaitText(project.id));
+    throw new ConflictError(toFirstPrototypeVersionText());
   }
 
   const source = await resolveSource(

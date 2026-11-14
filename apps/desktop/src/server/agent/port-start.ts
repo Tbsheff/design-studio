@@ -33,6 +33,7 @@ import {
   sourcePagePath,
 } from "./port-plan.js";
 import type { PortPlanInput } from "./port-plan.js";
+import { toRouteUpdate, toUpdatedPrompt } from "./port-route-update.js";
 
 interface PortStartDeps {
   readonly isRunning: (projectId: string, directionId: string) => boolean;
@@ -420,16 +421,10 @@ const startPageRun = async (
 ): Promise<PortStartResult> => {
   const plan = await buildPortPlan(input);
 
-  if (plan.target?.routeExists) {
-    throw new ConflictError(
-      `The app already has the route ${input.target.route} (${plan.target.routeFile}). Pick a new path.`
-    );
-  }
-
-  const html = await readSourcePage(
-    input.source.direction.workTree,
-    input.source.path
-  );
+  const [update, html] = await Promise.all([
+    toRouteUpdate(input, plan),
+    readSourcePage(input.source.direction.workTree, input.source.path),
+  ]);
 
   const assets = await toCopyAssets(input, input.target.route, [
     { html, path: input.source.path },
@@ -439,7 +434,7 @@ const startPageRun = async (
     deps,
     input,
     assets,
-    toPagePrompt(input, plan, html, assets)
+    toUpdatedPrompt(toPagePrompt(input, plan, html, assets), update)
   );
 
   const routeFile = plan.target?.routeFile ?? null;

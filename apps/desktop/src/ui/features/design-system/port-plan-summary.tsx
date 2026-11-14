@@ -5,6 +5,7 @@ import { toChoice } from "./choose-text.js";
 import { COPY } from "./copy.js";
 import { KitChips } from "./port-kit-chips.js";
 import { toContentText, toKitList } from "./port-model.js";
+import type { PortRouteUpdate } from "./port-model.js";
 import { PlanFile } from "./port-plan-file.js";
 import { PlanRow } from "./port-plan-row.js";
 
@@ -22,11 +23,13 @@ const PlanSummary = ({
   links,
   isLoading,
   error,
+  update,
 }: {
   pages: PortFlowPage[];
   links: number;
   isLoading: boolean;
   error: string | null;
+  update: PortRouteUpdate | null;
 }): ReactElement => {
   if (error) {
     return <p className="port-note error">{error}</p>;
@@ -59,7 +62,9 @@ const PlanSummary = ({
       <PlanRow label={COPY.textTokens} valueClass={VALUE_CLASS}>
         {toTokensText(first)}
       </PlanRow>
-      {pages.length === 1 && routeFile && <PlanFile routeFile={routeFile} />}
+      {pages.length === 1 && routeFile && (
+        <PlanFile routeFile={routeFile} update={update} />
+      )}
     </section>
   );
 };

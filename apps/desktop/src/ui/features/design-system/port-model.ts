@@ -19,6 +19,17 @@ interface PortFrameOption {
   path: string;
 }
 
+interface PortRouteUpdate {
+  file: string;
+  isChanged: boolean;
+}
+
+interface PortCopySource {
+  appProjectId: string | null;
+  isChanged: boolean;
+  routePath: string | null;
+}
+
 interface PortTarget {
   projectId: string;
   directionId: string | null;
@@ -87,12 +98,54 @@ const toRouteError = (route: string, picked: PortFlowPage[]): string | null => {
   return toTakenText(picked.filter((page) => page.routeExists));
 };
 
+const toSourceRoute = (
+  source: PortCopySource | null,
+  appId: string
+): string | null => {
+  if (source === null || source.appProjectId !== appId) {
+    return null;
+  }
+
+  return source.routePath;
+};
+
+const isSameRoute = (left: string, right: string | null): boolean => {
+  const clean = toCleanRoute(left);
+
+  return clean !== null && clean !== "" && clean === toCleanRoute(right);
+};
+
+const toRouteUpdate = (
+  source: PortCopySource | null,
+  appId: string,
+  routeText: string,
+  picked: PortFlowPage[]
+): PortRouteUpdate | null => {
+  const page = picked[0] ?? null;
+  const sourceRoute = toSourceRoute(source, appId);
+
+  if (source === null || page === null || picked.length !== 1) {
+    return null;
+  }
+
+  if (!page.routeExists || !page.routeFile) {
+    return null;
+  }
+
+  if (!isSameRoute(routeText, sourceRoute)) {
+    return null;
+  }
+
+  return { file: page.routeFile, isChanged: source.isChanged };
+};
+
 const toRouteProblem = (
   typed: string | null,
   shown: string,
-  picked: PortFlowPage[]
+  picked: PortFlowPage[],
+  update: PortRouteUpdate | null
 ): string | null => {
-  if (typed === null && !shown) {
+  if ((typed === null && !shown) || update !== null) {
     return null;
   }
 
@@ -162,7 +215,15 @@ const toStartedText = (result: PortStartResult): string => {
 const toNoteClass = (isError: boolean): string =>
   toChoice(isError, "port-note error", "port-note");
 
-const toWritesText = (count: number, appName: string): string => {
+const toWritesText = (
+  count: number,
+  appName: string,
+  update: PortRouteUpdate | null
+): string => {
+  if (update !== null) {
+    return `${COPY.textUpdates}${update.file} ${COPY.textIn}${appName}${COPY.textGlyph2}`;
+  }
+
   const files = toChoice(
     count > 1,
     `${count} ${COPY.textNewRouteFiles}`,
@@ -185,8 +246,10 @@ export {
   toKitList,
   toPagePath,
   toRouteProblem,
+  toRouteUpdate,
   toShownRoute,
+  toSourceRoute,
   toStartedText,
 };
 
-export type { PortTarget, PortFrameOption };
+export type { PortCopySource, PortRouteUpdate, PortTarget, PortFrameOption };

@@ -1,13 +1,21 @@
-import { useState } from "react";
+import { routes } from "@design-studio/actions/page/routes";
+import { useMemo, useState } from "react";
 
+import { useAction } from "../../platform/query.js";
 import {
   toCleanRoute,
   toFirstFrameId,
   toPagePath,
   toRouteProblem,
+  toRouteUpdate,
   toShownRoute,
+  toSourceRoute,
 } from "./port-model.js";
-import type { PortTarget, PortFrameOption } from "./port-model.js";
+import type {
+  PortFrameOption,
+  PortRouteUpdate,
+  PortTarget,
+} from "./port-model.js";
 import { usePagePicks } from "./use-page-picks.js";
 import type { PagePicks } from "./use-page-picks.js";
 import { usePlan } from "./use-port-plan.js";
@@ -31,7 +39,26 @@ interface PortForm {
   setFrameId: (id: string) => void;
   setRoute: (route: string | null) => void;
   targets: Targets;
+  update: PortRouteUpdate | null;
 }
+
+interface SourceInput {
+  directionId: string;
+  file: string;
+  projectId: string;
+}
+
+const MAIN_DIRECTION = "main";
+
+const toSourceInput = (
+  projectId: string,
+  directionId: string | null,
+  file: string
+): SourceInput => ({
+  directionId: directionId ?? MAIN_DIRECTION,
+  file,
+  projectId,
+});
 
 const toIsReady = (
   form: Pick<PortForm, "chosenApp" | "cleanRoute" | "htmlSource" | "pages">,
@@ -72,7 +99,16 @@ const usePortForm = (
   const targets = useTargets(target.projectId);
   const [appId, setAppId] = useState("");
   const chosenApp = appId || toDefaultApp(targets);
-  const [route, setRoute] = useState<string | null>(null);
+  const [typedRoute, setTypedRoute] = useState<string | null>(null);
+  const setRoute = setTypedRoute;
+
+  const sourceInput = useMemo(
+    () => toSourceInput(target.projectId, target.directionId, path),
+    [path, target.directionId, target.projectId]
+  );
+
+  const source = useAction(routes.inspectSourcePage, sourceInput).data ?? null;
+  const route = typedRoute ?? toSourceRoute(source, chosenApp);
 
   const plan = usePlan({
     path,
@@ -89,7 +125,8 @@ const usePortForm = (
   const htmlSource =
     !targets.source || (targets.source.kind === "html" && !targets.source.app);
 
-  const badRoute = toRouteProblem(route, routeText, pages.picked);
+  const update = toRouteUpdate(source, chosenApp, routeText, pages.picked);
+  const badRoute = toRouteProblem(route, routeText, pages.picked, update);
 
   const isReady = toIsReady(
     { chosenApp, cleanRoute, htmlSource, pages },
@@ -113,6 +150,7 @@ const usePortForm = (
     setFrameId,
     setRoute,
     targets,
+    update,
   };
 };
 

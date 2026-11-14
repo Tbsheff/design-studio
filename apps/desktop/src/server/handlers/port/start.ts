@@ -6,10 +6,13 @@ import type { PortFlowPlan, PortPlan } from "@design-studio/contracts/port";
 import { Effect } from "effect";
 
 import { McpReadStore } from "../../preview/index.js";
+import { RouteSourceStore } from "../../project-ops/index.js";
 import { RunLogWriter } from "../../run-log/index.js";
 import type { Handle, Preview } from "../_core/handler.js";
 
 type StartPortInput = Input<typeof startPort>;
+
+const MAIN_DIRECTION = "main";
 
 interface PortCardRoute {
   readonly path: string;
@@ -62,14 +65,51 @@ const toTakenRoutes = (routes: readonly PortCardRoute[]): string[] => {
   return taken;
 };
 
-const toCardLine = (route: PortCardRoute): string =>
-  [
+const toCardLine = (route: PortCardRoute): string => {
+  if (route.routeExists) {
+    return [
+      route.path,
+      " as ",
+      route.route,
+      ": updates ",
+      route.routeFile ?? route.path,
+      " in place",
+    ].join("");
+  }
+
+  return [
     route.path,
     " as ",
     route.route,
     " in ",
     route.routeFile ?? "a new route file",
   ].join("");
+};
+
+const isRouteCopyUpdate = Effect.fn("port.start.isRouteCopyUpdate")(
+  function* run(input: StartPortInput, routes: readonly PortCardRoute[]) {
+    const first = routes[0] ?? null;
+
+    if (isFlowInput(input) || routes.length !== 1 || first === null) {
+      return false;
+    }
+
+    const sources = yield* RouteSourceStore;
+
+    const entry = yield* sources
+      .get({
+        directionId: input.directionId ?? MAIN_DIRECTION,
+        file: first.path,
+        projectId: input.projectId,
+      })
+      .pipe(Effect.orElseSucceed(() => null));
+
+    return (
+      entry?.appProjectId === input.targetProjectId &&
+      entry.files[0]?.file === first.routeFile
+    );
+  }
+);
 
 const toPageCount = (count: number): string => {
   if (count === 1) {
@@ -128,7 +168,7 @@ const preview = Effect.fn("port.start.preview")(function* card(
   const routes = toCardRoutes(plan);
   const taken = toTakenRoutes(routes);
 
-  if (taken.length > 0) {
+  if (taken.length > 0 && !(yield* isRouteCopyUpdate(input, routes))) {
     return yield* new Conflict({
       message: `The app already has ${taken.join(", ")}. Pick a new route.`,
     });

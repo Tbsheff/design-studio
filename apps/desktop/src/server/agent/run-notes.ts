@@ -3,6 +3,7 @@ import type { DriverInput, DriverOutcome } from "./lifecycle.js";
 import { EDIT_TOOL_NAMES } from "./permissions.js";
 import { toPhotoNotes } from "./photo-note.js";
 import { toAssetNotes } from "./port-assets.js";
+import { toRouteUpdateNotes } from "./port-route-update.js";
 import type { RunToolState } from "./types.js";
 
 const toEditCount = (run: RunToolState): number =>
@@ -18,10 +19,16 @@ const toNotedOutcome = async (
   segment: NotedSegment,
   input: DriverInput
 ): Promise<DriverOutcome> => {
+  const [routeNotes, photoNotes] = await Promise.all([
+    toRouteUpdateNotes(input.ctx.request.prompt, input.ctx.direction.workTree),
+    toPhotoNotes(input, segment.setup.config),
+  ]);
+
   const notes = [
     ...segment.notes,
+    ...routeNotes,
     ...toAssetNotes(input.ctx.request.prompt),
-    ...(await toPhotoNotes(input, segment.setup.config)),
+    ...photoNotes,
   ];
 
   if (notes.length === 0) {

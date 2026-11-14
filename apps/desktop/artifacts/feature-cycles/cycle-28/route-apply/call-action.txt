@@ -1,0 +1,58 @@
+call-action port.start on http://127.0.0.1:5590. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 13 ms, git spawns: not counted (server side)
+{
+  "directionId": "main",
+  "projectId": "dc1i5WsN_2",
+  "route": "/patients",
+  "routeFile": "app/patients/page.jsx",
+  "routes": [
+    {
+      "path": "index.html",
+      "route": "/patients",
+      "routeFile": "app/patients/page.jsx"
+    }
+  ],
+  "runId": "Oxdxj8_efAZodM7FqrdZf"
+}
+
+[mcp] error, 11 ms, git spawns: not counted (server side)
+"A run is in progress in Clinic Next. Try again when it finishes."
+
+[agent] skipped: agent binding is off (run-control)
+
+diff http -> mcp:
+- {
++ "A run is in progress in Clinic Next. Try again when it finishes."
+-   "directionId": "main",
++ 
+-   "projectId": "dc1i5WsN_2",
++ 
+-   "route": "/patients",
++ 
+-   "routeFile": "app/patients/page.jsx",
++ 
+-   "routes": [
++ 
+-     {
++ 
+-       "path": "index.html",
++ 
+-       "route": "/patients",
++ 
+-       "routeFile": "app/patients/page.jsx"
++ 
+-     }
++ 
+-   ],
++ 
+-   "runId": "Oxdxj8_efAZodM7FqrdZf"
++ 
+- }
++ 
+
+answered approval cards: b-fjhw5RMeED
+
+call-action: fail, 2 surfaces ran, 1 diffs, 0 failed surfaces, 1 error results
+
+fix: compare the outputs above, then run call-action again with the id port.start and the same input

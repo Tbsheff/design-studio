@@ -5,6 +5,7 @@ import type { importSourcePage } from "@design-studio/actions/page/import-source
 import { PAGE_IMPORT_WIDTH_DEFAULT } from "@design-studio/contracts/page-import";
 import { Effect } from "effect";
 
+import { FixtureStore } from "../../export/index.js";
 import {
   RouteSourceStore,
   RouteSourceWriter,
@@ -15,6 +16,20 @@ import { PageWriter } from "../../share/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type ImportSourcePageInput = Input<typeof importSourcePage>;
+
+interface SourceImport {
+  readonly appProjectId: string;
+  readonly directionId: string;
+  readonly name: string;
+  readonly projectId: string;
+  readonly routePath: string;
+  readonly upstream: string;
+  readonly width: number;
+}
+
+const DATA_FAILURE = /answered [45]\d\d\.$|had nothing to copy/u;
+
+const FIXTURE_LIST_LIMIT = 200;
 
 const toCopyName = (file: string): string => {
   const base = file.replace(/^\/+/u, "").replace(/\.html?$/u, "");
@@ -32,6 +47,70 @@ const toWidth = (viewport: number | null): number => {
 
 const toConflict = (error: BadRequest): Effect.Effect<never, Conflict> =>
   Effect.fail(new Conflict({ message: error.message }));
+
+const toSlashPath = (route: string): string =>
+  `/${route.trim().split("/").filter(Boolean).join("/")}`;
+
+const toFixtureRoute = Effect.fn("page.importSource.toFixtureRoute")(
+  function* run(appProjectId: string, routePath: string) {
+    const store = yield* FixtureStore;
+
+    const { items } = yield* store.list({
+      cursor: null,
+      limit: FIXTURE_LIST_LIMIT,
+      projectId: appProjectId,
+    });
+
+    const wanted = toSlashPath(routePath);
+
+    const fixture =
+      items.findLast((item) => toSlashPath(item.sourceRoute) === wanted) ??
+      null;
+
+    return fixture?.route ?? null;
+  }
+);
+
+const importRoutePage = Effect.fn("page.importSource.importRoutePage")(
+  function* run(source: SourceImport, route: string) {
+    const pages = yield* PageWriter;
+
+    return yield* pages.import({
+      appRoute: source.routePath,
+      directionId: source.directionId,
+      name: source.name,
+      projectId: source.projectId,
+      selector: null,
+      url: toAppRouteUrl(source.upstream, route),
+      width: source.width,
+    });
+  }
+);
+
+const importSourceOrFixture = Effect.fn(
+  "page.importSource.importSourceOrFixture"
+)(function* run(source: SourceImport) {
+  return yield* importRoutePage(source, source.routePath).pipe(
+    Effect.catchTag("BadRequest", (error) =>
+      Effect.gen(function* fromFixture() {
+        if (!DATA_FAILURE.test(error.message)) {
+          return yield* error;
+        }
+
+        const route = yield* toFixtureRoute(
+          source.appProjectId,
+          source.routePath
+        );
+
+        if (route === null) {
+          return yield* error;
+        }
+
+        return yield* importRoutePage(source, route);
+      })
+    )
+  );
+});
 
 const handle = Effect.fn("page.importSource")(function* run(
   input: ImportSourcePageInput
@@ -52,19 +131,17 @@ const handle = Effect.fn("page.importSource")(function* run(
     });
   }
 
-  const upstream = yield* toReadyAppUpstream(entry.appProjectId).pipe(
+  const ready = yield* toReadyAppUpstream(entry.appProjectId).pipe(
     Effect.catchTag("BadRequest", toConflict)
   );
 
-  const pages = yield* PageWriter;
-
-  const imported = yield* pages.import({
-    appRoute: entry.routePath,
+  const imported = yield* importSourceOrFixture({
+    appProjectId: entry.appProjectId,
     directionId: input.directionId,
     name: toCopyName(input.file),
     projectId: input.projectId,
-    selector: null,
-    url: toAppRouteUrl(upstream, entry.routePath),
+    routePath: entry.routePath,
+    upstream: ready,
     width: toWidth(entry.viewport),
   });
 

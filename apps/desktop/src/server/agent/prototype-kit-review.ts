@@ -4,6 +4,7 @@ import type { AgentRunContext } from "../../shared/server-ports.js";
 import type {
   DriftTag,
   MarkupDrift,
+  PackRecipe,
 } from "../components/kit-drift/engine/index.js";
 import {
   isKitPrototype,
@@ -37,6 +38,7 @@ const REVIEW_RAN =
 const TAG_WORDS: Readonly<Record<DriftTag, string>> = {
   "a-as-button": "link styled as a button",
   button: "button",
+  card: "card",
   input: "input",
   label: "label",
   select: "select",
@@ -47,6 +49,7 @@ const TAG_WORDS: Readonly<Record<DriftTag, string>> = {
 const PLURAL_WORDS: Readonly<Record<DriftTag, string>> = {
   "a-as-button": "links styled as buttons",
   button: "buttons",
+  card: "cards",
   input: "inputs",
   label: "labels",
   select: "selects",
@@ -78,11 +81,62 @@ const toPlaces = (finds: readonly MarkupDrift[]): string =>
     .map((find) => `${find.file}:${find.line}`)
     .join(", ");
 
+const toCount = (group: KitGroup, tag: DriftTag): string => {
+  const count = group.finds.length;
+
+  if (count === 1) {
+    return `${count} ${TAG_WORDS[tag]} is`;
+  }
+
+  return `${count} ${PLURAL_WORDS[tag]} are`;
+};
+
+const toRecipeText = (recipe: PackRecipe): string => {
+  const classes = `${recipe.component.name} \`${recipe.component.base.join(" ")}\``;
+
+  if (recipe.slot === null) {
+    return classes;
+  }
+
+  return `${classes} with data-slot="${recipe.slot}"`;
+};
+
+const listPartRecipes = (group: KitGroup): PackRecipe[] => {
+  const found = new Map<string, PackRecipe>();
+
+  for (const part of group.finds.flatMap((find) => find.parts)) {
+    found.set(part.component.name, part);
+  }
+
+  return [...found.values()];
+};
+
+const toCardLine = (group: KitGroup, first: MarkupDrift): string => {
+  const parts = listPartRecipes(group);
+  const names = parts.map((part) => part.component.name).join(", ");
+  let partText = "";
+  let nameText = "";
+
+  if (names !== "") {
+    nameText = ` (${names})`;
+  }
+
+  if (parts.length > 0) {
+    partText = ` Give each part its recipe: ${parts.map((part) => toRecipeText(part)).join("; ")}.`;
+  }
+
+  return `- ${toCount(group, "card")} hand-styled (${toPlaces(group.finds)}). Replace the hand-styled card with the app Card${nameText}; keep the content. Give the outer block ${toRecipeText(first.recipe)}.${partText} Keep the page CSS for the look, so Move to app maps it to Card.`;
+};
+
 const toKitLine = (group: KitGroup): string => {
   const [first] = group.finds;
 
   if (!first) {
     return "";
+  }
+
+  if (first.tag === "card") {
+    return toCardLine(group, first);
   }
 
   const { component, slot } = first.recipe;

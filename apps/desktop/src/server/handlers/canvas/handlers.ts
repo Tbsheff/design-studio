@@ -7,6 +7,7 @@ import { handle as createFlowCanvasHandle } from "./create-flow.js";
 import { handle as createFrameCanvasHandle } from "./create-frame.js";
 import { handle as createLinkCanvasHandle } from "./create-link.js";
 import { handle as createLinkedFrameCanvasHandle } from "./create-linked-frame.js";
+import { handle as createPageFramesCanvasHandle } from "./create-page-frames.js";
 import { handle as createRouteFrameCanvasHandle } from "./create-route-frame.js";
 import { handle as createStateFramesCanvasHandle } from "./create-state-frames.js";
 import {
@@ -55,6 +56,7 @@ const CanvasEntries = {
   createFrameCanvas: { handle: createFrameCanvasHandle },
   createLinkCanvas: { handle: createLinkCanvasHandle },
   createLinkedFrameCanvas: { handle: createLinkedFrameCanvasHandle },
+  createPageFramesCanvas: { handle: createPageFramesCanvasHandle },
   createRouteFrameCanvas: { handle: createRouteFrameCanvasHandle },
   createStateFramesCanvas: { handle: createStateFramesCanvasHandle },
   deleteFrameCanvas: {

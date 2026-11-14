@@ -4,6 +4,7 @@ import { createFlowCanvas } from "./create-flow.js";
 import { createFrameCanvas } from "./create-frame.js";
 import { createLinkCanvas } from "./create-link.js";
 import { createLinkedFrameCanvas } from "./create-linked-frame.js";
+import { createPageFramesCanvas } from "./create-page-frames.js";
 import { createRouteFrameCanvas } from "./create-route-frame.js";
 import { createStateFramesCanvas } from "./create-state-frames.js";
 import { deleteFrameCanvas } from "./delete-frame.js";
@@ -43,6 +44,7 @@ const CanvasActions = {
   createFrameCanvas,
   createLinkCanvas,
   createLinkedFrameCanvas,
+  createPageFramesCanvas,
   createRouteFrameCanvas,
   createStateFramesCanvas,
   deleteFrameCanvas,

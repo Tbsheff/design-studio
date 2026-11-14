@@ -35,6 +35,17 @@ const routes = {
     method: "POST",
     path: "/api/projects/:projectId/canvas/linked-frames",
   },
+  createPageFramesCanvas: {
+    id: "canvas.createPageFrames",
+    invalidates: [
+      "canvas.getDoc",
+      "canvas.listLinks",
+      "canvas.listImplicitLinks",
+      "version.list",
+    ],
+    method: "POST",
+    path: "/api/projects/:projectId/canvas/page-frames",
+  },
   createRouteFrameCanvas: {
     id: "canvas.createRouteFrame",
     invalidates: ["canvas.inspect"],

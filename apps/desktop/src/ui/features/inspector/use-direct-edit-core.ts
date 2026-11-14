@@ -236,10 +236,13 @@ const runEditFlush = async (core: EditCore): Promise<void> => {
   const kept = toKeptStyle(core);
   core.forced.current.clear();
 
-  const style = applyRewrite(core, {
-    ...toChangedProps(core.draftRef.current, core.baseRef.current),
+  const style = {
     ...kept,
-  });
+    ...applyRewrite(core, {
+      ...toChangedProps(core.draftRef.current, core.baseRef.current),
+      ...kept,
+    }),
+  };
 
   const text = toPendingText(core, current);
 

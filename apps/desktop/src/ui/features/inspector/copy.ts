@@ -363,4 +363,13 @@ const borderSideCopy = {
   widthLabel: "Border width",
 };
 
-export { borderSideCopy, copy };
+const spaceStackCopy = {
+  editInCode: "Edit in code",
+  readOnlyTip:
+    "This stack uses a reverse, negative or custom space class. Edit it in code",
+  stackX: "Stack spacing (space-x)",
+  stackY: "Stack spacing (space-y)",
+  tip: "Gap edits write a space class. Other auto layout edits turn it into flex with gap",
+};
+
+export { borderSideCopy, copy, spaceStackCopy };

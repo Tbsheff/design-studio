@@ -9,6 +9,7 @@ import type {
   SingleGroup,
 } from "./classes.js";
 import type { CssEdit } from "./map.js";
+import { toSpaceStackEdits } from "./space-stack.js";
 import type { TailwindTheme } from "./theme-model.js";
 
 export interface Segment {
@@ -414,7 +415,13 @@ export function planClassEdit(
     tokenize(segment, index, theme, next)
   );
   const tokens = parts.flatMap((entry) => entry.tokens);
-  const { keyed, adds, removes } = collect(edits, theme);
+  const stacked = toSpaceStackEdits(
+    tokens
+      .filter((token) => token.editable && !token.partial)
+      .map((token) => token.raw),
+    edits
+  );
+  const { keyed, adds, removes } = collect(stacked, theme);
   assertNoPartials(tokens, keyed, theme);
   const notes: string[] = [];
   const output: Output = { replace: new Map(), removed: new Set(), append: [] };

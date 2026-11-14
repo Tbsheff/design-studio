@@ -1,0 +1,67 @@
+edit_element #stack-a {"row-gap":"32px"}
+  before: space-y-4 w-80
+  after:  w-80 space-y-8
+  result: {
+  "at": "index.html:1:183",
+  "editedAt": "element",
+  "file": "index.html",
+  "applied": {
+    "style": [
+      "row-gap"
+    ],
+    "text": false
+  },
+  "title": "Edit div: row-gap",
+  "versionId": "pending-5e9db13a52f0aac3",
+  "classes": [
+    "w-80",
+    "space-y-8"
+  ],
+  "wrote": "classes"
+}
+edit_element #stack-b {"display":"flex"}
+  before: space-y-2 w-80 mt-10
+  after:  w-80 mt-10 flex flex-col gap-2
+  result: {
+  "at": "index.html:1:715",
+  "editedAt": "element",
+  "file": "index.html",
+  "applied": {
+    "style": [
+      "display"
+    ],
+    "text": false
+  },
+  "title": "Edit div: display",
+  "versionId": "pending-0aa50aa8cc7f1914",
+  "classes": [
+    "w-80",
+    "mt-10",
+    "flex",
+    "flex-col",
+    "gap-2"
+  ],
+  "wrote": "classes"
+}
+edit_element #stack-c {"gap":"8px"}
+  before: space-x-4 mt-10 whitespace-nowrap
+  after:  mt-10 whitespace-nowrap space-x-2
+  result: {
+  "at": "index.html:1:1102",
+  "editedAt": "element",
+  "file": "index.html",
+  "applied": {
+    "style": [
+      "gap"
+    ],
+    "text": false
+  },
+  "title": "Edit div: gap",
+  "versionId": "pending-1c195b2d75471efe",
+  "classes": [
+    "mt-10",
+    "whitespace-nowrap",
+    "space-x-2"
+  ],
+  "wrote": "classes"
+}

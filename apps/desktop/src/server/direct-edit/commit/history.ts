@@ -432,6 +432,19 @@ export function createEditHistory(options: HistoryOptions): EditHistory {
 
   const mark = (): number => sequence;
 
+  const dropSince = (
+    projectId: string,
+    directionId: string,
+    since: number
+  ): void => {
+    const stacks = projects.get(projectId);
+    if (!stacks) return;
+    stacks.undo = stacks.undo.filter(
+      (entry) =>
+        !isFor(entry, directionId) || (recorded.get(entry) ?? 0) <= since
+    );
+  };
+
   const dropUnsaved = async (
     projectId: string,
     since: number
@@ -455,7 +468,17 @@ export function createEditHistory(options: HistoryOptions): EditHistory {
     return drop.length;
   };
 
-  return { record, state, list, step, clear, forget, mark, dropUnsaved };
+  return {
+    record,
+    state,
+    list,
+    step,
+    clear,
+    forget,
+    mark,
+    dropSince,
+    dropUnsaved,
+  };
 }
 
 export type { EditHistory, EditStepResult, HistoryStep };

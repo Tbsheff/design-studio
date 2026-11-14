@@ -93,7 +93,7 @@ export { parseSetProps, planSetProps } from "./props.js";
 
 export { planStyleReplace } from "./replace.js";
 
-export { recordRunInHistory } from "./run-record.js";
+export { applyPortRunHistory, recordRunInHistory } from "./run-record.js";
 
 export {
   PENDING_VERSION,

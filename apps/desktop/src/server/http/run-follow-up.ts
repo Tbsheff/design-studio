@@ -12,7 +12,10 @@ import type {
   VersionStore,
 } from "../../shared/server-ports.js";
 import { toPortSteerRequest } from "../agent/index.js";
-import { recordRunInHistory } from "../direct-edit/commit/index.js";
+import {
+  applyPortRunHistory,
+  recordRunInHistory,
+} from "../direct-edit/commit/index.js";
 import type { EditHistory } from "../direct-edit/commit/index.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";
 import { logError } from "../platform/logger/index.js";
@@ -101,19 +104,46 @@ const toSummary = async (handle: RunHandle): Promise<RunSummary | null> => {
   }
 };
 
+interface RunRecordAt {
+  readonly since: number;
+  readonly versionId: string;
+}
+
+const applyRunEntry = async (
+  deps: RunFollowUpDeps,
+  target: RunFollowUpTarget,
+  at: RunRecordAt
+): Promise<void> => {
+  const baseId = target.direction.headVersionId;
+
+  if (isPortRequest(target.request) && baseId !== null) {
+    await applyPortRunHistory(deps.editHistory, deps.versions, {
+      baseId,
+      direction: target.direction,
+      project: target.project,
+      since: at.since,
+      versionId: at.versionId,
+    });
+
+    return;
+  }
+
+  await recordRunInHistory(
+    deps.editHistory,
+    deps.versions,
+    target.project,
+    target.direction,
+    at.versionId
+  );
+};
+
 const applyRunHistory = async (
   deps: RunFollowUpDeps,
   target: RunFollowUpTarget,
-  versionId: string
+  at: RunRecordAt
 ): Promise<boolean> => {
   try {
-    await recordRunInHistory(
-      deps.editHistory,
-      deps.versions,
-      target.project,
-      target.direction,
-      versionId
-    );
+    await applyRunEntry(deps, target, at);
 
     return true;
   } catch {
@@ -142,6 +172,7 @@ const applyRunFollowUp = async (
   target: RunFollowUpTarget,
   next: () => Promise<void>
 ): Promise<void> => {
+  const since = deps.editHistory.mark();
   const summary = await toSummary(target.handle);
 
   if (summary === null) {
@@ -153,7 +184,10 @@ const applyRunFollowUp = async (
   const versionId = summary.versionId ?? null;
 
   if (versionId !== null) {
-    const isRecorded = await applyRunHistory(deps, target, versionId);
+    const isRecorded = await applyRunHistory(deps, target, {
+      since,
+      versionId,
+    });
 
     if (isRecorded && target.request.mode === "edit") {
       await applyRunArt(deps, target);

@@ -10,13 +10,14 @@ import {
   scopeOf,
   toProbeTarget,
 } from "../page-probe/index.js";
-import { BadRequestError } from "../platform/errors/index.js";
+import { BadRequestError, ConflictError } from "../platform/errors/index.js";
 import { withPagePath } from "../project-source/index.js";
 import type { ExportSource } from "../project-source/index.js";
 import { attemptNull, toOptional } from "./attempt-null.js";
 import { captureFrame } from "./capture.js";
 import type { Shot } from "./capture.js";
 import { toSchemedPreview } from "./color-scheme.js";
+import { toDevPageError } from "./dev-page-check.js";
 import { pickFrame } from "./frame-shot-pick.js";
 import type { FramePick } from "./frame-shot-pick.js";
 import {
@@ -171,6 +172,16 @@ const openAndShoot = async (context: ShotContext): Promise<ScreenshotView> => {
       withFrameStateHost(opened.url, toOptional(pick.state)),
       pick.forced
     );
+
+    const failure = await toDevPageError(
+      context.preview,
+      src.project,
+      withPagePath(url, toOptional(context.page))
+    );
+
+    if (failure !== null) {
+      throw new ConflictError(failure);
+    }
 
     const shot = await shoot(context, url);
 

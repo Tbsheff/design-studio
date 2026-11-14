@@ -262,7 +262,31 @@ const finishedView = (
   };
 };
 
+const applyDraftWrite = (run: RunView, event: StudioEvent): void => {
+  if (
+    event.type !== "run.write.delta" ||
+    run.tools.some((tool) => tool.toolUseId === event.toolUseId)
+  ) {
+    return;
+  }
+
+  run.tools = [
+    ...run.tools,
+    {
+      durationMs: null,
+      input: { file_path: event.path },
+      isError: false,
+      name: "Write",
+      startedAt: event.ts,
+      summary: "",
+      toolUseId: event.toolUseId,
+    },
+  ];
+};
+
 const applyToolEvent = (run: RunView, event: StudioEvent): void => {
+  applyDraftWrite(run, event);
+
   if (event.type === "run.tool.started") {
     run.retry = null;
     run.tools = [

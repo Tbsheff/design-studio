@@ -191,6 +191,18 @@ const toChangeDiffs = (tool: ToolRow): ToolDiff[] => {
   return [tool.diff];
 };
 
+const toNetChange = (change: FileChange): FileChange => {
+  if (!change.created) {
+    return change;
+  }
+
+  return {
+    ...change,
+    added: Math.max(change.added - change.removed, 0),
+    removed: 0,
+  };
+};
+
 const fileChanges = (tools: ToolRow[]): FileChange[] => {
   const byPath = new Map<string, FileChange>();
 
@@ -198,19 +210,18 @@ const fileChanges = (tools: ToolRow[]): FileChange[] => {
     for (const diff of toChangeDiffs(tool)) {
       const entry = byPath.get(diff.path) ?? {
         added: 0,
-        created: false,
+        created: diff.created,
         path: diff.path,
         removed: 0,
       };
 
       entry.added += diff.added;
       entry.removed += diff.removed;
-      entry.created ||= diff.created;
       byPath.set(diff.path, entry);
     }
   }
 
-  return [...byPath.values()];
+  return [...byPath.values()].map((change) => toNetChange(change));
 };
 
 export { fileChanges, groupRepeats, rowView, shellEdits, toolDiffs, toolState };

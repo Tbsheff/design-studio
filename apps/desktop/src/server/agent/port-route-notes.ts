@@ -1,6 +1,11 @@
 import path from "node:path";
 
-import { FOLDER_TAG, getText, toRouteFileNow } from "./port-route-update.js";
+import {
+  FOLDER_TAG,
+  getText,
+  toDataReads,
+  toRouteFileNow,
+} from "./port-route-update.js";
 import type { RouteFileText } from "./port-route-update.js";
 
 interface BlockNote {
@@ -12,53 +17,6 @@ interface BlockNote {
 const UPDATE_OPEN = ["<", 'route-update file="'].join("");
 
 const FOLDER_HEAD_END = '">\n';
-
-const AWAIT_CALL = /\bawait\s+(?<name>[A-Za-z_$][\w$.]*)\s*\(/gu;
-
-const QUERY_CALL =
-  /\b(?<name>[A-Za-z_$][\w$.]*\.(?:useQuery|useSuspenseQuery|useInfiniteQuery|query|prefetch))\s*\(/gu;
-
-const PARAM_READ = /\b(?<name>params|searchParams)\b/gu;
-
-const HOOK_CALL = /\b(?<name>use[A-Z]\w*)\s*\(/gu;
-
-const REACT_HOOKS: ReadonlySet<string> = new Set([
-  "useActionState",
-  "useCallback",
-  "useContext",
-  "useDeferredValue",
-  "useEffect",
-  "useFormStatus",
-  "useId",
-  "useImperativeHandle",
-  "useInsertionEffect",
-  "useLayoutEffect",
-  "useMemo",
-  "useOptimistic",
-  "useReducer",
-  "useRef",
-  "useState",
-  "useSyncExternalStore",
-  "useTransition",
-]);
-
-const toDataReads = (text: string): Set<string> => {
-  const names = new Set<string>();
-
-  for (const pattern of [AWAIT_CALL, QUERY_CALL, PARAM_READ, HOOK_CALL]) {
-    for (const found of text.matchAll(pattern)) {
-      names.add(found.groups?.["name"] ?? "");
-    }
-  }
-
-  names.delete("");
-
-  for (const hook of REACT_HOOKS) {
-    names.delete(hook);
-  }
-
-  return names;
-};
 
 const toReadsText = (kept: number, total: number): string => {
   if (total === 1 && kept === 1) {

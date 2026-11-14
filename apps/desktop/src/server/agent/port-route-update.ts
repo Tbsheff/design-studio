@@ -54,6 +54,35 @@ const PLAN_CLOSE = "</port-plan>";
 
 const ROUTE_TEXT_MAX = 24_000;
 
+const AWAIT_CALL = /\bawait\s+(?<name>[A-Za-z_$][\w$.]*)\s*\(/gu;
+
+const QUERY_CALL =
+  /\b(?<name>[A-Za-z_$][\w$.]*\.(?:useQuery|useSuspenseQuery|useInfiniteQuery|query|prefetch))\s*\(/gu;
+
+const PARAM_READ = /\b(?<name>params|searchParams)\b/gu;
+
+const HOOK_CALL = /\b(?<name>use[A-Z]\w*)\s*\(/gu;
+
+const REACT_HOOKS: ReadonlySet<string> = new Set([
+  "useActionState",
+  "useCallback",
+  "useContext",
+  "useDeferredValue",
+  "useEffect",
+  "useFormStatus",
+  "useId",
+  "useImperativeHandle",
+  "useInsertionEffect",
+  "useLayoutEffect",
+  "useMemo",
+  "useOptimistic",
+  "useReducer",
+  "useRef",
+  "useState",
+  "useSyncExternalStore",
+  "useTransition",
+]);
+
 const RULE_LINES = [
   "The route file exists in the app. Update it in place. Do not make a new route.",
   "Keep every data read: server component await calls, tRPC or fetch calls, params and searchParams use, loaders.",
@@ -338,10 +367,29 @@ const toRouteFileNow = (prompt: string): RouteFileText | null => {
   return { file: head, text };
 };
 
+const toDataReads = (text: string): Set<string> => {
+  const names = new Set<string>();
+
+  for (const pattern of [AWAIT_CALL, QUERY_CALL, PARAM_READ, HOOK_CALL]) {
+    for (const found of text.matchAll(pattern)) {
+      names.add(found.groups?.["name"] ?? "");
+    }
+  }
+
+  names.delete("");
+
+  for (const hook of REACT_HOOKS) {
+    names.delete(hook);
+  }
+
+  return names;
+};
+
 export {
   FOLDER_TAG,
   getText,
   toCopyEntry,
+  toDataReads,
   toDiffText,
   isRouteCopyOf,
   toRouteFileNow,

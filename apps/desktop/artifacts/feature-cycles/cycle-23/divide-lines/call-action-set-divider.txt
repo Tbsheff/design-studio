@@ -1,0 +1,99 @@
+call-action spacing.setDivider on http://127.0.0.1:46810. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 10 ms, git spawns: not counted (server side)
+{
+  "axis": "y",
+  "classes": {
+    "add": [
+      "divide-y-2"
+    ],
+    "remove": [
+      "divide-y"
+    ]
+  },
+  "files": [
+    "index.html"
+  ],
+  "title": "Lines between: y, 2px",
+  "versionId": "pending-315defcb67579da6"
+}
+
+[mcp] error, 12 ms, git spawns: not counted (server side)
+"The element already has these lines."
+
+[agent] error, 5 ms, git spawns: not counted (server side)
+"The element already has these lines."
+
+diff http -> mcp:
+- {
++ "The element already has these lines."
+-   "axis": "y",
++ 
+-   "classes": {
++ 
+-     "add": [
++ 
+-       "divide-y-2"
++ 
+-     ],
++ 
+-     "remove": [
++ 
+-       "divide-y"
++ 
+-     ]
++ 
+-   },
++ 
+-   "files": [
++ 
+-     "index.html"
++ 
+-   ],
++ 
+-   "title": "Lines between: y, 2px",
++ 
+-   "versionId": "pending-315defcb67579da6"
++ 
+- }
++ 
+
+diff http -> agent:
+- {
++ "The element already has these lines."
+-   "axis": "y",
++ 
+-   "classes": {
++ 
+-     "add": [
++ 
+-       "divide-y-2"
++ 
+-     ],
++ 
+-     "remove": [
++ 
+-       "divide-y"
++ 
+-     ]
++ 
+-   },
++ 
+-   "files": [
++ 
+-     "index.html"
++ 
+-   ],
++ 
+-   "title": "Lines between: y, 2px",
++ 
+-   "versionId": "pending-315defcb67579da6"
++ 
+- }
++ 
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 2 error results
+
+fix: compare the outputs above, then run call-action again with the id spacing.setDivider and the same input

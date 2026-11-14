@@ -1,0 +1,24 @@
+Bonaparte (read-only grep of *.tsx): divide classes
+ 119 divide-y
+  18 divide-stone-200
+  14 divide-border
+   7 divide-border/60
+   7 divide-border-muted
+   6 divide-stone-100
+   6 dark:divide-stone-700
+   4 divide-slate-100
+   4 divide-border-default
+   2 md:divide-x
+   2 divide-gray-200
+   2 divide-destructive/20
+   2 divide-border/20
+   1 sm:divide-y-0
+   1 sm:divide-x
+   1 lg:divide-x
+   1 lg:divide-border-muted
+   1 divide-y-2
+   1 divide-x
+   1 divide-slate-200
+   1 divide-border/40
+   1 dark:divide-stone-800
+files with divide-x or divide-y:      103

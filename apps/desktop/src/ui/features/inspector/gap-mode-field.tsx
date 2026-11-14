@@ -2,10 +2,12 @@ import { UiSelect } from "@design-studio/ui";
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
-import { GAP_MODES, toGapMode, toGapPatch } from "./auto-layout-model.js";
-import type { GapMode } from "./auto-layout-model.js";
+import { toGapMode, toGapPatch } from "./auto-layout-model.js";
 import { copy } from "./copy.js";
+import { GAP_MENU, toGapMenuMode } from "./divider-model.js";
+import type { GapMenuMode } from "./divider-model.js";
 import type { DirectEdit } from "./use-direct-edit.js";
+import { useDividerView } from "./use-divider.js";
 import { useLastGap } from "./use-last-gap.js";
 import { setEdit } from "./use-layout-keys.js";
 
@@ -16,14 +18,31 @@ interface Props {
 const GapModeField = ({ edit }: Props): ReactElement => {
   const mode = toGapMode(edit.values["justify-content"]);
   const lastGap = useLastGap(edit.values.gap);
+  const view = useDividerView();
+  const divider = view?.divider ?? null;
+  const shown = toGapMenuMode(mode, divider);
 
   const handleMode = useCallback(
-    (next: GapMode): void => {
+    (next: GapMenuMode): void => {
+      if (next === shown) {
+        return;
+      }
+
+      if (next === "lines") {
+        view?.setLines(true);
+
+        return;
+      }
+
+      if (divider !== null) {
+        view?.setLines(false);
+      }
+
       if (next !== mode) {
         setEdit(edit, toGapPatch(next, lastGap));
       }
     },
-    [edit, lastGap, mode]
+    [divider, edit, lastGap, mode, shown, view]
   );
 
   return (
@@ -35,8 +54,8 @@ const GapModeField = ({ edit }: Props): ReactElement => {
       <span className="ins-scrub static">{copy.spacing}</span>
       <UiSelect
         aria-label={copy.gapMode}
-        value={mode}
-        options={GAP_MODES}
+        value={shown}
+        options={GAP_MENU}
         onChange={handleMode}
       />
     </div>

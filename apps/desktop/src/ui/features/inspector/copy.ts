@@ -413,9 +413,22 @@ const textListCopy = {
   typeLabel: "List style",
 };
 
+const dividerCopy = {
+  color: "Color",
+  colorLabel: "Line color",
+  colorPlaceholder: "border",
+  editInCode: "Edit in code",
+  linesBetween: "Lines between",
+  reverseTip:
+    "This stack uses divide-y-reverse or divide-x-reverse. Edit it in code",
+  width: "Width",
+  widthLabel: "Line width",
+};
+
 export {
   borderSideCopy,
   copy,
+  dividerCopy,
   rotationCopy,
   spaceStackCopy,
   strokePositionCopy,

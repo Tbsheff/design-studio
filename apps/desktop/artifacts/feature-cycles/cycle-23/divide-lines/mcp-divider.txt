@@ -1,0 +1,8 @@
+# set_divider_spacing
+{"jsonrpc":"2.0","id":2,"result":{"content":[{"text":"{\"axis\":\"y\",\"classes\":{\"add\":[\"divide-y\",\"divide-border\"],\"remove\":[]},\"files\":[\"index.html\"],\"title\":\"Lines between: y, 1px\",\"versionId\":\"pending-288cb68a0fd9c4a2\"}","type":"text"}],"isError":false}}
+
+# get_divider_spacing
+{"jsonrpc":"2.0","id":2,"result":{"content":[{"text":"{\"axis\":\"y\",\"width\":1,\"color\":\"var(--color-border)\",\"token\":\"border\",\"isReverse\":false,\"classes\":[\"divide-y\",\"divide-border\"],\"mode\":\"classes\"}","type":"text"}],"isError":false}}
+
+# get_divider_spacing on divide-y divide-border
+{"jsonrpc":"2.0","id":2,"result":{"content":[{"text":"{\"axis\":\"y\",\"width\":1,\"color\":\"var(--color-border)\",\"token\":\"border\",\"isReverse\":false,\"classes\":[\"divide-y\",\"divide-border\"],\"mode\":\"classes\"}","type":"text"}],"isError":false}}

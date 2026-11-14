@@ -4,6 +4,7 @@ import type { ReactElement } from "react";
 
 import { AutoLayoutRow } from "./auto-layout-row.js";
 import { AutoLayoutSkipNote } from "./auto-layout-skip-note.js";
+import { DividerRow } from "./divider-row.js";
 import type { ElementClasses } from "./element-classes-model.js";
 import { FlexControls } from "./flex-controls.js";
 import { GridControls } from "./grid-controls.js";
@@ -11,6 +12,7 @@ import { isFlexDisplay, isGridDisplay } from "./sizing-model.js";
 import { SpaceStackNote } from "./space-stack-note.js";
 import { useAutoLayout } from "./use-auto-layout.js";
 import type { DirectEdit } from "./use-direct-edit.js";
+import { DividerContext, useDivider, useDividerEdit } from "./use-divider.js";
 import { setEdit, useLayoutKeys } from "./use-layout-keys.js";
 import { useSpaceStack } from "./use-space-stack.js";
 
@@ -28,6 +30,8 @@ const AutoLayoutBody = ({ edit, selection, classes }: Props): ReactElement => {
   const { handleAdd: addLayout, isPending, skipNote } = layout;
 
   const { stack, stackEdit } = useSpaceStack(edit, classes, selection);
+  const divider = useDivider(edit, classes, selection);
+  const flexEdit = useDividerEdit(edit, selection, divider);
 
   const isStackLocked = stack !== null && !stack.isEditable;
 
@@ -51,18 +55,23 @@ const AutoLayoutBody = ({ edit, selection, classes }: Props): ReactElement => {
   useLayoutKeys(root, handleAdd, handleRemove);
 
   return (
-    <div ref={root} className="ins-layout">
-      <AutoLayoutRow
-        edit={edit}
-        canAdd={!isFlex && !isGrid && !isPending && stack === null}
-        onAdd={handleAdd}
-      />
-      {skipNote !== null && <AutoLayoutSkipNote note={skipNote} />}
-      {stack !== null && <SpaceStackNote stack={stack} />}
-      {isFlex && <FlexControls edit={edit} />}
-      {stackEdit !== null && <FlexControls edit={stackEdit} />}
-      {isGrid && <GridControls edit={edit} />}
-    </div>
+    <DividerContext value={divider}>
+      <div ref={root} className="ins-layout">
+        <AutoLayoutRow
+          edit={edit}
+          canAdd={!isFlex && !isGrid && !isPending && stack === null}
+          onAdd={handleAdd}
+        />
+        {skipNote !== null && <AutoLayoutSkipNote note={skipNote} />}
+        {stack !== null && <SpaceStackNote stack={stack} />}
+        {isFlex && <FlexControls edit={flexEdit} />}
+        {stackEdit !== null && <FlexControls edit={stackEdit} />}
+        {isGrid && <GridControls edit={edit} />}
+        {divider.divider !== null && (
+          <DividerRow divider={divider.divider} view={divider} />
+        )}
+      </div>
+    </DividerContext>
   );
 };
 

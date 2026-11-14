@@ -1,0 +1,47 @@
+call-action spacing.getDivider on http://127.0.0.1:46810. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 17 ms, git spawns: not counted (server side)
+{
+  "axis": "y",
+  "classes": [
+    "divide-slate-400",
+    "divide-y-2"
+  ],
+  "color": "var(--color-slate-400)",
+  "isReverse": false,
+  "mode": "classes",
+  "token": "slate-400",
+  "width": 2
+}
+
+[mcp] ok, 12 ms, git spawns: not counted (server side)
+{
+  "axis": "y",
+  "classes": [
+    "divide-slate-400",
+    "divide-y-2"
+  ],
+  "color": "var(--color-slate-400)",
+  "isReverse": false,
+  "mode": "classes",
+  "token": "slate-400",
+  "width": 2
+}
+
+[agent] ok, 6 ms, git spawns: not counted (server side)
+{
+  "axis": "y",
+  "classes": [
+    "divide-slate-400",
+    "divide-y-2"
+  ],
+  "color": "var(--color-slate-400)",
+  "isReverse": false,
+  "mode": "classes",
+  "token": "slate-400",
+  "width": 2
+}
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

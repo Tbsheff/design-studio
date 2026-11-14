@@ -18,7 +18,7 @@ Branch `feat/polish-28`. Mock agent, server on 49610 (preview 49611), data in `d
 - **Percent or z translate.** New `src/ui/features/canvas/rotate-translate-model.ts`. A px part adds the shift; another part becomes `calc(<part> + Npx)`; a z part stays. UI drag, CSS boxes `#c1 { translate: 50% 0 }`, `#c2 { translate: 4px 0 6px }`, group rotate 30°: `c1` got `translate: calc(50% + 6px) -21px`, `c2` got `translate: -2px 21px 6px`. The c1 center landed on the turned point (142,202). Screenshot `rotate-percent-translate-light.png`.
 - **Missed slot searched again.** A slot with no result gets `data-photo-missed="<words>"` in the same version (title "Photo misses: N on <page>" when nothing filled). A later call skips a slot whose mark equals its words and says so in `note`. New words, or removing the mark, search again. A fill removes the mark. Tag helpers moved to new `src/server/share/image-search/photo-tag.ts` (photo-fill.ts stays under 500 lines).
   - First call: 3989 ms (Openverse search), `missed` 1. `call-action.ts image-search.apply`: http 5 ms, mcp 31 ms, agent 2 ms, `filled: []`, 0 diffs (`ds-wt/p28-call-action.txt`).
-- **Unfinished changes on a new route copy.** `createPrototypeWith` commits `folder-context.md` (and `tokens.css`, `DESIGN.md` when written) as version "Folder context" before the page import, only for a route copy. A copy made before the fix shows "Unfinished changes in 1 file" (`route-copy-before-fix-light.png`); a copy after shows none (`route-copy-no-pill-*.png`). Undo on the new copy keeps `folder-context.md`.
+- **Unfinished changes on a new route copy.** `createPrototypeWith` commits `folder-context.md` (and `tokens.css`, `DESIGN.md` when written) as version "Folder context" before the page import, only for a route copy. A copy made before the fix shows "Unfinished changes in 1 file" (`route-copy-before-fix-light.png`); a copy after shows none (`route-copy-no-pill-*.png`). Undo of the first run (mock agent): on a copy made after the fix (`KlX7kDQms-`, versions Folder context, Import page, Redesign /patients) `folder-context.md` stays; on the copy made before the fix (`MrX4Kc1ECR`) the same run and undo delete it.
 
 ## Screenshots
 
@@ -31,6 +31,8 @@ Branch `feat/polish-28`. Mock agent, server on 49610 (preview 49611), data in `d
 ## Left out
 
 - The "Check render" toolbar button is not shown in this canvas build, so the render check result was read from `POST /api/projects/:id/d/main/check` (the same `renderCheck` as `render_check`), not from its panel.
-- No port probe run on a ported route (`port.inspect`); it uses the same page load, so the bridge fix covers it, but it was not measured.
+- `call-action.ts port.inspect` on `/patients` passed on 3 surfaces (score 34, 0 diffs), but its output has no console-error count, so "port probe gives 0" is not measured directly.
+- "Unless the call names it" is not built: `apply_image_search` has no input to reopen a marked slot, because the input schema (`actions/image-search/schema.ts`) is not in this pick's files. Workaround: change the slot's `data-photo` words or remove `data-photo-missed`; the note says so.
+- `isMarkedMiss` compares the raw words. A query with a `"` that the writer escapes as `&quot;` never matches its mark, so that slot is searched on every call (as before the fix).
 - A network failure during a search also marks the slot missed; the note says how to retry.
 - Not checked: a frame with a mock clock state in the canvas.

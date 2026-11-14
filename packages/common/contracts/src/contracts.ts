@@ -1335,7 +1335,8 @@ export type BridgeToParent =
       ns: "studio";
       token: string;
       type: "text-range-key";
-      command: "bold" | "italic" | "link";
+      command: "bold" | "italic" | "link" | "underline" | "strike";
+      className: string;
       selector: string;
       start: number;
       end: number;

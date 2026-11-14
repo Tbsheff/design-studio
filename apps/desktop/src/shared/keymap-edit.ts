@@ -59,19 +59,20 @@ const EDIT_KEYS = [
     group: "Selection",
     id: "text-bold",
     keys: ["Mod+B"],
-    label: "Bold text: 700, or 400 when every layer is bold",
+    label:
+      "Bold text: 700, or 400 when every layer is bold. In a text edit, bold the selected range",
   },
   {
     group: "Selection",
     id: "text-underline",
     keys: ["Mod+U"],
-    label: "Underline text",
+    label: "Underline text, or the selected range in a text edit",
   },
   {
     group: "Selection",
     id: "text-strike",
     keys: ["Mod+Shift+X"],
-    label: "Strikethrough text",
+    label: "Strikethrough text, or the selected range in a text edit",
   },
   {
     group: "Selection",

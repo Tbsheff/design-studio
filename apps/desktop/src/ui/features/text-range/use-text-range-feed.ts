@@ -14,7 +14,8 @@ import type {
 interface TextRangeFeedSetup {
   readonly onCommand: (
     command: TextRangeCommand,
-    reading: TextRangeReading
+    reading: TextRangeReading,
+    className: string
   ) => void;
   readonly onFresh: () => void;
   readonly port: RefObject<PreviewPort | null>;
@@ -82,7 +83,8 @@ const useTextRangeFeed = (setup: TextRangeFeedSetup): TextRangeFeed => {
       if (message.type === "text-range-key") {
         latest.current.onCommand(
           message.command,
-          toKeyReading(message, boxRef.current)
+          toKeyReading(message, boxRef.current),
+          message.className
         );
       }
     });

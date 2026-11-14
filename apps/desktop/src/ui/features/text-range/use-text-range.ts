@@ -44,8 +44,12 @@ const useTextRange = (setup: TextRangeSetup): TextRangeView => {
   const { apply, clear } = applied;
 
   const handleCommand = useCallback(
-    (command: TextRangeCommand, reading: TextRangeReading): void => {
-      const isRemove = toIsRemove(command, reading.tag);
+    (
+      command: TextRangeCommand,
+      reading: TextRangeReading,
+      className: string
+    ): void => {
+      const isRemove = toIsRemove(command, reading.tag, className);
 
       setHeld(reading);
 

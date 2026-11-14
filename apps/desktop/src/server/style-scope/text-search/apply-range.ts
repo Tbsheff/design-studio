@@ -37,6 +37,8 @@ const STYLE_NAMES = {
   class: "color",
   italic: "italic",
   link: "link",
+  strike: "strikethrough",
+  underline: "underline",
 } as const satisfies Readonly<Record<TextRangeRequest["style"], string>>;
 
 const toReadSource = async (file: ScopeFile): Promise<string> => {

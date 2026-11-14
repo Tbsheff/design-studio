@@ -20,7 +20,7 @@ HTML prototype, paragraph "Book your first class today and save 20 percent":
 Tailwind fake app `ds-wt/ru-next` (Next 16.4, Tailwind 4, a clone of `fv-next`, attached, route frame `/`):
 - Passes: the same bold, undo, redo, underline, undo, undo steps with HMR. The edit stays open on the same range after each step. The plain `h1` steps and the double-click also pass. `next build` passes.
 
-`call-action version.restoreHistory` after 3 `apply_range_text` writes (`ds-wt/ru-call-undo.txt`): http, mcp and agent each ran one undo, and the file went back to the start text. The 2 reported diffs are only the per-call version id, `createdAt`, `parentId` and `origin` fields.
+`call-action version.restoreHistory` after 3 `apply_range_text` writes (`ds-wt/ru-call-undo.txt`): the script verdict is `fail, 2 diffs`. All 3 surfaces (http, mcp, agent) ran the same undo, with the same label and state, and the file went back to the start text. Only the per-call version id, `createdAt`, `parentId` and `origin` fields differ.
 
 Screenshots: `cycle-36/range-undo/edit-after-undo-{dark,light}.png` (the open edit after Mod+Z, with "today" selected and the bar shown).
 
@@ -32,12 +32,13 @@ Gates: `pnpm run typecheck`, `pnpm run lint:gate` (59613, baseline 89733) and `p
 - `bridge/text-edit.ts`: the history key branch in `onKeyDown` (451 lines).
 - `bridge/text-edit-range-mode.ts`: `toMixedParentOf`, `selectChildText`.
 - `bridge/hover-select.ts`: `onDblClick` only.
-- `ui/features/text-range/use-text-range-resume.ts`: keeps the last range layer and arms the resume on `history-key`.
+- `ui/features/text-range/use-text-range-resume.ts`: keeps the last range layer and arms the resume on `history-key`. A frame `ready`, a `text-commit` or an edit end clears the layer, so a later Mod+Z outside an edit does not reopen a closed edit (checked: plain `h1` commit, then Mod+Z and Mod+Shift+Z outside the edit, keep the edit closed).
+- `ru-next` is a copy of pick 3's `fv-next`; `fv-next` was not changed. No file outside the pick 2 list changed.
 - Not changed: `preview-key-forward.ts`, `use-text-range-apply.ts`, `deps.ts`, `contracts.ts`. The existing `history-key` route was enough.
 
 ## Left out
 
-- **Electron menu.** In the packed app, the Edit menu owns Cmd+Z. The plain edit with typed text now stops the default in the frame, so the menu should not run too. This was not checked in Electron.
+- **Electron menu (not checked).** In the packed app, the Edit menu owns Cmd+Z, and the parent's echo dedupe does not see a keydown in the frame. If the menu still fires after the frame stops the default, a plain edit with typed text gets a history step and loses that text.
 - **Redo after text undo.** In a plain edit, after Mod+Z removes all typed text, Mod+Shift+Z runs the history redo, not the browser text redo.
 - **A caret with no range.** The edit reopens only when a range was selected in the edit. With only a caret in a plain edit, the edit closes after the history step, as before.
 - **Double-click before the first click is in the UI.** A double-click that comes faster than the UI can take the first click's selection does not show the bar until the selection changes. A real double-click (about 200 ms between clicks) shows it. The text-range hooks start to listen only when there is a selection.

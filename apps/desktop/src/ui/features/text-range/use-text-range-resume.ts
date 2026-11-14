@@ -51,7 +51,11 @@ const noteLayer = (
     return;
   }
 
-  if (message.type === "text-commit" || isOtherEdit(message, lastLayer)) {
+  if (
+    message.type === "ready" ||
+    message.type === "text-commit" ||
+    isOtherEdit(message, lastLayer)
+  ) {
     lastLayer.current = null;
   }
 };

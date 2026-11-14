@@ -1,8 +1,12 @@
+import { decodeEntities } from "@design-studio/contracts/html-entities";
+
 import type { ImageOrientation } from "./deps.js";
 
 interface PhotoSlot {
   readonly alt: string | null;
   readonly col: number;
+  readonly hasArt: boolean;
+  readonly hasImage: boolean;
   readonly isImg: boolean;
   readonly line: number;
   readonly orientation: ImageOrientation;
@@ -11,6 +15,10 @@ interface PhotoSlot {
 }
 
 const PHOTO_ATTR = "data-photo";
+
+const ART_ATTR = "data-photo-art";
+
+const STYLE_URL = /url\(/iu;
 
 const WIDE_RATIO = 1.2;
 
@@ -33,8 +41,10 @@ const toAttrPattern = (name: string): RegExp =>
 
 const ATTRS = {
   alt: toAttrPattern("alt"),
+  art: toAttrPattern(ART_ATTR),
   height: toAttrPattern("height"),
   photo: toAttrPattern(PHOTO_ATTR),
+  src: toAttrPattern("src"),
   style: toAttrPattern("style"),
   width: toAttrPattern("width"),
 } as const;
@@ -105,22 +115,29 @@ const toPosition = (source: string, index: number): SlotPosition => {
 const toSlot = (source: string, match: RegExpExecArray): PhotoSlot | null => {
   const attrs = match.groups?.attrs ?? "";
   const words = toAttrValue(attrs, ATTRS.photo);
-  const cleaned = (words ?? "").replaceAll(SPACES, " ").trim();
+
+  const cleaned = decodeEntities(words ?? "")
+    .replaceAll(SPACES, " ")
+    .trim();
 
   if (cleaned === "") {
     return null;
   }
 
   const position = toPosition(source, match.index);
+  const style = toAttrValue(attrs, ATTRS.style);
+  const hasSrc = (toAttrValue(attrs, ATTRS.src) ?? "").trim() !== "";
 
   return {
     alt: toAttrValue(attrs, ATTRS.alt),
     col: position.col,
+    hasArt: ATTRS.art.test(attrs),
+    hasImage: hasSrc || STYLE_URL.test(style ?? ""),
     isImg: match.groups?.tag === "img",
     line: position.line,
     orientation: toOrientation(attrs),
     query: cleaned,
-    style: toAttrValue(attrs, ATTRS.style),
+    style,
   };
 };
 
@@ -143,6 +160,6 @@ const isHtmlPage = (relative: string): boolean => /\.html?$/iu.test(relative);
 const isTypescriptPage = (relative: string): boolean =>
   /\.tsx$/iu.test(relative);
 
-export { PHOTO_ATTR, isHtmlPage, isTypescriptPage, toPhotoSlots };
+export { ART_ATTR, PHOTO_ATTR, isHtmlPage, isTypescriptPage, toPhotoSlots };
 
 export type { PhotoSlot };

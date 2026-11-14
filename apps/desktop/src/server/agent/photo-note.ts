@@ -4,7 +4,10 @@ import path from "node:path";
 import type { ResolvedRunConfig } from "../../shared/run-levels.js";
 import { isLeanRun } from "./lean-run.js";
 import type { DriverInput } from "./lifecycle.js";
-import { isPhotoSearchOn } from "./photo-search.js";
+import { isHtmlEntry, isPhotoSearchOn } from "./photo-search.js";
+
+const PHOTO_ART_NOTE =
+  "Photo slots show art from your colors. Turn on image search for real photos (image sheet, or STUDIO_IMAGE_SEARCH=on).";
 
 const PHOTO_NOTE =
   "Photo slots are gray boxes. Turn on image search in the image sheet (Turn on image search for this project) or with STUDIO_IMAGE_SEARCH=on for real photos.";
@@ -87,6 +90,10 @@ const toPhotoNotes = async (
   }
 
   await toWriteMarker(marker);
+
+  if (isHtmlEntry(input.ctx.project)) {
+    return [PHOTO_ART_NOTE];
+  }
 
   return [PHOTO_NOTE];
 };

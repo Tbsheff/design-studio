@@ -16,6 +16,7 @@ const handle = Effect.fn("image-search.apply")(function* run(
     directionId: input.directionId,
     path: input.path,
     projectId: input.projectId,
+    slots: input.slots,
   });
 }) satisfies Handle<typeof applyImageSearch>;
 

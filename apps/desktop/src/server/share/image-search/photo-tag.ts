@@ -1,3 +1,5 @@
+import { decodeEntities } from "@design-studio/contracts/html-entities";
+
 import { PHOTO_ATTR } from "./photo-slots.js";
 import type { PhotoSlot } from "./photo-slots.js";
 
@@ -6,6 +8,15 @@ const MISSED_ATTR = "data-photo-missed";
 const TAG_NAME = /^<(?<tag>[A-Za-z][\w-]*)/u;
 
 const TAG_NAME_MAX = 64;
+
+const MISSED_VALUE =
+  /(?:^|\s)data-photo-missed=(?:"(?<double>[^"]*)"|'(?<single>[^']*)')/u;
+
+const TAGS = /<[^<>]*>/gu;
+
+const SPACES = /\s+/gu;
+
+const LABEL_MAX = 120;
 
 const LABEL_TAG =
   /^<(?<label>span|small|p|strong|em|b|i)\b[^<>]*>[^<]*<\/\k<label>>$/u;
@@ -53,10 +64,15 @@ const toTagEnd = (code: string, from: number): number => {
   return -1;
 };
 
-const toLabelFree = (
+interface LabelRange {
+  readonly end: number;
+  readonly start: number;
+}
+
+const toLabelRange = (
   code: string,
   position: { readonly col: number; readonly line: number }
-): string => {
+): LabelRange | null => {
   const offset = toOffset(code, position);
   const head = code.slice(offset, offset + TAG_NAME_MAX);
   const tag = TAG_NAME.exec(head)?.groups?.tag ?? "";
@@ -64,21 +80,57 @@ const toLabelFree = (
   const start = toTagEnd(code, offset);
 
   if (tag === "" || start === -1) {
-    return code;
+    return null;
   }
 
   const end = code.indexOf(`</${tag}>`, start);
   const inner = code.slice(start, Math.max(end, start));
 
   if (end === -1 || inner.trim() === "") {
-    return code;
+    return null;
   }
 
   if (inner.includes("<") && !LABEL_TAG.test(inner.trim())) {
+    return null;
+  }
+
+  return { end, start };
+};
+
+const toLabelFree = (
+  code: string,
+  position: { readonly col: number; readonly line: number }
+): string => {
+  const range = toLabelRange(code, position);
+
+  if (range === null) {
     return code;
   }
 
-  return `${code.slice(0, start)}${code.slice(end)}`;
+  return `${code.slice(0, range.start)}${code.slice(range.end)}`;
+};
+
+const toLabelText = (
+  code: string,
+  position: { readonly col: number; readonly line: number }
+): string | null => {
+  const range = toLabelRange(code, position);
+
+  if (range === null) {
+    return null;
+  }
+
+  const text = decodeEntities(
+    code.slice(range.start, range.end).replaceAll(TAGS, " ")
+  )
+    .replaceAll(SPACES, " ")
+    .trim();
+
+  if (text === "") {
+    return null;
+  }
+
+  return text.slice(0, LABEL_MAX);
 };
 
 const toOpenTag = (source: string, slot: PhotoSlot): string => {
@@ -88,15 +140,20 @@ const toOpenTag = (source: string, slot: PhotoSlot): string => {
 };
 
 const isMarkedMiss = (source: string, slot: PhotoSlot): boolean => {
-  const tag = toOpenTag(source, slot);
+  const groups = MISSED_VALUE.exec(toOpenTag(source, slot))?.groups ?? null;
+  const marked = groups?.double ?? groups?.single ?? null;
+
+  if (marked === null) {
+    return false;
+  }
 
   return (
-    tag.includes(`${MISSED_ATTR}="${slot.query}"`) ||
-    tag.includes(`${MISSED_ATTR}='${slot.query}'`)
+    decodeEntities(marked).replaceAll(SPACES, " ").trim() ===
+    decodeEntities(slot.query)
   );
 };
 
-const RETRY_HINT = `To search a missed slot again, change its ${PHOTO_ATTR} words or remove ${MISSED_ATTR}.`;
+const RETRY_HINT = `To search a missed slot again, pass its words in slots, change its ${PHOTO_ATTR} words or remove ${MISSED_ATTR}.`;
 
 const toSkipNote = (skipped: number): string | null => {
   if (skipped === 0) {
@@ -114,4 +171,11 @@ const toIdleNote = (relative: string, skipped: number): string => {
   return `${relative} has no ${PHOTO_ATTR} slot left, so nothing changed and no search ran. Do not call apply_image_search again on this page. To add a photo, write an img or element with ${PHOTO_ATTR}="<2 to 6 search words>".`;
 };
 
-export { MISSED_ATTR, isMarkedMiss, toIdleNote, toLabelFree, toSkipNote };
+export {
+  MISSED_ATTR,
+  isMarkedMiss,
+  toIdleNote,
+  toLabelFree,
+  toLabelText,
+  toSkipNote,
+};

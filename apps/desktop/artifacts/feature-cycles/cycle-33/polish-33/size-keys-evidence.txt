@@ -1,0 +1,7 @@
+Fixture ds-wt/p33-next (Next 16, Tailwind 4). Card "Open visits": 236 px, no size class (parent grid-cols-[236px]).
+
+Mod+Right 4 times, 1.5 s apart (4 versions):
+  237px -> w-[237px]; 238px -> w-[238px]; 239px -> w-[239px]; 240px -> w-60
+Mod+Right held 4 repeats (1 burst, 1 request): 240px -> w-60
+Mod+Shift+Right once: 246px -> w-[246px] (off the scale)
+Reselect after w-[237px], Mod+Right: 238px -> w-[238px]

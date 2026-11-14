@@ -30,6 +30,7 @@ interface LayersPanelProps {
   tree: LayerTree | null;
   frameName: string;
   selectedNode: number | null;
+  readonly selectedNodes: ReadonlySet<number>;
   onHover: (id: number | null) => void;
   onSelect: (id: number, additive: boolean) => void;
   onClose?: () => void;
@@ -64,6 +65,7 @@ const LayersPanel = ({
   tree,
   frameName,
   selectedNode: confirmed,
+  selectedNodes: confirmedNodes,
   onHover,
   onSelect,
   onClose,
@@ -79,6 +81,7 @@ const LayersPanel = ({
 
   const state = usePanelState({
     confirmed,
+    confirmedNodes,
     edits,
     frameName,
     isMac,
@@ -89,9 +92,7 @@ const LayersPanel = ({
     tree,
   });
 
-  const { list, rename, rowMenu, selectedNode } = state;
-  const { drag } = list;
-  const { listRef, onKeyDown, rowsRef } = state;
+  const { list, listRef, onKeyDown, rename, rowMenu, rowsRef } = state;
 
   return (
     <aside className="layers" aria-label={COPY.labelLayers}>
@@ -99,19 +100,19 @@ const LayersPanel = ({
         frameName={frameName}
         isBusy={busy}
         onClose={onClose ?? null}
-        onRunTool={toRunTool(selectedNode, edits)}
+        onRunTool={toRunTool(state.selectedNode, edits)}
         toTip={tipWithKey}
       />
       <LayerSearchField search={state.search} />
       <LayersList
         ref={listRef}
         isBusy={busy}
-        isDragging={drag.dragging !== null}
+        isDragging={list.drag.dragging !== null}
         isEmpty={isEmpty}
         isSearching={state.search.isActive}
         rowCount={state.rows.length}
         selectedIndex={list.selectedIndex}
-        selectedNode={selectedNode}
+        selectedNode={state.selectedNode}
         tree={tree}
         onKeyDown={onKeyDown}
         onPointerCancel={state.handlePointerCancel}
@@ -124,8 +125,8 @@ const LayersPanel = ({
           callbacks={state.callbacks}
           collapsed={state.collapsed}
           dimmed={state.dimmed}
-          dropInto={drag.drop?.into ?? null}
-          dropLine={drag.drop?.line ?? null}
+          dropInto={list.drag.drop?.into ?? null}
+          dropLine={list.drag.drop?.line ?? null}
           editingKey={rename.editingKey}
           first={list.rowWindow.first}
           hoveredNode={hoveredNode}
@@ -133,7 +134,7 @@ const LayersPanel = ({
           keys={state.keys}
           last={list.rowWindow.last}
           rows={state.rows}
-          selectedNode={selectedNode}
+          selectedNodes={state.selectedNodes}
         />
       </LayersList>
       {toMenu(rowMenu, edits)}

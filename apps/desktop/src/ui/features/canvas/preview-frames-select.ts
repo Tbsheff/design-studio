@@ -12,6 +12,7 @@ import {
   manySelection,
   nextSelection,
   nodeAfterSelect,
+  toNextNodeMap,
 } from "./preview-selection-model.js";
 import type {
   SelectManyMessage,
@@ -43,7 +44,8 @@ const onTextMessage = (state: PreviewState, message: TextEditMessage): void => {
 
 const selectMany = (state: PreviewState, message: SelectManyMessage): void => {
   const { opts } = state;
-  state.setters.selectedNode(message.node ?? null);
+  state.setters.selectedNode(message.nodes?.at(-1) ?? null);
+  state.setters.nodes((prev) => toNextNodeMap(prev, message));
 
   if (message.selections.length > 0) {
     state.pendingSelectAt = message.at;
@@ -62,6 +64,7 @@ const selectMany = (state: PreviewState, message: SelectManyMessage): void => {
 const selectOne = (state: PreviewState, message: SelectMessage): void => {
   const { opts } = state;
   state.setters.selectedNode(nodeAfterSelect(message, opts.selection));
+  state.setters.nodes((prev) => toNextNodeMap(prev, message));
   state.picked.set(
     nextSelection(opts.selection, message.selection, message.additive)
   );

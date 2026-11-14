@@ -21,7 +21,7 @@ interface LayersRowsProps {
   readonly last: number;
   readonly rows: LayerNode[];
   readonly ref: Ref<HTMLDivElement>;
-  readonly selectedNode: number | null;
+  readonly selectedNodes: ReadonlySet<number>;
 }
 
 const LayersRows = (props: LayersRowsProps): ReactNode => {
@@ -46,7 +46,7 @@ const LayersRows = (props: LayersRowsProps): ReactNode => {
           onToggleLocked={callbacks.handleToggleLocked}
           node={node}
           top={(first + index) * ROW}
-          isSelected={node.id === props.selectedNode}
+          isSelected={props.selectedNodes.has(node.id)}
           isCollapsed={props.collapsed.has(node.id)}
           isDimmed={props.dimmed.has(node.id)}
           isEditing={editingKey !== null && keys.get(node.id) === editingKey}

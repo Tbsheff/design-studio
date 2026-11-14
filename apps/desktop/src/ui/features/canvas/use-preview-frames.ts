@@ -29,6 +29,7 @@ import {
   PREVIEW_LAYOUT_KEY_EVENT,
 } from "./preview-key-forward.js";
 import type { HoverBox } from "./preview-rect-model.js";
+import type { NodeMap } from "./preview-selection-model.js";
 import type { PreviewSlot } from "./preview-slot-model.js";
 import { usePreviewEffects } from "./use-preview-effects.js";
 
@@ -38,9 +39,12 @@ interface PreviewFrames extends PreviewApi {
   hover: PreviewState["hover"];
   picked: PreviewState["picked"];
   selectedNode: number | null;
+  selectedNodes: NodeMap;
   slots: PreviewSlot[];
   tree: LayerTree | null;
 }
+
+const EMPTY_NODES: NodeMap = new Map();
 
 const toRegionStep = (id: AppKey): 1 | -1 => {
   if (id === "next-region") {
@@ -95,6 +99,7 @@ const usePreviewFrames = (options: PreviewOptions): PreviewFrames => {
   const [frontToken, setFrontToken] = useState<string | null>(null);
   const [tree, setTree] = useState<LayerTree | null>(null);
   const [selectedNode, setSelectedNode] = useState<number | null>(null);
+  const [selectedNodes, setSelectedNodes] = useState<NodeMap>(EMPTY_NODES);
 
   const host = useMemo<PreviewHost>(
     () => ({
@@ -111,6 +116,7 @@ const usePreviewFrames = (options: PreviewOptions): PreviewFrames => {
     () =>
       createPreviewState(host, {
         front: setFrontToken,
+        nodes: setSelectedNodes,
         selectedNode: setSelectedNode,
         slots: setSlots,
       }),
@@ -147,6 +153,7 @@ const usePreviewFrames = (options: PreviewOptions): PreviewFrames => {
     hover,
     picked,
     selectedNode,
+    selectedNodes,
     slots,
     tree,
   };

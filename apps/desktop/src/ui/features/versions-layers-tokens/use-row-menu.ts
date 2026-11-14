@@ -10,7 +10,7 @@ interface RowMenuApi {
 
 const useRowMenu = (
   hasMenu: boolean,
-  selectedNode: number | null,
+  selectedNodes: ReadonlySet<number>,
   onSelect: (id: number, isAdditive: boolean) => void
 ): RowMenuApi => {
   const [at, setAt] = useState<DOMPoint | null>(null);
@@ -21,13 +21,13 @@ const useRowMenu = (
         return;
       }
 
-      if (node.id !== selectedNode) {
+      if (!selectedNodes.has(node.id)) {
         onSelect(node.id, false);
       }
 
       setAt(new DOMPoint(event.clientX, event.clientY));
     },
-    [hasMenu, onSelect, selectedNode]
+    [hasMenu, onSelect, selectedNodes]
   );
 
   const close = useCallback((): void => {

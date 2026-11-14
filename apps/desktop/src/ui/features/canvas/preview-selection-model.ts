@@ -72,6 +72,76 @@ const nodeAfterSelect = (
   return msg.node ?? null;
 };
 
-export { isSelectMessage, manySelection, nextSelection, nodeAfterSelect };
+type NodeMap = ReadonlyMap<string, number>;
 
-export type { SelectManyMessage, SelectMessage };
+const toNodeEntries = (
+  message: SelectMessage | SelectManyMessage
+): (readonly [string, number])[] => {
+  if (message.type === "select") {
+    const node = message.node ?? null;
+
+    if (node === null) {
+      return [];
+    }
+
+    return [[message.selection.selector, node]];
+  }
+
+  const nodes = message.nodes ?? [];
+
+  return message.selections.flatMap((entry, index) => {
+    const node = nodes[index] ?? null;
+
+    if (node === null) {
+      return [];
+    }
+
+    return [[entry.selector, node] as const];
+  });
+};
+
+const toNextNodeMap = (
+  prev: NodeMap,
+  message: SelectMessage | SelectManyMessage
+): NodeMap => {
+  const entries = toNodeEntries(message);
+
+  if (!message.additive) {
+    return new Map(entries);
+  }
+
+  return new Map([...prev, ...entries]);
+};
+
+const toSelectedNodes = (
+  selection: readonly SelectionContext[],
+  nodes: NodeMap,
+  last: number | null
+): ReadonlySet<number> => {
+  const ids = selection.flatMap((entry) => {
+    const node = nodes.get(entry.selector) ?? null;
+
+    if (node === null) {
+      return [];
+    }
+
+    return [node];
+  });
+
+  if (last !== null) {
+    ids.push(last);
+  }
+
+  return new Set(ids);
+};
+
+export {
+  isSelectMessage,
+  manySelection,
+  nextSelection,
+  nodeAfterSelect,
+  toNextNodeMap,
+  toSelectedNodes,
+};
+
+export type { NodeMap, SelectManyMessage, SelectMessage };

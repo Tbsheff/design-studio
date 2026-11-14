@@ -10,6 +10,7 @@ import type { Dispatch, SetStateAction } from "react";
 import type { LiveStore } from "../../platform/live-store.js";
 import type { MenuAnchor } from "./layer-pick-model.js";
 import type { HoverBox } from "./preview-rect-model.js";
+import type { NodeMap } from "./preview-selection-model.js";
 import type { PreviewSlot } from "./preview-slot-model.js";
 
 type Timer = ReturnType<typeof globalThis.setTimeout>;
@@ -94,6 +95,7 @@ interface PreviewHost {
 
 interface PreviewSetters {
   readonly front: (token: string | null) => void;
+  readonly nodes: Dispatch<SetStateAction<NodeMap>>;
   readonly selectedNode: (node: number | null) => void;
   readonly slots: Dispatch<SetStateAction<PreviewSlot[]>>;
 }

@@ -20,6 +20,7 @@ import { runNudgeFlush, runNudgePress } from "./use-element-nudge-core.js";
 import type { NudgeCore, NudgeOptions } from "./use-element-nudge-core.js";
 import { useLatestRef } from "./use-latest-ref.js";
 import { useSizeKeys } from "./use-size-keys.js";
+import { useTextKeys } from "./use-text-keys.js";
 
 const runNudgeKey = (core: NudgeCore, event: KeyboardEvent): void => {
   const cur = core.live.current;
@@ -119,6 +120,7 @@ const useElementNudge = (options: NudgeOptions): void => {
 
   useNudgeListeners(core, options.listen);
   useSizeKeys(options);
+  useTextKeys(options);
 
   const key = toBurstKey(options.selection.map((entry) => entry.selector));
 

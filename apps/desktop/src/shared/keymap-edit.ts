@@ -55,6 +55,49 @@ const EDIT_KEYS = [
     keys: ["Alt+Shift+,"],
     label: "Line height down",
   },
+  {
+    group: "Selection",
+    id: "text-bold",
+    keys: ["Mod+B"],
+    label: "Bold text: 700, or 400 when every layer is bold",
+  },
+  {
+    group: "Selection",
+    id: "text-underline",
+    keys: ["Mod+U"],
+    label: "Underline text",
+  },
+  {
+    group: "Selection",
+    id: "text-strike",
+    keys: ["Mod+Shift+X"],
+    label: "Strikethrough text",
+  },
+  {
+    group: "Selection",
+    id: "text-align-left",
+    keys: ["Mod+Alt+L"],
+    label: "Align text left",
+  },
+  {
+    group: "Selection",
+    id: "text-align-center",
+    keys: ["Mod+Alt+T"],
+    label:
+      "Align text center (Mac only: on Windows and Linux, Ctrl+Alt+T is Tidy up)",
+  },
+  {
+    group: "Selection",
+    id: "text-align-right",
+    keys: ["Mod+Alt+R"],
+    label: "Align text right",
+  },
+  {
+    group: "Selection",
+    id: "text-align-justify",
+    keys: ["Mod+Alt+J"],
+    label: "Justify text",
+  },
 ] as const satisfies readonly KeyBinding[];
 
 export { EDIT_KEYS };

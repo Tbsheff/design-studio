@@ -25,7 +25,7 @@ const OVERLAY_PROBE = [
   "(() => {",
   '  const portal = document.querySelector("nextjs-portal");',
   "  const root = portal && portal.shadowRoot;",
-  '  const dialog = root && root.querySelector("[data-nextjs-dialog], [data-nextjs-dialog-overlay]");',
+  "  const dialog = root && root.querySelector('[data-nextjs-dialog-overlay][data-rendered=\"true\"]');",
   '  const text = (document.body && document.body.innerText) || "";',
   '  return Boolean(dialog) || text.includes("Application error: a client-side exception") || text.includes("Application error: a server-side exception");',
   "})()",
@@ -166,8 +166,11 @@ const isFileError = (text: string, files: readonly string[]): boolean =>
 
 const inspectPage = async (
   page: RenderPage,
+  url: string,
   files: readonly string[]
 ): Promise<PageProblems> => {
+  await page.goto(url);
+
   const [overlay, errors] = await Promise.all([
     page.evaluate<boolean>(OVERLAY_PROBE),
     page.errors(),
@@ -193,7 +196,7 @@ const inspectProblems = async (
 
   try {
     return await preview.withPage(url, PROBE_VIEWPORT, (page) =>
-      inspectPage(page, files)
+      inspectPage(page, url, files)
     );
   } catch {
     return null;

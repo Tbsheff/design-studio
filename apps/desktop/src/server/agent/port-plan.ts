@@ -35,6 +35,8 @@ import { appRouterDir, listAppRoutes } from "../app/routes.js";
 import { searchComponents } from "../components/component-search.js";
 import { loadDesignSystemPromptContext } from "../design-system/state.js";
 import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
+import { toLookFontLines, toTokenLines } from "./port-look-lines.js";
+import type { PortLook } from "./port-look.js";
 
 type Node = DefaultTreeAdapterMap["node"];
 
@@ -727,7 +729,7 @@ export function mapTokens(
   }));
 }
 
-const PLAN_TEXT_MAX = 6000;
+const PLAN_TEXT_MAX = 7000;
 
 function list(label: string, values: string[]): string {
   return values.length > 0
@@ -735,7 +737,7 @@ function list(label: string, values: string[]): string {
     : "";
 }
 
-export function portPlanText(plan: PortPlan): string {
+export function portPlanText(plan: PortPlan, look: PortLook | null): string {
   const { target } = plan;
 
   const head = [
@@ -775,13 +777,8 @@ export function portPlanText(plan: PortPlan): string {
       "No kit match",
       plan.missing.map((m) => `${m.role}: ${m.reason}`)
     ),
-    list(
-      "Tokens",
-      plan.tokens.map(
-        (t) =>
-          `${t.name}${t.value ? ` = ${t.value}` : ""} -> ${t.target ?? "no app token"}`
-      )
-    ),
+    list("Tokens", toTokenLines(plan.tokens, look)),
+    list("Fonts", toLookFontLines(look)),
     list(
       "Images",
       plan.images.map((i) => `${i.src}${i.alt ? ` (${i.alt})` : ""}`)

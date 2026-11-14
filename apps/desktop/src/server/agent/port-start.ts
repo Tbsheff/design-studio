@@ -24,6 +24,8 @@ import {
   toAssetsTag,
 } from "./port-assets.js";
 import type { PortAssetCopy } from "./port-assets.js";
+import { listPortLooks, toPortLookPage } from "./port-look.js";
+import type { PortLookPage } from "./port-look.js";
 import {
   buildFlowPlan,
   buildPortPlan,
@@ -242,9 +244,10 @@ const toCheckLine = (
 const toPagePrompt = (
   input: StartableInput,
   plan: PortPlan,
-  html: string,
+  page: PortLookPage,
   assets: PortAssetCopy
 ): string => {
+  const { html, look } = page;
   const routeFile = plan.target?.routeFile ?? null;
   let file = "";
 
@@ -254,7 +257,7 @@ const toPagePrompt = (
 
   return [
     `${PORT_LEVEL_LABEL}: move the prototype page ${plan.source.path} from the project "${input.source.project.name}" into this app as the route ${input.target.route}${file}.`,
-    toTagged("port-plan", "", portPlanText(plan)),
+    toTagged("port-plan", "", portPlanText(plan, look)),
     toAssetsTag(assets),
     toTagged(
       "prototype-source",
@@ -268,7 +271,7 @@ const toPagePrompt = (
 const toFlowPrompt = (
   input: StartableInput,
   flow: PortFlowPlan,
-  htmls: readonly string[],
+  sources: readonly PortLookPage[],
   assets: PortAssetCopy
 ): string => {
   const max = Math.min(
@@ -280,11 +283,15 @@ const toFlowPrompt = (
     const attribute = toPathAttribute(page.path);
 
     return [
-      toTagged("port-plan", attribute, portPlanText(page.plan)),
+      toTagged(
+        "port-plan",
+        attribute,
+        portPlanText(page.plan, sources[index]?.look ?? null)
+      ),
       toTagged(
         "prototype-source",
         attribute,
-        toCutSource(htmls[index] ?? "", max)
+        toCutSource(sources[index]?.html ?? "", max)
       ),
     ].join("\n\n");
   });
@@ -387,20 +394,21 @@ const startFlowRun = async (
     )
   );
 
-  const assets = await toCopyAssets(
-    input,
-    flow.base ?? input.target.route,
-    flow.pages.map((page, index) => ({
-      html: htmls[index] ?? "",
-      path: page.path,
-    }))
-  );
+  const pages = flow.pages.map((page, index) => ({
+    html: htmls[index] ?? "",
+    path: page.path,
+  }));
+
+  const [assets, sources] = await Promise.all([
+    toCopyAssets(input, flow.base ?? input.target.route, pages),
+    listPortLooks(input, pages),
+  ]);
 
   const runId = await startAssetRun(
     deps,
     input,
     assets,
-    toFlowPrompt(input, flow, htmls, assets)
+    toFlowPrompt(input, flow, sources, assets)
   );
 
   return toStartResult(
@@ -426,15 +434,18 @@ const startPageRun = async (
     readSourcePage(input.source.direction.workTree, input.source.path),
   ]);
 
-  const assets = await toCopyAssets(input, input.target.route, [
-    { html, path: input.source.path },
+  const page = { html, path: input.source.path };
+
+  const [assets, source] = await Promise.all([
+    toCopyAssets(input, input.target.route, [page]),
+    toPortLookPage(input, page),
   ]);
 
   const runId = await startAssetRun(
     deps,
     input,
     assets,
-    toUpdatedPrompt(toPagePrompt(input, plan, html, assets), update)
+    toUpdatedPrompt(toPagePrompt(input, plan, source, assets), update)
   );
 
   const routeFile = plan.target?.routeFile ?? null;

@@ -32,6 +32,8 @@ import type {
 } from "./frame-source.js";
 import { attemptMcpRead } from "./mcp-read-core.js";
 import type { McpReadError, PortPlanQuery } from "./mcp-read-core.js";
+import { getProbedShot } from "./probed-shot-read.js";
+import type { ProbedShot } from "./probed-shot-read.js";
 import { readProjectList } from "./project-list-read.js";
 import type { ProjectSummary } from "./project-list-read.js";
 import { readProjectSearch } from "./project-search-read.js";
@@ -75,6 +77,10 @@ interface McpReadStoreApi {
   readonly portPlan: (
     query: PortPlanQuery
   ) => Effect.Effect<PortFlowPlan | PortPlan, McpReadError>;
+  readonly probedScreenshot: (
+    query: ShotQuery,
+    expression: string
+  ) => Effect.Effect<ProbedShot, McpReadError>;
   readonly projectList: () => Effect.Effect<
     readonly ProjectSummary[],
     McpReadError,
@@ -180,6 +186,13 @@ class McpReadStore extends Context.Service<McpReadStore, McpReadStoreApi>()(
       ) {
         return yield* attemptMcpRead((runtime) => runtime.planPort(query));
       }),
+      probedScreenshot: Effect.fn("McpReadStore.probedScreenshot")(
+        function* run(query: ShotQuery, expression: string) {
+          return yield* attemptMcpRead((runtime) =>
+            getProbedShot(runtime, query, expression)
+          );
+        }
+      ),
       projectList: Effect.fn("McpReadStore.projectList")(function* run() {
         const isVisible = yield* toVisibility();
 

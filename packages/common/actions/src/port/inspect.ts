@@ -15,7 +15,7 @@ const inspectPort = defineAction({
   },
   confirm: "none",
   description:
-    "Compare an app route with the prototype page it was moved from. The studio renders both pages at one width, scores the match from 0 to 100 (content 20%, edges 80%) and lists the 3x3 areas that differ most. A score under 80 means the route does not match yet. Read only; it writes only a side-by-side diff PNG in the data folder.",
+    "Compare an app route with the prototype page it was moved from. The studio renders both pages at one width, scores the match from 0 to 100 (content 20%, edges 80%) and lists the 3x3 areas that differ most. Each low area names up to 3 app elements in it. A score under 80 means the route does not match yet. For a route update, the studio masks the kept app text and the data row text on both pages, and lists them in masked. Read only; it writes only a side-by-side diff PNG in the data folder.",
   errors: [BadRequest, Conflict, NotFound],
   http: { method: "GET", path: "/api/projects/:projectId/port/match" },
   id: "port.inspect",

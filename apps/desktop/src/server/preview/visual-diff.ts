@@ -39,7 +39,7 @@ function cropTo(png: PNG, width: number, height: number): Buffer {
   return out;
 }
 
-function maskRect(
+export function maskRect(
   data: Buffer,
   width: number,
   height: number,

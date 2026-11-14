@@ -121,11 +121,31 @@ const PortCheckInputSchema = Schema.Struct({
   ),
 });
 
+const PORT_AREA_ELEMENTS_MAX = 3;
+
+const PORT_MASKED_MAX = 20;
+
+const PortElementSchema = Schema.Struct({
+  selector: Schema.String,
+  text: Schema.String,
+});
+
 const PortAreaSchema = Schema.Struct({
   col: Schema.Int,
+  elements: Schema.Array(PortElementSchema)
+    .check(Schema.isMaxLength(PORT_AREA_ELEMENTS_MAX))
+    .annotate({
+      description:
+        "Up to 3 app elements in this area, with a CSS selector and their text.",
+    }),
   name: Schema.String,
   row: Schema.Int,
   score: Schema.Int,
+});
+
+const PortMaskedSchema = Schema.Struct({
+  reason: Schema.Literals(["app-change", "data-row"]),
+  text: Schema.String,
 });
 
 const PortMatchSchema = Schema.Struct({
@@ -133,6 +153,12 @@ const PortMatchSchema = Schema.Struct({
   areas: Schema.Array(PortAreaSchema),
   diffPath: Schema.String,
   isLow: Schema.Boolean,
+  masked: Schema.Array(PortMaskedSchema)
+    .check(Schema.isMaxLength(PORT_MASKED_MAX))
+    .annotate({
+      description:
+        "For a route update: the kept app text and the data row text that the score does not count. Empty for a new route.",
+    }),
   prototypePath: Schema.String,
   score: Schema.Int,
 });
@@ -141,6 +167,10 @@ type PortStarted = typeof PortStartedSchema.Type;
 
 type PortArea = typeof PortAreaSchema.Type;
 
+type PortElement = typeof PortElementSchema.Type;
+
+type PortMasked = typeof PortMaskedSchema.Type;
+
 type PortMatch = typeof PortMatchSchema.Type;
 
 type PortAreaWire = typeof PortAreaSchema.Encoded;
@@ -148,12 +178,24 @@ type PortAreaWire = typeof PortAreaSchema.Encoded;
 type PortMatchWire = typeof PortMatchSchema.Encoded;
 
 export {
+  PORT_AREA_ELEMENTS_MAX,
+  PORT_MASKED_MAX,
   PortAreaSchema,
   PortCheckInputSchema,
+  PortElementSchema,
+  PortMaskedSchema,
   PortMatchSchema,
   PortRouteSchema,
   PortStartInputSchema,
   PortStartedSchema,
 };
 
-export type { PortArea, PortAreaWire, PortMatch, PortMatchWire, PortStarted };
+export type {
+  PortArea,
+  PortAreaWire,
+  PortElement,
+  PortMasked,
+  PortMatch,
+  PortMatchWire,
+  PortStarted,
+};

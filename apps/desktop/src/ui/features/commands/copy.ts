@@ -2,6 +2,7 @@ const copy = {
   closeShortcuts: "Close shortcuts",
   copyAsPng: "Copy as PNG",
   filesInput: "Go to file",
+  fillPhotoSlots: "Fill photo slots",
   filter: "Filter",
   filterShortcuts: "Filter shortcuts",
   goToFile: "Go to file",

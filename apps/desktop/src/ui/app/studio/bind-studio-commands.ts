@@ -1,7 +1,15 @@
+import { routes as imageSearchRoutes } from "@design-studio/actions/image-search/routes";
 import { useEffect } from "react";
 
+import {
+  activeFrame,
+  canvasStore,
+  defaultLayout,
+} from "../../features/canvas/index";
 import type { useStudioCommands } from "../../features/commands";
+import { call } from "../../platform/http";
 import { openPrototypeDialog } from "../../platform/prototype-dialog";
+import { uiStore } from "../../platform/storage";
 import { headerProps } from "./left-props";
 import { exportTarget } from "./project-model";
 import { assignRef } from "./ref-model";
@@ -19,6 +27,41 @@ const makeStatesOf = (ctx: StudioCtx): CommandActions["onMakeStates"] => {
   }
 
   return null;
+};
+
+const toActivePage = (ctx: StudioCtx): string => {
+  const { project } = ctx;
+
+  const frame = activeFrame(
+    canvasStore.get(project.id) ?? defaultLayout(uiStore.get().viewport)
+  );
+
+  return frame.path || project.entry;
+};
+
+const toFillMessage = (missed: readonly { query: string }[]): string =>
+  `No photo slot was filled. No result for: ${missed.map((slot) => slot.query).join(", ")}.`;
+
+const fillPhotosOf = (ctx: StudioCtx): CommandActions["onFillPhotos"] => {
+  const { core, project, ui } = ctx;
+  const { directionId } = core;
+
+  if (!directionId) {
+    return null;
+  }
+
+  return (): Promise<void> =>
+    ui.act(async (): Promise<void> => {
+      const result = await call(imageSearchRoutes.applyImageSearch, {
+        directionId,
+        path: toActivePage(ctx),
+        projectId: project.id,
+      });
+
+      if (result.filled.length === 0) {
+        ui.setActionError(toFillMessage(result.missed));
+      }
+    });
 };
 
 const directionsOf = (ctx: StudioCtx): CommandActions["directions"] =>
@@ -55,6 +98,7 @@ const commandActionsOf = (ctx: StudioCtx): CommandActions => {
     onDirection: guard(data.setDirectionId),
     onDuplicate: header.onDuplicate,
     onExport: (id): void => core.exporter.open({ versionId: id }),
+    onFillPhotos: fillPhotosOf(ctx),
     onHome: guard(onExit),
     onInspector: panes.toggleInspector,
     onMakeStates: makeStatesOf(ctx),

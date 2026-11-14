@@ -1,4 +1,5 @@
 import { toReason, withDisabled } from "./command-disabled.js";
+import { copy } from "./copy.js";
 import {
   DEV_STATUS_MARK_COMMAND,
   DEV_STATUS_MARK_EVENT,
@@ -16,6 +17,7 @@ import { moveRegion } from "./studio-regions.js";
 import { toolCommands } from "./tool-commands.js";
 
 const MIN_DIRECTIONS = 2;
+const RUN_GOING = "A run is going";
 const COMPOSER_SELECTOR = '.prompt [data-slot="composer-input"]';
 
 const idle = (): void => globalThis.console.debug("idle");
@@ -175,10 +177,18 @@ const directionCommands = (studioActions: StudioActions): Command[] =>
 
 const toStatesReason = (studioActions: StudioActions): string | null => {
   if (studioActions.running) {
-    return "A run is going";
+    return RUN_GOING;
   }
 
   return toReason(studioActions.onMakeStates === null, "No direction yet");
+};
+
+const toFillReason = (studioActions: StudioActions): string | null => {
+  if (studioActions.running) {
+    return RUN_GOING;
+  }
+
+  return toReason(studioActions.onFillPhotos === null, "No direction yet");
 };
 
 const runCommands = (studioActions: StudioActions): Command[] => [
@@ -211,7 +221,7 @@ const runCommands = (studioActions: StudioActions): Command[] => [
       run: studioActions.onPolish,
       title: "Polish this design",
     },
-    toReason(studioActions.running, "A run is going")
+    toReason(studioActions.running, RUN_GOING)
   ),
   withDisabled(
     {
@@ -224,6 +234,17 @@ const runCommands = (studioActions: StudioActions): Command[] => [
       title: "Make UI states of this page",
     },
     toStatesReason(studioActions)
+  ),
+  withDisabled(
+    {
+      group: "Run",
+      icon: "image",
+      id: "image.fill",
+      keywords: "photo image picture openverse data-photo slots fill",
+      run: () => studioActions.onFillPhotos?.(),
+      title: copy.fillPhotoSlots,
+    },
+    toFillReason(studioActions)
   ),
 ];
 

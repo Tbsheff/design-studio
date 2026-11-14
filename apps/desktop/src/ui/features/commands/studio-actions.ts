@@ -10,6 +10,7 @@ interface StudioActions {
   onDirection: (id: string) => void;
   onDuplicate: () => void;
   onExport: (versionId: string) => void;
+  onFillPhotos: (() => void) | null;
   onHome: () => void;
   onColumn: (tab: ColumnTab) => void;
   onInspector: () => void;

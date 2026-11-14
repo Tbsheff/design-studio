@@ -33,6 +33,8 @@ const KIT_NAMES: ReadonlySet<string> = new Set([
   "Textarea",
 ]);
 
+const LOOK_NAMES: ReadonlySet<string> = new Set(["Badge", "Card"]);
+
 const LITERAL_PATTERN =
   /"(?<double>[^"\n]*)"|'(?<single>[^'\n]*)'|`(?<tick>[^`\n]*)`/gu;
 
@@ -75,13 +77,16 @@ const toKitComponent = (
   };
 };
 
-const listKitEntries = (library: Library): KitEntryRef[] => {
+const listKitEntries = (
+  library: Library,
+  names: ReadonlySet<string>
+): KitEntryRef[] => {
   const seen = new Set<string>();
   const found: KitEntryRef[] = [];
 
   for (const entry of library.entries) {
     const isWanted =
-      KIT_NAMES.has(entry.name) &&
+      names.has(entry.name) &&
       !seen.has(entry.name) &&
       isKitFile(library, entry.absolute);
 
@@ -105,7 +110,7 @@ const getKitInventory = async (
   workTree: string
 ): Promise<KitInventory> => {
   const library = await loadLibrary(project, workTree);
-  const refs = listKitEntries(library);
+  const refs = listKitEntries(library, KIT_NAMES);
   const components = new Map<string, KitComponent>();
   const entries = new Map<string, KitEntryRef>();
 
@@ -132,6 +137,13 @@ const getKitInventory = async (
 const isInsideKit = (inventory: KitInventory, absolute: string): boolean =>
   inventory.kitDirs.some((dir) => absolute.startsWith(dir + path.sep));
 
-export { getKitInventory, isInsideKit };
+const listLookEntries = (
+  inventory: KitInventory
+): ReadonlyMap<string, KitEntryRef> =>
+  new Map(
+    listKitEntries(inventory.library, LOOK_NAMES).map((ref) => [ref.name, ref])
+  );
+
+export { getKitInventory, isInsideKit, listLookEntries };
 
 export type { KitEntryRef, KitInventory };

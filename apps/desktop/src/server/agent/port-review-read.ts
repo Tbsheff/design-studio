@@ -1,5 +1,11 @@
 import { readFile } from "node:fs/promises";
+import { setTimeout } from "node:timers/promises";
 
+import {
+  BAD_GATEWAY,
+  BAD_REQUEST,
+  UNAVAILABLE,
+} from "@design-studio/actions/_core/errors/http-status-codes";
 import { PortMatchSchema } from "@design-studio/actions/port/schema";
 import type { PortArea } from "@design-studio/actions/port/schema";
 import { Result, Schema } from "effect";
@@ -13,7 +19,14 @@ const INSPECT_TOOL = "inspect_port";
 
 const RENDER_TIMEOUT_MS = 30_000;
 
-const HTTP_ERROR_MIN = 400;
+const WARMING_STATUSES: ReadonlySet<number> = new Set([
+  BAD_GATEWAY,
+  UNAVAILABLE,
+]);
+
+const WARMING_WAIT_MS = 2000;
+
+const WARMING_TRIES = 5;
 
 const PROBE_VIEWPORT = { height: 900, width: 1280 };
 
@@ -144,7 +157,7 @@ const inspectPortMatch = async (
   };
 };
 
-const inspectStatus = async (url: string): Promise<number | null> => {
+const getRouteStatus = async (url: string): Promise<number | null> => {
   try {
     const response = await fetch(url, {
       signal: AbortSignal.timeout(RENDER_TIMEOUT_MS),
@@ -156,6 +169,24 @@ const inspectStatus = async (url: string): Promise<number | null> => {
   } catch {
     return null;
   }
+};
+
+const isWarmingStatus = (status: number | null): boolean =>
+  status !== null && WARMING_STATUSES.has(status);
+
+const inspectStatus = async (
+  url: string,
+  triesLeft: number
+): Promise<number | null> => {
+  const status = await getRouteStatus(url);
+
+  if (!isWarmingStatus(status) || triesLeft <= 0) {
+    return status;
+  }
+
+  await setTimeout(WARMING_WAIT_MS);
+
+  return inspectStatus(url, triesLeft - 1);
 };
 
 const toFileTail = (file: string): string =>
@@ -230,7 +261,7 @@ const toProblem = (
     return "the dev server did not answer";
   }
 
-  if (status >= HTTP_ERROR_MIN) {
+  if (status >= BAD_REQUEST) {
     return `HTTP ${status}`;
   }
 
@@ -243,7 +274,7 @@ const inspectRouteRender = async (
   files: readonly string[]
 ): Promise<RouteRender> => {
   const [status, problems] = await Promise.all([
-    inspectStatus(url),
+    inspectStatus(url, WARMING_TRIES),
     inspectProblems(preview, url, files),
   ]);
 

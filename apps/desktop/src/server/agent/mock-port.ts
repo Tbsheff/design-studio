@@ -7,7 +7,6 @@ import type {
 import type { StudioRuntime } from "../platform/studio-runtime/index.js";
 import type { DriverInput, DriverOutcome } from "./lifecycle.js";
 import {
-  INSPECT_PORT_TOOL,
   runPortReview,
   toPortChecked,
   toPortReviewGaps,
@@ -17,7 +16,17 @@ import type { PortContinue, PortReviewGaps } from "./port-review.js";
 
 const PORT_THROW_TAG = "[port-throw]";
 
-const PORT_CHECKED_TAG = "[port-checked]";
+const PORT_LOW_TAG = "[port-low]";
+
+const PAGE_START = "export default function Page() {";
+
+const STYLE_OPEN = ["<", "style>"].join("");
+
+const STYLE_CLOSE = ["<", "/style>"].join("");
+
+const BODY_OPEN = ["<", "body>"].join("");
+
+const BODY_CLOSE = ["<", "/body>"].join("");
 
 const HEADING_OPEN = ["<", "h1"].join("");
 
@@ -28,11 +37,6 @@ const HEADING_FALLBACK = "Moved page";
 const JSX_UNSAFE = /[{}<>]/gu;
 
 interface MockPortSession {
-  readonly fakeTool: (
-    name: string,
-    input: Readonly<Record<string, string>>,
-    summary: string
-  ) => Promise<void>;
   readonly say: (text: string) => Promise<void>;
   readonly writeFileAsTool: (
     toolName: "Write" | "Edit",
@@ -70,9 +74,42 @@ const toHeading = (prompt: string): string => {
 
 const toTagText = (parts: readonly string[]): string => parts.join("");
 
-const toGoodRoute = (heading: string): string =>
+const toBetween = (text: string, open: string, close: string): string => {
+  const start = text.indexOf(open);
+  const end = text.indexOf(close, start);
+
+  if (start === -1 || end === -1) {
+    return "";
+  }
+
+  return text.slice(start + open.length, end);
+};
+
+const toPrototypeHtml = (prompt: string): string =>
   [
-    "export default function Page() {",
+    STYLE_OPEN,
+    toBetween(prompt, STYLE_OPEN, STYLE_CLOSE),
+    STYLE_CLOSE,
+    toBetween(prompt, BODY_OPEN, BODY_CLOSE),
+  ].join("");
+
+const toFaithfulRoute = (prompt: string): string =>
+  [
+    `const PAGE_HTML = ${JSON.stringify(toPrototypeHtml(prompt))};`,
+    "",
+    PAGE_START,
+    toTagText([
+      "  return ",
+      "<",
+      'iframe srcDoc={PAGE_HTML} style={{ border: 0, display: "block", height: "100vh", width: "100%" }} />;',
+    ]),
+    "}",
+    "",
+  ].join("\n");
+
+const toHeadingRoute = (heading: string): string =>
+  [
+    PAGE_START,
     "  return (",
     toTagText([
       "    ",
@@ -89,7 +126,7 @@ const toGoodRoute = (heading: string): string =>
   ].join("\n");
 
 const THROW_ROUTE = [
-  "export default function Page() {",
+  PAGE_START,
   '  throw new Error("Mock port route failed to render");',
   "}",
   "",
@@ -98,20 +135,16 @@ const THROW_ROUTE = [
 const toRouteFile = (prompt: string): string | null =>
   toRouteFiles(prompt)[0] ?? null;
 
-const toMockToolOrder = (prompt: string): string[] => {
-  if (prompt.includes(PORT_CHECKED_TAG)) {
-    return ["Write", INSPECT_PORT_TOOL];
-  }
-
-  return ["Write"];
-};
-
 const toRouteText = (prompt: string): string => {
   if (prompt.includes(PORT_THROW_TAG)) {
     return THROW_ROUTE;
   }
 
-  return toGoodRoute(toHeading(prompt));
+  if (prompt.includes(PORT_LOW_TAG)) {
+    return toHeadingRoute(toHeading(prompt));
+  }
+
+  return toFaithfulRoute(prompt);
 };
 
 const runMockPort = async (
@@ -127,10 +160,6 @@ const runMockPort = async (
 
   await session.say(`Writing the route \`${file}\`.`);
   await session.writeFileAsTool("Write", file, toRouteText(prompt));
-
-  if (prompt.includes(PORT_CHECKED_TAG)) {
-    await session.fakeTool(INSPECT_PORT_TOOL, {}, "Port score checked");
-  }
 
   const finalText = `Moved the prototype into \`${file}\`.`;
   await session.say(finalText);
@@ -153,7 +182,7 @@ const toFixContinue =
     await session.writeFileAsTool(
       "Write",
       file,
-      toGoodRoute(toHeading(input.ctx.request.prompt))
+      toFaithfulRoute(input.ctx.request.prompt)
     );
     await session.say("Mock fix loop: rewrote the route so it renders.");
 
@@ -165,7 +194,7 @@ const toMockPortRun = (
   deps: MockPortDeps
 ): MockPortRun | null => {
   const { prompt } = input.ctx.request;
-  const gaps = toPortReviewGaps(input.ctx, toMockToolOrder(prompt));
+  const gaps = toPortReviewGaps(input.ctx, ["Write"]);
   const file = toRouteFile(prompt);
 
   if (gaps === null || file === null) {

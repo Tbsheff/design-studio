@@ -19,8 +19,6 @@ import type {
 } from "./port-review-read.js";
 import type { ImagePart } from "./user-message.js";
 
-const INSPECT_PORT_TOOL = "mcp__studio__inspect_port";
-
 const CHECK_TAG = /<port-check\b(?<attributes>[^>]*)\/>/u;
 
 const ROUTE_FILE = /`(?<file>[^`\s]+\/page\.[jt]sx?)`/gu;
@@ -111,11 +109,8 @@ const toRouteFiles = (prompt: string): string[] => [
   ),
 ];
 
-const isEditedAfterInspect = (toolOrder: readonly string[]): boolean => {
-  const lastEdit = toolOrder.findLastIndex((name) => EDIT_TOOL_NAMES.has(name));
-
-  return lastEdit !== -1 && toolOrder.lastIndexOf(INSPECT_PORT_TOOL) < lastEdit;
-};
+const hasEdit = (toolOrder: readonly string[]): boolean =>
+  toolOrder.some((name) => EDIT_TOOL_NAMES.has(name));
 
 const isPortRun = (ctx: PortReviewContext): boolean =>
   ctx.request.task === PORT_TASK &&
@@ -129,7 +124,7 @@ const toPortReviewGaps = (
   const checkRef = toPortCheckRef(ctx.request.prompt);
   const base = ctx.previewUrl;
 
-  if (!isPortRun(ctx) || !isEditedAfterInspect(toolOrder)) {
+  if (!isPortRun(ctx) || !hasEdit(toolOrder)) {
     return null;
   }
 
@@ -190,11 +185,11 @@ const toTag = (name: string, isClose: boolean): string => {
 const toFixPrompt = (gaps: PortReviewGaps, check: PortCheck): string =>
   [
     toTag(CONTINUE_TAG, false),
-    `The studio checked the new route ${gaps.ref.routePath} (${gaps.url}) after your last edit, because you did not call inspect_port after it.`,
+    `The studio checked the new route ${gaps.ref.routePath} (${gaps.url}) against the prototype after your last edit.`,
     `- Render: ${toRenderText(check.render)}.`,
     `- Port match against the prototype ${gaps.ref.path}: ${toScoreText(check.match)}. The bar is ${REFERENCE_LOW_SCORE}.`,
     "The attached sheet, when there is one, shows the prototype, the route, and the different pixels in red.",
-    "Do one fix loop. Fix the render error first, then the low areas, with the app kit and tokens. Then call inspect_port once with the five values of the port-check tag and reply in one or two sentences with the new score.",
+    "Do one fix loop. Fix the render error first, then the low areas, with the app kit and tokens. Do not call inspect_port: the studio checks the route again after your reply. Reply in one or two sentences with what you changed.",
     toTag(CONTINUE_TAG, true),
   ].join("\n");
 
@@ -265,7 +260,6 @@ const toPortChecked = (
 };
 
 export {
-  INSPECT_PORT_TOOL,
   runPortReview,
   toPortCheckRef,
   toPortChecked,

@@ -1,6 +1,40 @@
+# Run 1 (first pass, kept for the record): main ran after branch and left 400 loose objects, so the branch 'warm' row read them through the alternate. Do not use its p50.
 branch before count: 0 size: 0
 branch ms 906,659,677,658,728 p50 677 after count: 0 size: 0
 main before count: 0 size: 0
 main ms 610,453,487,459,518 p50 487 after count: 400 size: 1664
 branch before count: 400 size: 1664
 branch ms 611,481,463,465,446 p50 465 after count: 400 size: 1664
+
+# Run 2 (use this): git prune --expire=now before each main run, a fresh studio data folder before each branch run, 1 warm-up each, then interleaved; each line is a new tsx process
+branch 763 ok
+main 732 ok
+branch 749 ok
+main 719 ok
+branch 832 ok
+main 857 ok
+branch 900 ok
+main 978 ok
+branch 734 ok
+main 708 ok
+branch p50 763 ms, main p50 732 ms
+
+# po-bp full count before branch toStartTag
+count: 0
+size: 0
+in-pack: 449636
+packs: 1
+size-pack: 312507
+prune-packable: 0
+garbage: 0
+size-garbage: 0
+branch 899 ok
+# after
+count: 0
+size: 0
+in-pack: 449636
+packs: 1
+size-pack: 312507
+prune-packable: 0
+garbage: 0
+size-garbage: 0

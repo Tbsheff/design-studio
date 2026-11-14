@@ -21,3 +21,23 @@ dda4f494454c4766
 objects
 
 /Volumes/DevProjects/code/ds-wt/port-objects-data/port-objects/49716b6da1c9b17a/02449d729bdf1104a0fbc42eaf405490cc23c5e1/objects:
+
+# One more HTTP run, full git count-objects -v before and after
+before:
+count: 14
+size: 56
+in-pack: 0
+packs: 0
+size-pack: 0
+prune-packable: 0
+garbage: 0
+size-garbage: 0
+after (run SKARNz52G7PZpJIGQKo-g completed):
+count: 14
+size: 56
+in-pack: 0
+packs: 0
+size-pack: 0
+prune-packable: 0
+garbage: 0
+size-garbage: 0

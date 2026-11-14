@@ -1,9 +1,6 @@
 import path from "node:path";
 
-import type { Plugin } from "esbuild";
-
-const WORKSPACE_PACKAGE = /^@design-studio\//u;
-const BARE_SPECIFIER = /^[^./]/u;
+const WORKSPACE_SCOPE = "@design-studio/";
 const BUNDLED_PACKAGES = new Set(["effect", "culori", "parse5", "entities"]);
 const SINGLE_COPY_PACKAGES = new Set(["effect"]);
 const MODULES_MARKER = `${path.sep}node_modules${path.sep}`;
@@ -22,22 +19,9 @@ const toModuleSubpath = (dir: string): string =>
   dir.slice(dir.lastIndexOf(MODULES_MARKER) + MODULES_MARKER.length);
 
 const isBundled = (specifier: string): boolean =>
-  WORKSPACE_PACKAGE.test(specifier) ||
+  specifier.startsWith(WORKSPACE_SCOPE) ||
   path.isAbsolute(specifier) ||
   BUNDLED_PACKAGES.has(packageName(specifier));
-
-const externalizeBare: Plugin = {
-  name: "externalize-bare",
-  setup: (pluginBuild) => {
-    pluginBuild.onResolve({ filter: BARE_SPECIFIER }, (args) => {
-      if (isBundled(args.path)) {
-        return null;
-      }
-
-      return { external: true, path: args.path };
-    });
-  },
-};
 
 const assertSingleCopy = (dirs: string[]): void => {
   const copied = dirs.filter((dir) =>
@@ -51,4 +35,4 @@ const assertSingleCopy = (dirs: string[]): void => {
   }
 };
 
-export { assertSingleCopy, externalizeBare, packageName, toModuleSubpath };
+export { assertSingleCopy, isBundled, packageName, toModuleSubpath };

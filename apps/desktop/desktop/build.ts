@@ -14,14 +14,14 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { build } from "esbuild";
-import type { BuildOptions, Metafile } from "esbuild";
+import type { BuildOptions, Metafile, Plugin } from "esbuild";
 
 import { buildBridge } from "../src/server/platform/bridge-build/index.js";
 import { linkEsbuildBinary, pruneModules } from "./prune.js";
 import type { PruneStats } from "./prune.js";
 import {
   assertSingleCopy,
-  externalizeBare,
+  isBundled,
   packageName,
   toModuleSubpath,
 } from "./server-bundle.js";
@@ -146,6 +146,21 @@ export async function buildDesktopApp(
   for (const file of FIRST_RUN_STATIC)
     cpSync(path.join(desktop, file), path.join(outDir, file));
 }
+
+const BARE_SPECIFIER = /^[^./]/;
+
+const externalizeBare: Plugin = {
+  name: "externalize-bare",
+  setup: (pluginBuild) => {
+    pluginBuild.onResolve({ filter: BARE_SPECIFIER }, (args) => {
+      if (isBundled(args.path)) {
+        return null;
+      }
+
+      return { external: true, path: args.path };
+    });
+  },
+};
 
 async function buildServer(serverDir: string): Promise<Metafile[]> {
   const common: BuildOptions = {

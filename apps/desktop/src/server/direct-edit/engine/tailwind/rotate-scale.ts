@@ -263,7 +263,7 @@ const ROTATE_PART = /(?:^|\s)rotate(?:z)?\([^)]*\)/giu;
 
 const TRANSFORM_CLASS = /^\[transform:(?<value>.+)\]$/u;
 
-const TRANSFORM_UTILITY = /^-?(?:translate|scale|skew)-/u;
+const TRANSFORM_UTILITY = /^-?(?:translate-|skew-|scale-(?![xy]-))/u;
 
 type StyleChanges = Record<string, string | null>;
 
@@ -284,7 +284,10 @@ const toTransformWithoutRotate = (value: string): string | null => {
   return rest;
 };
 
-const toTransformClassEdits = (token: string): ClassEdit[] => {
+const toTransformClassEdits = (
+  token: string,
+  hasOther: boolean
+): ClassEdit[] => {
   const value = TRANSFORM_CLASS.exec(token)?.groups?.value ?? null;
 
   if (value === null || !/rotate(?:z)?\(/iu.test(value)) {
@@ -298,12 +301,17 @@ const toTransformClassEdits = (token: string): ClassEdit[] => {
     return [remove];
   }
 
+  if (hasOther) {
+    return [];
+  }
+
   return [remove, { kind: "add", token: `[transform:${toArbitrary(rest)}]` }];
 };
 
-const toKeywordEdits = (classes: readonly string[]): ClassEdit[] => {
-  const hasOther = classes.some((token) => TRANSFORM_UTILITY.test(token));
-
+const toKeywordEdits = (
+  classes: readonly string[],
+  hasOther: boolean
+): ClassEdit[] => {
   if (hasOther || !classes.includes("transform")) {
     return [];
   }
@@ -319,9 +327,11 @@ const toRotateTransformEdits = (
     return [];
   }
 
+  const hasOther = classes.some((token) => TRANSFORM_UTILITY.test(token));
+
   return [
-    ...classes.flatMap((token) => toTransformClassEdits(token)),
-    ...toKeywordEdits(classes),
+    ...classes.flatMap((token) => toTransformClassEdits(token, hasOther)),
+    ...toKeywordEdits(classes, hasOther),
   ];
 };
 

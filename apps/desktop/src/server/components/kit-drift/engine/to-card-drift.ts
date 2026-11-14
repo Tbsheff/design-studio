@@ -248,15 +248,19 @@ const isKitCard = (
   tokens: readonly string[]
 ): boolean => {
   const slot = context.card.slot ?? CARD_SLOT;
-
-  if (toAttribute(element, "data-slot") === slot) {
-    return true;
-  }
-
   const owned = new Set(tokens);
   const { base } = context.card.component;
+  const shared = base.filter((token) => owned.has(token)).length;
 
-  return base.length > 0 && base.every((token) => owned.has(token));
+  if (base.length === 0) {
+    return toAttribute(element, "data-slot") === slot;
+  }
+
+  if (toAttribute(element, "data-slot") === slot) {
+    return shared * 2 >= base.length;
+  }
+
+  return shared === base.length;
 };
 
 const listChildElements = (element: HtmlElement): HtmlElement[] =>

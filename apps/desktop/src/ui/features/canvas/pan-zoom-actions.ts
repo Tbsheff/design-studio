@@ -4,6 +4,7 @@ import { uiStore } from "../../platform/storage.js";
 import type { ZoomSetting } from "../../platform/storage.js";
 import type { Box } from "./canvas-frames-model.js";
 import {
+  RAIL_INSET,
   SELECTION_PAD,
   WHEEL_IDLE_MS,
   ZOOM_STEP,
@@ -13,6 +14,8 @@ import {
 import { paintState, schedulePaint } from "./pan-zoom-paint.js";
 import { toNumericBase, toView } from "./pan-zoom-state.js";
 import type { PanZoomState, Stage } from "./pan-zoom-state.js";
+
+const ACTUAL_ZOOM = 1;
 
 const toCommittedZoom = (
   stage: Stage,
@@ -106,9 +109,33 @@ const wheelZoomAt = (
   );
 };
 
+const setRailInset = (state: PanZoomState, zoom: number): void => {
+  const { active } = state.live.layout;
+  const base = toNumericBase(state.live.stage, active, zoom);
+  const left = base.x + state.offset.x;
+
+  if (left >= RAIL_INSET || left + active.width * zoom <= RAIL_INSET) {
+    return;
+  }
+
+  state.offset = { ...state.offset, x: state.offset.x + RAIL_INSET - left };
+};
+
 const zoomTo = (state: PanZoomState, zoom: number): void => {
   const { stage } = state.live;
-  zoomAt(state, stage.width / 2, stage.height / 2, zoom / toView(state).zoom);
+
+  const next = placeAt(
+    state,
+    stage.width / 2,
+    stage.height / 2,
+    zoom / toView(state).zoom
+  );
+
+  if (next === ACTUAL_ZOOM) {
+    setRailInset(state, next);
+  }
+
+  commitZoom(state, next);
 };
 
 const zoomStep = (state: PanZoomState, direction: 1 | -1): void =>

@@ -1,0 +1,16 @@
+photo-text: leased page, 3 nodes, 2 under AA, reasons [imgNode, bgGradient, bgGradient], 205 ms
+{"backend":"chrome","page":"index.html","round":1,"ms":1418,"axeMs":284,"photo":["h1 | high | Text on a photo or gradient is 1.2:1 at its lightest part (AA needs 3:1). Add a scrim behind the text, a text shadow, or move the text off the light part.","h2 | high | Text on a photo or gradient is 1.3:1 at its lightest part (AA needs 3:1). Add a scrim behind the text, a text shadow, or move the text off the light part."],"errors":[],"shot":"/Volumes/DevProjects/code/ds-wt/pt-out/chrome/index-desktop.png"}
+photo-text: leased page, 3 nodes, 2 under AA, reasons [imgNode, bgGradient, bgGradient], 196 ms
+{"backend":"chrome","page":"index.html","round":2,"ms":714,"axeMs":275,"photo":["h1 | high | Text on a photo or gradient is 1.2:1 at its lightest part (AA needs 3:1). Add a scrim behind the text, a text shadow, or move the text off the light part.","h2 | high | Text on a photo or gradient is 1.3:1 at its lightest part (AA needs 3:1). Add a scrim behind the text, a text shadow, or move the text off the light part."],"errors":[],"shot":"/Volumes/DevProjects/code/ds-wt/pt-out/chrome/index-desktop.png"}
+photo-text: leased page, 3 nodes, 0 under AA, reasons [bgGradient, bgGradient, bgGradient], 206 ms
+{"backend":"chrome","page":"plan.html","round":1,"ms":607,"axeMs":238,"photo":[],"errors":[],"shot":"/Volumes/DevProjects/code/ds-wt/pt-out/chrome/plan-desktop.png"}
+photo-text: leased page, 3 nodes, 0 under AA, reasons [bgGradient, bgGradient, bgGradient], 229 ms
+{"backend":"chrome","page":"plan.html","round":2,"ms":646,"axeMs":263,"photo":[],"errors":[],"shot":"/Volumes/DevProjects/code/ds-wt/pt-out/chrome/plan-desktop.png"}
+photo-text: leased page, 3 nodes, 0 under AA, reasons [bgGradient, bgGradient, bgGradient], 205 ms
+{"backend":"chrome","page":"fixed.html","round":1,"ms":605,"axeMs":238,"photo":[],"errors":[],"shot":"/Volumes/DevProjects/code/ds-wt/pt-out/chrome/fixed-desktop.png"}
+photo-text: leased page, 3 nodes, 0 under AA, reasons [bgGradient, bgGradient, bgGradient], 203 ms
+{"backend":"chrome","page":"fixed.html","round":2,"ms":616,"axeMs":237,"photo":[],"errors":[],"shot":"/Volumes/DevProjects/code/ds-wt/pt-out/chrome/fixed-desktop.png"}
+photo-text: leased page, 0 nodes, 0 under AA, reasons [], 1 ms
+{"backend":"chrome","page":"plain.html","round":1,"ms":308,"axeMs":39,"photo":[],"errors":[],"shot":"/Volumes/DevProjects/code/ds-wt/pt-out/chrome/plain-desktop.png"}
+photo-text: leased page, 0 nodes, 0 under AA, reasons [], 1 ms
+{"backend":"chrome","page":"plain.html","round":2,"ms":315,"axeMs":41,"photo":[],"errors":[],"shot":"/Volumes/DevProjects/code/ds-wt/pt-out/chrome/plain-desktop.png"}

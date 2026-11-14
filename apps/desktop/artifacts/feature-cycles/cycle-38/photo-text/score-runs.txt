@@ -1,0 +1,4 @@
+photo-text: leased page, 3 nodes, 1 under AA, reasons [pseudoContent, pseudoContent, pseudoContent, pseudoContent, pseudoContent, pseudoContent, pseudoContent, pseudoContent, pseudoContent], 227 ms
+{"backend":"score-main","page":"index.html","round":1,"ms":1991,"axeMs":318,"photo":["li:nth-child(1) > a[href$=\"#days\"] | high | Text on a photo or gradient is 4.3:1 at its lightest part (AA needs 4.5:1). Add a scrim behind the text, a text shadow, or move the text off the light part."],"errors":[],"shot":"/Volumes/DevProjects/code/ds-wt/pt-out/score-main/index-desktop.png"}
+photo-text: leased page, 3 nodes, 0 under AA, reasons [pseudoContent, pseudoContent, pseudoContent, pseudoContent, pseudoContent, pseudoContent, pseudoContent, pseudoContent, pseudoContent], 226 ms
+{"backend":"score-branch","page":"index.html","round":1,"ms":1879,"axeMs":320,"photo":[],"errors":[],"shot":"/Volumes/DevProjects/code/ds-wt/pt-out/score-branch/index-desktop.png"}

@@ -1,0 +1,16 @@
+photo-text: leased page, 3 nodes, 2 under AA, reasons [imgNode, bgGradient, bgGradient], 132 ms
+{"backend":"electron","page":"index.html","round":1,"ms":944,"axeMs":239,"photo":["h1 | high | Text on a photo or gradient is 1.1:1 at its lightest part (AA needs 3:1). Add a scrim behind the text, a text shadow, or move the text off the light part.","h2 | high | Text on a photo or gradient is 1.3:1 at its lightest part (AA needs 3:1). Add a scrim behind the text, a text shadow, or move the text off the light part."],"errors":[],"shot":"/Volumes/DevProjects/code/ds-wt/pt-out/electron/index-desktop.png"}
+photo-text: leased page, 3 nodes, 2 under AA, reasons [imgNode, bgGradient, bgGradient], 140 ms
+{"backend":"electron","page":"index.html","round":2,"ms":681,"axeMs":242,"photo":["h1 | high | Text on a photo or gradient is 1.1:1 at its lightest part (AA needs 3:1). Add a scrim behind the text, a text shadow, or move the text off the light part.","h2 | high | Text on a photo or gradient is 1.3:1 at its lightest part (AA needs 3:1). Add a scrim behind the text, a text shadow, or move the text off the light part."],"errors":[],"shot":"/Volumes/DevProjects/code/ds-wt/pt-out/electron/index-desktop.png"}
+photo-text: leased page, 3 nodes, 0 under AA, reasons [bgGradient, bgGradient, bgGradient], 123 ms
+{"backend":"electron","page":"plan.html","round":1,"ms":514,"axeMs":158,"photo":[],"errors":[],"shot":"/Volumes/DevProjects/code/ds-wt/pt-out/electron/plan-desktop.png"}
+photo-text: leased page, 3 nodes, 0 under AA, reasons [bgGradient, bgGradient, bgGradient], 102 ms
+{"backend":"electron","page":"plan.html","round":2,"ms":480,"axeMs":132,"photo":[],"errors":[],"shot":"/Volumes/DevProjects/code/ds-wt/pt-out/electron/plan-desktop.png"}
+photo-text: leased page, 3 nodes, 0 under AA, reasons [bgGradient, bgGradient, bgGradient], 110 ms
+{"backend":"electron","page":"fixed.html","round":1,"ms":493,"axeMs":140,"photo":[],"errors":[],"shot":"/Volumes/DevProjects/code/ds-wt/pt-out/electron/fixed-desktop.png"}
+photo-text: leased page, 3 nodes, 0 under AA, reasons [bgGradient, bgGradient, bgGradient], 106 ms
+{"backend":"electron","page":"fixed.html","round":2,"ms":483,"axeMs":138,"photo":[],"errors":[],"shot":"/Volumes/DevProjects/code/ds-wt/pt-out/electron/fixed-desktop.png"}
+photo-text: leased page, 0 nodes, 0 under AA, reasons [], 0 ms
+{"backend":"electron","page":"plain.html","round":1,"ms":296,"axeMs":30,"photo":[],"errors":[],"shot":"/Volumes/DevProjects/code/ds-wt/pt-out/electron/plain-desktop.png"}
+photo-text: leased page, 0 nodes, 0 under AA, reasons [], 0 ms
+{"backend":"electron","page":"plain.html","round":2,"ms":282,"axeMs":30,"photo":[],"errors":[],"shot":"/Volumes/DevProjects/code/ds-wt/pt-out/electron/plain-desktop.png"}

@@ -1,0 +1,6 @@
+port.start (POST /api/port/start) to run start, mock driver, Bonaparte clone ds-wt/po-bp (git clone --no-local, 46,860 files, appDir apps/dashboard).
+Each call: new route, then the run is canceled and the next call waits until it ends. Call 0 is the warm-up and is not in the p50.
+main (d274c9cff, own data folder): warm-up 10095 ms; 425, 480, 494, 1030, 1665 -> p50 494 ms
+branch pass 1:                      warm-up 2751 ms;  396, 455, 477, 540, 886  -> p50 477 ms
+branch pass 2:                      warm-up 1148 ms;  405, 468, 491, 623, 1382 -> p50 491 ms
+Clone git status after all runs: clean.

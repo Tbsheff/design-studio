@@ -74,7 +74,7 @@ import { readMentionFiles } from "./mentions.js";
 import { createFolderPicker } from "./pick-folder.js";
 import type { FolderPicker } from "./pick-folder.js";
 import { rulesLoader } from "./rules-routes.js";
-import { applyRunFollowUp } from "./run-follow-up.js";
+import { applyRunFollowUp, toNextRequest } from "./run-follow-up.js";
 import { toRunRepoContext } from "./run-repo-context.js";
 import type { StreamTracker } from "./stream-routes.js";
 import { unavailableThumbnails } from "./unavailable-thumbnails.js";
@@ -498,13 +498,11 @@ const createAppContext = (deps: AppDeps) => {
       if (!direction || runner.isRunning(pid, did)) {
         return;
       }
-      await startRun(project, direction, {
-        mode: previous.mode,
-        prompt: next.text,
-        ...(previous.level ? { level: previous.level } : {}),
-        ...(previous.effort ? { effort: previous.effort } : {}),
-        ...(previous.canvas ? { canvas: previous.canvas } : {}),
-      });
+      const request = toNextRequest(previous, next);
+
+      if (request !== null) {
+        await startRun(project, direction, request);
+      }
     } catch (error) {
       console.error(`[http] could not send the ${next.reason} message`, error);
     }

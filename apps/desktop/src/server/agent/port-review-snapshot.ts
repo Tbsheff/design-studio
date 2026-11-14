@@ -50,6 +50,8 @@ const STORE_CAP = 6;
 
 const PENDING_PREFIX = "pending-";
 
+const PENDING_MAX_AGE_MS = 3_600_000;
+
 const START_TAG = /<port-start\b[^>]*\btree="(?<tree>[\da-f]+)"/u;
 
 const toAppKey = (objects: string): string =>
@@ -149,27 +151,46 @@ const toStoreAge = async (dir: string): Promise<StoreAge | null> => {
   }
 };
 
+const deleteStores = async (ages: readonly StoreAge[]): Promise<void> => {
+  await Promise.all(
+    ages.map((age) => rm(age.dir, { force: true, recursive: true }))
+  );
+};
+
+const toStoreAges = async (dirs: readonly string[]): Promise<StoreAge[]> => {
+  const ages = await Promise.all(dirs.map((dir) => toStoreAge(dir)));
+
+  return ages.filter((age): age is StoreAge => age !== null);
+};
+
 const deleteOldStores = async (app: AppGit): Promise<void> => {
   const names = await readdir(app.storeRoot);
 
   const dirs: string[] = [];
+  const pendings: string[] = [];
 
   for (const name of names) {
-    if (!name.startsWith(PENDING_PREFIX)) {
+    if (name.startsWith(PENDING_PREFIX)) {
+      pendings.push(path.join(app.storeRoot, name));
+    } else {
       dirs.push(path.join(app.storeRoot, name));
     }
   }
 
-  const ages = await Promise.all(dirs.map((dir) => toStoreAge(dir)));
+  const [ages, pendingAges] = await Promise.all([
+    toStoreAges(dirs),
+    toStoreAges(pendings),
+  ]);
+
+  const staleAt = Date.now() - PENDING_MAX_AGE_MS;
 
   const old = ages
-    .filter((age): age is StoreAge => age !== null)
     .toSorted((left, right) => right.at - left.at)
     .slice(STORE_CAP);
 
-  await Promise.all(
-    old.map((age) => rm(age.dir, { force: true, recursive: true }))
-  );
+  const stale = pendingAges.filter((age) => age.at < staleAt);
+
+  await deleteStores([...old, ...stale]);
 };
 
 const moveStore = async (pending: string, store: string): Promise<boolean> => {

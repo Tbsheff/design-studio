@@ -13,13 +13,14 @@ import {
 import type {
   PreviewPort,
   SelectionContext,
+  SelectionStack,
   StackingKeyDetail,
 } from "./deps.js";
 import { writeStacking } from "./stacking-api.js";
 import type { StackingIds } from "./stacking-api.js";
 import { breakpointOf } from "./stacking-model.js";
 import type { StackingEdit } from "./stacking-model.js";
-import { toZPlan } from "./z-order-model.js";
+import { toCompare, toPaintKey, toZPlan } from "./z-order-model.js";
 import type { ZStep, ZStop, ZWrite } from "./z-order-model.js";
 import { readStack } from "./z-order-read.js";
 
@@ -52,6 +53,8 @@ const IS_MAC = isMacPlatform();
 const STEP_KEYS = [
   { appKey: "layer-forward", keyId: "bring-forward", step: "forward" },
   { appKey: "layer-backward", keyId: "send-backward", step: "backward" },
+  { appKey: "layer-front", keyId: "bring-to-front", step: "front" },
+  { appKey: "layer-back", keyId: "send-to-back", step: "back" },
 ] as const;
 
 type StepKey = (typeof STEP_KEYS)[number];
@@ -92,6 +95,21 @@ const toZEdit = (write: ZWrite): StackingEdit => {
   return { position: write.position, zIndex: write.zIndex };
 };
 
+const runWrites = async (
+  run: StepRun,
+  writes: readonly ZWrite[]
+): Promise<void> => {
+  const write = writes.at(0) ?? null;
+
+  if (write === null) {
+    return;
+  }
+
+  await writeStacking(run.ids, toTarget(write), run.breakpoint, toZEdit(write));
+
+  await runWrites(run, writes.slice(1));
+};
+
 const runOneStep = async (
   run: StepRun,
   target: SelectionContext
@@ -108,12 +126,7 @@ const runOneStep = async (
     return plan.stop;
   }
 
-  await writeStacking(
-    run.ids,
-    toTarget(plan.write),
-    run.breakpoint,
-    toZEdit(plan.write)
-  );
+  await runWrites(run, plan.writes);
 
   return null;
 };
@@ -139,9 +152,50 @@ const runSteps = async (
   return runSteps(run, targets.slice(1), next);
 };
 
+interface PaintEntry {
+  readonly stack: SelectionStack | null;
+  readonly target: SelectionContext;
+}
+
+const readEntries = (
+  run: StepRun,
+  targets: readonly SelectionContext[]
+): Promise<PaintEntry[]> =>
+  Promise.all(
+    targets.map(async (target) => ({
+      stack: await readStack(run.options.port?.current ?? null, target),
+      target,
+    }))
+  );
+
+const toPaintCompare = (one: PaintEntry, two: PaintEntry): number => {
+  if (one.stack === null || two.stack === null) {
+    return 0;
+  }
+
+  return toCompare(toPaintKey(one.stack.self), toPaintKey(two.stack.self));
+};
+
+const toRunOrder = async (run: StepRun): Promise<SelectionContext[]> => {
+  const targets = toDomOrder(run.options.selection);
+
+  if (targets.length < 2 || run.step === "forward" || run.step === "backward") {
+    return targets;
+  }
+
+  const read = await readEntries(run, targets);
+  const entries = read.toSorted(toPaintCompare);
+
+  if (run.step === "back") {
+    entries.reverse();
+  }
+
+  return entries.map((entry) => entry.target);
+};
+
 const runZStep = async (run: StepRun): Promise<void> => {
   try {
-    const result = await runSteps(run, toDomOrder(run.options.selection), {
+    const result = await runSteps(run, await toRunOrder(run), {
       stop: null,
       wrote: 0,
     });

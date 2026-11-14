@@ -48,8 +48,10 @@ const runPreviewStyleKey = (id: AppKey): boolean => {
 };
 
 const STACKING_APP_KEYS: ReadonlySet<AppKey> = new Set<StackingAppKey>([
+  "layer-back",
   "layer-backward",
   "layer-forward",
+  "layer-front",
 ]);
 
 const runPreviewStackingKey = (id: AppKey): boolean => {

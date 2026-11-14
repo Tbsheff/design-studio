@@ -1626,6 +1626,8 @@ export type AppKey =
   | "style-paste"
   | "layer-forward"
   | "layer-backward"
+  | "layer-front"
+  | "layer-back"
   | "view-outline";
 
 const MOD_APP_KEYS: Record<string, AppKey> = {
@@ -1674,12 +1676,21 @@ const LAYER_APP_KEYS = new Map<string, AppKey>([
   ["BracketRight", "layer-forward"],
 ]);
 
+const LAYER_SHIFT_APP_KEYS = new Map<string, AppKey>([
+  ["BracketLeft", "layer-back"],
+  ["BracketRight", "layer-front"],
+]);
+
 const layerAppKeyOf = (
   event: PlainKeyEvent,
   typing: boolean
 ): AppKey | null => {
-  if (typing || event.shiftKey || !(event.metaKey || event.ctrlKey)) {
+  if (typing || !(event.metaKey || event.ctrlKey)) {
     return null;
+  }
+
+  if (event.shiftKey) {
+    return LAYER_SHIFT_APP_KEYS.get(event.code) ?? null;
   }
 
   return LAYER_APP_KEYS.get(event.code) ?? null;

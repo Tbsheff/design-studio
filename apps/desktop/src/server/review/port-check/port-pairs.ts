@@ -149,20 +149,41 @@ const toNodeKeys = (nodes: readonly PairNode[]): Map<string, number> => {
   return keys;
 };
 
+const toLeafCounts = (
+  keys: ReadonlyMap<string, number>
+): Map<string, number> => {
+  const counts = new Map<string, number>();
+
+  for (const key of keys.keys()) {
+    if (key.endsWith(":0")) {
+      const group = key.slice(0, key.lastIndexOf("#"));
+
+      counts.set(group, (counts.get(group) ?? 0) + 1);
+    }
+  }
+
+  return counts;
+};
+
 const toPairs = (
   app: readonly PairNode[],
   prototype: readonly PairNode[]
 ): PortPair[] => {
   const prototypeKeys = toNodeKeys(prototype);
+  const appKeys = toNodeKeys(app);
+  const appCounts = toLeafCounts(appKeys);
+  const prototypeCounts = toLeafCounts(prototypeKeys);
   const pairs: PortPair[] = [];
 
-  for (const [key, index] of toNodeKeys(app)) {
+  for (const [key, index] of appKeys) {
+    const group = key.slice(0, key.lastIndexOf("#"));
+    const isSameCount = appCounts.get(group) === prototypeCounts.get(group);
     const appNode = app[index] ?? null;
 
     const prototypeNode =
       prototype[prototypeKeys.get(key) ?? NO_PARENT] ?? null;
 
-    if (appNode !== null && prototypeNode !== null) {
+    if (isSameCount && appNode !== null && prototypeNode !== null) {
       pairs.push({
         app: appNode,
         appIndex: index,

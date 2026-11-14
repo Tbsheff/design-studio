@@ -1,0 +1,4 @@
+[agent] dark check: no page has dark values, so no dark render
+pass 1: 0 line(s), 306 ms, 0 dark render(s)
+
+opening 1: null

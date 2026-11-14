@@ -1,0 +1,2 @@
+opening 1: You finished a prototype, so the studio checked each page in dark. Each page must keep AA text contrast in dark too, as share Play shows it when the viewer picks dark.
+opening 2: You edited again after the studio checks, so the studio checked each page in dark once more. These gaps are left.

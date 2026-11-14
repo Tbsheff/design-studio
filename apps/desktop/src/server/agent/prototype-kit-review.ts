@@ -15,6 +15,7 @@ import {
 } from "../components/kit-drift/kit-drift-prototype.js";
 import type { PrototypeDrift } from "../components/kit-drift/kit-drift-prototype.js";
 import type { AppReviewGaps } from "./final-check.js";
+import { listDarkLines } from "./prototype-dark-review.js";
 import {
   getFlow,
   listFlowLines,
@@ -282,29 +283,34 @@ const listKitDriftLines = async (
 const listFlowPhoneLines = async (
   ctx: FlowContext,
   preview: PreviewService
-): Promise<readonly [string[], string[]]> => {
+): Promise<readonly [string[], string[], string[]]> => {
   const flow = await getFlow(ctx);
-  const phone = await listPhoneLines(ctx, preview, flow.pages);
 
-  return [listFlowLines(flow), phone];
+  const [phone, dark] = await Promise.all([
+    listPhoneLines(ctx, preview, flow.pages),
+    listDarkLines(ctx, preview, flow.pages),
+  ]);
+
+  return [listFlowLines(flow), phone, dark];
 };
 
 const listKitLines = async (
   ctx: FlowContext,
   preview: PreviewService
 ): Promise<string[]> => {
-  const [kit, [flow, phone]] = await Promise.all([
+  const [kit, [flow, phone, dark]] = await Promise.all([
     listKitDriftLines(ctx, preview),
     listFlowPhoneLines(ctx, preview),
   ]);
 
   LINE_COUNTS.set(ctx, {
+    dark: dark.length,
     flow: flow.length,
     kit: kit.length,
     phone: phone.length,
   });
 
-  return [...kit, ...flow, ...phone];
+  return [...kit, ...flow, ...phone, ...dark];
 };
 
 const toKitGaps = (ctx: KitContext, hasEdit: boolean): AppReviewGaps | null => {
@@ -345,7 +351,7 @@ const toReviewOpening = (gaps: AppReviewGaps, pass: number): string | null => {
 
   if (ctx !== null) {
     return toCheckOpening(
-      LINE_COUNTS.get(ctx) ?? { flow: 0, kit: 0, phone: 0 },
+      LINE_COUNTS.get(ctx) ?? { dark: 0, flow: 0, kit: 0, phone: 0 },
       pass
     );
   }

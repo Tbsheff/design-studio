@@ -1,0 +1,5 @@
+[agent] dark check: rendered index.html, plans.html, confirm.html in 1083 ms
+pass 1: 2 line(s), 1106 ms, 3 dark render(s)
+- Dark: 6 text items on plans.html are under AA contrast in dark (first: ".plan:nth-child(1) > div > strong" 1.2:1). Use token colors such as var(--fg), not raw colors, then take get_screenshot with colorScheme dark.
+- Dark: 2 text items on confirm.html are under AA contrast in dark (first: "#plan-price" 1.2:1). Use token colors such as var(--fg), not raw colors, then take get_screenshot with colorScheme dark.
+opening 1: You finished a prototype, so the studio checked each page in dark. Each page must keep AA text contrast in dark too, as share Play shows it when the viewer picks dark.

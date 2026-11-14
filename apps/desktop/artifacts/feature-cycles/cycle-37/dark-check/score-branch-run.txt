@@ -1,0 +1,4 @@
+[agent] dark check: rendered index.html, plans.html, confirmation.html in 916 ms
+pass 1: 0 line(s), 931 ms, 3 dark render(s)
+
+opening 1: null

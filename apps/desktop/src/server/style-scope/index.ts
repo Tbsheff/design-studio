@@ -23,6 +23,16 @@ export type {
   SetEffectCommand,
 } from "./effect/index.js";
 
+export { DividerStore, DividerWriter } from "./divider/index.js";
+
+export type {
+  DividerChange,
+  DividerStoreApi,
+  DividerWriterApi,
+  GetDividerCommand,
+  SetDividerCommand,
+} from "./divider/index.js";
+
 export { FillStore, FillWriter } from "./fill/index.js";
 
 export type {

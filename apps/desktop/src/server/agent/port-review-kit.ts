@@ -126,6 +126,10 @@ const toRawText = (find: PortKitFind): string => {
     return "has a link with button classes";
   }
 
+  if (find.tag === "skeleton") {
+    return "has a hand-made loading block (a gray animate-pulse div)";
+  }
+
   return `has a raw <${find.tag}> with ${find.tag} classes`;
 };
 

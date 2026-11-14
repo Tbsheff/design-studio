@@ -31,6 +31,7 @@ interface FrameSelectionKeysInput {
   readonly frames: CanvasFrames;
   readonly isBlocked: boolean;
   readonly removeFramesAt: (ids: readonly string[]) => void;
+  readonly selectSiblings: () => void;
   readonly selectionCount: number;
 }
 
@@ -81,7 +82,13 @@ const runSelectionKey = (
   const { frames } = input;
   const ids = toSelectedIds(frames.projectId);
 
-  if (isSelectAllKey(event) && input.selectionCount === 0) {
+  if (isSelectAllKey(event) && input.selectionCount > 0) {
+    input.selectSiblings();
+
+    return true;
+  }
+
+  if (isSelectAllKey(event)) {
     setSelectedIds(frames.projectId, toVisibleIds(frames.layout));
 
     return true;

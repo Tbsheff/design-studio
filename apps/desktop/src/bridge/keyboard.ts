@@ -2,6 +2,7 @@ import { selectMoveOf } from "@design-studio/contracts";
 
 import { nudgeStepOf } from "../shared/nudge.js";
 import { reorderMoveOf } from "../shared/reorder.js";
+import { isSelectSiblingsKey, toResizeChord } from "../shared/resize-step.js";
 import { structureKeyOf } from "../shared/structure-keys.js";
 import type { BridgeContext, MessageHandlers } from "./bridge-types.js";
 import {
@@ -14,10 +15,14 @@ import {
 } from "./dom-input.js";
 import { queryElement, selectorFor } from "./element-info.js";
 import { nudgeBaseOf } from "./free-move.js";
-import { moveSelection } from "./layers.js";
+import { isLayer, moveSelection } from "./layers.js";
 
 type KeyForwarders = Record<
-  "forwardNudgeKey" | "forwardReorderKey" | "forwardStructureKey",
+  | "forwardNudgeKey"
+  | "forwardReorderKey"
+  | "forwardSiblingKey"
+  | "forwardSizeKey"
+  | "forwardStructureKey",
   (event: KeyboardEvent) => boolean
 >;
 
@@ -40,6 +45,20 @@ const isKeptForText = (key: string, event: KeyboardEvent): boolean =>
   (key === "copy" && hasTextSelection());
 
 type KeyboardHandlers = Pick<MessageHandlers, "nudge" | "select-relative">;
+
+const toSiblingLayers = (element: Element): Element[] => {
+  const parent = element.parentElement;
+
+  if (
+    !parent ||
+    parent === document.documentElement ||
+    element === document.body
+  ) {
+    return [element];
+  }
+
+  return [...parent.children].filter((child) => isLayer(child));
+};
 
 const createPostNudge = (context: BridgeContext): PostNudge => {
   const { state, post, textEditor } = context;
@@ -83,7 +102,7 @@ const createKeyboardHandlers = (
   context: BridgeContext,
   postNudge: PostNudge
 ): KeyboardHandlers => {
-  const { state, textEditor, postSelect } = context;
+  const { state, textEditor, postSelect, postSelectMany } = context;
 
   const selectFirstLayer = (): void => {
     const first = moveSelection(document.body, "child");
@@ -109,6 +128,14 @@ const createKeyboardHandlers = (
         base = queryElement(message.selector);
       }
 
+      if (message.move === "siblings") {
+        if (base) {
+          void postSelectMany(toSiblingLayers(base), false);
+        }
+
+        return;
+      }
+
       if (message.move === "child" && textEditor.canEdit(base)) {
         return textEditor.start(base);
       }
@@ -128,14 +155,64 @@ const createKeyboardHandlers = (
   };
 };
 
+const createSelectionForwarders = (
+  context: BridgeContext
+): Pick<KeyForwarders, "forwardSiblingKey" | "forwardSizeKey"> => {
+  const { state, post, textEditor, postSelectMany } = context;
+
+  const toFreeSelected = (event: KeyboardEvent): Element | null => {
+    const { selected } = state;
+
+    if (
+      !selected?.isConnected ||
+      textEditor.editing() ||
+      isTypingElement(eventElement(event))
+    ) {
+      return null;
+    }
+
+    return selected;
+  };
+
+  const forwardSizeKey = (event: KeyboardEvent): boolean => {
+    const chord = toResizeChord(event);
+
+    if (!chord || !toFreeSelected(event)) {
+      return false;
+    }
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    post({ key: chord, type: "arrange-key" });
+
+    return true;
+  };
+
+  const forwardSiblingKey = (event: KeyboardEvent): boolean => {
+    const selected = !event.repeat && toFreeSelected(event);
+
+    if (!selected || !isSelectSiblingsKey(event)) {
+      return false;
+    }
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    void postSelectMany(toSiblingLayers(selected), false);
+
+    return true;
+  };
+
+  return { forwardSiblingKey, forwardSizeKey };
+};
+
 const createKeyForwarders = (
   context: BridgeContext,
   postNudge: PostNudge
-): Pick<
-  KeyForwarders,
-  "forwardNudgeKey" | "forwardReorderKey" | "forwardStructureKey"
-> => {
+): KeyForwarders => {
   const { state, post } = context;
+
+  const { forwardSiblingKey, forwardSizeKey } =
+    createSelectionForwarders(context);
 
   const forwardStructureKey = (event: KeyboardEvent): boolean => {
     const { selected } = state;
@@ -192,7 +269,13 @@ const createKeyForwarders = (
     return true;
   };
 
-  return { forwardNudgeKey, forwardReorderKey, forwardStructureKey };
+  return {
+    forwardNudgeKey,
+    forwardReorderKey,
+    forwardSiblingKey,
+    forwardSizeKey,
+    forwardStructureKey,
+  };
 };
 
 const createEscapeHandlers = (context: BridgeContext): EscapeHandlers => {
@@ -286,8 +369,12 @@ const installKeyboard = (
 ): void => {
   const { state, textEditor, links } = context;
 
-  const { forwardNudgeKey, forwardReorderKey, forwardStructureKey } =
-    createKeyForwarders(context, postNudge);
+  const forwarders = createKeyForwarders(context, postNudge);
+
+  const forwardLayerKey = (event: KeyboardEvent): boolean =>
+    forwarders.forwardStructureKey(event) ||
+    forwarders.forwardSizeKey(event) ||
+    forwarders.forwardSiblingKey(event);
 
   const { cancelMarquee, clearOnEscape, exitSelectMode } =
     createEscapeHandlers(context);
@@ -315,10 +402,10 @@ const installKeyboard = (
     onAltChange(event);
 
     if (
-      forwardReorderKey(event) ||
+      forwarders.forwardReorderKey(event) ||
       state.mode !== "select" ||
-      forwardStructureKey(event) ||
-      forwardNudgeKey(event)
+      forwardLayerKey(event) ||
+      forwarders.forwardNudgeKey(event)
     ) {
       return;
     }

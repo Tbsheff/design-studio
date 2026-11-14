@@ -265,6 +265,7 @@ export {
   isEveryOnTypeScale,
   toNextDigits,
   toOpacityValue,
+  toScaleStep,
   toTypeValue,
 };
 

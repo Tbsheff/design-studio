@@ -3,6 +3,18 @@ import type { KeyBinding } from "./keymap.js";
 const EDIT_KEYS = [
   {
     group: "Selection",
+    id: "layer-resize",
+    keys: ["Mod+→", "Mod+←", "Mod+↓", "Mod+↑"],
+    label: "Resize by 1 px: → ← width, ↓ ↑ height (Shift: 10 px)",
+  },
+  {
+    group: "Selection",
+    id: "select-siblings",
+    keys: ["Mod+A"],
+    label: "Select the layer and its siblings, or all frames",
+  },
+  {
+    group: "Selection",
     id: "opacity-keys",
     keys: ["0-9"],
     label: "Opacity: 1 is 10%, 0 is 100%, 2 digits fast for an exact value",

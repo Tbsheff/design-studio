@@ -1,6 +1,9 @@
 import type { Classified } from "./classes.js";
 import type { CssEdit } from "./map.js";
 import type { ClassEdit } from "./plan.js";
+import type { TailwindTheme } from "./theme-model.js";
+
+type ThemeVersion = Pick<TailwindTheme, "version">;
 
 type RotateScaleGroup = "rotate" | "scale-x" | "scale-y";
 
@@ -89,7 +92,23 @@ const toDegrees = (value: string): number | null => {
   return toNumber(text);
 };
 
-const toRotateToken = (value: string): string => {
+const V4 = 4;
+
+const isRotateStep = (
+  size: number,
+  version: TailwindTheme["version"]
+): boolean => {
+  if (version === V4) {
+    return Number.isInteger(size);
+  }
+
+  return ROTATE_STEPS.has(`${size}`);
+};
+
+const toRotateToken = (
+  value: string,
+  version: TailwindTheme["version"]
+): string => {
   const degrees = toDegrees(value);
 
   if (degrees === null) {
@@ -98,7 +117,7 @@ const toRotateToken = (value: string): string => {
 
   const size = Math.abs(degrees);
 
-  if (!ROTATE_STEPS.has(`${size}`)) {
+  if (!isRotateStep(size, version)) {
     return `rotate-[${degrees}deg]`;
   }
 
@@ -185,7 +204,10 @@ const toScaleEdits = (value: string | null): CssEdit[] => {
   ];
 };
 
-const toRotateEdits = (value: string | null): CssEdit[] => {
+const toRotateEdits = (
+  value: string | null,
+  version: TailwindTheme["version"]
+): CssEdit[] => {
   const text = value?.trim() ?? "";
   const isCleared = text === "" || text === "none" || toDegrees(text) === 0;
 
@@ -193,15 +215,18 @@ const toRotateEdits = (value: string | null): CssEdit[] => {
     return [{ group: "rotate", kind: "single", token: null }];
   }
 
-  return [{ group: "rotate", kind: "single", token: toRotateToken(text) }];
+  return [
+    { group: "rotate", kind: "single", token: toRotateToken(text, version) },
+  ];
 };
 
 const toRotateScaleEdits = (
   prop: string,
-  value: string | null
+  value: string | null,
+  theme: ThemeVersion
 ): CssEdit[] | null => {
   if (prop === "rotate") {
-    return toRotateEdits(value);
+    return toRotateEdits(value, theme.version);
   }
 
   if (prop === "scale") {
@@ -219,13 +244,17 @@ const toTransformToken = (value: string): string => {
   return `[transform:${toArbitrary(value)}]`;
 };
 
-const toRotateScaleToken = (prop: string, value: string): string | null => {
+const toRotateScaleToken = (
+  prop: string,
+  value: string,
+  theme: ThemeVersion
+): string | null => {
   if (prop === "transform") {
     return toTransformToken(value);
   }
 
   if (prop === "rotate") {
-    return toRotateToken(value);
+    return toRotateToken(value, theme.version);
   }
 
   if (prop === "scale") {

@@ -18,6 +18,7 @@ interface LayerStyleHostOptions {
   readonly notify: (message: string) => void;
   readonly projectId: string;
   readonly selection: SelectionContext[];
+  readonly variant: string;
 }
 
 interface LayerStyleMenuItem {
@@ -119,7 +120,9 @@ const toCopyItem = (
 const useLayerStyleHost = (options: LayerStyleHostOptions): LayerStyleHost => {
   const [opened, setOpened] = useState(false);
   const copied = useLive(copiedStyleStore);
-  const { busy, directionId, enabled, notify, projectId, selection } = options;
+
+  const { busy, directionId, enabled, notify, projectId, selection, variant } =
+    options;
 
   const close = useCallback((): void => setOpened(false), []);
   const open = useCallback((): void => setOpened(true), []);
@@ -130,6 +133,7 @@ const useLayerStyleHost = (options: LayerStyleHostOptions): LayerStyleHost => {
     notify,
     projectId,
     selection,
+    variant,
   });
 
   const items = useCallback(

@@ -41,10 +41,15 @@ interface Effects {
 
 const EMPTY: EffectState = { error: null, info: null, stamp: "", styles: [] };
 
+interface EffectScope {
+  readonly round: number;
+  readonly variant: string;
+}
+
 const toStamp = (
   ids: EffectIds,
   target: SelectionContext,
-  round: number
+  scope: EffectScope
 ): string => {
   const { source } = target;
 
@@ -52,16 +57,17 @@ const toStamp = (
     return "";
   }
 
-  return `${ids.projectId}/${ids.directionId}/${source.file}:${source.line}:${source.col}#${round}`;
+  return `${ids.projectId}/${ids.directionId}/${source.file}:${source.line}:${source.col}#${scope.round}|${scope.variant}`;
 };
 
 const useEffectState = (
   ids: EffectIds,
   target: SelectionContext,
-  round: number
+  scope: EffectScope
 ): EffectState => {
   const [state, setState] = useState<EffectState>(EMPTY);
-  const stamp = toStamp(ids, target, round);
+  const stamp = toStamp(ids, target, scope);
+  const { variant } = scope;
   const { source } = target;
 
   useEffect(() => {
@@ -74,7 +80,7 @@ const useEffectState = (
     const load = async (): Promise<void> => {
       try {
         const [info, styles] = await Promise.all([
-          readEffects(ids, source),
+          readEffects(ids, source, variant),
           readStyles(ids),
         ]);
 
@@ -93,7 +99,7 @@ const useEffectState = (
     return (): void => {
       live.current = false;
     };
-  }, [ids, source, stamp]);
+  }, [ids, source, stamp, variant]);
 
   if (state.stamp === stamp) {
     return state;
@@ -102,11 +108,16 @@ const useEffectState = (
   return { ...EMPTY, info: state.info, styles: state.styles };
 };
 
-const useEffects = (ids: EffectIds, target: SelectionContext): Effects => {
+const useEffects = (
+  ids: EffectIds,
+  target: SelectionContext,
+  variant: string
+): Effects => {
   const [round, setRound] = useState(0);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const state = useEffectState(ids, target, round);
+  const scope = useMemo(() => ({ round, variant }), [round, variant]);
+  const state = useEffectState(ids, target, scope);
 
   const run = useCallback((write: () => Promise<object>): void => {
     startTransition(async () => {
@@ -123,9 +134,9 @@ const useEffects = (ids: EffectIds, target: SelectionContext): Effects => {
 
   const apply = useCallback(
     (stack: readonly EffectItem[]): void => {
-      run(() => writeEffects(ids, target, stack));
+      run(() => writeEffects(ids, target, { stack, variant }));
     },
-    [ids, run, target]
+    [ids, run, target, variant]
   );
 
   const handleStyle = useCallback(

@@ -17,6 +17,7 @@ interface LayerStyleApplyOptions {
   readonly notify: (message: string) => void;
   readonly projectId: string;
   readonly selection: SelectionContext[];
+  readonly variant: string;
 }
 
 interface LayerStyleApply {
@@ -44,6 +45,7 @@ const useLayerStyleApply = (
         projectId,
         sourceLayerId: current.layerId,
         targetLayerIds: selection.flatMap((item) => toLayerId(item) ?? []),
+        variant: options.variant,
       };
 
       startWork(async () => {
@@ -60,7 +62,7 @@ const useLayerStyleApply = (
         notify(toPasteSummary(result));
       });
     },
-    [close, directionId, notify, projectId, run, selection]
+    [close, directionId, notify, options.variant, projectId, run, selection]
   );
 
   return { apply, isPending };

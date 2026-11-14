@@ -17,7 +17,16 @@ const NO_SOURCE = "This layer has no source location.";
 
 const STYLE_PAGE = 200;
 
-const readEffects = (ids: EffectIds, source: SourceLoc): Promise<EffectInfo> =>
+interface EffectWrite {
+  readonly stack: readonly EffectItem[];
+  readonly variant: string;
+}
+
+const readEffects = (
+  ids: EffectIds,
+  source: SourceLoc,
+  variant: string
+): Promise<EffectInfo> =>
   call(effectRoutes.getEffect, {
     col: source.col,
     directionId: ids.directionId,
@@ -25,6 +34,7 @@ const readEffects = (ids: EffectIds, source: SourceLoc): Promise<EffectInfo> =>
     limit: EFFECT_STACK_MAX,
     line: source.line,
     projectId: ids.projectId,
+    variant,
   });
 
 const readStyles = async (ids: EffectIds): Promise<readonly EffectStyle[]> => {
@@ -41,7 +51,7 @@ const readStyles = async (ids: EffectIds): Promise<readonly EffectStyle[]> => {
 const writeEffects = (
   ids: EffectIds,
   target: SelectionContext,
-  stack: readonly EffectItem[]
+  write: EffectWrite
 ): Promise<WireOutput<typeof setEffect>> => {
   const { selector, source, tag } = target;
 
@@ -51,9 +61,10 @@ const writeEffects = (
 
   return call(effectRoutes.setEffect, {
     directionId: ids.directionId,
-    effects: stack,
+    effects: write.stack,
     projectId: ids.projectId,
     target: { selector, source, tag },
+    variant: write.variant,
   });
 };
 

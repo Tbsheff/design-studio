@@ -38,6 +38,12 @@ const useInspectorSession = (props: InspectorProps): EditSession => {
 
   useSessionHandle(props.session ?? null, session);
 
+  useEffect(() => {
+    if (!hasSelection) {
+      restoreEditVariant(port.current);
+    }
+  }, [hasSelection, port]);
+
   useEffect(() => (): void => restoreEditVariant(port.current), [port]);
 
   return session;

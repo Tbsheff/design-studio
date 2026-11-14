@@ -39,8 +39,6 @@ import {
 } from "./design-system-run.js";
 import { applyDraftMessage } from "./draft-stream.js";
 import {
-  appReviewGaps,
-  appReviewNote,
   appReviewPrompt,
   mergeAppReviews,
   noteReview,
@@ -88,6 +86,7 @@ import {
   type StopReason,
 } from "./polish-loop.js";
 import { buildSystemPrompt } from "./prompt.js";
+import { toReviewGaps, toReviewNote } from "./prototype-review.js";
 import { lockReadOnly } from "./read-only-lock.js";
 import { runReferencePass } from "./reference-check.js";
 import {
@@ -97,6 +96,12 @@ import {
 } from "./regression.js";
 import { withRunLevel } from "./run-level.js";
 import { describeTargetLayout } from "./run-target.js";
+import {
+  toContextTokens,
+  toContextWindow,
+  toRunUsage,
+  type RawUsage,
+} from "./run-usage.js";
 import {
   screenReviewNote,
   screenReviewPrompt,
@@ -459,6 +464,7 @@ interface StreamState {
   currentCallId: string | null;
   callStartedAt: number | null;
   apiMs: number;
+  contextTokens: number;
   onTool?: (name: string, input: unknown) => void;
 }
 
@@ -474,22 +480,7 @@ function newStreamState(toolOrder: string[] = []): StreamState {
     currentCallId: null,
     callStartedAt: null,
     apiMs: 0,
-  };
-}
-
-interface RawUsage {
-  input_tokens?: number | null;
-  output_tokens?: number | null;
-  cache_read_input_tokens?: number | null;
-  cache_creation_input_tokens?: number | null;
-}
-
-function fromRawUsage(raw: RawUsage | null | undefined): RunUsage {
-  return {
-    inputTokens: raw?.input_tokens ?? 0,
-    outputTokens: raw?.output_tokens ?? 0,
-    cacheReadTokens: raw?.cache_read_input_tokens ?? 0,
-    cacheWriteTokens: raw?.cache_creation_input_tokens ?? 0,
+    contextTokens: 0,
   };
 }
 
@@ -539,7 +530,7 @@ function trackStreamUsage(
       state,
       event.message.id,
       event.message.model ?? "",
-      fromRawUsage(event.message.usage)
+      toRunUsage(event.message.usage)
     );
   } else if (event.type === "message_delta" && state.currentCallId) {
     mergeCall(state, state.currentCallId, "", {
@@ -561,7 +552,7 @@ function trackAssistantUsage(
     usage?: RawUsage;
   };
   if (!inner.id || message.parent_tool_use_id) return;
-  mergeCall(state, inner.id, inner.model ?? "", fromRawUsage(inner.usage));
+  mergeCall(state, inner.id, inner.model ?? "", toRunUsage(inner.usage));
 }
 
 function sumUsage(state: StreamState): RunUsage {
@@ -893,14 +884,6 @@ async function buildSdkOptions(
   };
 }
 
-function contextTokensOf(usage: RawUsage | undefined): number {
-  return (
-    (usage?.input_tokens ?? 0) +
-    (usage?.cache_read_input_tokens ?? 0) +
-    (usage?.cache_creation_input_tokens ?? 0)
-  );
-}
-
 function handleStreamEvent(
   message: StreamEventMessage,
   state: StreamState,
@@ -909,8 +892,10 @@ function handleStreamEvent(
   trackStreamUsage(message, state);
   if (message.parent_tool_use_id) return;
   const event = message.event;
-  if (event.type === "message_start")
-    sink.usage(contextTokensOf(event.message.usage as RawUsage | undefined));
+  if (event.type === "message_start") {
+    state.contextTokens = toContextTokens(event.message.usage as RawUsage);
+    sink.usage(state.contextTokens, null);
+  }
   if (event.type !== "content_block_delta") return;
   if (event.delta.type === "text_delta") sink.textDelta(event.delta.text);
   else if (event.delta.type === "thinking_delta")
@@ -1003,6 +988,7 @@ async function handleMessage(
   else if (message.type === "user") handleUser(message, state, sink);
   else if (message.type === "result") {
     state.result = message;
+    sink.usage(state.contextTokens, toContextWindow(message));
     return true;
   }
   return false;
@@ -1324,7 +1310,7 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
     const run = segment.setup.run;
     const gaps = skipsReview(input, total)
       ? null
-      : appReviewGaps(input.ctx, run, run.log?.toolOrder ?? []);
+      : toReviewGaps(input.ctx, run, run.log?.toolOrder ?? []);
     if (!gaps) return null;
     const review = await studioAppReview(
       {
@@ -1396,7 +1382,7 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
     return {
       outcome: {
         ...outcome,
-        finalText: `${outcome.finalText}\n\n${appReviewNote(records)}`,
+        finalText: `${outcome.finalText}\n\n${toReviewNote(input.ctx, records)}`,
       },
       record: mergeAppReviews(records),
     };

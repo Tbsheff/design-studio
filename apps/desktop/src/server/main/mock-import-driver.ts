@@ -98,7 +98,7 @@ const runMockImport = async (
   await sink.sessionStarted(
     ctx.direction.sessionId ?? `mock-${ctx.direction.id}-${runId}`
   );
-  sink.usage(MOCK_CONTEXT_TOKENS);
+  sink.usage(MOCK_CONTEXT_TOKENS, null);
 
   const parts = await buildUserMessageParts(ctx);
 

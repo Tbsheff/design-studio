@@ -1262,7 +1262,7 @@ async function runMock(
     input.ctx.direction.sessionId ??
       `mock-${input.ctx.direction.id}-${input.runId}`
   );
-  input.sink.usage(MOCK_CONTEXT_TOKENS);
+  input.sink.usage(MOCK_CONTEXT_TOKENS, null);
   input.sink.sent({
     imageCount: input.ctx.attachments.length,
     promptHash: "mock",

@@ -89,7 +89,7 @@ export interface DriverSink {
     toolUseId: string,
     check: BashWriteCheck
   ): Promise<BashEditResult>;
-  usage(contextTokens: number): void;
+  usage(contextTokens: number, contextWindow: number | null): void;
   retry(attempt: number, max: number, delayMs: number, error: string): void;
   sessionStarted(sessionId: string): Promise<void>;
   sent(message: SentMessage): void;
@@ -700,15 +700,11 @@ export function createRunLifecycle(
             })
           );
       },
-      usage(contextTokens) {
-        if (
-          !Number.isFinite(contextTokens) ||
-          contextTokens <= 0 ||
-          contextTokens === summary.contextTokens
-        )
-          return;
+      usage(contextTokens, contextWindow) {
+        if (!Number.isFinite(contextTokens) || contextTokens <= 0) return;
+        if (contextTokens === summary.contextTokens && !contextWindow) return;
         summary.contextTokens = contextTokens;
-        emitRun({ type: "run.usage", contextTokens });
+        emitRun({ type: "run.usage", contextTokens, contextWindow });
       },
       retry(attempt, max, delayMs, error) {
         emitRun({ type: "run.retry", attempt, max, delayMs, error });

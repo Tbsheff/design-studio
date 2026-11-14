@@ -8,6 +8,8 @@ const LayerStyleSlot = lazy(async () => {
 
 export { useLayerStyleHost } from "./use-layer-style-host.js";
 
+export { useLayerStyleKeys } from "./use-layer-style-keys.js";
+
 export { LayerStyleSlot };
 
 export type {

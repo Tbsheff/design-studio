@@ -12,7 +12,11 @@ import { toTextEditability } from "../inspector/index.js";
 import { PREVIEW_PAINTED_EVENT } from "../inspector/use-edit-history.js";
 import { parseLayerTree } from "../versions-layers-tokens/layers-tree.js";
 import type { LayerTree } from "../versions-layers-tokens/layers-tree.js";
-import { runPreviewToolKey, toPreviewCommandId } from "./preview-app-keys.js";
+import {
+  runPreviewStyleKey,
+  runPreviewToolKey,
+  toPreviewCommandId,
+} from "./preview-app-keys.js";
 import { toPreviewApi } from "./preview-frames-api.js";
 import type { PreviewApi } from "./preview-frames-api.js";
 import { frameFor } from "./preview-frames-core.js";
@@ -56,7 +60,7 @@ const toRegionStep = (id: AppKey): 1 | -1 => {
 };
 
 const forwardAppKeyToShell = (id: AppKey): void => {
-  if (runPreviewToolKey(id)) {
+  if (runPreviewToolKey(id) || runPreviewStyleKey(id)) {
     return;
   }
 

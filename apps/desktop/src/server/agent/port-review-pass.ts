@@ -4,11 +4,8 @@ import { Result, Schema } from "effect";
 
 import { runAgentTool, runConfirmedAgentTool } from "../mcp/index.js";
 import { toDecoder } from "../platform/decode/index.js";
-import {
-  inspectRouteKit,
-  toHighKitCount,
-  toKitNote,
-} from "./port-review-kit.js";
+import { inspectRouteDark, toGapCount } from "./port-review-dark.js";
+import { inspectRouteKit, toKitNote } from "./port-review-kit.js";
 import { inspectPortMatch, inspectRouteRender } from "./port-review-read.js";
 import type { InspectCall } from "./port-review-read.js";
 import { runRoutesReview } from "./port-review-routes.js";
@@ -73,7 +70,9 @@ const inspectRoute = async (input: PortReviewInput): Promise<PortCheck> => {
   const inspect: InspectCall = (name, body) =>
     runAgentTool(input.runtime, name, body);
 
-  const [match, render, kit] = await Promise.all([
+  const { gaps } = input;
+
+  const [match, render, kit, dark] = await Promise.all([
     inspectPortMatch(inspect, input.gaps.ref),
     inspectRouteRender(input.preview, input.gaps.url, input.gaps.files),
     inspectRouteKit({
@@ -82,13 +81,24 @@ const inspectRoute = async (input: PortReviewInput): Promise<PortCheck> => {
       routePath: input.gaps.ref.routePath,
       workTree: input.gaps.workTree,
     }),
+    inspectRouteDark(
+      {
+        before: gaps.before,
+        direction: gaps.direction,
+        files: gaps.files,
+        project: gaps.project,
+        routePath: gaps.ref.routePath,
+        url: gaps.url,
+      },
+      input.preview
+    ),
   ]);
 
-  return { kit, match, render };
+  return { dark, kit, match, render };
 };
 
 const isKitTrade = (before: PortCheck, after: PortCheck): boolean =>
-  toHighKitCount(after.kit) < toHighKitCount(before.kit) &&
+  toGapCount(after) < toGapCount(before) &&
   (before.match.score ?? 0) - (after.match.score ?? 0) <= KIT_DROP_MAX;
 
 const isLower = (before: PortCheck, after: PortCheck): boolean =>

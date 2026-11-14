@@ -4,7 +4,7 @@ import { copy } from "./copy.js";
 import type { PreviewPort, SaveStatus, SelectionContext } from "./deps.js";
 import { StateChip } from "./state-chip.js";
 import { StateNote } from "./state-note.js";
-import { CHIPS, hasDot } from "./state-styles-model.js";
+import { hasDot } from "./state-styles-model.js";
 import type { ChipId } from "./state-styles-model.js";
 import { useStateStyles } from "./use-state-styles.js";
 
@@ -40,7 +40,7 @@ const StateChipRow = (props: StateChipRowProps): ReactElement => {
   return (
     <fieldset aria-label={copy.groupLabel} className={styles.row}>
       <div className={styles.chips}>
-        {CHIPS.map((chip) => (
+        {state.chips.map((chip) => (
           <StateChip
             chip={chip}
             hasStyles={hasDot(chip, state.styled)}

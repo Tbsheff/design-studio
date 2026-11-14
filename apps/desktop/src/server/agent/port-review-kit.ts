@@ -99,8 +99,11 @@ const inspectRouteKit = async (
     await listScanFiles(scope)
   );
 
+const toHighKitCount = (finds: readonly PortKitFind[] | null): number =>
+  (finds ?? []).filter((find) => find.isHigh).length;
+
 const hasKitGap = (finds: readonly PortKitFind[] | null): boolean =>
-  (finds ?? []).some((find) => find.isHigh);
+  toHighKitCount(finds) > 0;
 
 const toUseText = (find: PortKitFind): string => {
   if (find.importPath === "") {
@@ -179,6 +182,6 @@ const toKitNote = (count: KitCount): string => {
   return ` Kit: ${toElementsText(count.found)} found, ${count.left ?? count.found} left.`;
 };
 
-export { hasKitGap, inspectRouteKit, toKitLines, toKitNote };
+export { hasKitGap, inspectRouteKit, toHighKitCount, toKitLines, toKitNote };
 
 export type { KitCount, KitRouteScope };

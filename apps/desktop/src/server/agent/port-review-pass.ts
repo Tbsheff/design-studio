@@ -4,7 +4,11 @@ import { Result, Schema } from "effect";
 
 import { runAgentTool, runConfirmedAgentTool } from "../mcp/index.js";
 import { toDecoder } from "../platform/decode/index.js";
-import { inspectRouteKit, toKitNote } from "./port-review-kit.js";
+import {
+  inspectRouteKit,
+  toHighKitCount,
+  toKitNote,
+} from "./port-review-kit.js";
 import { inspectPortMatch, inspectRouteRender } from "./port-review-read.js";
 import type { InspectCall } from "./port-review-read.js";
 import { runRoutesReview } from "./port-review-routes.js";
@@ -58,6 +62,8 @@ const WRITTEN_SHOWN = 5;
 
 const WAS_MARK = " (was ";
 
+const KIT_DROP_MAX = 2;
+
 const decodeApplied = toDecoder(
   Schema.fromJsonString(PortAppliedSchema),
   "ignore"
@@ -81,10 +87,15 @@ const inspectRoute = async (input: PortReviewInput): Promise<PortCheck> => {
   return { kit, match, render };
 };
 
+const isKitTrade = (before: PortCheck, after: PortCheck): boolean =>
+  toHighKitCount(after.kit) < toHighKitCount(before.kit) &&
+  (before.match.score ?? 0) - (after.match.score ?? 0) <= KIT_DROP_MAX;
+
 const isLower = (before: PortCheck, after: PortCheck): boolean =>
   before.match.score !== null &&
   after.match.score !== null &&
-  after.match.score < before.match.score;
+  after.match.score < before.match.score &&
+  !isKitTrade(before, after);
 
 const isRaised = (before: PortCheck, after: PortCheck): boolean =>
   before.match.score !== null &&

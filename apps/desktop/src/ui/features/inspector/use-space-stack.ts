@@ -1,3 +1,4 @@
+import type { SelectionContext } from "@design-studio/contracts";
 import { useMemo } from "react";
 
 import type { ElementClasses } from "./element-classes-model.js";
@@ -23,7 +24,8 @@ const toTailwindClasses = (
 
 const toLayoutStack = (
   edit: DirectEdit,
-  classes: ElementClasses | null
+  classes: ElementClasses | null,
+  styles: Readonly<Record<string, string>> | null
 ): SpaceStack | null => {
   const { display } = edit.values;
 
@@ -31,7 +33,10 @@ const toLayoutStack = (
     return null;
   }
 
-  return toSpaceStack(toTailwindClasses(classes));
+  return toSpaceStack(toTailwindClasses(classes), {
+    x: styles?.["stack-gap-x"] ?? null,
+    y: styles?.["stack-gap-y"] ?? null,
+  });
 };
 
 const toStackEdit = (
@@ -42,14 +47,25 @@ const toStackEdit = (
     return null;
   }
 
-  return { ...edit, values: toStackValues(edit.values, stack) };
+  return {
+    ...edit,
+    preview: edit.previewForced,
+    values: toStackValues(edit.values, stack),
+  };
 };
 
 const useSpaceStack = (
   edit: DirectEdit,
-  classes: ElementClasses | null
+  classes: ElementClasses | null,
+  selection: SelectionContext | null
 ): SpaceStackView => {
-  const stack = useMemo(() => toLayoutStack(edit, classes), [edit, classes]);
+  const styles = selection?.styles ?? null;
+
+  const stack = useMemo(
+    () => toLayoutStack(edit, classes, styles),
+    [edit, classes, styles]
+  );
+
   const stackEdit = useMemo(() => toStackEdit(edit, stack), [edit, stack]);
 
   return { stack, stackEdit };

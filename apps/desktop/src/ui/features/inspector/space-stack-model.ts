@@ -29,6 +29,8 @@ const LAYOUT_CLASSES: ReadonlySet<string> = new Set([
 
 const SPACING_PX = 4;
 
+const PX_SUFFIX = /px$/u;
+
 const REM_PX = 16;
 
 const REVERSE = "reverse";
@@ -98,7 +100,24 @@ const toStackClass = (raw: string): StackClass | null => {
   };
 };
 
-const toSpaceStack = (classes: readonly string[] | null): SpaceStack | null => {
+const toMeasuredGap = (measured: string | null): string | null => {
+  if (measured === null) {
+    return null;
+  }
+
+  const amount = Number(measured.replace(PX_SUFFIX, ""));
+
+  if (Number.isNaN(amount) || amount <= 0) {
+    return null;
+  }
+
+  return measured;
+};
+
+const toSpaceStack = (
+  classes: readonly string[] | null,
+  measured: Readonly<Record<StackAxis, string | null>>
+): SpaceStack | null => {
   if (classes === null || classes.some((raw) => LAYOUT_CLASSES.has(raw))) {
     return null;
   }
@@ -119,7 +138,9 @@ const toSpaceStack = (classes: readonly string[] | null): SpaceStack | null => {
     return null;
   }
 
-  const stackGap = toGapText(toSuffixPx(main.suffix));
+  const stackGap =
+    toMeasuredGap(measured[main.axis]) ?? toGapText(toSuffixPx(main.suffix));
+
   const isReversed = found.some((entry) => entry.suffix === REVERSE);
 
   return {

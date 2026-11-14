@@ -1,5 +1,6 @@
 import { ARRANGE_SHORTCUTS } from "../shared/arrange.js";
 import { authoredBox, declaredMargins } from "./authored.js";
+import { toStackGaps } from "./stack-gap.js";
 
 export const REMOVE_LAYOUT_CHORD = "Alt+Shift+KeyA";
 
@@ -95,6 +96,7 @@ export function layoutStyles(
   return {
     ...authoredStyles(element),
     ...declaredMargins(element),
+    ...toStackGaps(element),
     "authored-height": sizes.height ?? "",
     "authored-width": sizes.width ?? "",
     "own-justify-self": computed.justifySelf,

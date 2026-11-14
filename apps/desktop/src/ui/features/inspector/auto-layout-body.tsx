@@ -26,7 +26,9 @@ const AutoLayoutBody = ({ edit, selection, classes }: Props): ReactElement => {
   const isGrid = isGridDisplay(edit.values.display);
   const layout = useAutoLayout(edit, selection);
   const { handleAdd: addLayout, isPending, skipNote } = layout;
-  const { stack, stackEdit } = useSpaceStack(edit, classes);
+
+  const { stack, stackEdit } = useSpaceStack(edit, classes, selection);
+
   const isStackLocked = stack !== null && !stack.isEditable;
 
   const handleAdd = useCallback((): void => {

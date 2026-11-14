@@ -31,14 +31,18 @@ const toReadCanvasText = (direction: Direction): Promise<string | null> =>
 
 const toWithEntryFrame = (
   file: CanvasFile,
-  directionId: string
+  target: { readonly project: Project; readonly direction: Direction },
+  page: string
 ): CanvasFile => {
-  if (file.frames.length > 0) {
+  if (file.frames.length > 0 || page === target.project.entry) {
     return file;
   }
 
-  return applyPlacement(file, [{ ...CANVAS_VIEWPORTS.desktop }], directionId)
-    .file;
+  return applyPlacement(
+    file,
+    [{ ...CANVAS_VIEWPORTS.desktop }],
+    target.direction.id
+  ).file;
 };
 
 const toPlaceFrame = async (
@@ -54,7 +58,7 @@ const toPlaceFrame = async (
     target.project,
     (file) => {
       const next = applyPlacement(
-        toWithEntryFrame(file, target.direction.id),
+        toWithEntryFrame(file, target, spec.page),
         [
           {
             height: spec.height,

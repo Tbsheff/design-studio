@@ -12,12 +12,9 @@ type ReviewContext = Pick<
   "project" | "target" | "request" | "previewUrl"
 >;
 
-const hasPreviewTarget = (ctx: ReviewContext): boolean =>
-  Boolean(ctx.target) && Boolean(ctx.previewUrl);
-
 const isPrototypeRun = (ctx: ReviewContext, run: RunToolState): boolean =>
   !ctx.project.app &&
-  hasPreviewTarget(ctx) &&
+  Boolean(ctx.previewUrl) &&
   ctx.request.mode === "edit" &&
   run.config.level !== "wireframe";
 

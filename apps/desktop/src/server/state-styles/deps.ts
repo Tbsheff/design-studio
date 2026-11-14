@@ -42,6 +42,7 @@ export { DIRECT_STYLE_PROPERTIES } from "@design-studio/contracts";
 export {
   fromGroupClass,
   fromGroupVariant,
+  isEdgeStateName,
   isGroupStateName,
   STATE_SELECTOR_MAX,
   STYLE_STATES,
@@ -65,10 +66,12 @@ export type {
 
 export type {
   ForcedFrameState,
+  ForcedStateChange,
   ForcedStateWire,
   GroupAncestor,
   GroupClass,
   GroupPart,
+  StateEdgeKind,
   StateLayer,
   StateListResult,
   StateStyleInput,

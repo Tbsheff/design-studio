@@ -14,6 +14,7 @@ import type {
   StyleScope,
   StyleSite,
 } from "./deps.js";
+import { toEdgeKind } from "./edge-siblings.js";
 import { forcedList } from "./forced-store.js";
 import { toGroupAncestor } from "./group-ancestor.js";
 import { toOwnGroupPart } from "./group-state.js";
@@ -87,6 +88,7 @@ const getStateStyleInfo = async (
   const found = await layerOf(scope, site, source);
 
   return {
+    edge: toEdgeKind(site, source, found),
     forced: forcedList(scope.project.id),
     group: toListedGroup(site, source, found),
     layer: found,

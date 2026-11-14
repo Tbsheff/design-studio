@@ -67,12 +67,22 @@ const StateStyleForcedSchema = Schema.Struct({
   state: Schema.NullOr(StateStyleStateSchema),
 });
 
+const StateStyleForcedChangeSchema = Schema.Struct({
+  frameId: Schema.String,
+  isStructural: Schema.Boolean,
+  selector: Schema.NullOr(Schema.String),
+  state: Schema.NullOr(StateStyleStateSchema),
+});
+
+const StateStyleEdgeSchema = Schema.Literals(["list", "siblings"]);
+
 const StateStyleGroupSchema = Schema.Struct({
   hasDataState: Schema.Boolean,
   name: Schema.NullOr(Schema.String),
 });
 
 const StateStyleInfoSchema = Schema.Struct({
+  edge: Schema.NullOr(StateStyleEdgeSchema),
   forced: Schema.Array(StateStyleForcedSchema),
   group: Schema.NullOr(StateStyleGroupSchema),
   layer: StateStyleLayerInfoSchema,
@@ -120,6 +130,7 @@ export {
   StateStyleBreakpointDefaultSchema,
   StateStyleChangeFields,
   StateStyleChangeSchema,
+  StateStyleForcedChangeSchema,
   StateStyleForcedFields,
   StateStyleForcedSchema,
   StateStyleInfoSchema,

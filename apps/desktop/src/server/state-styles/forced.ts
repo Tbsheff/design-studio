@@ -1,5 +1,5 @@
-import { findFrame } from "./deps.js";
-import type { CanvasFileFrame, ForcedFrameState, StyleState } from "./deps.js";
+import { findFrame, isEdgeStateName } from "./deps.js";
+import type { CanvasFileFrame, ForcedStateChange, StyleState } from "./deps.js";
 import { StateStyleError } from "./errors.js";
 import { setForced } from "./forced-store.js";
 
@@ -30,8 +30,18 @@ const frameIdOf = (request: ForcedStateRequest): string => {
   );
 };
 
-const setForcedState = (request: ForcedStateRequest): ForcedFrameState => {
+const setForcedState = (request: ForcedStateRequest): ForcedStateChange => {
   const frameId = frameIdOf(request);
+
+  if (request.state !== null && isEdgeStateName(request.state)) {
+    return {
+      frameId,
+      isStructural: true,
+      selector: request.layer,
+      state: request.state,
+    };
+  }
+
   const needsLayer = request.state !== null && request.state !== "dark";
 
   if (needsLayer && request.layer === null) {
@@ -40,10 +50,19 @@ const setForcedState = (request: ForcedStateRequest): ForcedFrameState => {
 
   setForced(request.projectId, frameId, request.layer, request.state);
 
-  return { frameId, selector: request.layer, state: request.state };
+  return {
+    frameId,
+    isStructural: false,
+    selector: request.layer,
+    state: request.state,
+  };
 };
 
-const forcedSummary = (forced: ForcedFrameState): string => {
+const forcedSummary = (forced: ForcedStateChange): string => {
+  if (forced.isStructural) {
+    return `${forced.state ?? "This state"} is a structural state: it matches the place of the layer among its siblings, so there is nothing to force. Frame ${forced.frameId} does not change.`;
+  }
+
   if (forced.state === null) {
     return `Frame ${forced.frameId} shows no forced state.`;
   }

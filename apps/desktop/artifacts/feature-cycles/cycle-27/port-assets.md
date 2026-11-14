@@ -27,7 +27,7 @@ Branch `feat/port-assets`. Main at `f8dbc0c6d`.
 ## Checked
 
 - `call-action.ts port.inspect` on a prototype with no version (`n2EKwEtsNu`, made with no pack, `headVersionId: null`): pass, 3 surfaces, 0 diffs; MCP gave score 12. Before: "The first version of this app is not saved yet. Try again in a few seconds."
-- MCP `read_file` on the same prototype: the new text.
+- MCP `read_file` on the same prototype: the new text. MCP `get_screenshot` on it: an image and "1440 × 900 px of the prototype work tree (no saved version yet)."
 - Mock `start_port` `/coffee-cart`: 5 files in `public/coffee-cart/`, a tag with 5 lines, note "Copied 5 prototype assets to public/coffee-cart/.", all 6 requests return 200 (playwright network log).
 - Mock flow port (2 pages that share `assets/logo.svg`) to `/shop`: 6 files, `logo.svg` once.
 - `../outside.png`: listed as skipped, not copied, note "Skipped 1 prototype asset".
@@ -42,7 +42,7 @@ Branch `feat/port-assets`. Main at `f8dbc0c6d`.
 
 ## Left out
 
-- The prototype for the real run used local PNG files, not `apply_image_search` photos. The copy path is the same for both.
-- Bonaparte check (`get_port_plan` beside `apps/dashboard`, public folder `apps/dashboard/public/<slug>/`) was not run. The folder is `path.join(workTree, app.appDir, "public", slug)`, the same `appDir` that `targetOf` uses for the route file.
+- The prototype for the real run used local PNG files, not `apply_image_search` photos. The scan covers both photo forms by code: for an HTML page, `planAsset` (`direct-edit/commit/image.ts` lines 178 and 215) writes the photo to `assets/<name>` and sets a page-relative `src`, and a background slot gets `background-image: url(<src>)` in the `style` attribute (`share/image-search/photo-fill.ts` line 85). No live `apply_image_search` call was made (it needs Openverse).
+- `get_port_plan` was not called on a Bonaparte clone. Instead `detectApp` ran read-only on Bonaparte: 6 Next candidates, so the attach asks to pick one, and `apps/dashboard` gives router `apps/dashboard/app` and public folder `apps/dashboard/public/<slug>/`. Bonaparte `git status --short` was the same before and after.
 - `.claude/goal/roadmap.md` is not in the worktree, so no Appendix A globs were added (L6e).
 - A canceled mock run does not show the copy note, because the mock note runs only after the mock port finishes.

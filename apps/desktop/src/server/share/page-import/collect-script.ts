@@ -47,6 +47,7 @@ const COLLECT_BODY = String.raw`(args) => {
     const base = defaultsOf(el);
     const style = {};
     for (const name of OWN) { const value = cs.getPropertyValue(name); if (value !== base[name]) style[name] = value; }
+    for (const side of ["top","right","bottom","left"]) { const width = "border-" + side + "-width"; if (style["border-" + side + "-style"] && !(width in style)) style[width] = cs.getPropertyValue(width); }
     for (const name of INHERITED) {
       const value = cs.getPropertyValue(name);
       const against = isRoot || !parentStyle ? base[name] : parentStyle.getPropertyValue(name);

@@ -198,9 +198,7 @@ const useAppCommands = (setError: (error: string | null) => void): void => {
 
       case "undo":
       case "redo": {
-        textEdit(command.type);
-
-        break;
+        return textEdit(command.type);
       }
 
       case "command": {

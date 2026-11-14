@@ -1,0 +1,184 @@
+call-action fill.set on http://127.0.0.1:5470. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 10 ms, git spawns: not counted (server side)
+{
+  "blend": null,
+  "classes": {
+    "add": [
+      "md:data-[state=open]:bg-linear-90",
+      "md:data-[state=open]:from-[#1d4ed8]",
+      "md:data-[state=open]:to-[#9333ea]"
+    ],
+    "remove": []
+  },
+  "files": [
+    "index.html"
+  ],
+  "fill": {
+    "angle": 90,
+    "stops": [
+      {
+        "color": "#1d4ed8",
+        "position": null,
+        "token": null
+      },
+      {
+        "color": "#9333ea",
+        "position": null,
+        "token": null
+      }
+    ],
+    "type": "linear"
+  },
+  "mode": "classes",
+  "title": "Fill (md:data-[state=open]): linear gradient",
+  "versionId": "pending-3f162b932b18b887"
+}
+
+[mcp] error, 11 ms, git spawns: not counted (server side)
+"The element already has this fill."
+
+[agent] error, 4 ms, git spawns: not counted (server side)
+"The element already has this fill."
+
+diff http -> mcp:
+- {
++ "The element already has this fill."
+-   "blend": null,
++ 
+-   "classes": {
++ 
+-     "add": [
++ 
+-       "md:data-[state=open]:bg-linear-90",
++ 
+-       "md:data-[state=open]:from-[#1d4ed8]",
++ 
+-       "md:data-[state=open]:to-[#9333ea]"
++ 
+-     ],
++ 
+-     "remove": []
++ 
+-   },
++ 
+-   "files": [
++ 
+-     "index.html"
++ 
+-   ],
++ 
+-   "fill": {
++ 
+-     "angle": 90,
++ 
+-     "stops": [
++ 
+-       {
++ 
+-         "color": "#1d4ed8",
++ 
+-         "position": null,
++ 
+-         "token": null
++ 
+-       },
++ 
+-       {
++ 
+-         "color": "#9333ea",
++ 
+-         "position": null,
++ 
+-         "token": null
++ 
+-       }
++ 
+-     ],
++ 
+-     "type": "linear"
++ 
+-   },
++ 
+-   "mode": "classes",
++ 
+-   "title": "Fill (md:data-[state=open]): linear gradient",
++ 
+-   "versionId": "pending-3f162b932b18b887"
++ 
+- }
++ 
+
+diff http -> agent:
+- {
++ "The element already has this fill."
+-   "blend": null,
++ 
+-   "classes": {
++ 
+-     "add": [
++ 
+-       "md:data-[state=open]:bg-linear-90",
++ 
+-       "md:data-[state=open]:from-[#1d4ed8]",
++ 
+-       "md:data-[state=open]:to-[#9333ea]"
++ 
+-     ],
++ 
+-     "remove": []
++ 
+-   },
++ 
+-   "files": [
++ 
+-     "index.html"
++ 
+-   ],
++ 
+-   "fill": {
++ 
+-     "angle": 90,
++ 
+-     "stops": [
++ 
+-       {
++ 
+-         "color": "#1d4ed8",
++ 
+-         "position": null,
++ 
+-         "token": null
++ 
+-       },
++ 
+-       {
++ 
+-         "color": "#9333ea",
++ 
+-         "position": null,
++ 
+-         "token": null
++ 
+-       }
++ 
+-     ],
++ 
+-     "type": "linear"
++ 
+-   },
++ 
+-   "mode": "classes",
++ 
+-   "title": "Fill (md:data-[state=open]): linear gradient",
++ 
+-   "versionId": "pending-3f162b932b18b887"
++ 
+- }
++ 
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 2 error results
+
+fix: compare the outputs above, then run call-action again with the id fill.set and the same input

@@ -11,7 +11,7 @@ const SIDES = ["top", "right", "bottom", "left"] as const;
 type Side = (typeof SIDES)[number];
 
 const NUMBER_RE =
-  /^(?<value>-?(?:\d+(?:\.\d+)?|\.\d+))\s*(?<unit>px|rem|em|%)?$/iu;
+  /^(?<value>-?(?:\d+(?:\.\d+)?|\.\d+))\s*(?<unit>px|rem|em|%|deg)?$/iu;
 
 const RGB_RE =
   /^rgba?\(\s*(?<red>[\d.]+)[\s,]+(?<green>[\d.]+)[\s,]+(?<blue>[\d.]+)(?:\s*[,/]\s*(?<alpha>[\d.]+%?))?\s*\)$/iu;

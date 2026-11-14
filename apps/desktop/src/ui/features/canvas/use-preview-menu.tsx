@@ -40,6 +40,7 @@ import { createItem, disabledBy } from "./preview-menu-create.js";
 import { PreviewMenu } from "./preview-menu.js";
 import type { PreviewMenuItem } from "./preview-menu.js";
 import { toValueOr } from "./settle-model.js";
+import { toTransformMenuItems } from "./transform-menu-items.js";
 import { useFramePin } from "./use-frame-pin.js";
 import type { FramePin } from "./use-frame-pin.js";
 import { useLayerPick } from "./use-layer-pick.js";
@@ -197,6 +198,7 @@ const menuItems = (
     run: () => uiStore.set({ layersOpen: true }),
   },
   ...structureItems(options5),
+  ...toTransformMenuItems(),
   ...pasteItem(options5, target),
   ...iconItems(target),
   ...createItem(options5, openCreate),

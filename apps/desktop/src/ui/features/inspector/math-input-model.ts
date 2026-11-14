@@ -10,7 +10,7 @@ interface MathResult {
 }
 
 const TOKEN_RE =
-  /\s*(?:(?<num>\d*\.?\d+)(?<unit>px|rem|em|%)?|(?<op>[-+*/()]))/iuy;
+  /\s*(?:(?<num>\d*\.?\d+)(?<unit>px|rem|em|%|deg)?|(?<op>[-+*/()]))/iuy;
 
 const OPERATOR_RE = /[-+*/()]/u;
 const RELATIVE_RE = /^(?:\+=?|-=)/u;

@@ -386,4 +386,23 @@ const strokePositionCopy = {
   widthLabel: "Stroke width",
 };
 
-export { borderSideCopy, copy, spaceStackCopy, strokePositionCopy };
+const rotationCopy = {
+  flipH: "Flip horizontal",
+  flipHKeywords: "mirror flip horizontal scale x",
+  flipV: "Flip vertical",
+  flipVKeywords: "mirror flip vertical upside down scale y",
+  label: "Rotation",
+  noSelection: "Select one layer first",
+  rotate: "Rotate…",
+  rotateKeywords: "rotate rotation angle degrees turn",
+  short: "°",
+  tip: "Rotation in degrees. Shift and an arrow key step 15°",
+};
+
+export {
+  borderSideCopy,
+  copy,
+  rotationCopy,
+  spaceStackCopy,
+  strokePositionCopy,
+};

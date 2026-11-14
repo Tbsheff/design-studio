@@ -90,7 +90,11 @@ const toDuplicateRequest = (
   targets: StructureTarget[],
   into: StructureTarget
 ): StructureEditRequest => {
-  if (isLeafTag(into.tag ?? "") || isCopiedLayer(targets, into)) {
+  if (isCopiedLayer(targets, into)) {
+    return { op: "duplicate", targets };
+  }
+
+  if (isLeafTag(into.tag ?? "")) {
     return { after: into, op: "duplicate", targets };
   }
 

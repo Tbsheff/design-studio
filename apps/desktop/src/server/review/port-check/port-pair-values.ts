@@ -13,7 +13,7 @@ interface ValueRule {
 
 const LENGTH_MIN = 2;
 
-const WEIGHT_MIN = 1;
+const STEP_MIN = 1;
 
 const BORDER_MIN = 1;
 
@@ -22,6 +22,14 @@ const BORDER_WIDTH = "border-width";
 const GAP: PairProperty = "gap";
 
 const PX = /px$/u;
+
+const NORMAL_PX = /^normal \((?<px>[\d.]+)px\)$/u;
+
+const NORMAL_LINE = 1.2;
+
+const FONT_SIZE: PairProperty = "font-size";
+
+const LINE_HEIGHT: PairProperty = "line-height";
 
 const BORDER_SIDES: readonly PairProperty[] = [
   "border-top-width",
@@ -44,32 +52,54 @@ const VALUE_RULES: readonly ValueRule[] = [
   toRule("padding-bottom", LENGTH_MIN),
   toRule("padding-left", LENGTH_MIN),
   toRule(GAP, LENGTH_MIN),
-  toRule("font-size", LENGTH_MIN),
-  toRule("line-height", LENGTH_MIN),
-  toRule("font-weight", WEIGHT_MIN),
+  toRule(FONT_SIZE, STEP_MIN),
+  toRule(LINE_HEIGHT, LENGTH_MIN),
+  toRule("font-weight", STEP_MIN),
   { min: LENGTH_MIN, name: "border-radius", source: "border-top-left-radius" },
 ];
 
 const BOX_NAMES: ReadonlySet<string> = new Set(["height", "width"]);
 
-const toValue = (node: PairNode, name: PairProperty): string => {
-  const value = node.values[PAIR_PROPERTIES.indexOf(name)] ?? "";
-
-  if (name === GAP && value === "normal") {
-    return "0px";
-  }
-
-  return value;
-};
+const toRawValue = (node: PairNode, name: PairProperty): string =>
+  node.values[PAIR_PROPERTIES.indexOf(name)] ?? "";
 
 const toNumber = (value: string): number | null => {
-  const parsed = Number(value.replace(PX, ""));
+  const normal = NORMAL_PX.exec(value)?.groups?.["px"] ?? null;
+  const parsed = Number((normal ?? value).replace(PX, ""));
 
   if (value !== "" && Number.isFinite(parsed)) {
     return parsed;
   }
 
   return null;
+};
+
+const toLineHeight = (node: PairNode, value: string): string => {
+  const size = toNumber(toRawValue(node, FONT_SIZE));
+
+  if (size === null) {
+    return value;
+  }
+
+  return `normal (${Math.round(size * NORMAL_LINE)}px)`;
+};
+
+const toValue = (node: PairNode, name: PairProperty): string => {
+  const value = toRawValue(node, name);
+
+  if (value !== "normal") {
+    return value;
+  }
+
+  if (name === GAP) {
+    return "0px";
+  }
+
+  if (name === LINE_HEIGHT) {
+    return toLineHeight(node, value);
+  }
+
+  return value;
 };
 
 const isValueDiff = (app: string, prototype: string, min: number): boolean => {

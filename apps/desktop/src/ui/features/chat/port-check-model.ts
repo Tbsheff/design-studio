@@ -141,7 +141,7 @@ const toShiftLines = (shift: PortFirstShiftWire | null): string[] => {
 
   if (shift.above !== null && shift.above.diffs.length > 0) {
     parts.push(
-      `Above it, ${toElementName(shift.above)}: ${toDiffsText(shift.above.diffs)}.`
+      `Above it, ${toElementName(shift.above)}: ${toDiffsText(shift.above.diffs)}. Give it the prototype values; it is not kept text.`
     );
   }
 
@@ -167,7 +167,7 @@ const toMaskedLines = (match: PortMatchWire): string[] => {
 
   if (kept.length > 0) {
     lines.push(
-      `- Kept app text, not scored: ${kept.join(" / ")}. Do not edit the kept app text or its margins.`
+      `- Kept app text, not scored: "${kept.join('" / "')}". Do not edit the kept app text or its margins.`
     );
   }
 

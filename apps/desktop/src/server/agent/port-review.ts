@@ -224,7 +224,7 @@ const toMaskedLines = (match: PortMatchRead): string[] => {
 
   if (kept.length > 0) {
     lines.push(
-      `- Kept app text, not scored: ${kept.join(" / ")}. The studio hides it in the app shot, so give the elements around it the prototype spacing, as if it were not there.`,
+      `- Kept app text, not scored: "${kept.join('" / "')}". The studio hides it in the app shot, so give the elements around it the prototype spacing, as if it were not there.`,
       "  Do not edit the kept app text or its margins."
     );
   }
@@ -268,7 +268,7 @@ const toAboveText = (above: PortElement): string => {
     return `Above it, ${toElementName(above)}: no measured value differs; check the space between them.`;
   }
 
-  return `Above it, ${toElementName(above)}: ${toDiffsText(above.diffs)}.`;
+  return `Above it, ${toElementName(above)}: ${toDiffsText(above.diffs)}. Give it the prototype values; it is not kept text.`;
 };
 
 const toShiftLines = (shift: PortFirstShift | null): string[] => {

@@ -1,0 +1,350 @@
+call-action kit-drift.list on http://127.0.0.1:6830. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 206 ms, git spawns: not counted (server side)
+{
+  "items": [
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "17defe642f0f0a10",
+      "keptClasses": [
+        "card"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/card.tsx",
+        "name": "Card"
+      },
+      "line": 70,
+      "parts": [
+        "CardContent"
+      ],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card"
+    },
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "17e116ac2f171a18",
+      "keptClasses": [
+        "card"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/card.tsx",
+        "name": "Card"
+      },
+      "line": 78,
+      "parts": [
+        "CardContent"
+      ],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card"
+    },
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "1802de3530181917",
+      "keptClasses": [
+        "card"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/card.tsx",
+        "name": "Card"
+      },
+      "line": 86,
+      "parts": [
+        "CardContent"
+      ],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card"
+    },
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "1824a5be31191816",
+      "keptClasses": [
+        "card"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/card.tsx",
+        "name": "Card"
+      },
+      "line": 94,
+      "parts": [
+        "CardContent"
+      ],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card"
+    },
+    {
+      "column": 3,
+      "confidence": "medium",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "298ce274026efa8b",
+      "keptClasses": [
+        "card",
+        "list-card"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/card.tsx",
+        "name": "Card"
+      },
+      "line": 104,
+      "parts": [
+        "CardHeader",
+        "CardTitle",
+        "CardContent"
+      ],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card"
+    }
+  ],
+  "next": null
+}
+
+[mcp] ok, 12 ms, git spawns: not counted (server side)
+{
+  "items": [
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "17defe642f0f0a10",
+      "keptClasses": [
+        "card"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/card.tsx",
+        "name": "Card"
+      },
+      "line": 70,
+      "parts": [
+        "CardContent"
+      ],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card"
+    },
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "17e116ac2f171a18",
+      "keptClasses": [
+        "card"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/card.tsx",
+        "name": "Card"
+      },
+      "line": 78,
+      "parts": [
+        "CardContent"
+      ],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card"
+    },
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "1802de3530181917",
+      "keptClasses": [
+        "card"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/card.tsx",
+        "name": "Card"
+      },
+      "line": 86,
+      "parts": [
+        "CardContent"
+      ],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card"
+    },
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "1824a5be31191816",
+      "keptClasses": [
+        "card"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/card.tsx",
+        "name": "Card"
+      },
+      "line": 94,
+      "parts": [
+        "CardContent"
+      ],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card"
+    },
+    {
+      "column": 3,
+      "confidence": "medium",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "298ce274026efa8b",
+      "keptClasses": [
+        "card",
+        "list-card"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/card.tsx",
+        "name": "Card"
+      },
+      "line": 104,
+      "parts": [
+        "CardHeader",
+        "CardTitle",
+        "CardContent"
+      ],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card"
+    }
+  ],
+  "next": null
+}
+
+[agent] ok, 4 ms, git spawns: not counted (server side)
+{
+  "items": [
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "17defe642f0f0a10",
+      "keptClasses": [
+        "card"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/card.tsx",
+        "name": "Card"
+      },
+      "line": 70,
+      "parts": [
+        "CardContent"
+      ],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card"
+    },
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "17e116ac2f171a18",
+      "keptClasses": [
+        "card"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/card.tsx",
+        "name": "Card"
+      },
+      "line": 78,
+      "parts": [
+        "CardContent"
+      ],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card"
+    },
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "1802de3530181917",
+      "keptClasses": [
+        "card"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/card.tsx",
+        "name": "Card"
+      },
+      "line": 86,
+      "parts": [
+        "CardContent"
+      ],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card"
+    },
+    {
+      "column": 5,
+      "confidence": "medium",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "1824a5be31191816",
+      "keptClasses": [
+        "card"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/card.tsx",
+        "name": "Card"
+      },
+      "line": 94,
+      "parts": [
+        "CardContent"
+      ],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card"
+    },
+    {
+      "column": 3,
+      "confidence": "medium",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "298ce274026efa8b",
+      "keptClasses": [
+        "card",
+        "list-card"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/card.tsx",
+        "name": "Card"
+      },
+      "line": 104,
+      "parts": [
+        "CardHeader",
+        "CardTitle",
+        "CardContent"
+      ],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card"
+    }
+  ],
+  "next": null
+}
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

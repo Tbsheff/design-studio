@@ -1,0 +1,164 @@
+call-action port.inspect on http://127.0.0.1:6830. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 2524 ms, git spawns: not counted (server side)
+{
+  "appPath": "/Volumes/DevProjects/code/ds-wt/real-proof-data/a1r/data/port-check/UaWIzpQz_B-kcJpOacajn-_visits-1280-app.png",
+  "areas": [],
+  "diffPath": "/Volumes/DevProjects/code/ds-wt/real-proof-data/a1r/data/port-check/UaWIzpQz_B-kcJpOacajn-_visits-1280-diff.png",
+  "firstShift": null,
+  "isLow": false,
+  "masked": [
+    {
+      "reason": "data-row",
+      "text": "Ana Ruiz"
+    },
+    {
+      "reason": "data-row",
+      "text": "09:00"
+    },
+    {
+      "reason": "data-row",
+      "text": "·"
+    },
+    {
+      "reason": "data-row",
+      "text": "Room 2"
+    },
+    {
+      "reason": "data-row",
+      "text": "Ben Okafor"
+    },
+    {
+      "reason": "data-row",
+      "text": "09:30"
+    },
+    {
+      "reason": "data-row",
+      "text": "Room 4"
+    },
+    {
+      "reason": "data-row",
+      "text": "Chen Li"
+    },
+    {
+      "reason": "data-row",
+      "text": "10:15"
+    },
+    {
+      "reason": "data-row",
+      "text": "Room 1"
+    }
+  ],
+  "prototypePath": "/Volumes/DevProjects/code/ds-wt/real-proof-data/a1r/data/port-check/UaWIzpQz_B-kcJpOacajn-_visits-1280-prototype.png",
+  "score": 100
+}
+
+[mcp] ok, 450 ms, git spawns: not counted (server side)
+{
+  "appPath": "/Volumes/DevProjects/code/ds-wt/real-proof-data/a1r/data/port-check/UaWIzpQz_B-kcJpOacajn-_visits-1280-app.png",
+  "areas": [],
+  "diffPath": "/Volumes/DevProjects/code/ds-wt/real-proof-data/a1r/data/port-check/UaWIzpQz_B-kcJpOacajn-_visits-1280-diff.png",
+  "firstShift": null,
+  "isLow": false,
+  "masked": [
+    {
+      "reason": "data-row",
+      "text": "Ana Ruiz"
+    },
+    {
+      "reason": "data-row",
+      "text": "09:00"
+    },
+    {
+      "reason": "data-row",
+      "text": "·"
+    },
+    {
+      "reason": "data-row",
+      "text": "Room 2"
+    },
+    {
+      "reason": "data-row",
+      "text": "Ben Okafor"
+    },
+    {
+      "reason": "data-row",
+      "text": "09:30"
+    },
+    {
+      "reason": "data-row",
+      "text": "Room 4"
+    },
+    {
+      "reason": "data-row",
+      "text": "Chen Li"
+    },
+    {
+      "reason": "data-row",
+      "text": "10:15"
+    },
+    {
+      "reason": "data-row",
+      "text": "Room 1"
+    }
+  ],
+  "prototypePath": "/Volumes/DevProjects/code/ds-wt/real-proof-data/a1r/data/port-check/UaWIzpQz_B-kcJpOacajn-_visits-1280-prototype.png",
+  "score": 100
+}
+
+[agent] ok, 403 ms, git spawns: not counted (server side)
+{
+  "appPath": "/Volumes/DevProjects/code/ds-wt/real-proof-data/a1r/data/port-check/UaWIzpQz_B-kcJpOacajn-_visits-1280-app.png",
+  "areas": [],
+  "diffPath": "/Volumes/DevProjects/code/ds-wt/real-proof-data/a1r/data/port-check/UaWIzpQz_B-kcJpOacajn-_visits-1280-diff.png",
+  "firstShift": null,
+  "isLow": false,
+  "masked": [
+    {
+      "reason": "data-row",
+      "text": "Ana Ruiz"
+    },
+    {
+      "reason": "data-row",
+      "text": "09:00"
+    },
+    {
+      "reason": "data-row",
+      "text": "·"
+    },
+    {
+      "reason": "data-row",
+      "text": "Room 2"
+    },
+    {
+      "reason": "data-row",
+      "text": "Ben Okafor"
+    },
+    {
+      "reason": "data-row",
+      "text": "09:30"
+    },
+    {
+      "reason": "data-row",
+      "text": "Room 4"
+    },
+    {
+      "reason": "data-row",
+      "text": "Chen Li"
+    },
+    {
+      "reason": "data-row",
+      "text": "10:15"
+    },
+    {
+      "reason": "data-row",
+      "text": "Room 1"
+    }
+  ],
+  "prototypePath": "/Volumes/DevProjects/code/ds-wt/real-proof-data/a1r/data/port-check/UaWIzpQz_B-kcJpOacajn-_visits-1280-prototype.png",
+  "score": 100
+}
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

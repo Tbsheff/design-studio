@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer, webUtils } from 'electron';
 
 const VERSION_FLAG = '--studio-version=';
 const BOOT_FLAG = '--studio-boot=';
+const BOOT_CHANNEL = 'studio:boot';
 const COMMAND_CHANNEL = 'studio:command';
 const CONTEXT_CHANNEL = 'studio:context';
 const PICK_FOLDER_CHANNEL = 'studio:pick-folder';
@@ -21,17 +22,31 @@ interface Boot {
   marks: Record<string, number>;
 }
 
+function toBoot(parsed: Partial<Boot> | null): Boot | null {
+  if (!parsed || typeof parsed.startedAt !== 'number' || typeof parsed.marks !== 'object' || parsed.marks === null) { return null; }
+
+  return { startedAt: parsed.startedAt, marks: { ...parsed.marks } };
+}
+
+function liveBootTimes(): Boot | null {
+  try {
+    return toBoot(ipcRenderer.sendSync(BOOT_CHANNEL) as Partial<Boot> | null);
+  } catch {
+    return null;
+  }
+}
+
 function bootTimes(): Boot | null {
+  const live = liveBootTimes();
+
+  if (live) { return live; }
+
   const arg = process.argv.find((value) => value.startsWith(BOOT_FLAG));
 
   if (!arg) { return null; }
 
   try {
-    const parsed = JSON.parse(arg.slice(BOOT_FLAG.length)) as Partial<Boot>;
-
-    if (typeof parsed.startedAt !== 'number' || typeof parsed.marks !== 'object' || parsed.marks === null) { return null; }
-
-    return { startedAt: parsed.startedAt, marks: { ...parsed.marks } };
+    return toBoot(JSON.parse(arg.slice(BOOT_FLAG.length)) as Partial<Boot>);
   } catch {
     return null;
   }

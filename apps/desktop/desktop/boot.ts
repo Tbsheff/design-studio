@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 
 import { loginShellPath } from "./env.js";
 import type { GitChoice } from "./git-choice.js";
@@ -164,6 +164,17 @@ const createMarker = (
   return markBoot;
 };
 
+const BOOT_CHANNEL = "studio:boot";
+
+const startBootMarks = (
+  startedAt: number,
+  marks: Readonly<Record<string, number>>
+): void => {
+  ipcMain.on(BOOT_CHANNEL, (event) => {
+    event.returnValue = { marks: { ...marks }, startedAt };
+  });
+};
+
 const createShell = (
   cell: StateCell,
   hooks: BootHooks,
@@ -202,6 +213,7 @@ const createBoot = (ownDir: string, hooks: BootHooks): Boot => {
   };
 
   const markBoot = createMarker(startedAt, marks);
+  startBootMarks(startedAt, marks);
 
   const startLoginShell = (): Promise<string[]> => {
     const early = cell.get().earlyLoginPath ?? getLoginShellDirs(markBoot);

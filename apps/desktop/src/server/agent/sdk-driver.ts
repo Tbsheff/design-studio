@@ -48,7 +48,7 @@ import {
   studioAppReview,
   withReference,
 } from "./final-check.js";
-import { createFlowFrames } from "./flow-frames.js";
+import { createFlowFrames, isFlowFramed } from "./flow-frames.js";
 import { toGateLists } from "./focus-gate.js";
 import {
   createIntegrationNoteHook,
@@ -354,7 +354,7 @@ function prepareMessage(
           appTokens:
             input.ctx.project.kind === "react" &&
             Boolean(input.ctx.designSystem?.source),
-          isHtmlPages: input.ctx.project.kind === "html",
+          isHtmlPages: isFlowFramed(input.ctx),
         }
       );
   const sent = resume

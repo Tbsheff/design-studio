@@ -1,4 +1,5 @@
-import { createRunPageFrames } from "../canvas/index.js";
+import type { AgentRunContext } from "../../shared/server-ports.js";
+import { canvasOwner, createRunPageFrames } from "../canvas/index.js";
 import type { DriverInput, DriverOutcome } from "./lifecycle.js";
 import { changedSince } from "./screens.js";
 import type { RunToolState } from "./types.js";
@@ -14,14 +15,18 @@ const PAGE_FILE = /\.html?$/iu;
 
 const PAGES_MAX = 40;
 
-const isHtmlProject = (input: DriverInput): boolean =>
-  input.ctx.project.kind === "html" && !input.ctx.project.app;
+const isFlowFramed = (
+  ctx: Pick<AgentRunContext, "direction" | "project">
+): boolean =>
+  ctx.project.kind === "html" &&
+  !ctx.project.app &&
+  canvasOwner(ctx.project).id === ctx.direction.id;
 
 const isFlowRun = (input: DriverInput, outcome: DriverOutcome): boolean =>
   !input.signal.aborted &&
   outcome.status === "completed" &&
   input.ctx.request.mode === "edit" &&
-  isHtmlProject(input);
+  isFlowFramed(input.ctx);
 
 const toWrittenPages = async (
   input: DriverInput,
@@ -89,4 +94,4 @@ const createFlowFrames = async (
   }
 };
 
-export { createFlowFrames };
+export { createFlowFrames, isFlowFramed };

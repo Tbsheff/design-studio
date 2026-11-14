@@ -37,23 +37,69 @@ const isPagePath = (relative: string): boolean =>
   PAGE_FILE.test(relative) &&
   !relative.split("/").some((part) => SKIP_PART.test(part));
 
-const toPagePaths = async (workTree: string): Promise<string[]> => {
+const ENTRIES_MAX = 4000;
+
+interface DirEntry {
+  readonly isDir: boolean;
+  readonly relative: string;
+}
+
+const toDirEntries = async (
+  workTree: string,
+  relative: string
+): Promise<DirEntry[]> => {
   try {
-    const entries = await readdir(workTree, { recursive: true });
-    const pages: string[] = [];
+    const entries = await readdir(path.join(workTree, relative), {
+      withFileTypes: true,
+    });
 
-    for (const entry of entries) {
-      const relative = entry.split(path.sep).join("/");
-
-      if (isPagePath(relative)) {
-        pages.push(relative);
+    return entries.flatMap((entry) => {
+      if (SKIP_PART.test(entry.name)) {
+        return [];
       }
-    }
 
-    return pages.toSorted().slice(0, PAGES_MAX);
+      const child = [relative, entry.name].filter(Boolean).join("/");
+
+      return [{ isDir: entry.isDirectory(), relative: child }];
+    });
   } catch {
     return [];
   }
+};
+
+const toLevelPages = async (
+  workTree: string,
+  dirs: readonly string[],
+  seen: number
+): Promise<string[]> => {
+  if (dirs.length === 0 || seen >= ENTRIES_MAX) {
+    return [];
+  }
+
+  const level = await Promise.all(
+    dirs.map((dir) => toDirEntries(workTree, dir))
+  );
+
+  const entries = level.flat().slice(0, ENTRIES_MAX - seen);
+
+  const nextDirs = entries.flatMap(
+    (entry) => (entry.isDir && [entry.relative]) || []
+  );
+
+  const pages = entries.flatMap(
+    (entry) =>
+      (!entry.isDir && isPagePath(entry.relative) && [entry.relative]) || []
+  );
+
+  const deeper = await toLevelPages(workTree, nextDirs, seen + entries.length);
+
+  return [...pages, ...deeper];
+};
+
+const toPagePaths = async (workTree: string): Promise<string[]> => {
+  const pages = await toLevelPages(workTree, [""], 0);
+
+  return pages.toSorted().slice(0, PAGES_MAX);
 };
 
 const toScriptFile = (

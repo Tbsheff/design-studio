@@ -232,3 +232,11 @@ All 5 can run at once. Merge 4 (state-sections: moves the variant schema to `_co
 10. Undo speed: measure Cmd+Z to preview for a text edit and patch in place if the preview reloads (friction 13, unverified).
 
 Sources: [Figma release notes archive](https://www.figma.com/release-notes/archive/?page=2), [mcp.directory 2026 comparison](https://mcp.directory/blog/claude-design-vs-stitch-vs-v0-vs-lovable-vs-figma-make-2026), [Figma shortcuts cheatsheet](https://meshworld.in/blog/cheatsheets/figma-shortcuts-cheatsheet/), [Figma forum: flip elements](https://forum.figma.com/t/flip-elements/10176).
+
+## Results
+
+- Merged in order: state-sections, rotate-flip, parent-states, text-lists, divide-lines. Main at ed99abc75.
+- Conflicts resolved by keeping both sides: text-lists vs rotate-flip in `tailwind/classes.ts` (group union: KeywordGroup, OutlineGroup, RotateScaleGroup), `contracts.ts` (both property imports) and `inspector/copy.ts`; divide-lines vs both in `inspector/copy.ts`. Formatted, then gen-routes.
+- Checks: gen-routes --check pass, typecheck 0 errors, lint:gate pass (59609, baseline 89733), build:ui pass, check:clip 0 findings, desktop:pack pass.
+- Installed app: :4570 returns 200. Server idle CPU 0.00 CPU-s/min over 60 s.
+- Open: divide lines do not work on CSS projects (rule writer rejects `> * + *`). The space-stack bundle (both axes, `md:space-y-*`) was not done. Text lists cannot edit the parent list from an `li`. An edit on a rotation set by `transform` adds a second rotation. Shadows are written as exact values, not scale names. MCP snapshots not refreshed (user decision).

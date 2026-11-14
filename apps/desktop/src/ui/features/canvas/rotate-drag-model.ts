@@ -29,6 +29,7 @@ interface RotateLayer {
   readonly snapX: number;
   readonly snapY: number;
   readonly top: number;
+  readonly translate: RotatePoint;
 }
 
 interface RotateLayout {
@@ -311,6 +312,28 @@ const toGroupCenter = (
   };
 };
 
+const NO_SHIFT: RotatePoint = { x: 0, y: 0 };
+
+const TRANSLATE_PARTS_MAX = 3;
+
+const toTranslateBase = (value: string | undefined): RotatePoint => {
+  const parts = (value?.trim() ?? "").split(/\s+/u);
+  const [first = "", second = "0px", third = "0px"] = parts;
+
+  if (parts.length > TRANSLATE_PARTS_MAX || toPx(third) !== 0) {
+    return NO_SHIFT;
+  }
+
+  const x = toPx(first);
+  const y = toPx(second);
+
+  if (x === null || y === null) {
+    return NO_SHIFT;
+  }
+
+  return { x, y };
+};
+
 const toRotateLayer = (input: RotateLayerInput): RotateLayer => {
   const { classes, target } = input;
   const left = toPx(target.styles.left);
@@ -324,6 +347,7 @@ const toRotateLayer = (input: RotateLayerInput): RotateLayer => {
     snapX: toSnapStep(classes, "left"),
     snapY: toSnapStep(classes, "top"),
     top: top ?? 0,
+    translate: toTranslateBase(target.styles.translate),
   };
 };
 
@@ -412,7 +436,10 @@ const toMoveStyle = (
     return {};
   }
 
-  return { translate: `${moveX}${PX_UNIT} ${moveY}${PX_UNIT}` };
+  const toX = toSnapped(layer.translate.x + moveX, 1);
+  const toY = toSnapped(layer.translate.y + moveY, 1);
+
+  return { translate: `${toX}${PX_UNIT} ${toY}${PX_UNIT}` };
 };
 
 export {

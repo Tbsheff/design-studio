@@ -1,6 +1,7 @@
 import type { SelectionContext } from "@design-studio/contracts";
 import type { ReactNode, ReactElement } from "react";
 
+import { GroupRotateFrame } from "./group-rotate-frame.js";
 import { Measurements } from "./measurements.js";
 import { toRectStyle } from "./overlay-styles.js";
 import type { HoverBox } from "./preview-rect-model.js";
@@ -100,6 +101,7 @@ const ArtboardOverlay = ({
       {resize?.target && (
         <ResizeHandles control={resize} rect={resize.target.rect} zoom={zoom} />
       )}
+      <GroupRotateFrame control={resize} rect={anchor} />
       {resize?.live && <SnapGuides guides={resize.live.guides} full />}
       {measuring && hover && anchor && (
         <Measurements from={anchor} to={hover.rect} />

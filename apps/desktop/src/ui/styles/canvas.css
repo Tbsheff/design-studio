@@ -349,7 +349,8 @@ body.frame-dragging * {
 }
 
 body.frame-dragging .frame,
-body.element-resizing .frame {
+body.element-resizing .frame,
+body.element-rotating .frame {
   pointer-events: none;
 }
 

@@ -15,14 +15,31 @@ interface ShareBodyProps {
   readonly data: SharePlayData;
 }
 
+const toToggleClass = (isInBar: boolean): string => {
+  if (isInBar) {
+    return "btn share-canvas-toggle is-bar";
+  }
+
+  return "btn share-canvas-toggle";
+};
+
+const toViewerClass = (isInBar: boolean): string => {
+  if (isInBar) {
+    return "share-viewer is-bar-canvas";
+  }
+
+  return "share-viewer";
+};
+
 const ShareBody = ({ data, renderPlay }: ShareBodyProps): ReactElement => {
   const viewer = useShareViewer(data);
   const comments = useShareComments();
   const { draft, frames, isCommentsOpen, mode, play, selected } = viewer;
   const { onCanvas, onClearDraft, onComments, onPick, onPlay } = viewer;
+  const isInBar = mode === "play" && play.isFullBleed;
 
   return (
-    <div className="share-viewer">
+    <div className={toViewerClass(isInBar)}>
       <ShareViewerHead
         title={data.title}
         isLive={data.isLive}
@@ -54,7 +71,7 @@ const ShareBody = ({ data, renderPlay }: ShareBodyProps): ReactElement => {
       {mode === "play" && (
         <button
           type="button"
-          className="btn share-canvas-toggle"
+          className={toToggleClass(isInBar)}
           data-tip={copy.viewCanvasTip}
           data-testid="share-view-canvas"
           onClick={onCanvas}

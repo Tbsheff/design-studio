@@ -1,7 +1,18 @@
-import { copyFile, mkdtemp, rm } from "node:fs/promises";
+import { createHash, randomUUID } from "node:crypto";
+import {
+  copyFile,
+  mkdir,
+  mkdtemp,
+  readdir,
+  rename,
+  rm,
+  stat,
+  utimes,
+} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
+import { loadConfig } from "../platform/config/index.js";
 import { userGit } from "../platform/git/index.js";
 
 interface RouteSnapshot {
@@ -14,23 +25,72 @@ interface TreeChange {
   readonly status: string;
 }
 
+interface AppGit {
+  readonly gitDir: string;
+  readonly objects: string;
+  readonly storeRoot: string;
+}
+
+interface StoreAge {
+  readonly at: number;
+  readonly dir: string;
+}
+
+interface ObjectEnv {
+  readonly GIT_ALTERNATE_OBJECT_DIRECTORIES: string;
+  readonly GIT_OBJECT_DIRECTORY: string;
+}
+
 const ADD_TIMEOUT_MS = 60_000;
 
 const ADDED = "A";
 
+const APP_KEY_LENGTH = 16;
+
+const STORE_CAP = 6;
+
+const PENDING_PREFIX = "pending-";
+
 const START_TAG = /<port-start\b[^>]*\btree="(?<tree>[\da-f]+)"/u;
 
-const toGitDir = async (workTree: string): Promise<string | null> => {
-  const found = await userGit(workTree, ["rev-parse", "--absolute-git-dir"], {
-    allowFail: true,
-  });
+const toAppKey = (objects: string): string =>
+  createHash("sha256").update(objects).digest("hex").slice(0, APP_KEY_LENGTH);
+
+const toAppGit = async (workTree: string): Promise<AppGit | null> => {
+  const found = await userGit(
+    workTree,
+    ["rev-parse", "--absolute-git-dir", "--git-path", "objects"],
+    { allowFail: true }
+  );
 
   if (found.code !== 0) {
     return null;
   }
 
-  return found.stdout.trim();
+  const [gitDir = "", objectsPath = ""] = found.stdout.trim().split("\n");
+
+  if (gitDir === "" || objectsPath === "") {
+    return null;
+  }
+
+  const objects = path.resolve(workTree, objectsPath);
+
+  const storeRoot = path.join(
+    loadConfig().dataDir,
+    "port-objects",
+    toAppKey(objects)
+  );
+
+  return { gitDir, objects, storeRoot };
 };
+
+const toObjectEnv = (app: AppGit, store: string): ObjectEnv => ({
+  GIT_ALTERNATE_OBJECT_DIRECTORIES: app.objects,
+  GIT_OBJECT_DIRECTORY: path.join(store, "objects"),
+});
+
+const toTreeStore = (app: AppGit, tree: string): string =>
+  path.join(app.storeRoot, tree);
 
 const createIndexCopy = async (from: string, to: string): Promise<boolean> => {
   try {
@@ -44,14 +104,16 @@ const createIndexCopy = async (from: string, to: string): Promise<boolean> => {
 
 const createTree = async (
   workTree: string,
-  gitDir: string
+  app: AppGit,
+  store: string
 ): Promise<string | null> => {
   const dir = await mkdtemp(path.join(os.tmpdir(), "port-snapshot-"));
   const index = path.join(dir, "index");
-  const indexEnv = { GIT_INDEX_FILE: index };
+  const indexEnv = { ...toObjectEnv(app, store), GIT_INDEX_FILE: index };
 
   try {
-    await createIndexCopy(path.join(gitDir, "index"), index);
+    await mkdir(indexEnv.GIT_OBJECT_DIRECTORY, { recursive: true });
+    await createIndexCopy(path.join(app.gitDir, "index"), index);
 
     const added = await userGit(workTree, ["add", "-A"], {
       allowFail: true,
@@ -78,23 +140,87 @@ const createTree = async (
   }
 };
 
+const toStoreAge = async (dir: string): Promise<StoreAge | null> => {
+  try {
+    const found = await stat(dir);
+
+    return { at: found.mtimeMs, dir };
+  } catch {
+    return null;
+  }
+};
+
+const deleteOldStores = async (app: AppGit): Promise<void> => {
+  const names = await readdir(app.storeRoot);
+
+  const dirs: string[] = [];
+
+  for (const name of names) {
+    if (!name.startsWith(PENDING_PREFIX)) {
+      dirs.push(path.join(app.storeRoot, name));
+    }
+  }
+
+  const ages = await Promise.all(dirs.map((dir) => toStoreAge(dir)));
+
+  const old = ages
+    .filter((age): age is StoreAge => age !== null)
+    .toSorted((left, right) => right.at - left.at)
+    .slice(STORE_CAP);
+
+  await Promise.all(
+    old.map((age) => rm(age.dir, { force: true, recursive: true }))
+  );
+};
+
+const moveStore = async (pending: string, store: string): Promise<boolean> => {
+  try {
+    await rename(pending, store);
+  } catch {
+    if ((await toStoreAge(store)) === null) {
+      return false;
+    }
+  }
+
+  const now = new Date();
+
+  await utimes(store, now, now);
+
+  return true;
+};
+
 const createRouteSnapshot = async (
   workTree: string
 ): Promise<RouteSnapshot | null> => {
   try {
-    const gitDir = await toGitDir(workTree);
+    const app = await toAppGit(workTree);
 
-    if (gitDir === null) {
+    if (app === null) {
       return null;
     }
 
-    const tree = await createTree(workTree, gitDir);
+    const pending = path.join(
+      app.storeRoot,
+      `${PENDING_PREFIX}${randomUUID()}`
+    );
 
-    if (tree === null) {
-      return null;
+    try {
+      const tree = await createTree(workTree, app, pending);
+
+      if (tree === null) {
+        return null;
+      }
+
+      if (!(await moveStore(pending, toTreeStore(app, tree)))) {
+        return null;
+      }
+
+      await deleteOldStores(app);
+
+      return { tree, workTree };
+    } finally {
+      await rm(pending, { force: true, recursive: true });
     }
-
-    return { tree, workTree };
   } catch {
     return null;
   }
@@ -113,7 +239,8 @@ const toTreeChanges = (text: string): TreeChange[] => {
 
 const listTreeChanges = async (
   snapshot: RouteSnapshot,
-  tree: string
+  tree: string,
+  env: ObjectEnv
 ): Promise<TreeChange[] | null> => {
   const found = await userGit(
     snapshot.workTree,
@@ -123,10 +250,11 @@ const listTreeChanges = async (
       "-z",
       "--no-renames",
       "--name-status",
+      "--relative",
       snapshot.tree,
       tree,
     ],
-    { allowFail: true }
+    { allowFail: true, env }
   );
 
   if (found.code !== 0) {
@@ -138,7 +266,8 @@ const listTreeChanges = async (
 
 const restoreFiles = async (
   snapshot: RouteSnapshot,
-  files: readonly string[]
+  files: readonly string[],
+  env: ObjectEnv
 ): Promise<boolean> => {
   if (files.length === 0) {
     return true;
@@ -147,7 +276,7 @@ const restoreFiles = async (
   const restored = await userGit(
     snapshot.workTree,
     ["restore", `--source=${snapshot.tree}`, "--worktree", "--", ...files],
-    { allowFail: true }
+    { allowFail: true, env }
   );
 
   return restored.code === 0;
@@ -166,19 +295,21 @@ const restoreRouteSnapshot = async (
   snapshot: RouteSnapshot
 ): Promise<boolean> => {
   try {
-    const gitDir = await toGitDir(snapshot.workTree);
+    const app = await toAppGit(snapshot.workTree);
 
-    if (gitDir === null) {
+    if (app === null) {
       return false;
     }
 
-    const now = await createTree(snapshot.workTree, gitDir);
+    const store = toTreeStore(app, snapshot.tree);
+    const now = await createTree(snapshot.workTree, app, store);
 
     if (now === null) {
       return false;
     }
 
-    const changes = await listTreeChanges(snapshot, now);
+    const env = toObjectEnv(app, store);
+    const changes = await listTreeChanges(snapshot, now, env);
 
     if (changes === null) {
       return false;
@@ -194,7 +325,8 @@ const restoreRouteSnapshot = async (
 
     return await restoreFiles(
       snapshot,
-      changed.map((change) => change.file)
+      changed.map((change) => change.file),
+      env
     );
   } catch {
     return false;
@@ -226,7 +358,8 @@ const toStartSnapshot = (
 
 const listChangedFiles = async (
   snapshot: RouteSnapshot,
-  tree: string
+  tree: string,
+  env: ObjectEnv
 ): Promise<string[] | null> => {
   const found = await userGit(
     snapshot.workTree,
@@ -240,7 +373,7 @@ const listChangedFiles = async (
       snapshot.tree,
       tree,
     ],
-    { allowFail: true }
+    { allowFail: true, env }
   );
 
   if (found.code !== 0) {
@@ -255,19 +388,22 @@ const hasRouteChange = async (
   files: readonly string[]
 ): Promise<boolean> => {
   try {
-    const gitDir = await toGitDir(snapshot.workTree);
+    const app = await toAppGit(snapshot.workTree);
 
-    if (gitDir === null) {
+    if (app === null) {
       return false;
     }
 
-    const now = await createTree(snapshot.workTree, gitDir);
+    const store = toTreeStore(app, snapshot.tree);
+    const now = await createTree(snapshot.workTree, app, store);
 
     if (now === null) {
       return false;
     }
 
-    const changed = new Set(await listChangedFiles(snapshot, now));
+    const changed = new Set(
+      await listChangedFiles(snapshot, now, toObjectEnv(app, store))
+    );
 
     return files.some((file) => changed.has(file));
   } catch {

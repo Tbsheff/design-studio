@@ -1,5 +1,6 @@
 import type { BridgeToParent } from "@design-studio/contracts";
 
+import { isHistoryKey } from "./history-key.js";
 import {
   createEditGuard,
   isMixedLayer,
@@ -15,6 +16,7 @@ type TextEditBody =
   | Omit<Extract<BridgeToParent, { type: "text-edit" }>, "ns" | "token">
   | Omit<Extract<BridgeToParent, { type: "text-commit" }>, "ns" | "token">
   | Omit<Extract<BridgeToParent, { type: "text-edit-blocked" }>, "ns" | "token">
+  | Omit<Extract<BridgeToParent, { type: "history-key" }>, "ns" | "token">
   | TextRangeBody
   | { type: "hover"; rect: null };
 
@@ -349,9 +351,40 @@ export function createTextEditor(deps: TextEditDeps): TextEditor {
     }
   };
 
+  const onHistoryKey = (current: Session, event: KeyboardEvent): boolean => {
+    if (!isHistoryKey(event)) {
+      return false;
+    }
+
+    event.preventDefault();
+
+    if (event.repeat) {
+      return true;
+    }
+
+    if (
+      current.isRangeMode ||
+      plainText(current.element) === current.original
+    ) {
+      deps.post({ redo: event.shiftKey, type: "history-key" });
+    } else if (event.shiftKey) {
+      document.execCommand("redo");
+    } else {
+      document.execCommand("undo");
+    }
+
+    return true;
+  };
+
   const onKeyDown = (event: KeyboardEvent): boolean => {
     if (!session) {
       return false;
+    }
+
+    if (onHistoryKey(session, event)) {
+      event.stopImmediatePropagation();
+
+      return true;
     }
 
     const plain =

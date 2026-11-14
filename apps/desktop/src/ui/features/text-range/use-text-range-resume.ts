@@ -33,11 +33,79 @@ const isResumed = (message: BridgeToParent, pending: PendingResume): boolean =>
   message.type === "text-edit" &&
   (pending.frameToken === null || message.token === pending.frameToken);
 
+const isOtherEdit = (
+  message: BridgeToParent,
+  lastLayer: RefObject<TextRangeLayer | null>
+): boolean =>
+  message.type === "text-edit" &&
+  (message.state === "cancel" ||
+    lastLayer.current?.selector !== message.selector);
+
+const noteLayer = (
+  message: BridgeToParent,
+  lastLayer: RefObject<TextRangeLayer | null>
+): void => {
+  if (message.type === "text-range" && message.rect !== null) {
+    lastLayer.current = message.layer;
+
+    return;
+  }
+
+  if (
+    message.type === "ready" ||
+    message.type === "text-commit" ||
+    isOtherEdit(message, lastLayer)
+  ) {
+    lastLayer.current = null;
+  }
+};
+
+const hasArmedHistory = (
+  message: BridgeToParent,
+  lastLayer: RefObject<TextRangeLayer | null>,
+  pending: RefObject<PendingResume | null>
+): boolean => {
+  noteLayer(message, lastLayer);
+  const layer = lastLayer.current;
+
+  if (message.type !== "history-key" || layer === null) {
+    return false;
+  }
+
+  pending.current = { armedAt: Date.now(), frameToken: null, layer };
+
+  return true;
+};
+
+const postResume = (
+  port: RefObject<PreviewPort | null>,
+  pending: RefObject<PendingResume | null>
+): void => {
+  const armed = pending.current;
+
+  if (armed === null || armed.frameToken === null) {
+    return;
+  }
+
+  if (!isFresh(armed)) {
+    pending.current = null;
+
+    return;
+  }
+
+  port.current?.post({
+    ...armed.layer,
+    frameToken: armed.frameToken,
+    type: "text-edit-resume",
+  });
+};
+
 const useTextRangeResume = (
   port: RefObject<PreviewPort | null>,
   selector: string | null
 ): TextRangeResume => {
   const pending = useRef<PendingResume | null>(null);
+  const lastLayer = useRef<TextRangeLayer | null>(null);
 
   useEffect(() => {
     const listen = port.current?.listen;
@@ -47,6 +115,10 @@ const useTextRangeResume = (
     }
 
     return listen((message) => {
+      if (hasArmedHistory(message, lastLayer, pending)) {
+        return;
+      }
+
       const armed = pending.current;
 
       if (armed === null) {
@@ -74,23 +146,7 @@ const useTextRangeResume = (
 
   useEffect(() => {
     const onPainted = (): void => {
-      const armed = pending.current;
-
-      if (armed === null || armed.frameToken === null) {
-        return;
-      }
-
-      if (!isFresh(armed)) {
-        pending.current = null;
-
-        return;
-      }
-
-      port.current?.post({
-        ...armed.layer,
-        frameToken: armed.frameToken,
-        type: "text-edit-resume",
-      });
+      postResume(port, pending);
     };
 
     globalThis.addEventListener(PREVIEW_PAINTED_EVENT, onPainted);

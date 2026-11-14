@@ -12,6 +12,7 @@ import { isMatchKind, matchingElements } from "./select-match.js";
 import { selectSource } from "./select-sources.js";
 import { APP_MODE, SELECT_RETRIES, SELECT_RETRY_MS } from "./session.js";
 import { findStyles } from "./style-scan.js";
+import { selectChildText, toMixedParentOf } from "./text-edit-range-mode.js";
 
 const SELECTOR_MAX = 400;
 
@@ -251,7 +252,22 @@ const installClickMenus = (context: BridgeContext): void => {
       target = element;
     }
 
-    if (textEditor.owns(element) || !textEditor.canEdit(target)) {
+    if (textEditor.owns(element)) {
+      return block(event);
+    }
+
+    const parent = toMixedParentOf(target);
+
+    if (target !== null && parent !== null && textEditor.canEdit(parent)) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      textEditor.start(parent);
+      selectChildText(parent, target);
+
+      return;
+    }
+
+    if (!textEditor.canEdit(target)) {
       return block(event);
     }
 

@@ -117,6 +117,34 @@ const selectTextRange = (
   return true;
 };
 
+const toMixedParentOf = (element: Element | null): HTMLElement | null => {
+  const parent = element?.parentElement ?? null;
+
+  if (
+    element === null ||
+    parent === null ||
+    !isInlineTextChild(element) ||
+    !isMixedLayer(parent)
+  ) {
+    return null;
+  }
+
+  return parent;
+};
+
+const selectChildText = (parent: HTMLElement, child: Element): boolean => {
+  const before = document.createRange();
+  before.selectNodeContents(parent);
+  before.setEndBefore(child);
+  const start = before.toString().length;
+
+  return selectTextRange(
+    parent,
+    start,
+    start + (child.textContent ?? "").length
+  );
+};
+
 const preventEvent = (event: Event): void => {
   event.preventDefault();
 };
@@ -209,7 +237,9 @@ export {
   isInlineTextChild,
   isMixedLayer,
   restoreSnapshot,
+  selectChildText,
   selectTextRange,
+  toMixedParentOf,
   toSnapshot,
 };
 

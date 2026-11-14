@@ -16,12 +16,13 @@ function typingTarget(event: KeyboardEvent): boolean {
   );
 }
 
+export const isHistoryKey = (event: KeyboardEvent): boolean =>
+  (event.metaKey || event.ctrlKey) &&
+  !event.altKey &&
+  event.key.toLowerCase() === "z";
+
 export function historyKeyBody(event: KeyboardEvent): HistoryKeyBody | null {
-  if (
-    !(event.metaKey || event.ctrlKey) ||
-    event.altKey ||
-    event.key.toLowerCase() !== "z"
-  ) {
+  if (!isHistoryKey(event)) {
     return null;
   }
 

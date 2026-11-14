@@ -24,6 +24,7 @@ import {
   nodeDirs,
   readSavedLoginPath,
   saveLoginPath,
+  toFirstLaunchPath,
 } from "./env.js";
 import { openSetupWindow, registerSetupIpc, setupNeeded } from "./first-run.js";
 import { chooseGit, FORCE_GIT_ENV } from "./git-choice.js";
@@ -78,7 +79,15 @@ async function toServerLoginPath(boot: Boot): Promise<string[]> {
   const live = boot.startLoginShell();
   void saveLivePath(file, live);
   const saved = await readSavedLoginPath(file);
-  return saved.length > 0 ? saved : live;
+  if (saved.length > 0) return saved;
+  const home = process.env.HOME ?? os.homedir();
+  const fast = await toFirstLaunchPath(
+    process.env,
+    home,
+    nodeDirs(process.env, process.execPath)
+  );
+  console.log(`[desktop] first launch fast PATH: ${String(fast !== null)}`);
+  return fast ?? live;
 }
 
 function compileCacheEnv(boot: Boot): Record<string, string> {
@@ -189,9 +198,12 @@ async function serverOverrides(
   };
 }
 
+const ignoreSpawn = (): null => null;
+
 async function launchServer(
   boot: Boot,
-  current: Prepared
+  current: Prepared,
+  onSpawned: () => void
 ): Promise<ServerSession> {
   const portsFile = boot.userDataFile("ports.json");
   const ports = await pickPorts(readSavedPorts(portsFile));
@@ -214,6 +226,7 @@ async function launchServer(
     echo: !boot.layout.packaged,
   });
   boot.markBoot("serverSpawned");
+  onSpawned();
   writeServerPid(boot.userDataFile("server.pid"), server.pid);
   serveChild(boot.renderHost, server.child);
   boot.serverLink.attach(server.child, url);
@@ -248,7 +261,7 @@ async function restartServer(boot: Boot, previous: PortSet): Promise<void> {
   if (!prepared) return;
   await waitForFree(previous, RESTART_PORT_WAIT_MS);
   try {
-    const next = await launchServer(boot, prepared);
+    const next = await launchServer(boot, prepared, ignoreSpawn);
     for (const window of boot.studioWindows()) void window.loadURL(next.url);
   } catch (error) {
     await failBoot(boot, error);
@@ -280,19 +293,39 @@ async function onServerExit(
   else await restartServer(boot, owner.ports);
 }
 
-function openWindow(boot: Boot, current: ServerSession): BrowserWindow {
-  console.log(`[desktop] window: studio ${current.url}`);
-  boot.markBoot("window");
+function createStudioWindow(boot: Boot, url: string | null): BrowserWindow {
   const window = createMainWindow({
-    url: current.url,
+    url,
     preload: path.join(boot.ownDir, "preload.cjs"),
     stateFile: boot.userDataFile("window-state.json"),
     version: app.getVersion(),
     boot: { startedAt: boot.startedAt, marks: { ...boot.marks } },
   });
   window.once("ready-to-show", () => boot.markBoot("readyToShow"));
+  return window;
+}
+
+function openWindow(boot: Boot, current: ServerSession): BrowserWindow {
+  console.log(`[desktop] window: studio ${current.url}`);
+  boot.markBoot("window");
+  const window = createStudioWindow(boot, current.url);
   boot.native.trackWindow(window);
   return window;
+}
+
+function showEarlyWindow(
+  boot: Boot,
+  window: BrowserWindow,
+  current: ServerSession
+): void {
+  if (window.isDestroyed()) {
+    openWindow(boot, current);
+    return;
+  }
+  console.log(`[desktop] window: studio ${current.url} (early window)`);
+  boot.markBoot("window");
+  boot.native.trackWindow(window);
+  void window.loadURL(current.url);
 }
 
 function focusWindow(boot: Boot): void {
@@ -400,14 +433,17 @@ async function runBoot(boot: Boot): Promise<void> {
     app.exit(0);
     return;
   }
-  const [current] = await Promise.all([
-    launchServer(boot, prepared),
-    firstRun(boot, prepared),
-  ]);
+  const spawned = Promise.withResolvers<null>();
+  const launching = launchServer(boot, prepared, () => spawned.resolve(null));
+  const started = Promise.all([launching, firstRun(boot, prepared)]);
+  await Promise.race([spawned.promise, started]);
+  const early = createStudioWindow(boot, null);
+  boot.markBoot("earlyWindow");
+  const [current] = await started;
   if (boot.state().isServerStopping || boot.state().isServerStopped) return;
   await restartIfClaudeMoved(boot, prepared);
   boot.allowWindows();
-  openWindow(boot, boot.state().session ?? current);
+  showEarlyWindow(boot, early, boot.state().session ?? current);
   updater.start();
 }
 

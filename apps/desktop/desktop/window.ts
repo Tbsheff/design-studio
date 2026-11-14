@@ -13,7 +13,7 @@ import type {
 import { markFullScreenInPage } from "./window.renderer.js";
 
 export interface WindowOptions {
-  url: string;
+  url: string | null;
   preload: string;
   stateFile: string;
   version: string;
@@ -138,7 +138,10 @@ export function createMainWindow(options: WindowOptions): BrowserWindow {
   trackState(window, options.stateFile);
   trackFullScreen(window);
   window.once("ready-to-show", () => window.show());
-  void window.loadURL(options.url);
+
+  if (options.url !== null) {
+    void window.loadURL(options.url);
+  }
 
   return window;
 }

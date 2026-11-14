@@ -1,6 +1,8 @@
 import { execFile } from "node:child_process";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+
+import { resolveClaude } from "./claude-cli.js";
 
 type Env = Record<string, string>;
 
@@ -11,6 +13,12 @@ const EXTRA_KEYS = ["DESIGN_MEMORY_HOME", "ANTHROPIC_API_KEY"];
 const STUDIO_PREFIX = "STUDIO_";
 const PATH_MARK = "__STUDIO_PATH__";
 const LOGIN_SHELL_TIMEOUT_MS = 3000;
+const VERSION_MANAGER_DIRS = [
+  ".nvm",
+  ".volta",
+  ".asdf",
+  path.join(".local", "share", "fnm"),
+];
 
 function pick(source: SourceEnv, keys: string[]): Env {
   const out: Env = {};
@@ -143,6 +151,52 @@ async function saveLoginPath(file: string, dirs: string[]): Promise<void> {
   await writeFile(file, `${dirs.join(":")}\n`);
 }
 
+const isPresent = async (target: string): Promise<boolean> => {
+  try {
+    await access(target);
+
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const hasVersionManager = async (home: string): Promise<boolean> => {
+  const found = await Promise.all(
+    VERSION_MANAGER_DIRS.map((dir) => isPresent(path.join(home, dir)))
+  );
+
+  return found.includes(true);
+};
+
+const toPresentDirs = async (dirs: string[]): Promise<string[]> => {
+  const found = await Promise.all(dirs.map((dir) => isPresent(dir)));
+
+  return dirs.filter((_dir, index) => found[index] === true);
+};
+
+const toFirstLaunchPath = async (
+  source: SourceEnv,
+  home: string,
+  extra: string[]
+): Promise<string[] | null> => {
+  if (await hasVersionManager(home)) {
+    return null;
+  }
+
+  const known = await toPresentDirs(knownPathDirs(home, extra));
+  const searchPath = mergePath((source.PATH ?? "").split(":"), known).split(
+    ":"
+  );
+  const claude = resolveClaude({ env: source, home, searchPath });
+
+  if (claude === null) {
+    return null;
+  }
+
+  return mergePath(searchPath, [path.dirname(claude.path)]).split(":");
+};
+
 export {
   baseEnv,
   buildServerEnv,
@@ -153,6 +207,7 @@ export {
   parseShellPath,
   readSavedLoginPath,
   saveLoginPath,
+  toFirstLaunchPath,
 };
 
 export type { Env };

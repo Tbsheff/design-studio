@@ -5,13 +5,40 @@ const SLUG_MAX_LENGTH = 48;
 const SLUG_FALLBACK = "untitled";
 export const MAX_SLUG_SUFFIX = 999;
 
-export function nameFromPrompt(prompt: string): string {
-  const words = withoutAnswers(prompt)
-    .replaceAll(/\s+/g, " ")
+const NAME_WORDS_MAX = 6;
+
+const SPACES = /\s+/gu;
+
+const TRAILING_LINKS: ReadonlySet<string> = new Set([
+  "with",
+  "for",
+  "and",
+  "of",
+  "to",
+  "that",
+  "which",
+]);
+
+const isTrailingLink = (word: string | undefined): boolean =>
+  TRAILING_LINKS.has(word?.toLowerCase() ?? "");
+
+const toClauseWords = (prompt: string): string[] => {
+  const [clause = ""] = withoutAnswers(prompt).split(",");
+  const words = clause
+    .replaceAll(SPACES, " ")
     .trim()
     .split(" ")
-    .slice(0, 6)
-    .join(" ");
+    .slice(0, NAME_WORDS_MAX);
+
+  while (words.length > 1 && isTrailingLink(words.at(-1))) {
+    words.pop();
+  }
+
+  return words;
+};
+
+export function nameFromPrompt(prompt: string): string {
+  const words = toClauseWords(prompt).join(" ");
 
   return words.length > 48 ? `${words.slice(0, 47)}…` : words || "Untitled";
 }

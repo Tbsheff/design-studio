@@ -1,0 +1,52 @@
+== run.get afterEvent=50
+    "request": {
+      "level": "prototype",
+      "mode": "edit",
+      "prompt": "[slowlong] make the hero warmer"
+    },
+    "sessionId": "mock-main-3kVBkXhCtXjs0aN1mwYDN",
+    "startedAt": 1794654342622,
+    "status": "failed",
+    "toolCalls": [],
+    "toolMs": 0,
+    "usage": {
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "inputTokens": 0,
+      "outputTokens": 0
+    },
+    "versionId": null
+  }
+}
+
+[agent] skipped: agent binding is off (run-control)
+
+answered approval cards: none
+
+call-action: pass, 2 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results
+== fixture.create /patients (reuses fx-94b683 on every surface)
+  "frameId": "f2",
+  "removed": [
+    "await prefetchPatients(...)"
+  ],
+  "route": "/__studio-fixture/fx-94b683",
+  "unresolved": [],
+  "versionId": null
+}
+
+[agent] ok, 4 ms, git spawns: not counted (server side)
+{
+  "file": "app/%5F%5Fstudio-fixture/fx-94b683/page.jsx",
+  "fixtureId": "fx-94b683",
+  "frameId": "f2",
+  "removed": [
+    "await prefetchPatients(...)"
+  ],
+  "route": "/__studio-fixture/fx-94b683",
+  "unresolved": [],
+  "versionId": null
+}
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

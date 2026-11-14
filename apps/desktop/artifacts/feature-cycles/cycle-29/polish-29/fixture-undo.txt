@@ -1,0 +1,7 @@
+== main (copy e0B0n5n8qZ): history after the fixture copy: [Remove frame Frame 1, Import page index.html] -> 2 undo steps
+== branch: copy fixture route into the empty copy YoRyaI0sjb
+200 4214ms {"folder":"/Volumes/DevProjects/code/ds-wt/polish-29-projects/prototypes/p29-next/redesign-patients-two","pro
+== edit history
+200 3ms {"canUndo":true,"canRedo":false,"undoLabel":"Import page index.html","redoLabel":null,"undo":[{"label":"Import page index.html","versionId":"68e8b3a96a7c82e8dd808ad879b8f727f3530869","files":["index.html",".studio/canvas.json"]}],"redo":[]}
+== canvas frames
+[["f1","index.html","Clinic"]]

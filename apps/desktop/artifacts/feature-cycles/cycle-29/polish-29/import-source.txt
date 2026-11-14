@@ -1,0 +1,8 @@
+== main: import_source_page on fixture copy e0B0n5n8qZ
+400 2183ms {"_tag":"BadRequest","code":null,"error":"BadRequest","message":"http://127.0.0.1:9500/patients answered 500."}
+
+== branch: same call (the copy records /patients; fixture fx-94b683 has sourceRoute /patients)
+200 5702ms {"frameId":"f3","page":"index-app.html","routePath":"/patients","sourcePage":"index.html","versionId":"fe57b52fc64f87552097d647db7c984780a44c05"}
+== edit history
+200 2ms {"canUndo":true,"canRedo":false,"undoLabel":"Import page index-app.html","redoLabel":null,"undo":[{"label":"Import page index-app.html","versionId":"fe57b52fc64f87552097d647db7c984780a44c05","files":["index-app.html",".studio/canvas.json"]}],"redo":[]}
+

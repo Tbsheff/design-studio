@@ -1,0 +1,11 @@
+== main: 2 calls gave fx-965e0c and fx-836866 (2 folders)
+== branch: fixture.create twice, same route and params
+200 127ms {"file":"app/%5F%5Fstudio-fixture/fx-94b683/page.jsx","fixtureId":"fx-94b683","frameId":"f2","removed":["await prefetchPatients(...)"],"route":"/__studio-fixture/fx-94b683","unresolved":[],"versionId":"92e38c0a3456449ee5045e749477b1f2477eb730"}
+200 6ms {"file":"app/%5F%5Fstudio-fixture/fx-94b683/page.jsx","fixtureId":"fx-94b683","frameId":"f2","removed":["await prefetchPatients(...)"],"route":"/__studio-fixture/fx-94b683","unresolved":[],"versionId":null}
+== other params give a new fixture
+200 75ms {"file":"app/%5F%5Fstudio-fixture/fx-88b983/page.jsx","fixtureId":"fx-88b983","frameId":"f3","removed":["await prefetchPatients(...)"],"route":"/__studio-fixture/fx-88b983","unresolved":[],"versionId":"338bcc6cca841112557b33e36585afaa1e3f64c6"}
+== fixture folders
+fx-88b983
+fx-94b683
+== list_fixture
+200 3ms {"items":[{"createdAt":"2026-11-14T11:03:29.174Z","file":"app/%5F%5Fstudio-fixture/fx-94b683/page.jsx","frameId":"f2","id":"fx-94b683","route":"/__studio-fixture/fx-94b683","sourceRoute":"/patients"},{"createdAt":"2026-11-14T11:03:29.905Z","file":"app/%5F%5Fstudio-fixture/fx-88b983/page.jsx","frameId":"f3","id":"fx-88b983","route":"/__studio-fixture/fx-88b983","sourceRoute":"/patients"}],"next":null}

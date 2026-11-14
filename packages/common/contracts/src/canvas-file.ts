@@ -139,19 +139,16 @@ function coord(value: unknown): number | null {
   return Math.abs(n) <= CANVAS_MAX_COORD ? n : null;
 }
 
-function toClampedSide(value: number, max: number): number {
-  return Math.round(Math.min(max, Math.max(CANVAS_MIN_SIDE, value)));
-}
+const toClampedSide = (value: number, max: number): number =>
+  Math.round(Math.min(max, Math.max(CANVAS_MIN_SIDE, value)));
 
-export function toFrameSize(
+export const toFrameSize = (
   width: number,
   height: number
-): Pick<CanvasFileFrame, "height" | "width"> {
-  return {
-    height: toClampedSide(height, CANVAS_MAX_HEIGHT),
-    width: toClampedSide(width, CANVAS_MAX_SIDE),
-  };
-}
+): Pick<CanvasFileFrame, "height" | "width"> => ({
+  height: toClampedSide(height, CANVAS_MAX_HEIGHT),
+  width: toClampedSide(width, CANVAS_MAX_SIDE),
+});
 
 export function parseCanvasFrame(raw: unknown): CanvasFileFrame | null {
   if (!raw || typeof raw !== "object") {

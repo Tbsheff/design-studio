@@ -1,4 +1,4 @@
-import { appElementBySource, appHydrated, appSourceFor } from "./app-source.js";
+import { appHydrated, appSourceFor } from "./app-source.js";
 import type { BridgeContext, MessageHandlers } from "./bridge-types.js";
 import { eventElement, isNumber, isString } from "./dom-input.js";
 import {
@@ -6,11 +6,10 @@ import {
   selectionFor,
   selectorFor,
   shortLabel,
-  textOf,
 } from "./element-info.js";
 import { dropElement, insideTarget, toDropTarget } from "./insert-target.js";
-import { elementBySource } from "./reorder.js";
 import { isMatchKind, matchingElements } from "./select-match.js";
+import { selectSource } from "./select-sources.js";
 import { APP_MODE, SELECT_RETRIES, SELECT_RETRY_MS } from "./session.js";
 import { findStyles } from "./style-scan.js";
 
@@ -129,18 +128,6 @@ const createLookupHandlers = (
   };
 };
 
-const selectBySource = async (
-  sourceLoc: string,
-  tag: string,
-  postSelect: BridgeContext["postSelect"]
-): Promise<void> => {
-  const found = await appElementBySource(sourceLoc, tag);
-
-  if (found) {
-    postSelect(found, false);
-  }
-};
-
 const createRetryHandlers = (
   context: BridgeContext
 ): Pick<
@@ -206,17 +193,7 @@ const createRetryHandlers = (
       attempt(SELECT_RETRIES);
     },
     "select-source": (message) => {
-      const element = elementBySource(message, textOf);
-
-      if (element) {
-        postSelect(element, false);
-      } else if (
-        APP_MODE === "next" &&
-        isString(message.sourceLoc) &&
-        isString(message.tag)
-      ) {
-        void selectBySource(message.sourceLoc, message.tag, postSelect);
-      }
+      selectSource(message, context);
     },
   };
 };

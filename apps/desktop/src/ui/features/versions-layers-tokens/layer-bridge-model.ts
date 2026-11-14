@@ -36,6 +36,16 @@ const isStructureMessage = (
   message.type === "structure-key" &&
   Object.hasOwn(STRUCTURE_KEY_IDS, message.key);
 
+const toManySelections = (
+  message: BridgeToParent
+): readonly SelectionContext[] => {
+  if (message.type !== "select-many" || !Array.isArray(message.selections)) {
+    return [];
+  }
+
+  return message.selections;
+};
+
 const runBridgeKeys = (
   context: LayerBridgeContext,
   message: BridgeToParent
@@ -76,6 +86,12 @@ const handleLayerBridge = (
     Object(message.selection) === message.selection
   ) {
     context.resolveReselect(frame.token, message.selection);
+  }
+
+  const [firstPicked] = toManySelections(message);
+
+  if (firstPicked) {
+    context.resolveReselect(frame.token, firstPicked);
   }
 
   runBridgeKeys(context, message);

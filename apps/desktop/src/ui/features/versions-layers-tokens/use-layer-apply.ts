@@ -81,6 +81,7 @@ const settleApply = (
     fromSelector: target.selector,
     loc: toLocKey(moved ?? source),
     move: "move" in change,
+    others: [],
     tag: target.tag.toLowerCase(),
     text: target.text,
     token,

@@ -1892,6 +1892,7 @@ export type ParentToBridge =
       sourceLoc: string;
       tag: string;
       text: string;
+      others?: readonly { sourceLoc: string; tag: string }[];
     }
   | { ns: "studio"; token: string; type: "select-selector"; selector: string }
   | {

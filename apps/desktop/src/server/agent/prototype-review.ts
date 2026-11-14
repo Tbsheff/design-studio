@@ -4,6 +4,7 @@ import type { AgentRunContext } from "../../shared/server-ports.js";
 import { appReviewGaps } from "./final-check.js";
 import type { AppReviewGaps } from "./final-check.js";
 import { EDIT_TOOL_NAMES } from "./permissions.js";
+import { toFlowReviewGaps } from "./prototype-flow-review.js";
 import {
   isStudioRan,
   toKitAfterClause,
@@ -86,7 +87,8 @@ const toReviewGaps = (
 ): AppReviewGaps | null =>
   appReviewGaps(ctx, run, toolOrder) ??
   toPrototypeReviewGaps(ctx, run, toolOrder) ??
-  toKitReviewGaps(ctx, run, toolOrder);
+  toKitReviewGaps(ctx, run, toolOrder) ??
+  toFlowReviewGaps(ctx, run, toolOrder);
 
 const toPassText = (record: AppReviewRecord, index: number): string => {
   let old = "";

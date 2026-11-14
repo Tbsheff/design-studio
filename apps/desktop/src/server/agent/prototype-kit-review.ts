@@ -15,6 +15,12 @@ import {
 } from "../components/kit-drift/kit-drift-prototype.js";
 import type { PrototypeDrift } from "../components/kit-drift/kit-drift-prototype.js";
 import type { AppReviewGaps } from "./final-check.js";
+import {
+  isFlowGaps,
+  listFlowLines,
+  toFlowOpening,
+} from "./prototype-flow-review.js";
+import type { FlowContext } from "./prototype-flow-review.js";
 
 interface KitGroup {
   readonly finds: readonly MarkupDrift[];
@@ -234,7 +240,7 @@ const setKitCount = (ctx: KitContext, count: number): void => {
   KIT_COUNTS.set(ctx, [...(KIT_COUNTS.get(ctx) ?? []), count]);
 };
 
-const listKitLines = async (
+const listKitDriftLines = async (
   ctx: KitContext,
   preview: PreviewService
 ): Promise<string[]> => {
@@ -269,6 +275,18 @@ const listKitLines = async (
   return lines;
 };
 
+const listKitLines = async (
+  ctx: FlowContext,
+  preview: PreviewService
+): Promise<string[]> => {
+  const [kit, flow] = await Promise.all([
+    listKitDriftLines(ctx, preview),
+    listFlowLines(ctx),
+  ]);
+
+  return [...kit, ...flow];
+};
+
 const toKitGaps = (ctx: KitContext, hasEdit: boolean): AppReviewGaps | null => {
   if (!hasEdit || !isKitRun(ctx)) {
     return null;
@@ -292,6 +310,10 @@ const toRanList = (gaps: AppReviewGaps): string => {
 };
 
 const toReviewOpening = (gaps: AppReviewGaps, pass: number): string | null => {
+  if (isFlowGaps(gaps)) {
+    return toFlowOpening(gaps, pass);
+  }
+
   if (isKitOnly(gaps)) {
     if (pass > 1) {
       return null;

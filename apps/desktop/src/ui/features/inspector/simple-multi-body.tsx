@@ -12,6 +12,7 @@ import { SelectMatchingSection } from "./select-matching-section.js";
 import type { EditorProps, MultiEdit } from "./simple-model.js";
 import { TokenNotes } from "./token-notes.js";
 import type { UseInspectorTokensResult } from "./token-scope-model.js";
+import type { Rotation } from "./use-rotation.js";
 
 interface SimpleMultiBodyProps {
   readonly props: EditorProps;
@@ -19,6 +20,7 @@ interface SimpleMultiBodyProps {
   readonly edit: MultiEdit;
   readonly tokens: UseInspectorTokensResult;
   readonly keepRaw: (raw: Parameters<MultiEdit["preview"]>[0]) => void;
+  readonly rotation: Rotation;
 }
 
 const SimpleMultiBody = ({
@@ -27,6 +29,7 @@ const SimpleMultiBody = ({
   edit,
   tokens,
   keepRaw,
+  rotation,
 }: SimpleMultiBodyProps): ReactElement => {
   const { projectId, directionId, selection, port } = props;
   const { dismiss, note } = tokens.snap;
@@ -61,7 +64,12 @@ const SimpleMultiBody = ({
         <MultiNote reason={edit.blocked} />
         <ErrorLine status={edit.status} text={null} />
         {component}
-        <MultiFieldset edit={edit} ui={tokens.ui} textStyle={textStyle} />
+        <MultiFieldset
+          edit={edit}
+          ui={tokens.ui}
+          textStyle={textStyle}
+          rotation={rotation}
+        />
         <MatchSection
           projectId={projectId}
           directionId={directionId}

@@ -30,7 +30,7 @@ const getRun = defineAction({
   agent: { off: "run-control" },
   confirm: "none",
   description:
-    "Read one run by id. Returns its status at the top level, events, the messages sent to it and its summary. Pass waitSeconds (up to 120) to wait until the run ends, and afterEvent with the last eventCount to get only new events. Read only.",
+    "Read one run by id. Returns its status at the top level, events, the messages sent to it and its summary. Pass waitSeconds (up to 120) to wait until the run ends, and afterEvent with the last eventCount to get only new events. With afterEvent, sent also holds only the messages sent after that event. Read only.",
   errors: [NotFound],
   http: { method: "GET", path: "/api/projects/:projectId/runs/:runId" },
   id: "run.get",

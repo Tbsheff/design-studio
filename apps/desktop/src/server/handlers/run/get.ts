@@ -32,6 +32,18 @@ const toNewEvents = <Event>(
   return events.slice(afterEvent);
 };
 
+const toNewSent = <Sent>(
+  sent: readonly Sent[],
+  sentAfter: readonly number[],
+  afterEvent: number | null
+): readonly Sent[] => {
+  if (afterEvent === null) {
+    return sent;
+  }
+
+  return sent.filter((_record, index) => (sentAfter[index] ?? 0) >= afterEvent);
+};
+
 const handle = Effect.fn("run.get")(function* run(input: GetRunInput) {
   const service = yield* RunLogStore;
   const decisionStore = yield* RunDecisionStore;
@@ -43,15 +55,18 @@ const handle = Effect.fn("run.get")(function* run(input: GetRunInput) {
   }
 
   const detail = yield* service.get(input.projectId, input.runId);
-  const decisions = yield* decisionStore.list(input.projectId, input.runId);
+  const picks = yield* decisionStore.list(input.projectId, input.runId);
+  const { events, sent, sentAfter } = detail;
+  const runSummary = detail.summary;
 
   return {
-    ...detail,
-    decisions,
-    eventCount: detail.events.length,
-    events: toNewEvents(detail.events, input.afterEvent),
-    selectionPicture: detail.summary?.request.selectionPicture ?? null,
-    status: toRunStatus(detail.summary),
+    decisions: picks,
+    eventCount: events.length,
+    events: toNewEvents(events, input.afterEvent),
+    selectionPicture: runSummary?.request.selectionPicture ?? null,
+    sent: toNewSent(sent, sentAfter, input.afterEvent),
+    status: toRunStatus(runSummary),
+    summary: runSummary,
   };
 }) satisfies Handle<typeof getRun>;
 

@@ -1,0 +1,13 @@
+before undo steps: 0 
+before <div class="avatars"> <div class="avatar one" id="av-one"> <div class="avatar two" id="av-two">
+before top at overlap: av-two; z one=auto two=auto
+SEL 2 elements
+STACKING POST {"zIndex":"1","breakpoint":"base","others":[{"target":{"selector":"#av-one","source":{"col":1,"file":"index.html","line":14},"tag":"div"},"zIndex":"1"}],"target":{"selector":"body > main > div:nth-of-type(1) > span","source":{"col":1,"file":"index.html","line":9},"tag":"span"}}
+RESP POST /api/projects/skQt5qJ3Js/d/main/stacking 200
+after undo steps: 1 Stacking: z-index 1 on 2 layers
+after <div class="avatars"> <div class="avatar two" id="av-two">
+after top at overlap: av-one; z one=1 two=auto
+RESP POST /api/projects/skQt5qJ3Js/d/main/edit-history/undo 200
+undo undo steps: 0 
+undo <div class="avatars"> <div class="avatar one" id="av-one"> <div class="avatar two" id="av-two">
+undo top at overlap: av-two; z one=auto two=auto

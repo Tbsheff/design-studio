@@ -1,0 +1,106 @@
+97 held action ids (run-action checkReady rule)
+accessibility.set
+animation.create
+animation.delete
+animation.update
+block.insert
+canvas.createLinkedFrame
+canvas.createPageFrames
+canvas.importFrame
+chart.insert
+component-variant.create
+component-variant.update
+content.apply
+critique.run
+critique.runAttention
+direct-edit.apply
+direct-edit.applyReviewFix
+direct-edit.applySwap
+direct-edit.createComponent
+direct-edit.createToken
+direct-edit.deleteText
+direct-edit.importFigma
+direct-edit.insertComponent
+direct-edit.insertJsx
+direct-edit.run
+direct-edit.setImage
+direct-edit.setRules
+direct-edit.setTweak
+direct-edit.setVariantClasses
+direct-edit.setVector
+direct-edit.updateTokens
+direct-edit.updateTweaks
+effect.create
+effect.delete
+effect.set
+fill.set
+gallery.create
+grid.set
+grid.setGridItem
+icon.insert
+image-search.apply
+image-search.insert
+image.create
+image.update
+kit-drift.apply
+layer-style.apply
+layer-style.set
+layer-style.update
+motion.set
+pack.applyPack
+page.import
+page.importSource
+page.setSource
+page.updateMatches
+pattern.insert
+prop.create
+prop.delete
+prop.rename
+prop.set
+run.start
+scenario.apply
+scenario.create
+scenario.run
+screen.create
+screen.duplicate
+spacing.set
+spacing.setDivider
+stacking.set
+state-style.set
+state-style.setForced
+text-style.apply
+text-style.create
+text-style.update
+text.applyRange
+text.run
+text.update
+theme.apply
+theme.create
+theme.import
+theme.set
+token.apply
+token.delete
+token.import
+token.rename
+token.set
+version.applyHistory
+version.applyHunk
+version.create
+version.createSession
+version.deleteSession
+version.restore
+version.restoreChange
+version.restoreHead
+version.restoreHistory
+version.restoreWorkTree
+viewport.apply
+viewport.create
+viewport.run
+canvas.setPresence: not held
+comment.insert: not held
+canvas.createFrame: not held
+canvas.updateFrame: not held
+canvas.setPoint: not held
+canvas.setFrameHeights: not held
+kit-drift.apply: held
+stacking.set: held

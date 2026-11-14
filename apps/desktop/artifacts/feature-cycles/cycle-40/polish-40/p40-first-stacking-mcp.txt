@@ -1,0 +1,7 @@
+attach: 326 ms, project VO2bYnn_XE, firstVersion null
+list_kit_drift: 6 ms, 4 high ids
+set_stacking first: 313 ms, isError false
+{"breakpoint":"base","classes":{"add":["z-10"],"remove":[]},"files":["app/loading/page.tsx"],"mode":"classes","prefix":"","style":{},"title":"Stacking: z-index 10","versionId":"pending-11823508206c30a7"}
+set_stacking second: 51 ms, isError false
+{"breakpoint":"base","classes":{"add":["z-20"],"remove":["z-10"]},"files":["app/loading/page.tsx"],"mode":"classes","prefix":"","style":{},"title":"Stacking: z-index 20","versionId":"pending-f74f4f1449779839"}
+PROJECT=VO2bYnn_XE

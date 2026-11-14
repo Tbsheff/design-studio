@@ -22,7 +22,7 @@ import type {
   DirectionRun,
   Project,
 } from "./deps.js";
-import { toThemes } from "./engine/index.js";
+import { toMergedFontLink, toThemes } from "./engine/index.js";
 import type { ThemeChange, ThemeDraft, ThemeRole } from "./engine/index.js";
 import type { StoredTheme } from "./theme-model.js";
 import { setSavedThemes } from "./theme-saved.js";
@@ -67,7 +67,9 @@ const STARTER_SEED = 1;
 
 const STARTER_TITLE = "Starter look";
 
-const STARTER_RADIUS = "10px";
+const STARTER_RADIUS = "8px";
+
+const STARTER_RADIUS_PATH = "radius.md";
 
 const BRIEF_MAX = 400;
 
@@ -119,6 +121,9 @@ const toStarterDrafts = (brief: string): readonly ThemeDraft[] | null => {
     brief: brief.trim().slice(0, BRIEF_MAX),
     count: STARTER_COUNT,
     fonts: [],
+    linkedFonts: null,
+    radiusDefault: STARTER_RADIUS,
+    radiusPath: STARTER_RADIUS_PATH,
     seed: STARTER_SEED,
     tokens: STARTER_TOKENS,
   });
@@ -140,6 +145,10 @@ const toColorToken = (change: ThemeChange): StarterColorToken => {
     $value: change.value,
   };
 };
+
+const toRadiusValue = (draft: ThemeDraft): string =>
+  draft.changes.find((change) => change.role === "radius")?.value ??
+  STARTER_RADIUS;
 
 const toFontValue = (draft: ThemeDraft, role: "body" | "display"): string =>
   draft.changes.find((change) => change.role === role)?.value ??
@@ -188,7 +197,7 @@ const toStarterTokenText = (draft: ThemeDraft): string =>
         body: { $value: toFontValue(draft, "body") },
         display: { $value: toFontValue(draft, "display") },
       },
-      radius: { $type: "dimension", md: { $value: STARTER_RADIUS } },
+      radius: { $type: "dimension", md: { $value: toRadiusValue(draft) } },
     },
     null,
     2
@@ -197,15 +206,38 @@ const toStarterTokenText = (draft: ThemeDraft): string =>
 const toFamilyName = (stack: string): string =>
   (stack.split(",")[0] ?? stack).replaceAll(/["']/gu, "").trim();
 
-const toStarterManifestText = (draft: ThemeDraft): string =>
+interface StarterFonts {
+  readonly body: string;
+  readonly display: string;
+  readonly googleFontsUrl?: string;
+  readonly mono: string;
+}
+
+const toFontsField = (
+  draft: ThemeDraft,
+  fontLink: string | null
+): StarterFonts => {
+  const fonts = {
+    body: toFamilyName(toFontValue(draft, "body")),
+    display: toFamilyName(toFontValue(draft, "display")),
+    mono: "ui-monospace",
+  };
+
+  if (fontLink === null) {
+    return fonts;
+  }
+
+  return { ...fonts, googleFontsUrl: fontLink };
+};
+
+const toStarterManifestText = (
+  draft: ThemeDraft,
+  fontLink: string | null
+): string =>
   `${JSON.stringify(
     {
       description: `${STARTER_TITLE} made from the first prompt: ${draft.name}.`,
-      fonts: {
-        body: toFamilyName(toFontValue(draft, "body")),
-        display: toFamilyName(toFontValue(draft, "display")),
-        mono: "ui-monospace",
-      },
+      fonts: toFontsField(draft, fontLink),
       id: "starter-look",
       license: "MIT",
       mode: "light",
@@ -217,10 +249,32 @@ const toStarterManifestText = (draft: ThemeDraft): string =>
     2
   )}\n`;
 
+interface StarterChoice {
+  readonly draft: ThemeDraft;
+  readonly fontLink: string | null;
+}
+
+const toStarterChoice = (
+  drafts: readonly ThemeDraft[]
+): StarterChoice | null => {
+  const [draft] = drafts;
+
+  if (!draft) {
+    return null;
+  }
+
+  return {
+    draft,
+    fontLink: toMergedFontLink(drafts.map((item) => item.fontLink)),
+  };
+};
+
 const createStarterFiles = async (
   workTree: string,
-  draft: ThemeDraft
+  choice: StarterChoice
 ): Promise<readonly string[]> => {
+  const { draft } = choice;
+
   if (await isFilePresent(path.join(workTree, TOKENS_FILE))) {
     return [];
   }
@@ -238,7 +292,7 @@ const createStarterFiles = async (
   await writeAtomic(path.join(workTree, TOKENS_FILE), text, options);
   await writeAtomic(
     path.join(workTree, PACK_FILE),
-    toStarterManifestText(draft),
+    toStarterManifestText(draft, choice.fontLink),
     options
   );
   await writeAtomic(path.join(workTree, TOKENS_CSS_FILE), css, options);
@@ -252,13 +306,13 @@ const createStarterVersion = async (
   direction: Direction,
   brief: string
 ): Promise<boolean> => {
-  const [first] = toStarterDrafts(brief) ?? [];
+  const choice = toStarterChoice(toStarterDrafts(brief) ?? []);
 
-  if (!first) {
+  if (choice === null) {
     return false;
   }
 
-  const written = await createStarterFiles(direction.workTree, first);
+  const written = await createStarterFiles(direction.workTree, choice);
 
   if (written.length === 0) {
     return false;
@@ -269,7 +323,7 @@ const createStarterVersion = async (
     direction,
     [...written],
     STARTER_TITLE,
-    { kind: "manual", prompt: `${STARTER_TITLE}: ${first.name}` }
+    { kind: "manual", prompt: `${STARTER_TITLE}: ${choice.draft.name}` }
   );
 
   return true;
@@ -295,23 +349,23 @@ const toStoredTheme = (draft: ThemeDraft): StoredTheme => ({
 });
 
 const toStarterTask =
-  (draft: ThemeDraft) =>
+  (choice: StarterChoice) =>
   ({ direction }: DirectionRun): Promise<readonly string[]> =>
-    createStarterFiles(direction.workTree, draft);
+    createStarterFiles(direction.workTree, choice);
 
 const createStarterLook = Effect.fn("ThemeStarter.create")(function* run(
   command: StarterLookCommand
 ) {
-  const drafts = toStarterDrafts(command.brief);
-  const [first] = drafts ?? [];
+  const drafts = toStarterDrafts(command.brief) ?? [];
+  const choice = toStarterChoice(drafts);
 
-  if (drafts === null || !first) {
+  if (choice === null) {
     return null;
   }
 
   const written = yield* runDirectionRead(
     command,
-    toStarterTask(first),
+    toStarterTask(choice),
     toDirectEditStatusFailure
   );
 
@@ -325,7 +379,7 @@ const createStarterLook = Effect.fn("ThemeStarter.create")(function* run(
   });
 
   const look: StarterLook = {
-    chosen: first.name,
+    chosen: choice.draft.name,
     options: drafts.map((draft) => draft.name),
     written,
   };

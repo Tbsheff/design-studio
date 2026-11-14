@@ -1,6 +1,7 @@
 import { toBriefHint } from "./brief.js";
 import { toContrast, toHue, toHueOf } from "./color.js";
-import { toFontPair } from "./fonts.js";
+import { toFontLink, toFontPair, toWebPairOrder } from "./fonts.js";
+import type { FontPair } from "./fonts.js";
 import { toThemeName } from "./names.js";
 import { MIN_RATIO, toDarkPalette, toLightPalette } from "./palette.js";
 import type { PaletteSpec } from "./palette.js";
@@ -103,6 +104,19 @@ const toRows = (
     ];
   });
 
+const toRadiusChange = (
+  input: ThemeInput,
+  briefRadius: string | null
+): ThemeChange[] => {
+  const value = briefRadius ?? input.radiusDefault;
+
+  if (input.radiusPath === null || value === null) {
+    return [];
+  }
+
+  return [{ darkValue: null, path: input.radiusPath, role: "radius", value }];
+};
+
 const toChanges = (
   tokens: ThemeTokenMap,
   light: ThemePalette,
@@ -174,6 +188,7 @@ const toDraft = (
   slot: {
     readonly anchor: number;
     readonly index: number;
+    readonly pairs: readonly FontPair[];
     readonly spread: number;
   }
 ): ThemeDraft | null => {
@@ -183,7 +198,10 @@ const toDraft = (
   const spec = toSpec(random, hue);
   const light = toLightPalette(spec);
   const dark = toDarkPalette(spec);
-  const pair = toFontPair(random, input.fonts, hint.mood);
+
+  const pair =
+    slot.pairs[slot.index % Math.max(1, slot.pairs.length)] ??
+    toFontPair(random, input.fonts, hint.mood);
 
   const present = (role: ThemeRole): boolean =>
     input.tokens.roles[role] !== null;
@@ -197,10 +215,13 @@ const toDraft = (
     return null;
   }
 
-  const changes = toChanges(input.tokens, light, dark, {
-    body: pair.body.stack,
-    display: pair.display.stack,
-  });
+  const changes = [
+    ...toChanges(input.tokens, light, dark, {
+      body: pair.body.stack,
+      display: pair.display.stack,
+    }),
+    ...toRadiusChange(input, hint.radius),
+  ];
 
   const source = [
     input.seed,
@@ -212,9 +233,9 @@ const toDraft = (
   return {
     changes,
     contrast,
-    fontLink: null,
+    fontLink: toFontLink([pair]),
     id: `theme-${toIdText(source)}`,
-    name: toThemeName(hue, pair.display.mood),
+    name: toThemeName(hue, pair.display.mood, pair.display.family),
     seed: input.seed,
   };
 };
@@ -239,6 +260,12 @@ const toThemes = (input: ThemeInput): ThemeResult => {
     spread = BRIEF_SPREAD;
   }
 
+  let pairs: readonly FontPair[] = [];
+
+  if (input.tokens.display !== null || input.tokens.body !== null) {
+    pairs = toWebPairOrder(random, input.linkedFonts, hint.mood);
+  }
+
   const drafts: ThemeDraft[] = [];
   const seen = new Set<string>();
   const attempts = input.count * ATTEMPT_FACTOR;
@@ -249,7 +276,7 @@ const toThemes = (input: ThemeInput): ThemeResult => {
     attempt += 1
   ) {
     const index = drafts.length;
-    const draft = toDraft(input, random, { anchor, index, spread });
+    const draft = toDraft(input, random, { anchor, index, pairs, spread });
 
     if (draft !== null && !seen.has(draft.id)) {
       seen.add(draft.id);

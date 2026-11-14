@@ -27,6 +27,9 @@ interface ThemeInput {
   readonly brief: string | null;
   readonly count: number;
   readonly fonts: readonly string[];
+  readonly linkedFonts: readonly string[] | null;
+  readonly radiusDefault: string | null;
+  readonly radiusPath: string | null;
   readonly seed: number;
   readonly tokens: ThemeTokenMap;
 }
@@ -51,7 +54,7 @@ interface ThemeContrast {
 interface ThemeDraft {
   readonly changes: readonly ThemeChange[];
   readonly contrast: readonly ThemeContrast[];
-  readonly fontLink: null;
+  readonly fontLink: string | null;
   readonly id: string;
   readonly name: string;
   readonly seed: number;

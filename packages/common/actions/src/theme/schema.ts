@@ -66,7 +66,7 @@ const ThemeBodySchema = Schema.Struct({
   contrast: Schema.Array(ThemeContrastSchema),
   fontLink: Schema.NullOr(Schema.String).annotate({
     description:
-      "Font link the theme adds. Always null: themes use system fonts and fonts the project has.",
+      "Google Fonts stylesheet URL for the theme fonts. Null when the theme uses system fonts or fonts the project has.",
   }),
   id: ThemeIdSchema,
   name: Schema.String.check(Schema.isMaxLength(NAME_MAX)),

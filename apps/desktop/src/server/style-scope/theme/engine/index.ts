@@ -1,5 +1,7 @@
 export { toThemes } from "./build.js";
 
+export { toLinkedFamilies, toMergedFontLink } from "./fonts.js";
+
 export { toReferenceTheme } from "./reference.js";
 
 export { toPalette } from "./to-palette.js";

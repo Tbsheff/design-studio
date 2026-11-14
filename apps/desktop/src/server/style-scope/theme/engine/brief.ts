@@ -3,6 +3,12 @@ import type { ThemeMood } from "./types.js";
 interface BriefHint {
   readonly hue: number | null;
   readonly mood: ThemeMood | null;
+  readonly radius: string | null;
+}
+
+interface RadiusRule {
+  readonly radius: string;
+  readonly words: readonly string[];
 }
 
 interface BriefRule {
@@ -16,6 +22,11 @@ const BRIEF_RULES: readonly BriefRule[] = [
     hue: 45,
     mood: null,
     words: ["warm", "sunset", "coffee", "autumn", "amber"],
+  },
+  {
+    hue: 45,
+    mood: "serif",
+    words: ["bakery", "bread", "pastry", "patisserie", "cafe"],
   },
   {
     hue: 25,
@@ -38,7 +49,18 @@ const BRIEF_RULES: readonly BriefRule[] = [
   {
     hue: null,
     mood: "serif",
-    words: ["serif", "editorial", "elegant", "classic", "luxury"],
+    words: [
+      "serif",
+      "editorial",
+      "elegant",
+      "classic",
+      "luxury",
+      "law",
+      "legal",
+      "lawyer",
+      "attorney",
+      "magazine",
+    ],
   },
   {
     hue: null,
@@ -47,6 +69,46 @@ const BRIEF_RULES: readonly BriefRule[] = [
   },
   { hue: null, mood: "rounded", words: ["rounded", "kids", "cute"] },
   { hue: null, mood: "sans", words: ["modern", "minimal", "neutral", "swiss"] },
+];
+
+const RADIUS_RULES: readonly RadiusRule[] = [
+  {
+    radius: "4px",
+    words: [
+      "editorial",
+      "finance",
+      "financial",
+      "bank",
+      "law",
+      "legal",
+      "lawyer",
+      "attorney",
+      "magazine",
+      "news",
+      "corporate",
+      "consulting",
+      "architecture",
+    ],
+  },
+  {
+    radius: "16px",
+    words: ["playful", "kids", "kid", "toy", "toys", "candy", "cute", "fun"],
+  },
+  {
+    radius: "12px",
+    words: [
+      "cafe",
+      "coffee",
+      "bakery",
+      "bread",
+      "pastry",
+      "patisserie",
+      "friendly",
+      "soft",
+      "pet",
+      "pets",
+    ],
+  },
 ];
 
 const toWords = (brief: string): ReadonlySet<string> =>
@@ -59,7 +121,7 @@ const toWords = (brief: string): ReadonlySet<string> =>
 
 const toBriefHint = (brief: string | null): BriefHint => {
   if (brief === null) {
-    return { hue: null, mood: null };
+    return { hue: null, mood: null, radius: null };
   }
 
   const words = toWords(brief);
@@ -71,6 +133,9 @@ const toBriefHint = (brief: string | null): BriefHint => {
   return {
     hue: matched.find((rule) => rule.hue !== null)?.hue ?? null,
     mood: matched.find((rule) => rule.mood !== null)?.mood ?? null,
+    radius:
+      RADIUS_RULES.find((rule) => rule.words.some((word) => words.has(word)))
+        ?.radius ?? null,
   };
 };
 

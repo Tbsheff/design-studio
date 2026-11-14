@@ -10,6 +10,12 @@ import type {
   GroupStateName,
 } from "@design-studio/contracts/state-styles";
 
+import {
+  toGroupDataValue,
+  toGroupElement,
+  toGroupState,
+} from "./force-group.js";
+
 const STYLE_ID = "studio-force-state";
 const ATTR = "data-studio-force";
 const REBUILD_MS = 120;
@@ -38,14 +44,6 @@ export const FORCED_STATES: readonly ForcedState[] = [
   ...DATA_STATE_NAMES,
   ...GROUP_STATE_NAMES,
 ];
-
-const GROUP_DATA_VALUES: Readonly<Record<GroupStateName, string | null>> = {
-  "group-checked": "checked",
-  "group-hover": null,
-  "group-open": "open",
-};
-
-const NAMED_GROUP = /(?:^|:)group-(?:hover|data-\[[^\]]*\])\/(?<name>[\w-]+):/u;
 
 interface HeldDataState {
   readonly element: Element;
@@ -310,38 +308,6 @@ function holdDataState(
   return { held: next, isChanged };
 }
 
-function groupNameOf(element: Element): string | null {
-  for (const token of Array.from(element.classList)) {
-    const hit = NAMED_GROUP.exec(token);
-
-    const name = hit?.groups?.["name"] ?? "";
-
-    if (name !== "") {
-      return name;
-    }
-  }
-
-  return null;
-}
-
-function groupOf(element: Element | null): Element | null {
-  const parent = element?.parentElement ?? null;
-
-  if (element === null || parent === null) {
-    return null;
-  }
-
-  const name = groupNameOf(element);
-
-  if (name === null) {
-    return parent.closest(".group");
-  }
-
-  const groupClass = CSS.escape(`group/${name}`);
-
-  return parent.closest(`.${groupClass}`);
-}
-
 interface ForceTargets {
   readonly dataElement: Element | null;
   readonly element: Element | null;
@@ -360,16 +326,6 @@ const NO_TARGETS: ForceTargets = {
   want: null,
 };
 
-function groupStateOf(states: readonly ForcedState[]): GroupStateName | null {
-  for (const state of states) {
-    if (isGroupStateName(state)) {
-      return state;
-    }
-  }
-
-  return null;
-}
-
 function targetsOf(current: Forced | null): ForceTargets {
   if (current === null) {
     return NO_TARGETS;
@@ -377,7 +333,7 @@ function targetsOf(current: Forced | null): ForceTargets {
 
   const element = query(current.selector);
   const pointerStates = current.states.filter((state) => isPointerState(state));
-  const grouped = groupStateOf(current.states);
+  const grouped = toGroupState(current.states);
 
   if (grouped === null) {
     return {
@@ -390,13 +346,13 @@ function targetsOf(current: Forced | null): ForceTargets {
     };
   }
 
-  const group = groupOf(element);
+  const group = toGroupElement(element);
 
   return {
     dataElement: group,
     isGroupHover: grouped === "group-hover",
     pointer: pointerStates,
-    want: GROUP_DATA_VALUES[grouped],
+    want: toGroupDataValue(grouped),
     element,
     group,
   };

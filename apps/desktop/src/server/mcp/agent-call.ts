@@ -2,6 +2,7 @@ import { AllActions } from "@design-studio/actions";
 import type { AnyAction } from "@design-studio/actions/_core/action";
 import { Schema } from "effect";
 
+import { TARGET_SCOPED_ACTIONS } from "../agent-tools/index.js";
 import { actionCaller, runActionCaller } from "./registry.js";
 import type { CallById } from "./registry.js";
 import type { TextResult } from "./tool-result.js";
@@ -56,11 +57,25 @@ const toDirectionId = (args: AgentCallArgs): string => {
   return MAIN_DIRECTION;
 };
 
+const toScopeProjectId = (
+  action: AnyAction,
+  args: AgentCallArgs
+): Schema.Json | null => {
+  const { projectId, targetProjectId } = args;
+
+  if (TARGET_SCOPED_ACTIONS.has(action.id)) {
+    return targetProjectId ?? null;
+  }
+
+  return projectId ?? null;
+};
+
 const toAgentCaller = (
   runtime: AgentRuntime,
+  action: AnyAction,
   args: AgentCallArgs
 ): CallById | null => {
-  const { projectId } = args;
+  const projectId = toScopeProjectId(action, args);
 
   if (!isText(projectId)) {
     return actionCaller(runtime);
@@ -91,7 +106,7 @@ const runAgentTool = (
   }
 
   const { args } = body;
-  const caller = toAgentCaller(runtime, args);
+  const caller = toAgentCaller(runtime, action, args);
 
   if (caller === null) {
     return Promise.resolve(toRefusal(RUNTIME_OFF));

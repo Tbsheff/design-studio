@@ -1,3 +1,5 @@
+export { TARGET_SCOPED_ACTIONS } from "./registry.js";
+
 export { toSdkFieldSet } from "./sdk-shape.js";
 
 export {

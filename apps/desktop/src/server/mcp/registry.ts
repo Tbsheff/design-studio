@@ -5,6 +5,7 @@ import type { McpApprovalOutcome } from "@design-studio/contracts";
 import { Effect, Schema } from "effect";
 import type { JsonSchema } from "effect";
 
+import { TARGET_SCOPED_ACTIONS } from "../agent-tools/index.js";
 import type { AgentArgs } from "../agent-tools/registry.js";
 import { actionDeniedMessage } from "../agent/ask-gate.js";
 import type { ActionAsk } from "../agent/ask-gate.js";
@@ -339,8 +340,6 @@ interface RunScope {
   readonly directionId: string;
   readonly projectId: string;
 }
-
-const TARGET_SCOPED_ACTIONS: ReadonlySet<string> = new Set(["port.inspect"]);
 
 const toScopeEntries = (
   action: AnyAction,

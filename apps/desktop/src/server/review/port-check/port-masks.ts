@@ -229,7 +229,11 @@ const toAreaElements = (
     .filter((element) => isInArea(element, area, width))
     .toSorted((first, second) => toRank(first) - toRank(second))
     .slice(0, PORT_AREA_ELEMENTS_MAX)
-    .map((element) => ({ selector: element.selector, text: element.text }));
+    .map((element) => ({
+      diffs: [],
+      selector: element.selector,
+      text: element.text,
+    }));
 
 const MAIN_DIRECTION = "main";
 
@@ -260,10 +264,12 @@ const toPortRouteUpdate = (
 
 export {
   applyPictureMasks,
+  isInArea,
   readKeptAppTexts,
   toAreaElements,
   toKeptAppTexts,
   toMaskedList,
   toPortRouteUpdate,
   toPortSourceCommand,
+  toRank,
 };

@@ -1,6 +1,7 @@
 import { Schema } from "effect";
 
 import { toDecoder } from "../../platform/decode/index.js";
+import { PairNodeSchema, toPairsSource } from "./port-pairs-probe.js";
 
 interface MaskProbeInput {
   readonly hide: readonly string[];
@@ -29,6 +30,7 @@ const MaskProbeSchema = Schema.Struct({
   elements: Schema.Array(ProbeElementSchema),
   hidden: Schema.Array(Schema.String),
   hiddenRows: Schema.Number,
+  nodes: Schema.Array(PairNodeSchema),
   rowCounts: Schema.Array(Schema.Number),
 });
 
@@ -42,6 +44,7 @@ const EMPTY_PROBE: MaskProbe = {
   elements: [],
   hidden: [],
   hiddenRows: 0,
+  nodes: [],
   rowCounts: [],
 };
 
@@ -116,13 +119,14 @@ for (const node of document.body.querySelectorAll("h1, h2, h3, h4, h5, h6, p, ta
   const box = node.getBoundingClientRect();
   elements.push({ selector: toSelector(node), text: norm((node.tagName === "TABLE" && node.tHead ? node.tHead.innerText : node.innerText) || node.getAttribute("alt") || node.getAttribute("placeholder")).slice(0, 40), x: box.x + scrollX, y: box.y + scrollY, width: box.width, height: box.height });
 }
-return JSON.stringify({ cellTexts, cells, elements, hidden, hiddenRows, rowCounts });
+return JSON.stringify({ cellTexts, cells, elements, hidden, hiddenRows, nodes: toPairNodes(rowSet), rowCounts });
 `;
 
 const toMaskProbe = (input: MaskProbeInput): string =>
   [
     "(() => {",
     `const params = ${JSON.stringify(input)};`,
+    toPairsSource(),
     PROBE_SOURCE,
     "})()",
   ].join("\n");

@@ -125,9 +125,32 @@ const PORT_AREA_ELEMENTS_MAX = 3;
 
 const PORT_MASKED_MAX = 20;
 
+const PORT_DIFFS_MAX = 6;
+
+const PortDiffSchema = Schema.Struct({
+  app: Schema.String,
+  property: Schema.String,
+  prototype: Schema.String,
+});
+
 const PortElementSchema = Schema.Struct({
+  diffs: Schema.Array(PortDiffSchema)
+    .check(Schema.isMaxLength(PORT_DIFFS_MAX))
+    .annotate({
+      description:
+        "Computed values that differ between this app element and its paired prototype element, for example margin-bottom app 4px, prototype 24px. Empty when the element has no pair.",
+    }),
   selector: Schema.String,
   text: Schema.String,
+});
+
+const PortFirstShiftSchema = Schema.Struct({
+  above: Schema.NullOr(PortElementSchema),
+  element: PortElementSchema,
+  shift: Schema.Int.annotate({
+    description:
+      "How far in px the content from element sits below the prototype (negative: above it), from the element just above it.",
+  }),
 });
 
 const PortAreaSchema = Schema.Struct({
@@ -152,6 +175,10 @@ const PortMatchSchema = Schema.Struct({
   appPath: Schema.String,
   areas: Schema.Array(PortAreaSchema),
   diffPath: Schema.String,
+  firstShift: Schema.NullOr(PortFirstShiftSchema).annotate({
+    description:
+      "The first paired element whose top offset changes by 2px or more from the pair before it, with the element just above it. null when no content moved.",
+  }),
   isLow: Schema.Boolean,
   masked: Schema.Array(PortMaskedSchema)
     .check(Schema.isMaxLength(PORT_MASKED_MAX))
@@ -169,6 +196,10 @@ type PortArea = typeof PortAreaSchema.Type;
 
 type PortElement = typeof PortElementSchema.Type;
 
+type PortDiff = typeof PortDiffSchema.Type;
+
+type PortFirstShift = typeof PortFirstShiftSchema.Type;
+
 type PortMasked = typeof PortMaskedSchema.Type;
 
 type PortMatch = typeof PortMatchSchema.Type;
@@ -179,10 +210,13 @@ type PortMatchWire = typeof PortMatchSchema.Encoded;
 
 export {
   PORT_AREA_ELEMENTS_MAX,
+  PORT_DIFFS_MAX,
   PORT_MASKED_MAX,
   PortAreaSchema,
   PortCheckInputSchema,
+  PortDiffSchema,
   PortElementSchema,
+  PortFirstShiftSchema,
   PortMaskedSchema,
   PortMatchSchema,
   PortRouteSchema,
@@ -193,7 +227,9 @@ export {
 export type {
   PortArea,
   PortAreaWire,
+  PortDiff,
   PortElement,
+  PortFirstShift,
   PortMasked,
   PortMatch,
   PortMatchWire,

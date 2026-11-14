@@ -21,6 +21,7 @@ import {
   toAreaElements,
   toMaskedList,
 } from "./port-masks.js";
+import { toFirstShift, toPairedAreas, toPairs } from "./port-pairs.js";
 import { toPortShots } from "./port-shots.js";
 
 const ROW_NAMES = ["top", "middle", "bottom"];
@@ -89,6 +90,9 @@ const readPortMatch = Effect.fn("PortMatchStore.readPortMatch")(function* run(
   }
 
   const diff = diffPictures(prototype, app);
+  const appNodes = shots.app.probe.nodes;
+  const pairs = toPairs(appNodes, shots.prototype.probe.nodes);
+  const firstShift = toFirstShift(pairs, appNodes);
 
   const files = yield* attemptKnown(() =>
     createPortFiles(
@@ -109,11 +113,16 @@ const readPortMatch = Effect.fn("PortMatchStore.readPortMatch")(function* run(
 
   const match: PortMatch = {
     ...files,
-    areas: toLowAreas(
-      diff.regions,
-      shots.app.probe.elements,
-      query.width
-    ).slice(0, query.limit),
+    areas: toPairedAreas(
+      toLowAreas(diff.regions, shots.app.probe.elements, query.width).slice(
+        0,
+        query.limit
+      ),
+      pairs,
+      query.width,
+      firstShift
+    ),
+    firstShift,
     isLow: diff.score < REFERENCE_LOW_SCORE,
     masked: toMaskedList(shots, query.update !== null),
     score: diff.score,

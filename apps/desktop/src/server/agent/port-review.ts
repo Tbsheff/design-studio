@@ -1,4 +1,9 @@
-import type { PortMasked } from "@design-studio/actions/port/schema";
+import type {
+  PortDiff,
+  PortElement,
+  PortFirstShift,
+  PortMasked,
+} from "@design-studio/actions/port/schema";
 import type { FinalCheck } from "@design-studio/contracts";
 import { PORT_TASK } from "@design-studio/contracts/port";
 import type { PortReviewRecord } from "@design-studio/contracts/port";
@@ -30,6 +35,10 @@ const GROUP_SEGMENT = /^\(.*\)$/u;
 const CONTINUE_TAG = "studio-continue";
 
 const MASKED_TEXT_MAX = 5;
+
+const SECOND_LOOP_MS = 60_000;
+
+const HID_ROWS = /^Hid \d+ extra data rows? on the \w+ page\.$/u;
 
 interface PortCheckRef {
   readonly directionId: string;
@@ -215,7 +224,8 @@ const toMaskedLines = (match: PortMatchRead): string[] => {
 
   if (kept.length > 0) {
     lines.push(
-      `- Kept app text, not scored: ${kept.join(" / ")}. The studio hides it in the app shot, so give the elements around it the prototype spacing, as if it were not there.`
+      `- Kept app text, not scored: ${kept.join(" / ")}. The studio hides it in the app shot, so give the elements around it the prototype spacing, as if it were not there.`,
+      "  Do not edit the kept app text or its margins."
     );
   }
 
@@ -228,10 +238,61 @@ const toMaskedLines = (match: PortMatchRead): string[] => {
   return lines;
 };
 
+const toDiffText = (diff: PortDiff): string =>
+  `${diff.property} app ${diff.app}, prototype ${diff.prototype}`;
+
+const toDiffsText = (diffs: readonly PortDiff[]): string =>
+  diffs.map((diff) => toDiffText(diff)).join("; ");
+
+const toElementName = (element: PortElement): string =>
+  `${element.selector} "${element.text}"`;
+
+const toElementText = (element: PortElement): string => {
+  if (element.diffs.length === 0) {
+    return toElementName(element);
+  }
+
+  return `${toElementName(element)} (${toDiffsText(element.diffs)})`;
+};
+
+const toShiftWay = (shift: number): string => {
+  if (shift < 0) {
+    return "higher";
+  }
+
+  return "lower";
+};
+
+const toAboveText = (above: PortElement): string => {
+  if (above.diffs.length === 0) {
+    return `Above it, ${toElementName(above)}: no measured value differs; check the space between them.`;
+  }
+
+  return `Above it, ${toElementName(above)}: ${toDiffsText(above.diffs)}.`;
+};
+
+const toShiftLines = (shift: PortFirstShift | null): string[] => {
+  if (shift === null) {
+    return [];
+  }
+
+  const parts = [
+    `- First shift: content from ${shift.element.selector} is ${Math.abs(shift.shift)}px ${toShiftWay(shift.shift)} than the prototype.`,
+  ];
+
+  if (shift.element.diffs.length > 0) {
+    parts.push(`Its own values: ${toDiffsText(shift.element.diffs)}.`);
+  }
+
+  if (shift.above !== null) {
+    parts.push(toAboveText(shift.above));
+  }
+
+  return [parts.join(" ")];
+};
+
 const toAreaLine = (area: PortMatchRead["areas"][number]): string => {
-  const names = area.elements.map(
-    (element) => `${element.selector} "${element.text}"`
-  );
+  const names = area.elements.map((element) => toElementText(element));
 
   if (names.length === 0) {
     return `- ${area.name} ${area.score}: no named element; check the spacing and the background there.`;
@@ -257,6 +318,7 @@ const toFixPrompt = (gaps: PortReviewGaps, check: PortCheck): string =>
     `The studio checked the ${toRouteKind(gaps)} route ${gaps.ref.routePath} (${gaps.url}) against the prototype after your last edit.`,
     `- Render: ${toRenderText(check.render)}.`,
     `- Port match against the prototype ${gaps.ref.path}: ${toScoreText(check.match)}. The bar is ${REFERENCE_LOW_SCORE}.`,
+    ...toShiftLines(check.match.firstShift),
     ...toMaskedLines(check.match),
     ...toAreaLines(check.match),
     "The attached sheet, when there is one, shows the prototype, the route, and the different pixels in red.",
@@ -264,12 +326,35 @@ const toFixPrompt = (gaps: PortReviewGaps, check: PortCheck): string =>
     toTag(CONTINUE_TAG, true),
   ].join("\n");
 
-const toNote = (first: PortCheck, last: PortCheck | null): string => {
-  if (last === null) {
-    return `Studio port check: ${toCheckText(first)}.`;
+const toHidText = (check: PortCheck): string => {
+  const hid =
+    check.match.masked.find((item) => HID_ROWS.test(item.text)) ?? null;
+
+  if (hid === null) {
+    return "";
   }
 
-  return `Studio port check: ${toCheckText(first)}, a fix loop ran; after it ${toCheckText(last)}.`;
+  return `; ${hid.text.charAt(0).toLowerCase()}${hid.text.slice(1, -1)}`;
+};
+
+const toNote = (checks: readonly PortCheck[]): string => {
+  const first = checks[0] ?? null;
+  const second = checks[1] ?? null;
+  const third = checks[2] ?? null;
+
+  if (first === null) {
+    return "";
+  }
+
+  if (second === null) {
+    return `Studio port check: ${toCheckText(first)}${toHidText(first)}.`;
+  }
+
+  if (third === null) {
+    return `Studio port check: ${toCheckText(first)}, a fix loop ran; after it ${toCheckText(second)}${toHidText(second)}.`;
+  }
+
+  return `Studio port check: ${toCheckText(first)}, 2 fix loops ran; after the first ${toCheckText(second)}; after the second ${toCheckText(third)}${toHidText(third)}.`;
 };
 
 const toRecord = (check: PortCheck, isFixLoop: boolean): PortReviewRecord => ({
@@ -290,25 +375,72 @@ const inspectRoute = async (input: PortReviewInput): Promise<PortCheck> => {
   return { match, render };
 };
 
+const runFixLoop = async (
+  input: PortReviewInput,
+  check: PortCheck
+): Promise<PortCheck | null> => {
+  const isRan = await input.continueWith(
+    toFixPrompt(input.gaps, check),
+    check.match.images
+  );
+
+  if (!isRan) {
+    return null;
+  }
+
+  return inspectRoute(input);
+};
+
+const isRaised = (first: PortCheck, next: PortCheck): boolean =>
+  first.match.score !== null &&
+  next.match.score !== null &&
+  next.match.score > first.match.score;
+
+const isSecondLoop = (
+  first: PortCheck,
+  next: PortCheck,
+  loopMs: number
+): boolean =>
+  loopMs <= SECOND_LOOP_MS && isRaised(first, next) && isFixNeeded(next);
+
+const toReview = (checks: readonly PortCheck[]): PortReview => {
+  const last = checks.at(-1) ?? null;
+
+  if (last === null) {
+    return {
+      note: "",
+      record: { fixLoop: false, rendered: false, score: null },
+    };
+  }
+
+  return { note: toNote(checks), record: toRecord(last, checks.length > 1) };
+};
+
 const runPortReview = async (input: PortReviewInput): Promise<PortReview> => {
   const first = await inspectRoute(input);
 
   if (!isFixNeeded(first)) {
-    return { note: toNote(first, null), record: toRecord(first, false) };
+    return toReview([first]);
   }
 
-  const isRan = await input.continueWith(
-    toFixPrompt(input.gaps, first),
-    first.match.images
-  );
+  const startedAt = Date.now();
+  const second = await runFixLoop(input, first);
 
-  if (!isRan) {
-    return { note: toNote(first, null), record: toRecord(first, false) };
+  if (second === null) {
+    return toReview([first]);
   }
 
-  const last = await inspectRoute(input);
+  if (!isSecondLoop(first, second, Date.now() - startedAt)) {
+    return toReview([first, second]);
+  }
 
-  return { note: toNote(first, last), record: toRecord(last, true) };
+  const third = await runFixLoop(input, second);
+
+  if (third === null) {
+    return toReview([first, second]);
+  }
+
+  return toReview([first, second, third]);
 };
 
 const EMPTY_CHECK: FinalCheck = {

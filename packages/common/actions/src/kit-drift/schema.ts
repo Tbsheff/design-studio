@@ -13,6 +13,7 @@ const KitDriftTagSchema = Schema.Literals([
   "table",
   "a-as-button",
   "card",
+  "badge",
 ]);
 
 const KitDriftConfidenceSchema = Schema.Literals(["high", "medium"]);
@@ -45,6 +46,7 @@ const KitDriftSchema = Schema.Struct({
   suggestedSize: Schema.NullOr(Schema.String),
   suggestedVariant: Schema.NullOr(Schema.String),
   tag: KitDriftTagSchema,
+  variant: Schema.NullOr(Schema.String),
 });
 
 const KitDriftScopeFields = {

@@ -19,7 +19,7 @@ const listKitDrift = defineAction({
   },
   confirm: "none",
   description:
-    "Find raw HTML elements that duplicate a kit component: button, input, textarea, select, label, table and links styled as buttons. page limits the scan to one file; leave it out to scan every route and component file. Each find has file, line, column, the kit component and import path, confidence, the classes the kit covers, the classes to keep, and the suggested variant and size. Use apply_kit_drift to swap finds. In an HTML prototype of an app, it scans its pages for controls and cards (tag card, with parts) without the kit recipe classes or data-slot; fix those with edit_element.",
+    "Find raw HTML elements that duplicate a kit component: button, input, textarea, select, label, table and links styled as buttons. page limits the scan to one file; leave it out to scan every route and component. Each find has file, line, column, kit component and import path, confidence, the classes the kit covers and to keep, and the suggested variant and size. Use apply_kit_drift to swap finds. In an HTML prototype of an app, it scans pages for controls, cards (tag card, with parts) and badges (tag badge, with variant) with no kit recipe classes or data-slot; fix those with edit_element.",
   errors: [BadRequest, Conflict, NotFound],
   http: { method: "GET", path: "/api/projects/:projectId/kit-drift" },
   id: "kit-drift.list",

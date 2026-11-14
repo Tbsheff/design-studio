@@ -140,12 +140,21 @@ const useDividerWrite = (
           });
 
           absorbClasses(result.classes);
+          edit.reselect();
         } catch (error) {
           setError(errorText(error));
         }
       });
     },
-    [absorbClasses, directionId, projectId, selection, setError, startWrite]
+    [
+      absorbClasses,
+      directionId,
+      edit,
+      projectId,
+      selection,
+      setError,
+      startWrite,
+    ]
   );
 };
 

@@ -1,5 +1,6 @@
 export {
   assertCanEdit,
+  directEditRuntimeOf,
   publishVersion,
   runDirectionRead,
   runDirectionWrite,
@@ -8,6 +9,8 @@ export {
   toDirectEditStatusFailure,
   writeAndCommitAll,
 } from "../../direct-edit/index.js";
+
+export { getComponentsMd } from "../../design-system/extract/ui-components.js";
 
 export { planImports } from "../import-plan.js";
 

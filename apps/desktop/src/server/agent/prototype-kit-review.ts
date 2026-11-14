@@ -29,6 +29,16 @@ const REVIEW_RAN =
   "review_frame on the context frame at its size and at 390 px";
 
 const TAG_WORDS: Readonly<Record<DriftTag, string>> = {
+  "a-as-button": "link styled as a button",
+  button: "button",
+  input: "input",
+  label: "label",
+  select: "select",
+  table: "table",
+  textarea: "text area",
+};
+
+const PLURAL_WORDS: Readonly<Record<DriftTag, string>> = {
   "a-as-button": "links styled as buttons",
   button: "buttons",
   input: "inputs",
@@ -71,13 +81,14 @@ const toKitLine = (group: KitGroup): string => {
 
   const { component, slot } = first.recipe;
   const count = group.finds.length;
-  const word = TAG_WORDS[first.tag];
+  let word = PLURAL_WORDS[first.tag];
   let verb = "are";
   let variant = "";
   let slotText = "";
 
   if (count === 1) {
     verb = "is";
+    word = TAG_WORDS[first.tag];
   }
 
   if (first.suggestedVariant !== null) {
@@ -103,7 +114,7 @@ const listKitLines = async (ctx: KitContext): Promise<string[]> => {
   let finds: MarkupDrift[] = [];
 
   try {
-    finds = await listPrototypeDrift(ctx.direction.workTree, null);
+    finds = await listPrototypeDrift(ctx.project, ctx.direction.workTree, null);
   } catch {
     finds = [];
   }

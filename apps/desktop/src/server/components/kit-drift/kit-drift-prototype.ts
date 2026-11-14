@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
+import { directEditRuntimeOf, getComponentsMd } from "./deps.js";
 import type { Project } from "./deps.js";
 import { toMarkupDrift, toPackRecipes } from "./engine/index.js";
 import type { MarkupDrift } from "./engine/index.js";
@@ -8,6 +9,7 @@ import { KitDriftError } from "./errors.js";
 import { listPageFiles } from "./source-files.js";
 
 const COMPONENTS_FILE = "design-system/components.md";
+const MAIN_DIRECTION = "main";
 const PAGE_PATTERN = /\.html?$/u;
 
 const isKitPrototype = (project: Project): boolean =>
@@ -47,12 +49,47 @@ const listTargets = async (
   return await listPageFiles(workTree);
 };
 
+const getAppTree = async (appProjectId: string): Promise<string | null> => {
+  const runtime = directEditRuntimeOf();
+
+  if (runtime === null || appProjectId === "") {
+    return null;
+  }
+
+  try {
+    const app = await runtime.loadDirection(appProjectId, MAIN_DIRECTION);
+
+    return app.direction.workTree;
+  } catch {
+    return null;
+  }
+};
+
+const getRecipeText = async (
+  project: Project,
+  workTree: string
+): Promise<string> => {
+  const packed = await getText(path.join(workTree, COMPONENTS_FILE));
+
+  if (packed !== null) {
+    return packed;
+  }
+
+  const appTree = await getAppTree(project.appProjectId ?? "");
+
+  if (appTree === null) {
+    return "";
+  }
+
+  return (await getComponentsMd(appTree)) ?? "";
+};
+
 const listPrototypeDrift = async (
+  project: Project,
   workTree: string,
   page: string | null
 ): Promise<MarkupDrift[]> => {
-  const markdown = await getText(path.join(workTree, COMPONENTS_FILE));
-  const recipes = toPackRecipes(markdown ?? "");
+  const recipes = toPackRecipes(await getRecipeText(project, workTree));
   const targets = await listTargets(workTree, page);
 
   if (recipes.length === 0) {

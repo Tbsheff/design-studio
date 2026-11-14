@@ -154,10 +154,11 @@ const toMarkupItem = (drift: MarkupDrift): KitDrift => ({
 });
 
 const listPrototypePage = async (
+  project: Project,
   workTree: string,
   command: ListKitDriftCommand
 ): Promise<KitDriftPage> => {
-  const drift = await listPrototypeDrift(workTree, command.page);
+  const drift = await listPrototypeDrift(project, workTree, command.page);
   const { next, slice } = toPageSlice(drift, command);
 
   return { items: slice.map((entry) => toMarkupItem(entry)), next };
@@ -170,7 +171,7 @@ const runKitDriftList = async (
   command: ListKitDriftCommand
 ): Promise<KitDriftPage> => {
   if (isKitPrototype(project)) {
-    return await listPrototypePage(workTree, command);
+    return await listPrototypePage(project, workTree, command);
   }
 
   const inventory = await getKitInventory(ts, project, workTree);

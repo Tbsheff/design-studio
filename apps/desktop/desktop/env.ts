@@ -1,4 +1,5 @@
 import { execFile } from "node:child_process";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 export type Env = Record<string, string>;
@@ -118,4 +119,29 @@ export function buildServerEnv(
     ...overrides,
     ELECTRON_RUN_AS_NODE: "1",
   };
+}
+
+export async function readSavedLoginPath(file: string): Promise<string[]> {
+  try {
+    const text = await readFile(file, "utf-8");
+
+    return text
+      .trim()
+      .split(":")
+      .filter((dir) => path.isAbsolute(dir));
+  } catch {
+    return [];
+  }
+}
+
+export async function saveLoginPath(
+  file: string,
+  dirs: string[]
+): Promise<void> {
+  if (dirs.length === 0) {
+    return;
+  }
+
+  await mkdir(path.dirname(file), { recursive: true });
+  await writeFile(file, `${dirs.join(":")}\n`);
 }

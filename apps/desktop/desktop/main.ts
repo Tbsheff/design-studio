@@ -22,6 +22,8 @@ import {
   knownPathDirs,
   mergePath,
   nodeDirs,
+  readSavedLoginPath,
+  saveLoginPath,
 } from "./env.js";
 import { openSetupWindow, registerSetupIpc, setupNeeded } from "./first-run.js";
 import { chooseGit, FORCE_GIT_ENV } from "./git-choice.js";
@@ -50,12 +52,39 @@ const RELEASE_BUILD =
 const OWN_DIR = path.dirname(fileURLToPath(import.meta.url));
 const APP_NAME = "Design Studio";
 const SETUP_MODE_ENV = "STUDIO_DESKTOP_SETUP";
+const LOGIN_PATH_FILE = "login-path.txt";
+const COMPILE_CACHE_DIR = "compile-cache";
 
 function knownPath(): string {
   const home = process.env.HOME ?? os.homedir();
   return mergePath(
     knownPathDirs(home, nodeDirs(process.env, process.execPath))
   );
+}
+
+async function saveLivePath(
+  file: string,
+  live: Promise<string[]>
+): Promise<void> {
+  try {
+    await saveLoginPath(file, await live);
+  } catch (error) {
+    console.error("[desktop] cannot save the login shell PATH", error);
+  }
+}
+
+async function toServerLoginPath(boot: Boot): Promise<string[]> {
+  const file = boot.userDataFile(LOGIN_PATH_FILE);
+  const live = boot.startLoginShell();
+  void saveLivePath(file, live);
+  const saved = await readSavedLoginPath(file);
+  return saved.length > 0 ? saved : live;
+}
+
+function compileCacheEnv(boot: Boot): Record<string, string> {
+  return boot.layout.packaged
+    ? { NODE_COMPILE_CACHE: boot.userDataFile(COMPILE_CACHE_DIR) }
+    : {};
 }
 
 async function prepare(boot: Boot): Promise<Prepared | null> {
@@ -86,7 +115,7 @@ async function prepare(boot: Boot): Promise<Prepared | null> {
     dataDir: choice.dir,
     git,
     knownPath: knownPath(),
-    loginPath: boot.startLoginShell(),
+    loginPath: toServerLoginPath(boot),
   };
 }
 
@@ -151,6 +180,7 @@ async function serverOverrides(
     STUDIO_UI_SECRET: UI_SECRET,
     STUDIO_LOGIN_SHELL_PATH: (await current.loginPath).join(":"),
     [RENDER_IPC_ENV]: "1",
+    ...compileCacheEnv(boot),
     ...current.git.env,
     ...(boot.layout.resourcesDir
       ? { STUDIO_RESOURCES_DIR: boot.layout.resourcesDir }

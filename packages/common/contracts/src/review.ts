@@ -9,6 +9,8 @@ export const REVIEW_KINDS = [
   "clipped",
   "rule",
   "type",
+  "interaction",
+  "broken-image",
 ] as const;
 
 export type ReviewKind = (typeof REVIEW_KINDS)[number];
@@ -18,8 +20,10 @@ export type ReviewSeverity = "high" | "medium" | "low";
 export const REVIEW_KIND_LABEL: Record<ReviewKind, string> = {
   a11y: "Accessibility",
   "alt-text": "Missing alt text",
+  "broken-image": "Broken images",
   clipped: "Clipped or overflowing",
   contrast: "Color contrast",
+  interaction: "Hover and focus",
   "off-token": "Off-token values",
   rule: "Design rules",
   "tap-target": "Tap target size",

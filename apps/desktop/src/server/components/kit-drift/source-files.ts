@@ -27,6 +27,9 @@ const SOURCE_PATTERN = /\.(?:tsx|jsx)$/u;
 const SKIPPED_FILE_PATTERN = /\.(?:test|spec|stories|story)\.[jt]sx$/u;
 const TAG_PATTERN = /<(?:a|button|input|label|select|table|textarea)[\s/>]/u;
 const MAX_FILES = 6000;
+const PAGE_FILE_PATTERN = /\.html?$/u;
+const DESIGN_SYSTEM_DIR = "design-system";
+const MAX_PAGES = 40;
 const KILOBYTE = 1024;
 const MAX_KILOBYTES = 512;
 const MAX_BYTES = MAX_KILOBYTES * KILOBYTE;
@@ -54,7 +57,8 @@ const getStat = async (absolute: string): Promise<Stats | null> => {
 
 const listFolder = async (
   folder: string,
-  isSkipped: (absolute: string) => boolean
+  isSkipped: (absolute: string) => boolean,
+  isWanted: (name: string) => boolean
 ): Promise<string[]> => {
   const entries = await listEntries(folder);
 
@@ -67,10 +71,10 @@ const listFolder = async (
           return [];
         }
 
-        return await listFolder(absolute, isSkipped);
+        return await listFolder(absolute, isSkipped, isWanted);
       }
 
-      if (entry.isFile() && isScannable(entry.name)) {
+      if (entry.isFile() && isWanted(entry.name)) {
         return [absolute];
       }
 
@@ -85,9 +89,21 @@ const listSourceFiles = async (
   root: string,
   isSkipped: (absolute: string) => boolean
 ): Promise<string[]> => {
-  const found = await listFolder(root, isSkipped);
+  const found = await listFolder(root, isSkipped, isScannable);
 
   return found.toSorted().slice(0, MAX_FILES);
+};
+
+const listPageFiles = async (root: string): Promise<string[]> => {
+  const kitFolder = path.join(root, DESIGN_SYSTEM_DIR);
+
+  const found = await listFolder(
+    root,
+    (absolute) => absolute === kitFolder,
+    (name) => PAGE_FILE_PATTERN.test(name)
+  );
+
+  return found.toSorted().slice(0, MAX_PAGES);
 };
 
 const listFileElements = async (
@@ -123,4 +139,4 @@ const listFileElements = async (
   return elements;
 };
 
-export { listFileElements, listSourceFiles };
+export { listFileElements, listPageFiles, listSourceFiles };

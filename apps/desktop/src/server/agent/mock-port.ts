@@ -6,6 +6,8 @@ import type {
 } from "../../shared/server-ports.js";
 import type { StudioRuntime } from "../platform/studio-runtime/index.js";
 import type { DriverInput, DriverOutcome } from "./lifecycle.js";
+import { toAssetMap, toAssetNotes } from "./port-assets.js";
+import type { AssetLine } from "./port-assets.js";
 import {
   runPortReview,
   toPortChecked,
@@ -85,13 +87,48 @@ const toBetween = (text: string, open: string, close: string): string => {
   return text.slice(start + open.length, end);
 };
 
-const toPrototypeHtml = (prompt: string): string =>
-  [
+const REFERENCE_EDGE = String.raw`["'(\s,]`;
+
+const toEscaped = (text: string): string =>
+  text.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`);
+
+const toMappedHtml = (html: string, lines: readonly AssetLine[]): string => {
+  let text = html;
+
+  for (const line of lines) {
+    const pattern = new RegExp(
+      `(?<=${REFERENCE_EDGE})${toEscaped(line.reference)}(?=${REFERENCE_EDGE})`,
+      "gu"
+    );
+
+    text = text.replaceAll(pattern, line.url);
+  }
+
+  return text;
+};
+
+const toStyleLinks = (lines: readonly AssetLine[]): string =>
+  lines
+    .flatMap((line) => {
+      if (!line.url.endsWith(".css")) {
+        return [];
+      }
+
+      return [toTagText(["<", 'link rel="stylesheet" href="', line.url, '">'])];
+    })
+    .join("");
+
+const toPrototypeHtml = (prompt: string): string => {
+  const lines = toAssetMap(prompt);
+
+  return [
+    toStyleLinks(lines),
     STYLE_OPEN,
-    toBetween(prompt, STYLE_OPEN, STYLE_CLOSE),
+    toMappedHtml(toBetween(prompt, STYLE_OPEN, STYLE_CLOSE), lines),
     STYLE_CLOSE,
-    toBetween(prompt, BODY_OPEN, BODY_CLOSE),
+    toMappedHtml(toBetween(prompt, BODY_OPEN, BODY_CLOSE), lines),
   ].join("");
+};
 
 const toFaithfulRoute = (prompt: string): string =>
   [
@@ -208,7 +245,23 @@ const toMockPortRun = (
   return { file, gaps, preview: deps.preview, runtime: deps.runtime };
 };
 
-const applyMockPort = async (
+const toAssetNoted = (
+  input: DriverInput,
+  outcome: DriverOutcome
+): DriverOutcome => {
+  const notes = toAssetNotes(input.ctx.request.prompt);
+
+  if (notes.length === 0) {
+    return outcome;
+  }
+
+  return {
+    ...outcome,
+    finalText: [outcome.finalText, ...notes].join("\n\n"),
+  };
+};
+
+const applyMockReview = async (
   input: DriverInput,
   session: MockPortSession,
   deps: MockPortDeps,
@@ -233,6 +286,14 @@ const applyMockPort = async (
     finalText: `${outcome.finalText}\n\n${review.note}`,
   };
 };
+
+const applyMockPort = async (
+  input: DriverInput,
+  session: MockPortSession,
+  deps: MockPortDeps,
+  outcome: DriverOutcome
+): Promise<DriverOutcome> =>
+  toAssetNoted(input, await applyMockReview(input, session, deps, outcome));
 
 export { applyMockPort, isMockPort, runMockPort };
 

@@ -2,6 +2,7 @@ import type { ResolvedRunConfig } from "../../shared/run-levels.js";
 import type { DriverInput, DriverOutcome } from "./lifecycle.js";
 import { EDIT_TOOL_NAMES } from "./permissions.js";
 import { toPhotoNotes } from "./photo-note.js";
+import { toAssetNotes } from "./port-assets.js";
 import type { RunToolState } from "./types.js";
 
 const toEditCount = (run: RunToolState): number =>
@@ -19,6 +20,7 @@ const toNotedOutcome = async (
 ): Promise<DriverOutcome> => {
   const notes = [
     ...segment.notes,
+    ...toAssetNotes(input.ctx.request.prompt),
     ...(await toPhotoNotes(input, segment.setup.config)),
   ];
 

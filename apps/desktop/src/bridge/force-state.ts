@@ -1,15 +1,19 @@
 import {
   DATA_STATE_NAMES,
+  EDGE_STATE_NAMES,
   GROUP_STATE_NAMES,
   isDataStateName,
+  isEdgeStateName,
   isGroupStateName,
   toDataStateValue,
 } from "@design-studio/contracts/state-styles";
 import type {
   DataStateName,
+  EdgeStateName,
   GroupStateName,
 } from "@design-studio/contracts/state-styles";
 
+import { showEdge } from "./force-edge.js";
 import {
   toGroupDataValue,
   toGroupElement,
@@ -29,7 +33,11 @@ const DATA_STATE_ATTR = "data-state";
 
 type PointerState = "hover" | "focus" | "focus-visible" | "active" | "disabled";
 
-export type ForcedState = PointerState | DataStateName | GroupStateName;
+export type ForcedState =
+  | PointerState
+  | DataStateName
+  | GroupStateName
+  | EdgeStateName;
 
 const POINTER_STATES: readonly PointerState[] = [
   "hover",
@@ -43,6 +51,7 @@ export const FORCED_STATES: readonly ForcedState[] = [
   ...POINTER_STATES,
   ...DATA_STATE_NAMES,
   ...GROUP_STATE_NAMES,
+  ...EDGE_STATE_NAMES,
 ];
 
 interface HeldDataState {
@@ -51,7 +60,11 @@ interface HeldDataState {
 }
 
 function isPointerState(state: ForcedState): state is PointerState {
-  return !isDataStateName(state) && !isGroupStateName(state);
+  return (
+    !isDataStateName(state) &&
+    !isGroupStateName(state) &&
+    !isEdgeStateName(state)
+  );
 }
 
 interface Forced {
@@ -376,6 +389,7 @@ export function createForceState(onChanged: () => void): ForceStateControl {
     clearMarks();
     const current = forced;
     const targets = targetsOf(current);
+    showEdge(targets.element, current?.states ?? []);
     const hold = holdDataState(held, targets.dataElement, targets.want);
     ({ held } = hold);
     const states = cssStatesOf(targets);

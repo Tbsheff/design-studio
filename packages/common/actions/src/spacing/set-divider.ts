@@ -23,7 +23,7 @@ const setDividerSpacing = defineAction({
   },
   confirm: "none",
   description:
-    "Set the lines that one element draws between its children. axis is y for a vertical stack, x for a horizontal stack, or null to remove the lines. width is 1, 2, 4 or 8 px. Pass color or token for the line color. In Tailwind it writes divide-y or divide-x classes with divide-<color>. variant is a state or breakpoint prefix such as md:, and the default is the base style. Saves one version.",
+    "Set the lines that one element draws between its children. axis is y for a vertical stack, x for a horizontal stack, or null to remove the lines. width is 1, 2, 4 or 8 px. Pass color or token for the line color. In Tailwind it writes divide-y or divide-x classes with divide-<color>. In a plain HTML page it writes a > * + * rule with border-top or border-left, and takes color only. variant is a state or breakpoint prefix such as md:, and the default is the base style. Saves one version.",
   errors: [BadRequest, Conflict, NotFound],
   http: {
     method: "POST",

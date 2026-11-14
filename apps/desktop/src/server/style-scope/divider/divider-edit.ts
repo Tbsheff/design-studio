@@ -18,8 +18,9 @@ import type {
   DividerPaint,
   DividerParts,
 } from "./divider-classes.js";
+import { toCssDividerParts, toCssDividerWritten } from "./divider-css.js";
 import { toDividerSite } from "./divider-site.js";
-import type { DividerScope } from "./divider-site.js";
+import type { DividerScope, DividerSite } from "./divider-site.js";
 import { DividerError } from "./errors.js";
 
 interface DividerTarget {
@@ -49,7 +50,9 @@ interface DividerSetDone {
 const SAME = "The element already has these lines.";
 
 const CSS_NOTE =
-  "Lines between items need a Tailwind project. In a CSS project, add the rule in code.";
+  "Lines between items in a JSX file need Tailwind classes. In a plain HTML page they write a CSS rule.";
+
+const NO_CLASSES: DividerClassChanges = { add: [], remove: [] };
 
 const toVariantOf = (raw: string): string => {
   const variant = normalizeVariant(raw);
@@ -70,6 +73,15 @@ const inspectDivider = async (
 ): Promise<DividerInfo> => {
   const site = await toDividerSite(scope, source);
   const variant = toVariantOf(rawVariant);
+
+  if (site.mode === "css" && site.isHtml) {
+    return {
+      ...toCssDividerParts(site, source, variant),
+      classes: [],
+      mode: "css",
+    };
+  }
+
   const parts = toDividerParts(site.classes, variant, site.colorNames);
 
   return {
@@ -178,6 +190,31 @@ const toCommitted = async (
   return version;
 };
 
+const applyCssDivider = async (
+  deps: DirectEditDeps,
+  scope: DividerScope,
+  site: DividerSite,
+  request: DividerSetRequest
+): Promise<DividerSetDone> => {
+  if (!site.isHtml) {
+    throw new DividerError(CSS_NOTE);
+  }
+
+  const variant = toVariantOf(request.variant);
+  const title = toTitleOf(request.paint, variant);
+
+  const written = toCssDividerWritten(
+    site,
+    request.target.source,
+    request.paint,
+    variant
+  );
+
+  const version = await toCommitted(deps, scope, written, title);
+
+  return { classes: NO_CLASSES, title, version, written };
+};
+
 const applyDivider = async (
   deps: DirectEditDeps,
   scope: DividerScope,
@@ -185,12 +222,11 @@ const applyDivider = async (
 ): Promise<DividerSetDone> => {
   assertCanEdit(deps, scope.project, scope.direction);
   const site = await toDividerSite(scope, request.target.source);
+  const variant = toVariantOf(request.variant);
 
   if (site.mode !== "classes") {
-    throw new DividerError(CSS_NOTE);
+    return applyCssDivider(deps, scope, site, request);
   }
-
-  const variant = toVariantOf(request.variant);
 
   const classes = toDividerChanges(
     site.classes,

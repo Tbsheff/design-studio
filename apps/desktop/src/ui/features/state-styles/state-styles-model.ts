@@ -1,5 +1,7 @@
+import { copy } from "./copy.js";
 import {
   isDataStateStyle,
+  isEdgeStateName,
   isGroupStateName,
   parseVariant,
   toDataStateVariant,
@@ -31,6 +33,8 @@ const DATA_CHIPS: readonly ChipId[] = ["open", "checked", "selected"];
 const GROUP_HOVER_CHIPS: readonly ChipId[] = ["group-hover"];
 
 const GROUP_DATA_CHIPS: readonly ChipId[] = ["group-open", "group-checked"];
+
+const EDGE_CHIPS: readonly ChipId[] = ["first", "last", "odd", "even"];
 
 const START_TAG = /^<[^>]*>/u;
 
@@ -72,6 +76,27 @@ const toGroupChips = (info: StateListResult | null): readonly ChipId[] => {
   return GROUP_HOVER_CHIPS;
 };
 
+const toEdgeChips = (info: StateListResult | null): readonly ChipId[] => {
+  if ((info?.edge ?? null) === null) {
+    return [];
+  }
+
+  return EDGE_CHIPS;
+};
+
+const toEdgeNote = (
+  active: ChipId | null,
+  info: StateListResult | null
+): string | null => {
+  const kind = info?.edge ?? null;
+
+  if (active === null || kind === null || !isEdgeStateName(active)) {
+    return null;
+  }
+
+  return copy.edge[kind][active];
+};
+
 const chipsFor = (
   outerHTML: string,
   info: StateListResult | null
@@ -82,7 +107,7 @@ const chipsFor = (
     chips = [...CHIPS, ...DATA_CHIPS];
   }
 
-  return [...chips, ...toGroupChips(info)];
+  return [...chips, ...toGroupChips(info), ...toEdgeChips(info)];
 };
 
 const isGroupOff = (chip: ChipId, info: StateListResult | null): boolean =>
@@ -211,6 +236,7 @@ export {
   stateOf,
   stateWire,
   styledStates,
+  toEdgeNote,
 };
 
 export type { ChipId };

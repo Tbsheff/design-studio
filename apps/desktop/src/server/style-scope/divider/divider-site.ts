@@ -9,11 +9,18 @@ interface DividerScope {
   readonly workTree: string;
 }
 
+type ResolvedTarget = Awaited<ReturnType<typeof resolveSource>>;
+
 interface DividerSite {
   readonly classes: readonly string[];
+  readonly code: string;
   readonly colorNames: ReadonlySet<string>;
+  readonly isHtml: boolean;
   readonly mode: "classes" | "css";
+  readonly target: ResolvedTarget;
 }
+
+const HTML_FILE = /\.html?$/iu;
 
 const toModeOf = (isTailwind: boolean): DividerSite["mode"] => {
   if (isTailwind) {
@@ -42,8 +49,11 @@ const toDividerSite = async (
 
   return {
     classes: info.tailwind?.classes ?? [],
+    code: text,
     colorNames: theme?.colorNames ?? new Set<string>(),
+    isHtml: HTML_FILE.test(resolved.relative),
     mode: toModeOf(isTailwind),
+    target: resolved,
   };
 };
 

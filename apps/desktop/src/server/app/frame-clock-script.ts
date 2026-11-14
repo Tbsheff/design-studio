@@ -37,6 +37,8 @@ const toClockTag = (def: FrameStateDef | null): string => {
 
   return html`<script data-studio-clock>
     (function () {
+      var C = document.currentScript;
+      if (C) C.remove();
       var R = Date,
         B = ${startMs},
         F = ${isFrozen},

@@ -37,6 +37,8 @@ export function appSourceMode(): string | null {
     return null;
   }
 
+  script.async = true;
+
   const state = script.dataset.studioState;
 
   if (state) {

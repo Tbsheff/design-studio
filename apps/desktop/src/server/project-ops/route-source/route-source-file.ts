@@ -33,10 +33,15 @@ const HasSnapshotSchema = Schema.Boolean.pipe(
   Schema.withDecodingDefaultKey(NO_SNAPSHOT)
 );
 
+const FixtureRouteSchema = Schema.NullOr(Schema.String).pipe(
+  Schema.withDecodingDefaultKey(Effect.succeed(null))
+);
+
 const RouteSourceEntrySchema = Schema.Struct({
   appProjectId: Schema.String,
   copiedAt: Schema.Number,
   files: Schema.Array(RouteFileHashSchema),
+  fixtureRoute: FixtureRouteSchema,
   frameId: Schema.String,
   hasSnapshot: HasSnapshotSchema,
   page: Schema.String,

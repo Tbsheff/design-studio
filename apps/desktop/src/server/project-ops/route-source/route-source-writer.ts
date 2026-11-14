@@ -14,6 +14,7 @@ import type { SourcePageCommand } from "./route-source-target.js";
 interface RecordCommand {
   readonly appProjectId: string;
   readonly directionId: string;
+  readonly fixtureRoute: string | null;
   readonly frameId: string;
   readonly page: string;
   readonly projectId: string;

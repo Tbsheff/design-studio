@@ -31,6 +31,9 @@ import { toRouteUpdate, toUpdatedPrompt } from "./port-route-update.js";
 import { toFlowPrompt, toPagePrompt } from "./port-start-prompt.js";
 import type { StartableInput } from "./port-start-prompt.js";
 
+const PORT_STEER_LEAD =
+  "The user steered this run. Do what this message asks, and keep the rest of the plan above:";
+
 interface PortStartDeps {
   readonly isRunning: (projectId: string, directionId: string) => boolean;
   readonly projects: {
@@ -193,6 +196,15 @@ const toPortRequest = (project: Project, promptText: string): RunRequest =>
     mode: "edit",
     prompt: promptText,
     task: PORT_TASK,
+  }) satisfies RunRequest;
+
+const toPortSteerRequest = (
+  previous: RunRequest,
+  steerText: string
+): RunRequest =>
+  ({
+    ...previous,
+    prompt: [previous.prompt, PORT_STEER_LEAD, steerText].join("\n\n"),
   }) satisfies RunRequest;
 
 const toStartResult = (
@@ -367,6 +379,6 @@ const startPortRun = async (
   return startPageRun(deps, input);
 };
 
-export { startPortRun, toPortPlanInput };
+export { startPortRun, toPortPlanInput, toPortSteerRequest };
 
 export type { PortPlanSource, PortStartDeps };

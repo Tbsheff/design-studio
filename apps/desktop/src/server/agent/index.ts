@@ -158,7 +158,11 @@ export {
   sourcePagePath,
 } from "./port-plan.js";
 
-export { startPortRun, toPortPlanInput } from "./port-start.js";
+export {
+  startPortRun,
+  toPortPlanInput,
+  toPortSteerRequest,
+} from "./port-start.js";
 
 export {
   compareToReference,

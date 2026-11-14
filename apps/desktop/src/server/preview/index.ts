@@ -574,7 +574,7 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
 
 export type { PreviewService } from "../../shared/server-ports.js";
 
-export { loadBridgeScript } from "./bridge-bundle.js";
+export { loadBridgeScript, startBridgeWarmup } from "./bridge-bundle.js";
 
 export { BrowserPool, elementClipsExpression, planTiles } from "./browser.js";
 

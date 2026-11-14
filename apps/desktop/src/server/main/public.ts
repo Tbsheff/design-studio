@@ -21,7 +21,7 @@ import { pageProbe } from "../page-probe/index.js";
 import { loadConfig } from "../platform/config/index.js";
 import type { ServerConfig } from "../platform/config/index.js";
 import { logError, logInfo } from "../platform/logger/index.js";
-import { createPreviewService, loadBridgeScript } from "../preview/index.js";
+import { createPreviewService, startBridgeWarmup } from "../preview/index.js";
 import { createCommentStore } from "../store/comments.js";
 import { createVersionStore } from "../store/versions.js";
 import { bootAgentRunner } from "./agent-runner.js";
@@ -137,7 +137,7 @@ const warmPreview = async (
 ): Promise<void> => {
   try {
     await watchExisting(preview, versions, projects);
-    await loadBridgeScript();
+    await startBridgeWarmup();
   } catch (error) {
     logError("[studio] preview warm-up failed", error, config.dataDir);
   }

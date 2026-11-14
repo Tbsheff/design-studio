@@ -25,7 +25,7 @@ function prebuiltOrBundle(): Promise<string> {
   return prebuilt ? readFile(prebuilt, "utf-8") : bundleBridge();
 }
 
-export function loadBridgeScript(): Promise<string> {
+function loadBridgeScript(): Promise<string> {
   if (!bundlePromise) {
     bundlePromise = prebuiltOrBundle().catch((error: unknown) => {
       bundlePromise = null;
@@ -35,3 +35,11 @@ export function loadBridgeScript(): Promise<string> {
 
   return bundlePromise;
 }
+
+const startBridgeWarmup = async (): Promise<void> => {
+  if (packagedResource(PREBUILT_BRIDGE_FILE)) {
+    await loadBridgeScript();
+  }
+};
+
+export { loadBridgeScript, startBridgeWarmup };

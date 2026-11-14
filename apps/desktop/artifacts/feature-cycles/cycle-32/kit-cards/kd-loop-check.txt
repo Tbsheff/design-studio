@@ -1,0 +1,5 @@
+- 4 cards are hand-styled (index.html:15, index.html:19, index.html:23, index.html:27). Replace the hand-styled card with the app Card (CardHeader, CardTitle, CardContent); keep the content. Give the outer block Card `bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm` with data-slot="card". Give each part its recipe: CardHeader `grid auto-rows-min items-start gap-1.5 px-6` with data-slot="card-header"; CardTitle `leading-none font-semibold` with data-slot="card-title"; CardContent `px-6` with data-slot="card-content". Keep the page CSS for the look, so Move to app maps it to Card. 
+
+- 1 table is hand-styled (index.html:37). Use the Table recipe: `w-full caption-bottom text-sm`. Add these classes and data-slot="table" to each one and keep the page CSS for the look, so Move to app maps it to Table. 
+
+note: 5 controls did not use the app kit; a fix loop ran

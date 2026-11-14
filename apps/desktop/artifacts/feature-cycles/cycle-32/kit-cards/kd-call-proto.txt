@@ -1,0 +1,368 @@
+call-action kit-drift.list on http://127.0.0.1:5620. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 17 ms, git spawns: not counted (server side)
+{
+  "items": [
+    {
+      "column": 7,
+      "confidence": "medium",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "17127bf129020211",
+      "keptClasses": [
+        "stat-card"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/card.tsx",
+        "name": "Card"
+      },
+      "line": 15,
+      "parts": [
+        "CardHeader",
+        "CardTitle",
+        "CardContent"
+      ],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card"
+    },
+    {
+      "column": 7,
+      "confidence": "medium",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "1713881529060a15",
+      "keptClasses": [
+        "stat-card"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/card.tsx",
+        "name": "Card"
+      },
+      "line": 19,
+      "parts": [
+        "CardHeader",
+        "CardTitle",
+        "CardContent"
+      ],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card"
+    },
+    {
+      "column": 7,
+      "confidence": "medium",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "1734437a2a030110",
+      "keptClasses": [
+        "inline-card"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/card.tsx",
+        "name": "Card"
+      },
+      "line": 23,
+      "parts": [
+        "CardContent"
+      ],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card"
+    },
+    {
+      "column": 7,
+      "confidence": "medium",
+      "droppedClasses": [
+        "border",
+        "shadow-sm"
+      ],
+      "file": "index.html",
+      "id": "17354f9e2a070914",
+      "keptClasses": [
+        "rounded-lg",
+        "bg-white",
+        "p-4"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/card.tsx",
+        "name": "Card"
+      },
+      "line": 27,
+      "parts": [
+        "CardHeader",
+        "CardTitle",
+        "CardContent"
+      ],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card"
+    },
+    {
+      "column": 5,
+      "confidence": "high",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "17579d372b0a0c13",
+      "keptClasses": [
+        "visits"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/table.tsx",
+        "name": "Table"
+      },
+      "line": 37,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "table"
+    }
+  ],
+  "next": null
+}
+
+[mcp] ok, 11 ms, git spawns: not counted (server side)
+{
+  "items": [
+    {
+      "column": 7,
+      "confidence": "medium",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "17127bf129020211",
+      "keptClasses": [
+        "stat-card"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/card.tsx",
+        "name": "Card"
+      },
+      "line": 15,
+      "parts": [
+        "CardHeader",
+        "CardTitle",
+        "CardContent"
+      ],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card"
+    },
+    {
+      "column": 7,
+      "confidence": "medium",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "1713881529060a15",
+      "keptClasses": [
+        "stat-card"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/card.tsx",
+        "name": "Card"
+      },
+      "line": 19,
+      "parts": [
+        "CardHeader",
+        "CardTitle",
+        "CardContent"
+      ],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card"
+    },
+    {
+      "column": 7,
+      "confidence": "medium",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "1734437a2a030110",
+      "keptClasses": [
+        "inline-card"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/card.tsx",
+        "name": "Card"
+      },
+      "line": 23,
+      "parts": [
+        "CardContent"
+      ],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card"
+    },
+    {
+      "column": 7,
+      "confidence": "medium",
+      "droppedClasses": [
+        "border",
+        "shadow-sm"
+      ],
+      "file": "index.html",
+      "id": "17354f9e2a070914",
+      "keptClasses": [
+        "rounded-lg",
+        "bg-white",
+        "p-4"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/card.tsx",
+        "name": "Card"
+      },
+      "line": 27,
+      "parts": [
+        "CardHeader",
+        "CardTitle",
+        "CardContent"
+      ],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card"
+    },
+    {
+      "column": 5,
+      "confidence": "high",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "17579d372b0a0c13",
+      "keptClasses": [
+        "visits"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/table.tsx",
+        "name": "Table"
+      },
+      "line": 37,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "table"
+    }
+  ],
+  "next": null
+}
+
+[agent] ok, 8 ms, git spawns: not counted (server side)
+{
+  "items": [
+    {
+      "column": 7,
+      "confidence": "medium",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "17127bf129020211",
+      "keptClasses": [
+        "stat-card"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/card.tsx",
+        "name": "Card"
+      },
+      "line": 15,
+      "parts": [
+        "CardHeader",
+        "CardTitle",
+        "CardContent"
+      ],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card"
+    },
+    {
+      "column": 7,
+      "confidence": "medium",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "1713881529060a15",
+      "keptClasses": [
+        "stat-card"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/card.tsx",
+        "name": "Card"
+      },
+      "line": 19,
+      "parts": [
+        "CardHeader",
+        "CardTitle",
+        "CardContent"
+      ],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card"
+    },
+    {
+      "column": 7,
+      "confidence": "medium",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "1734437a2a030110",
+      "keptClasses": [
+        "inline-card"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/card.tsx",
+        "name": "Card"
+      },
+      "line": 23,
+      "parts": [
+        "CardContent"
+      ],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card"
+    },
+    {
+      "column": 7,
+      "confidence": "medium",
+      "droppedClasses": [
+        "border",
+        "shadow-sm"
+      ],
+      "file": "index.html",
+      "id": "17354f9e2a070914",
+      "keptClasses": [
+        "rounded-lg",
+        "bg-white",
+        "p-4"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/card.tsx",
+        "name": "Card"
+      },
+      "line": 27,
+      "parts": [
+        "CardHeader",
+        "CardTitle",
+        "CardContent"
+      ],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "card"
+    },
+    {
+      "column": 5,
+      "confidence": "high",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "17579d372b0a0c13",
+      "keptClasses": [
+        "visits"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/table.tsx",
+        "name": "Table"
+      },
+      "line": 37,
+      "parts": [],
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "table"
+    }
+  ],
+  "next": null
+}
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

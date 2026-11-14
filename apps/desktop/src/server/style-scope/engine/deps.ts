@@ -9,7 +9,12 @@ export {
   parseClass,
 } from "../../direct-edit/engine/index.js";
 
-export { STYLE_STATES } from "@design-studio/contracts/state-styles";
+export {
+  isDataStateStyle,
+  STYLE_STATES,
+  toDataStateVariant,
+  toStyleStateName,
+} from "@design-studio/contracts/state-styles";
 
 export { parseVariant } from "../../../shared/variants.js";
 

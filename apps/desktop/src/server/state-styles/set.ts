@@ -1,11 +1,14 @@
 import {
   commitScopedStyle,
+  elementClassInfo,
+  hasSelectedItem,
   guardScopedEdit,
   loadStyleSite,
   parseDirectEditRequest,
   planDirectEdit,
   scopedStyleOf,
   statePrefixOf,
+  toStatePart,
 } from "./deps.js";
 import type {
   DirectEditDeps,
@@ -107,6 +110,23 @@ const resolved = <Value>(
   return result.value;
 };
 
+const isSelectedItemAt = async (
+  scope: StyleScope,
+  request: StateStyleRequest
+): Promise<boolean> => {
+  if (request.input.state !== "selected") {
+    return false;
+  }
+
+  const info = await elementClassInfo(
+    scope.workTree,
+    scope.project.kind,
+    request.target.source
+  );
+
+  return hasSelectedItem(info.tailwind?.classes ?? []);
+};
+
 const planStateStyle = async (
   scope: StyleScope,
   request: StateStyleRequest
@@ -114,8 +134,13 @@ const planStateStyle = async (
   const site = await loadStyleSite(scope, request.target.source);
   const styleInput = request.input;
 
+  const part = toStatePart(
+    styleInput.state,
+    await isSelectedItemAt(scope, request)
+  );
+
   const statePrefix = resolved(
-    statePrefixOf(site.set.list, styleInput.state, styleInput.breakpoint)
+    statePrefixOf(site.set.list, part, styleInput.breakpoint)
   );
 
   const style = resolved(scopedStyleOf(styleInput)) as EditStyle;

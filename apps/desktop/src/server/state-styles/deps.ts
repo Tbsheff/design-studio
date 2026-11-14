@@ -17,10 +17,12 @@ export {
 } from "../direct-edit/index.js";
 
 export {
+  hasSelectedItem,
   scopedStyleOf,
   stateClassOverridesOf,
   stateCssOverridesOf,
   statePrefixOf,
+  toStatePart,
 } from "../style-scope/engine/index.js";
 
 export {

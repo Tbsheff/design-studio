@@ -1,3 +1,7 @@
+import {
+  isDataStateName,
+  toDataStateValue,
+} from "@design-studio/contracts/state-styles";
 import type { DefaultTreeAdapterMap } from "parse5";
 
 import {
@@ -23,7 +27,7 @@ export const VARIANT_STYLE_ATTR = "data-studio-variants";
 const KEY_CLASS = /^sv-[a-z0-9]{6}$/;
 
 const RULE_LINE =
-  /^(?:@media (.+?) \{ )?(\.sv-[a-z0-9]{6}(?::[a-z-]+)*) \{ (.*?) \}(?: \})?$/;
+  /^(?:@media (.+?) \{ )?(\.sv-[a-z0-9]{6}(?:\[data-state="[a-z]+"\])?(?::[a-z-]+)*) \{ (.*?) \}(?: \})?$/;
 
 interface Rule {
   media: string | null;
@@ -83,7 +87,15 @@ function mediaOf(variant: ParsedVariant): string | null {
 }
 
 function selectorOf(key: string, variant: ParsedVariant): string {
-  return `.${key}${variant.states.map((state) => `:${state}`).join("")}`;
+  const data = variant.states
+    .filter(isDataStateName)
+    .map((state) => `[data-state="${toDataStateValue(state)}"]`);
+
+  const pseudo = variant.states
+    .filter((state) => !isDataStateName(state))
+    .map((state) => `:${state}`);
+
+  return `.${key}${[...data, ...pseudo].join("")}`;
 }
 
 function keyOf(element: Element): string | null {

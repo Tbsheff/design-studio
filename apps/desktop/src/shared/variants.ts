@@ -1,12 +1,21 @@
+import {
+  DATA_STATE_NAMES,
+  fromDataStateVariant,
+  isDataStateName,
+  toDataStateVariant,
+} from "@design-studio/contracts/state-styles";
+
 export const VARIANT_STATES = ["hover", "focus", "active"] as const;
 
 export type VariantState = (typeof VARIANT_STATES)[number];
 
-export const PSEUDO_STATES = [
+const POINTER_STATES = [
   ...VARIANT_STATES,
   "focus-visible",
   "disabled",
 ] as const;
+
+export const PSEUDO_STATES = [...POINTER_STATES, ...DATA_STATE_NAMES] as const;
 
 export type PseudoState = (typeof PSEUDO_STATES)[number];
 
@@ -41,7 +50,23 @@ const PART = /^[a-z0-9][a-z0-9-]*$/;
 const MAX_VARIANT = 60;
 
 function isState(part: string): part is PseudoState {
-  return (PSEUDO_STATES as readonly string[]).includes(part);
+  return (POINTER_STATES as readonly string[]).includes(part);
+}
+
+function stateOfPart(part: string): PseudoState | null {
+  if (isState(part)) {
+    return part;
+  }
+
+  return fromDataStateVariant(part);
+}
+
+function toVariantPart(state: PseudoState): string {
+  if (isDataStateName(state)) {
+    return toDataStateVariant(state);
+  }
+
+  return state;
 }
 
 export function parseVariant(raw: string): ParsedVariant | null {
@@ -59,15 +84,17 @@ export function parseVariant(raw: string): ParsedVariant | null {
   const out: ParsedVariant = { breakpoint: null, dark: false, states: [] };
 
   for (const part of parts) {
-    if (!PART.test(part)) {
+    const state = stateOfPart(part);
+
+    if (state === null && !PART.test(part)) {
       return null;
     }
 
     if (part === "dark") {
       out.dark = true;
-    } else if (isState(part)) {
-      if (!out.states.includes(part)) {
-        out.states.push(part);
+    } else if (state !== null) {
+      if (!out.states.includes(state)) {
+        out.states.push(state);
       }
     } else if (out.breakpoint === null) {
       out.breakpoint = part;
@@ -87,7 +114,7 @@ export function variantPrefix(variant: ParsedVariant): string {
   const parts = [
     ...(variant.breakpoint ? [variant.breakpoint] : []),
     ...(variant.dark ? ["dark"] : []),
-    ...variant.states,
+    ...variant.states.map(toVariantPart),
   ];
 
   return parts.map((part) => `${part}:`).join("");

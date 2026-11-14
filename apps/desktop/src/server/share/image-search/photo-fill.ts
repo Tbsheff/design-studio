@@ -32,6 +32,13 @@ import {
   toPhotoSlots,
 } from "./photo-slots.js";
 import type { PhotoSlot } from "./photo-slots.js";
+import {
+  MISSED_ATTR,
+  isMarkedMiss,
+  toIdleNote,
+  toLabelFree,
+  toSkipNote,
+} from "./photo-tag.js";
 
 interface PhotoSlotFill {
   readonly photoId: string;
@@ -53,7 +60,18 @@ interface PhotoFillResult {
 
 interface PhotoEdits {
   readonly code: string;
-  readonly credit: CreditEdit;
+  readonly credit: CreditEdit | null;
+}
+
+interface PhotoFillPlan {
+  readonly misses: readonly PhotoSlot[];
+  readonly picks: readonly PhotoPick[];
+}
+
+interface SlotEdit {
+  readonly changes: AttrChanges;
+  readonly isFill: boolean;
+  readonly slot: PhotoSlot;
 }
 
 type SetAttrs = (
@@ -65,84 +83,6 @@ type SetAttrs = (
 const BACKGROUND_STYLE = "background-size: cover; background-position: center";
 
 const TRAILING_SEMI = /;\s*$/u;
-
-const TAG_NAME = /^<(?<tag>[A-Za-z][\w-]*)/u;
-
-const TAG_NAME_MAX = 64;
-
-const LABEL_TAG =
-  /^<(?<label>span|small|p|strong|em|b|i)\b[^<>]*>[^<]*<\/\k<label>>$/u;
-
-const toOffset = (
-  code: string,
-  position: { readonly col: number; readonly line: number }
-): number => {
-  const lines = code.split("\n").slice(0, position.line - 1);
-
-  return (
-    lines.reduce((sum, line) => sum + line.length + 1, 0) + position.col - 1
-  );
-};
-
-const toQuote = (quote: string, char: string): string => {
-  if (quote !== "") {
-    if (char === quote) {
-      return "";
-    }
-
-    return quote;
-  }
-
-  if (char === '"' || char === "'") {
-    return char;
-  }
-
-  return "";
-};
-
-const toTagEnd = (code: string, from: number): number => {
-  let quote = "";
-
-  for (let index = from; index < code.length; index += 1) {
-    const char = code.charAt(index);
-
-    if (quote === "" && char === ">") {
-      return index + 1;
-    }
-
-    quote = toQuote(quote, char);
-  }
-
-  return -1;
-};
-
-const toLabelFree = (
-  code: string,
-  position: { readonly col: number; readonly line: number }
-): string => {
-  const offset = toOffset(code, position);
-  const head = code.slice(offset, offset + TAG_NAME_MAX);
-  const tag = TAG_NAME.exec(head)?.groups?.tag ?? "";
-
-  const start = toTagEnd(code, offset);
-
-  if (tag === "" || start === -1) {
-    return code;
-  }
-
-  const end = code.indexOf(`</${tag}>`, start);
-  const inner = code.slice(start, Math.max(end, start));
-
-  if (end === -1 || inner.trim() === "") {
-    return code;
-  }
-
-  if (inner.includes("<") && !LABEL_TAG.test(inner.trim())) {
-    return code;
-  }
-
-  return `${code.slice(0, start)}${code.slice(end)}`;
-};
 
 const toSlotSelector = (slot: PhotoSlot): string => {
   const words = slot.query.replaceAll('"', String.raw`\"`);
@@ -174,12 +114,14 @@ const toPickChanges = (pick: PhotoPick): AttrChanges => {
 
   if (!slot.isImg) {
     return {
+      [MISSED_ATTR]: null,
       [PHOTO_ATTR]: null,
       style: toBackgroundStyle(slot, pick.asset.src),
     } satisfies AttrChanges;
   }
 
   return {
+    [MISSED_ATTR]: null,
     [PHOTO_ATTR]: null,
     alt: slot.alt ?? slot.query,
     src: pick.asset.src,
@@ -197,13 +139,23 @@ const toAttrSetter = (relative: string): SetAttrs => {
     setJsxAttrs(code, position, isTypescript, changes);
 };
 
-const toFilledSource = (
-  page: PhotoPage,
-  picks: readonly PhotoPick[]
-): string => {
+const toSlotEdits = (plan: PhotoFillPlan): readonly SlotEdit[] => [
+  ...plan.picks.map((pick) => ({
+    changes: toPickChanges(pick),
+    isFill: true,
+    slot: pick.slot,
+  })),
+  ...plan.misses.map((slot) => ({
+    changes: { [MISSED_ATTR]: slot.query } satisfies AttrChanges,
+    isFill: false,
+    slot,
+  })),
+];
+
+const toFilledSource = (page: PhotoPage, plan: PhotoFillPlan): string => {
   const setAttrs = toAttrSetter(page.relative);
 
-  const ordered = picks.toSorted(
+  const ordered = toSlotEdits(plan).toSorted(
     (left, right) =>
       right.slot.line - left.slot.line || right.slot.col - left.slot.col
   );
@@ -212,14 +164,14 @@ const toFilledSource = (
 
   const isHtml = isHtmlPage(page.relative);
 
-  for (const pick of ordered) {
-    const position = { col: pick.slot.col, line: pick.slot.line };
+  for (const edit of ordered) {
+    const position = { col: edit.slot.col, line: edit.slot.line };
 
-    if (isHtml && !pick.slot.isImg) {
+    if (isHtml && edit.isFill && !edit.slot.isImg) {
       code = toLabelFree(code, position);
     }
 
-    code = setAttrs(code, position, toPickChanges(pick));
+    code = setAttrs(code, position, edit.changes);
   }
 
   return code;
@@ -276,7 +228,11 @@ const toWriteAsset = async (pick: PhotoPick): Promise<void> => {
   }
 };
 
-const toWriteCredit = async (credit: CreditEdit): Promise<void> => {
+const toWriteCredit = async (credit: CreditEdit | null): Promise<void> => {
+  if (credit === null) {
+    return;
+  }
+
   if (credit.exists) {
     await writeAtomic(credit.file, credit.code);
 
@@ -308,6 +264,21 @@ const toRecordHistory = (
 ): void => {
   const { edits, page } = change;
 
+  const credits = [edits.credit].flatMap((credit) => {
+    if (credit === null) {
+      return [];
+    }
+
+    return [
+      {
+        after: credit.code,
+        before: credit.original,
+        file: credit.file,
+        relative: credit.relative,
+      },
+    ];
+  });
+
   deps.history?.record({
     directionId: scope.direction.id,
     files: [
@@ -317,12 +288,7 @@ const toRecordHistory = (
         file: page.file,
         relative: page.relative,
       },
-      {
-        after: edits.credit.code,
-        before: edits.credit.original,
-        file: edits.credit.file,
-        relative: edits.credit.relative,
-      },
+      ...credits,
     ],
     label: version.title,
     projectId: scope.project.id,
@@ -330,19 +296,28 @@ const toRecordHistory = (
   });
 };
 
+const toFillTitle = (plan: PhotoFillPlan, relative: string): string => {
+  if (plan.picks.length === 0) {
+    return `Photo misses: ${plan.misses.length} on ${relative}`;
+  }
+
+  return `Photos: ${plan.picks.length} on ${relative}`;
+};
+
 const toCommitFill = async (
   deps: DirectEditDeps,
   scope: PhotoFillScope,
   page: PhotoPage,
-  picks: readonly PhotoPick[]
+  plan: PhotoFillPlan
 ): Promise<Version | null> => {
-  const credit = await toCredits(scope.workTree, picks);
+  const { picks } = plan;
 
-  if (credit === null) {
+  if (picks.length === 0 && plan.misses.length === 0) {
     return null;
   }
 
-  const edits = { code: toFilledSource(page, picks), credit };
+  const credit = await toCredits(scope.workTree, picks);
+  const edits = { code: toFilledSource(page, plan), credit };
 
   if (isRunDraft(scope)) {
     await toWriteFill(page, edits, picks);
@@ -350,12 +325,12 @@ const toCommitFill = async (
     return null;
   }
 
-  const title = `Photos: ${picks.length} on ${page.relative}`;
+  const title = toFillTitle(plan, page.relative);
 
   const files = [
     page.relative,
     ...picks.map((pick) => pick.asset.relative),
-    credit.relative,
+    ...[credit?.relative ?? ""].filter(Boolean),
   ];
 
   const meta: VersionMeta = {
@@ -416,18 +391,24 @@ const toPhotoFill = async (
 
   const page = await toReadPage(scope.workTree, pagePath);
   const slots = toPhotoSlots(page.source);
+  const skipped = slots.filter((slot) => isMarkedMiss(page.source, slot));
+  const skippedSet = new Set(skipped);
+  const open = slots.filter((slot) => !skippedSet.has(slot));
 
-  if (slots.length === 0) {
+  if (open.length === 0) {
     return {
       filled: [],
-      missed: [],
-      note: `${page.relative} has no ${PHOTO_ATTR} slot left, so nothing changed and no search ran. Do not call apply_image_search again on this page. To add a photo, write an img or element with ${PHOTO_ATTR}="<2 to 6 search words>".`,
+      missed: toMissed(skipped, []),
+      note: toIdleNote(page.relative, skipped.length),
       versionId: null,
     };
   }
 
-  const picks = await toPicks(scope, page, toFillable(page, slots));
-  const version = await toCommitFill(deps, scope, page, picks);
+  const fillable = toFillable(page, open);
+  const picks = await toPicks(scope, page, fillable);
+  const picked = new Set(picks.map((pick) => pick.slot));
+  const misses = fillable.filter((slot) => !picked.has(slot));
+  const version = await toCommitFill(deps, scope, page, { misses, picks });
 
   return {
     filled: picks.map((pick) => ({
@@ -436,7 +417,7 @@ const toPhotoFill = async (
       selector: toFilledSelector(pick),
     })),
     missed: toMissed(slots, picks),
-    note: null,
+    note: toSkipNote(skipped.length),
     versionId: version?.id ?? null,
   };
 };

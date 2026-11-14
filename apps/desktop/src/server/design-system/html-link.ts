@@ -47,6 +47,10 @@ function headInsertOffset(html: string): number {
   return doctype ? doctype.index + doctype[0].length : 0;
 }
 
+function hasFontsLink(html: string, url: string): boolean {
+  return html.includes(url) || html.includes(escapeAttr(url));
+}
+
 interface LinkInjection {
   tokensHref: string | null;
   fontsUrl: string | null;
@@ -58,7 +62,7 @@ function injectDesignSystemLinks(
 ): string {
   const tags: string[] = [];
 
-  if (injection.fontsUrl && !html.includes("fonts.googleapis.com")) {
+  if (injection.fontsUrl && !hasFontsLink(html, injection.fontsUrl)) {
     tags.push(
       `<link rel="stylesheet" href="${escapeAttr(injection.fontsUrl)}">`
     );

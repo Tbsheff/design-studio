@@ -7,6 +7,8 @@ import type { PhotoPage } from "./photo-pick.js";
 
 const DARK_MEDIA = /@media \(prefers-color-scheme: ?dark\) ?\{/giu;
 
+const DARK_PREFIX = /prefers-color-scheme: ?dark/iu;
+
 const DARK_SELECTOR = /\.dark\b|\[data-theme=["']?dark["']?\]/u;
 
 const SHEET_NAME = "photo-art.css";
@@ -170,12 +172,14 @@ const toFlatBlocks = (text: string, isMedia: boolean): CssBlock[] =>
       return [];
     }
 
-    const selector = chunk.slice(0, open).split("{").at(-1) ?? "";
+    const prefix = chunk.slice(0, open);
+    const selector = prefix.split("{").at(-1) ?? "";
+    const isDarkPrefix = DARK_PREFIX.test(prefix);
 
     return [
       {
         body: chunk.slice(open + 1),
-        isDarkMedia: isMedia,
+        isDarkMedia: isMedia || isDarkPrefix,
         selector: selector.trim(),
       },
     ];

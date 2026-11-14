@@ -102,6 +102,7 @@ const RouteCopyEntrySchema = Schema.Struct({
   appProjectId: Schema.String,
   files: Schema.Array(RouteFileSchema),
   page: Schema.String,
+  routePath: Schema.String,
 });
 
 const RouteCopyRecordSchema = Schema.Struct({

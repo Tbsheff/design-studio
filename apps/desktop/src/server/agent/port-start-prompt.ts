@@ -4,7 +4,7 @@ import { PORT_LEVEL_LABEL } from "@design-studio/contracts/port";
 
 import type { PortAssetCopy } from "./port-assets.js";
 import { toAssetsTag } from "./port-assets.js";
-import type { FlowRouteBlock } from "./port-flow-update.js";
+import type { FlowCheckRoute, FlowRouteBlock } from "./port-flow-update.js";
 import type { PortLookPage } from "./port-look.js";
 import { portFlowText, portPlanText } from "./port-plan.js";
 import type { PortPlanInput } from "./port-plan.js";
@@ -17,15 +17,29 @@ interface StartableTarget {
 
 type StartableInput = PortPlanInput & { readonly target: StartableTarget };
 
+interface PagePromptExtra {
+  readonly assets: PortAssetCopy;
+  readonly checkRoute: string;
+}
+
 interface FlowPromptUpdate {
   readonly assets: PortAssetCopy;
   readonly blocks: readonly FlowRouteBlock[];
+  readonly checks: readonly FlowCheckRoute[];
   readonly lead: string;
 }
 
 const SOURCE_TEXT_MAX = 24_000;
 
 const FLOW_SOURCE_MAX = 64_000;
+
+const FLOW_CHECKS_MAX = 4;
+
+const PAGE_CHECK_TEXT =
+  "Before you report done, call inspect_port with these five values. If the score or an area is under 80, fix those areas and call inspect_port once more.";
+
+const FLOW_CHECK_TEXT =
+  "Before you report done, call inspect_port once for each port-check line above, with its five values. If a score or an area of a route is under 80, fix those areas and call inspect_port once more for that route.";
 
 const toTagged = (tag: string, attributes: string, body: string): string =>
   ["<", tag, attributes, ">\n", body, "\n</", tag, ">"].join("");
@@ -44,31 +58,64 @@ const toCutSource = (html: string, max: number): string => {
 const toCheckAttribute = (key: string, value: string): string =>
   [" ", key, '="', value, '"'].join("");
 
-const toCheckLine = (
+const toCheckTag = (
   input: StartableInput,
   path: string,
   route: string
 ): string =>
   [
-    [
-      "<",
-      "port-check",
-      toCheckAttribute("projectId", input.source.project.id),
-      toCheckAttribute("directionId", input.source.direction.id),
-      toCheckAttribute("path", path),
-      toCheckAttribute("targetProjectId", input.target.project.id),
-      toCheckAttribute("routePath", route),
-      " />",
-    ].join(""),
-    "Before you report done, call inspect_port with these five values. If the score or an area is under 80, fix those areas and call inspect_port once more.",
-  ].join("\n");
+    "<",
+    "port-check",
+    toCheckAttribute("projectId", input.source.project.id),
+    toCheckAttribute("directionId", input.source.direction.id),
+    toCheckAttribute("path", path),
+    toCheckAttribute("targetProjectId", input.target.project.id),
+    toCheckAttribute("routePath", route),
+    " />",
+  ].join("");
+
+const toCheckLine = (
+  input: StartableInput,
+  path: string,
+  route: string
+): string => [toCheckTag(input, path, route), PAGE_CHECK_TEXT].join("\n");
+
+const toMoreChecksText = (count: number): string => {
+  if (count === 1) {
+    return "The studio checks the first 4 routes. For the 1 other route, call inspect_port with the same values and that route's path and page.";
+  }
+
+  return `The studio checks the first 4 routes. For the ${count} other routes, call inspect_port with the same values and each route's path and page.`;
+};
+
+const toFlowCheckLines = (
+  input: StartableInput,
+  checks: readonly FlowCheckRoute[]
+): string => {
+  const ready = checks.flatMap((check) => {
+    if (check.route === null) {
+      return [];
+    }
+
+    return [toCheckTag(input, check.path, check.route)];
+  });
+
+  const lines = [...ready.slice(0, FLOW_CHECKS_MAX), FLOW_CHECK_TEXT];
+
+  if (ready.length > FLOW_CHECKS_MAX) {
+    lines.push(toMoreChecksText(ready.length - FLOW_CHECKS_MAX));
+  }
+
+  return lines.join("\n");
+};
 
 const toPagePrompt = (
   input: StartableInput,
   plan: PortPlan,
   page: PortLookPage,
-  assets: PortAssetCopy
+  extra: PagePromptExtra
 ): string => {
+  const { assets, checkRoute } = extra;
   const { html, look } = page;
   const routeFile = plan.target?.routeFile ?? null;
   let file = "";
@@ -86,7 +133,7 @@ const toPagePrompt = (
       toPathAttribute(plan.source.path),
       toCutSource(html, SOURCE_TEXT_MAX)
     ),
-    toCheckLine(input, plan.source.path, input.target.route),
+    toCheckLine(input, plan.source.path, checkRoute),
   ].join("\n\n");
 };
 
@@ -164,11 +211,7 @@ const toFlowPrompt = (
     update.lead,
     toAssetsTag(update.assets),
     ...pages,
-    toCheckLine(
-      input,
-      flow.pages[0]?.path ?? input.source.path,
-      flow.pages[0]?.route ?? input.target.route
-    ),
+    toFlowCheckLines(input, update.checks),
   ]
     .filter((part) => part !== "")
     .join("\n\n");

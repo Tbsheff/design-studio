@@ -24,14 +24,14 @@ Branch `feat/open-states`. No new action.
   - The trigger and tab show Open, Checked and Selected. A plain `<p>` does not.
   - Open sets `data-state="open"` in the frame. Default puts back `closed`.
   - Text color in Open writes `data-[state=open]:text-[#1d4ed8]`. Selected on a tab writes `data-[state=active]:`. On a `data-[state=selected]` tab it writes that form and forces `data-state="selected"`.
-- Screenshots: `open-picker-{dark,light}.png`, `open-forced-{dark,light}.png`, `plain-picker-dark.png`.
-- Bonaparte, read-only, by `git grep`: 235 of 249 `data-[state=...]` class uses read as a state (open 113, selected 97, checked 25) (`bp-check.txt`). `git status` was unchanged (14 lines before and after).
+- Screenshots: `open-picker-{dark,light}.png`, `open-forced-{dark,light}.png`, `plain-picker-dark.png`. In the forced shots the Ask chip covers the trigger; `mcp-forced-open.png` shows the open look.
+- Bonaparte, read-only, by `git grep`: 235 of 263 `data-[state=...]` class uses read as a state (open 113, selected 97, checked 25) (`bp-check.txt`). `git status` was unchanged (14 lines before and after).
 - `pnpm run typecheck`, `pnpm run lint:gate` and `pnpm run build:ui` pass.
 
 ## Left out
 
-- `group-data-[state=...]` and `has-data-[state=...]` (14 Bonaparte uses) style a child from a parent state. They are not read as states.
-- Found, not fixed: the Fill Apply button in the Appearance section writes a base class in every state (Hover too), because the `/fill` route takes no variant. Other inspector fields write the state prefix.
+- Fails: the spec step "choose Open and set fill slate-200". The Fill Apply button in Appearance writes a base `bg-*` class in every state (Hover too), so it changes the default look. `fill.set` has its own class writer (`style-scope/fill`) and takes no variant. Other inspector fields (text color and the rest of direct edit) write the state prefix. MCP `set_state_style` with `background-color` writes `data-[state=open]:bg-*`.
+- `group-data-[state=...]` and `has-data-[state=...]` (28 Bonaparte uses, 14 class names) style a child from a parent state. They are not read as states.
 - MCP `set_forced_state` with `selected` always sets `data-state="active"`. The picker sets `selected` on a layer that uses the `data-[state=selected]` form.
 - The Bonaparte inspector was not opened in a running app: a local clone has no `node_modules` and no database. The engine was checked on real Bonaparte classes.
 - `artifacts/mcp-snapshots` is not changed. The input enum and description diffs for `set_state_style`, `list_state_styles` and `set_forced_state` wait for approval at merge.

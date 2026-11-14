@@ -7,6 +7,10 @@ const BORDER_STYLE_PROPERTIES = [
   "border-left-width",
   "border-style",
   "border-color",
+  "outline-width",
+  "outline-style",
+  "outline-color",
+  "outline-offset",
 ] as const;
 
 const BORDER_SIDE_WIDTHS = [

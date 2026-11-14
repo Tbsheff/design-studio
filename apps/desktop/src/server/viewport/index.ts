@@ -12,6 +12,10 @@ export type { SheetShot } from "./contact-sheet.js";
 
 export { ViewportFixWriter } from "./viewport-fix-writer.js";
 
+export { matrixProbe } from "./probe.js";
+
+export type { RawMatrixProbe, RawTap } from "./probe.js";
+
 export type { ViewportFixWriterApi } from "./viewport-fix-writer.js";
 
 export type { FixCommand, FixResult } from "./viewport-fix-types.js";

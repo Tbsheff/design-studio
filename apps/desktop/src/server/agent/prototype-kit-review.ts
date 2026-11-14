@@ -16,11 +16,14 @@ import {
 import type { PrototypeDrift } from "../components/kit-drift/kit-drift-prototype.js";
 import type { AppReviewGaps } from "./final-check.js";
 import {
-  isFlowGaps,
+  getFlow,
   listFlowLines,
-  toFlowOpening,
+  toFlowContext,
 } from "./prototype-flow-review.js";
 import type { FlowContext } from "./prototype-flow-review.js";
+import { listPhoneLines } from "./prototype-phone-review.js";
+import { toCheckOpening } from "./prototype-review-opening.js";
+import type { LineCounts } from "./prototype-review-opening.js";
 
 interface KitGroup {
   readonly finds: readonly MarkupDrift[];
@@ -36,6 +39,10 @@ interface KitTally {
 type KitContext = Pick<AgentRunContext, "direction" | "project" | "request">;
 
 const KIT_COUNTS = new WeakMap<KitContext, number[]>();
+
+const LINE_COUNTS = new WeakMap<KitContext, LineCounts>();
+
+const KIT_GAPS = new WeakMap<AppReviewGaps, KitContext>();
 
 const LISTED_LINES = 6;
 
@@ -74,9 +81,6 @@ const PLURAL_WORDS: Readonly<Record<DriftTag, string>> = {
 
 const isKitRun = (ctx: KitContext): boolean =>
   isKitPrototype(ctx.project) && ctx.request.mode === "edit";
-
-const isKitOnly = (gaps: AppReviewGaps): boolean =>
-  !gaps.mobile && !gaps.review;
 
 const toGroups = (finds: readonly MarkupDrift[]): KitGroup[] => {
   const groups = new Map<string, MarkupDrift[]>();
@@ -275,16 +279,32 @@ const listKitDriftLines = async (
   return lines;
 };
 
+const listFlowPhoneLines = async (
+  ctx: FlowContext,
+  preview: PreviewService
+): Promise<readonly [string[], string[]]> => {
+  const flow = await getFlow(ctx);
+  const phone = await listPhoneLines(ctx, preview, flow.pages);
+
+  return [listFlowLines(flow), phone];
+};
+
 const listKitLines = async (
   ctx: FlowContext,
   preview: PreviewService
 ): Promise<string[]> => {
-  const [kit, flow] = await Promise.all([
+  const [kit, [flow, phone]] = await Promise.all([
     listKitDriftLines(ctx, preview),
-    listFlowLines(ctx),
+    listFlowPhoneLines(ctx, preview),
   ]);
 
-  return [...kit, ...flow];
+  LINE_COUNTS.set(ctx, {
+    flow: flow.length,
+    kit: kit.length,
+    phone: phone.length,
+  });
+
+  return [...kit, ...flow, ...phone];
 };
 
 const toKitGaps = (ctx: KitContext, hasEdit: boolean): AppReviewGaps | null => {
@@ -292,7 +312,15 @@ const toKitGaps = (ctx: KitContext, hasEdit: boolean): AppReviewGaps | null => {
     return null;
   }
 
-  return { isPrototype: true, mobile: false, review: false };
+  const gaps: AppReviewGaps = {
+    isPrototype: true,
+    mobile: false,
+    review: false,
+  };
+
+  KIT_GAPS.set(gaps, ctx);
+
+  return gaps;
 };
 
 const toRanList = (gaps: AppReviewGaps): string => {
@@ -309,17 +337,17 @@ const toRanList = (gaps: AppReviewGaps): string => {
   return ran.join(" and ");
 };
 
+const toCheckContext = (gaps: AppReviewGaps): KitContext | null =>
+  KIT_GAPS.get(gaps) ?? toFlowContext(gaps);
+
 const toReviewOpening = (gaps: AppReviewGaps, pass: number): string | null => {
-  if (isFlowGaps(gaps)) {
-    return toFlowOpening(gaps, pass);
-  }
+  const ctx = toCheckContext(gaps);
 
-  if (isKitOnly(gaps)) {
-    if (pass > 1) {
-      return null;
-    }
-
-    return "You finished a prototype of an app, so the studio checked its parts against the app kit recipes.";
+  if (ctx !== null) {
+    return toCheckOpening(
+      LINE_COUNTS.get(ctx) ?? { flow: 0, kit: 0, phone: 0 },
+      pass
+    );
   }
 
   const ran = toRanList(gaps);

@@ -52,7 +52,6 @@ export {
   commandBlocker,
   openLayer,
   runCommand,
-  tipWithKey,
   useCommands,
 } from "./registry.js";
 

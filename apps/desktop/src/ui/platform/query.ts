@@ -5,7 +5,6 @@ import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { call } from "./http";
 import type { ActionRoute, RouteInput, RouteOutput } from "./http";
 import { isActionDone } from "./json-guard";
-import { subscribeActionDone } from "./stream";
 
 interface ReadState<Route extends ActionRoute> {
   readonly data: RouteOutput<Route> | null;
@@ -44,6 +43,8 @@ const handoffOwner = new Map<string, string>();
 const listeners = new Set<DoneListener>();
 
 let unsubscribe: (() => void) | null = null;
+
+let isOpening = false;
 
 const settle = async (key: string, value: Promise<unknown>): Promise<void> => {
   try {
@@ -142,8 +143,16 @@ const parseDone = (raw: string): ActionDone | null => {
   }
 };
 
-const openSource = (): void => {
-  if (unsubscribe) {
+const openSource = async (): Promise<void> => {
+  if (unsubscribe || isOpening) {
+    return;
+  }
+
+  isOpening = true;
+  const { subscribeActionDone } = await import("./stream");
+  isOpening = false;
+
+  if (unsubscribe || listeners.size === 0) {
     return;
   }
 
@@ -157,8 +166,8 @@ const openSource = (): void => {
 };
 
 const subscribeDone = (listener: DoneListener): (() => void) => {
-  openSource();
   listeners.add(listener);
+  void openSource();
 
   return () => {
     listeners.delete(listener);

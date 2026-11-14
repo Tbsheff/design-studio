@@ -2,7 +2,7 @@ import { Icon } from "@design-studio/ui";
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
-import { tipWithKey } from "../../features/commands";
+import { tipWithKey } from "../../platform/key-tip.js";
 import type { ColumnTab } from "../../platform/panel-tab";
 import type { RailTab } from "./panel-rail-model";
 

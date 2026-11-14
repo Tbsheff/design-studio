@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import type { ReactElement } from "react";
 
-import { tipWithKey } from "../../features/commands";
+import { tipWithKey } from "../../platform/key-tip.js";
 import { toColumnKeyId, toColumnTitle } from "../shell/panel-rail-model";
 import { SheetFrame } from "../shell/sheet-frame";
 import { COLUMN_COPY } from "./copy";

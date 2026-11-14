@@ -68,7 +68,7 @@ const hasArmedHistory = (
   noteLayer(message, lastLayer);
   const layer = lastLayer.current;
 
-  if (message.type !== "history-key" || layer === null) {
+  if (message.type !== "history-key" || message.isNotice || layer === null) {
     return false;
   }
 

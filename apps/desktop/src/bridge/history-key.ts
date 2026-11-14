@@ -1,39 +1,55 @@
+import type { TextEditor } from "./text-edit.js";
+
 interface HistoryKeyBody {
-  type: "history-key";
-  redo: boolean;
+  readonly type: "history-key";
+  readonly redo: boolean;
+  readonly isNotice: boolean;
 }
 
-function typingTarget(event: KeyboardEvent): boolean {
-  const target = event.composedPath()[0] ?? event.target;
+type PostHistoryKey = (body: HistoryKeyBody) => void;
 
-  if (!(target instanceof HTMLElement)) {
-    return false;
-  }
+const TYPING_TAGS = new Set(["INPUT", "TEXTAREA", "SELECT"]);
 
-  return (
-    target.isContentEditable ||
-    ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)
-  );
-}
+const toHistoryKey = (redo: boolean, isNotice: boolean): HistoryKeyBody => ({
+  isNotice,
+  redo,
+  type: "history-key",
+});
 
-export const isHistoryKey = (event: KeyboardEvent): boolean =>
+const isTypingElement = (target: EventTarget | null): boolean =>
+  target instanceof HTMLElement &&
+  (target.isContentEditable || TYPING_TAGS.has(target.tagName));
+
+const isHistoryKey = (event: KeyboardEvent): boolean =>
   (event.metaKey || event.ctrlKey) &&
   !event.altKey &&
   event.key.toLowerCase() === "z";
 
-export function historyKeyBody(event: KeyboardEvent): HistoryKeyBody | null {
+const historyKeyBody = (event: KeyboardEvent): HistoryKeyBody | null => {
   if (!isHistoryKey(event)) {
     return null;
   }
 
-  if (typingTarget(event)) {
+  if (isTypingElement(event.composedPath()[0] ?? event.target)) {
     return null;
   }
 
-  return { redo: event.shiftKey, type: "history-key" };
-}
+  return toHistoryKey(event.shiftKey, false);
+};
 
-export function forwardHistoryKeys(post: (body: HistoryKeyBody) => void): void {
+const noteHistoryKeys = (post: PostHistoryKey): void => {
+  window.addEventListener(
+    "keydown",
+    (event) => {
+      if (isHistoryKey(event) && !event.repeat) {
+        post(toHistoryKey(event.shiftKey, true));
+      }
+    },
+    { capture: true }
+  );
+};
+
+const forwardHistoryKeys = (post: PostHistoryKey): void => {
   window.addEventListener(
     "keydown",
     (event) => {
@@ -48,4 +64,47 @@ export function forwardHistoryKeys(post: (body: HistoryKeyBody) => void): void {
     },
     { capture: true }
   );
-}
+};
+
+const toEditCommand = (redo: boolean): "redo" | "undo" => {
+  if (redo) {
+    return "redo";
+  }
+
+  return "undo";
+};
+
+const runTextUndo = (
+  editor: Pick<TextEditor, "editing" | "onKeyDown">,
+  redo: boolean,
+  post: PostHistoryKey
+): void => {
+  if (editor.editing()) {
+    editor.onKeyDown(
+      new KeyboardEvent("keydown", {
+        cancelable: true,
+        key: "z",
+        metaKey: true,
+        shiftKey: redo,
+      })
+    );
+
+    return;
+  }
+
+  if (isTypingElement(document.activeElement)) {
+    document.execCommand(toEditCommand(redo));
+
+    return;
+  }
+
+  post(toHistoryKey(redo, false));
+};
+
+export {
+  forwardHistoryKeys,
+  historyKeyBody,
+  isHistoryKey,
+  noteHistoryKeys,
+  runTextUndo,
+};

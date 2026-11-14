@@ -1,11 +1,16 @@
 import type { BridgeToParent } from "@design-studio/contracts";
 
+import { noteHandledShortcut } from "../../platform/desktop.js";
 import type { PreviewHost } from "./preview-frames-types.js";
 import { PREVIEW_HISTORY_EVENT } from "./use-undo-shortcut.js";
 import { PREVIEW_TOOL_KEY_EVENT } from "./vector-tool-model.js";
 
 const PREVIEW_LAYOUT_KEY_EVENT = "studio:preview-layout-key";
 const PREVIEW_ARRANGE_KEY_EVENT = "studio:preview-arrange-key";
+
+const TEXT_UNDO_ANSWER_MS = 1000;
+
+const textUndos = new Map<string, number>();
 
 const KEY_TYPES = [
   "escape",
@@ -22,6 +27,37 @@ const KEY_MESSAGES = new Set<BridgeToParent["type"]>(KEY_TYPES);
 
 const isKeyMessage = (message: BridgeToParent): message is KeyMessage =>
   KEY_MESSAGES.has(message.type);
+
+const markTextUndo = (token: string): void => {
+  textUndos.set(token, Date.now());
+};
+
+const isTextUndoAnswer = (token: string): boolean => {
+  const at = textUndos.get(token) ?? null;
+  textUndos.delete(token);
+
+  return at !== null && Date.now() - at < TEXT_UNDO_ANSWER_MS;
+};
+
+const forwardHistoryKey = (
+  message: Extract<KeyMessage, { type: "history-key" }>
+): void => {
+  if (message.isNotice) {
+    if (message.redo) {
+      noteHandledShortcut("redo");
+    } else {
+      noteHandledShortcut("undo");
+    }
+
+    return;
+  }
+
+  globalThis.dispatchEvent(
+    new CustomEvent(PREVIEW_HISTORY_EVENT, {
+      detail: { isAnswer: isTextUndoAnswer(message.token), redo: message.redo },
+    })
+  );
+};
 
 const forwardDetailKey = (message: KeyMessage): void => {
   if (message.type === "tool-key") {
@@ -45,9 +81,7 @@ const forwardDetailKey = (message: KeyMessage): void => {
   }
 
   if (message.type === "history-key") {
-    globalThis.dispatchEvent(
-      new CustomEvent(PREVIEW_HISTORY_EVENT, { detail: { redo: message.redo } })
-    );
+    forwardHistoryKey(message);
   }
 };
 
@@ -78,6 +112,7 @@ export {
   PREVIEW_LAYOUT_KEY_EVENT,
   forwardKeyMessage,
   isKeyMessage,
+  markTextUndo,
 };
 
 export type { KeyMessage };

@@ -12,6 +12,7 @@ import {
 } from "./element-info.js";
 import { FORCED_STATES } from "./force-state.js";
 import type { ForcedState } from "./force-state.js";
+import { runTextUndo } from "./history-key.js";
 import { createSelectionHandlers, elementOfId } from "./hover-select.js";
 import { createKeyboardHandlers } from "./keyboard.js";
 import type { PostNudge } from "./keyboard.js";
@@ -295,6 +296,7 @@ const createTextEditHandlers = (
   | "text-edit-resume"
   | "text-edit-start"
   | "text-edit-stop"
+  | "text-undo"
 > => ({
   "text-edit-allowed": (message) =>
     context.textEditor.allow(message.allowed === true),
@@ -307,6 +309,8 @@ const createTextEditHandlers = (
     startTextEdit(context, message.selector, TEXT_EDIT_RETRIES);
   },
   "text-edit-stop": () => context.textEditor.cancel(),
+  "text-undo": (message) =>
+    runTextUndo(context.textEditor, message.redo === true, context.post),
 });
 
 const lockAndPost = async (

@@ -14,6 +14,13 @@ import {
 import type { PictureRegion } from "../../preview/picture-diff/index.js";
 import type { PortCheckQuery, PortReads } from "./port-check-query.js";
 import { createPortFiles, toPortFileStem } from "./port-diff-file.js";
+import type { ProbeElement } from "./port-mask-probe.js";
+import {
+  applyPictureMasks,
+  readKeptAppTexts,
+  toAreaElements,
+  toMaskedList,
+} from "./port-masks.js";
 import { toPortShots } from "./port-shots.js";
 
 const ROW_NAMES = ["top", "middle", "bottom"];
@@ -37,20 +44,28 @@ const toArea = (region: PictureRegion): PortArea => {
 
   return {
     col: COL_NAMES.indexOf(colName),
+    elements: [],
     name: region.name,
     row: ROW_NAMES.indexOf(rowName),
     score: toAreaScore(region),
   };
 };
 
-const toLowAreas = (regions: readonly PictureRegion[]): PortArea[] => {
+const toLowAreas = (
+  regions: readonly PictureRegion[],
+  elements: readonly ProbeElement[],
+  width: number
+): PortArea[] => {
   const areas: PortArea[] = [];
 
   for (const region of regions) {
     const area = toArea(region);
 
     if (area.score < REFERENCE_LOW_SCORE) {
-      areas.push(area);
+      areas.push({
+        ...area,
+        elements: toAreaElements(elements, area, width),
+      });
     }
   }
 
@@ -64,9 +79,15 @@ const readPortMatch = Effect.fn("PortMatchStore.readPortMatch")(function* run(
   reads: PortReads,
   query: PortCheckQuery
 ) {
-  const shots = yield* toPortShots(reads, query);
-  const prototype = fromBase64Png(shots.prototype);
-  const app = fromBase64Png(shots.app);
+  const hide = yield* readKeptAppTexts(reads, query);
+  const shots = yield* toPortShots(reads, query, hide);
+  const prototype = fromBase64Png(shots.prototype.data);
+  const app = fromBase64Png(shots.app.data);
+
+  if (query.update !== null) {
+    applyPictureMasks([prototype, app], shots, query.width);
+  }
+
   const diff = diffPictures(prototype, app);
 
   const files = yield* attemptKnown(() =>
@@ -88,8 +109,13 @@ const readPortMatch = Effect.fn("PortMatchStore.readPortMatch")(function* run(
 
   const match: PortMatch = {
     ...files,
-    areas: toLowAreas(diff.regions).slice(0, query.limit),
+    areas: toLowAreas(
+      diff.regions,
+      shots.app.probe.elements,
+      query.width
+    ).slice(0, query.limit),
     isLow: diff.score < REFERENCE_LOW_SCORE,
+    masked: toMaskedList(shots, query.update !== null),
     score: diff.score,
   };
 

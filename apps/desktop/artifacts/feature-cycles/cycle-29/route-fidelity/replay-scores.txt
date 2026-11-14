@@ -1,0 +1,6 @@
+replay real-run-1 output, branch: score 52; areas [["top center", 32, ["Patients", "NameWardFarah OkaforCardiologyGreg Lindq"]], ["top left", 56, []]]; masked 12
+correct port, branch: score 99; areas []; masked 12
+fault, branch: score 50; areas [["top center", 35, ["Patients", "NAME WARD Farah Okafor Cardiology Greg L"]], ["top left", 55, []]]; masked 12
+correct port, main: score 48; areas [["top center", 33, []], ["top left", 55, []]]; masked 0
+new route /new-list, main: score 75; areas [["top center", 65, []]]; masked 0
+new route /new-list, branch: score 75; areas [["top center", 65, ["Patients", "NAME WARD"]]]; masked 0

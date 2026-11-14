@@ -1,3 +1,4 @@
+import type { PortMasked } from "@design-studio/actions/port/schema";
 import type { FinalCheck } from "@design-studio/contracts";
 import { PORT_TASK } from "@design-studio/contracts/port";
 import type { PortReviewRecord } from "@design-studio/contracts/port";
@@ -17,6 +18,7 @@ import type {
   PortMatchRead,
   RouteRender,
 } from "./port-review-read.js";
+import { toRouteFileNow } from "./port-route-update.js";
 import type { ImagePart } from "./user-message.js";
 
 const CHECK_TAG = /<port-check\b(?<attributes>[^>]*)\/>/u;
@@ -26,6 +28,8 @@ const ROUTE_FILE = /`(?<file>[^`\s]+\/page\.[jt]sx?)`/gu;
 const GROUP_SEGMENT = /^\(.*\)$/u;
 
 const CONTINUE_TAG = "studio-continue";
+
+const MASKED_TEXT_MAX = 5;
 
 interface PortCheckRef {
   readonly directionId: string;
@@ -37,6 +41,7 @@ interface PortCheckRef {
 
 interface PortReviewGaps {
   readonly files: readonly string[];
+  readonly isUpdate: boolean;
   readonly ref: PortCheckRef;
   readonly url: string;
 }
@@ -134,6 +139,7 @@ const toPortReviewGaps = (
 
   return {
     files: toRouteFiles(ctx.request.prompt),
+    isUpdate: toRouteFileNow(ctx.request.prompt) !== null,
     ref: checkRef,
     url: toRouteUrl(base, checkRef.routePath),
   };
@@ -182,12 +188,77 @@ const toTag = (name: string, isClose: boolean): string => {
   return ["<", name, ">"].join("");
 };
 
+const toRouteKind = (gaps: PortReviewGaps): string => {
+  if (gaps.isUpdate) {
+    return "updated";
+  }
+
+  return "new";
+};
+
+const toMaskedTexts = (
+  match: PortMatchRead,
+  reason: PortMasked["reason"]
+): string[] =>
+  match.masked.flatMap((item) => {
+    if (item.reason === reason) {
+      return [item.text];
+    }
+
+    return [];
+  });
+
+const toMaskedLines = (match: PortMatchRead): string[] => {
+  const kept = toMaskedTexts(match, "app-change");
+  const rows = toMaskedTexts(match, "data-row");
+  const lines: string[] = [];
+
+  if (kept.length > 0) {
+    lines.push(
+      `- Kept app text, not scored: ${kept.join(" / ")}. The studio hides it in the app shot, so give the elements around it the prototype spacing, as if it were not there.`
+    );
+  }
+
+  if (rows.length > 0) {
+    lines.push(
+      `- Data row text, not scored (the app data differs from the prototype sample rows): ${rows.slice(0, MASKED_TEXT_MAX).join(" / ")}`
+    );
+  }
+
+  return lines;
+};
+
+const toAreaLine = (area: PortMatchRead["areas"][number]): string => {
+  const names = area.elements.map(
+    (element) => `${element.selector} "${element.text}"`
+  );
+
+  if (names.length === 0) {
+    return `- ${area.name} ${area.score}: no named element; check the spacing and the background there.`;
+  }
+
+  return `- ${area.name} ${area.score}: ${names.join(", ")}`;
+};
+
+const toAreaLines = (match: PortMatchRead): string[] => {
+  if (match.areas.length === 0) {
+    return [];
+  }
+
+  return [
+    "Low areas and the app elements in them:",
+    ...match.areas.map((area) => toAreaLine(area)),
+  ];
+};
+
 const toFixPrompt = (gaps: PortReviewGaps, check: PortCheck): string =>
   [
     toTag(CONTINUE_TAG, false),
-    `The studio checked the new route ${gaps.ref.routePath} (${gaps.url}) against the prototype after your last edit.`,
+    `The studio checked the ${toRouteKind(gaps)} route ${gaps.ref.routePath} (${gaps.url}) against the prototype after your last edit.`,
     `- Render: ${toRenderText(check.render)}.`,
     `- Port match against the prototype ${gaps.ref.path}: ${toScoreText(check.match)}. The bar is ${REFERENCE_LOW_SCORE}.`,
+    ...toMaskedLines(check.match),
+    ...toAreaLines(check.match),
     "The attached sheet, when there is one, shows the prototype, the route, and the different pixels in red.",
     "Do one fix loop. Fix the render error first, then the low areas, with the app kit and tokens. Do not call inspect_port: the studio checks the route again after your reply. Reply in one or two sentences with what you changed.",
     toTag(CONTINUE_TAG, true),

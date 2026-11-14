@@ -1,6 +1,14 @@
 import type { McpReadStore } from "../../preview/index.js";
+import type { MaskProbe } from "./port-mask-probe.js";
 
-type PortReads = Pick<typeof McpReadStore.Service, "screenshot">;
+type PortReads = Pick<
+  typeof McpReadStore.Service,
+  "fileText" | "probedScreenshot" | "screenshot"
+>;
+
+interface PortRouteUpdate {
+  readonly diffs: readonly string[];
+}
 
 interface PortCheckQuery {
   readonly directionId: string | null;
@@ -9,12 +17,18 @@ interface PortCheckQuery {
   readonly projectId: string;
   readonly routePath: string;
   readonly targetProjectId: string;
+  readonly update: PortRouteUpdate | null;
   readonly width: number;
 }
 
+interface PortShot {
+  readonly data: string;
+  readonly probe: MaskProbe;
+}
+
 interface PortShotPair {
-  readonly app: string;
-  readonly prototype: string;
+  readonly app: PortShot;
+  readonly prototype: PortShot;
 }
 
 interface PortCheckFiles {
@@ -23,4 +37,11 @@ interface PortCheckFiles {
   readonly prototypePath: string;
 }
 
-export type { PortCheckFiles, PortCheckQuery, PortReads, PortShotPair };
+export type {
+  PortCheckFiles,
+  PortCheckQuery,
+  PortReads,
+  PortRouteUpdate,
+  PortShot,
+  PortShotPair,
+};

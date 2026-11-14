@@ -1,6 +1,7 @@
 export {
   diffMask,
   diffPictures,
+  maskRect,
   pictureSheet,
   resizePng,
   topOf,

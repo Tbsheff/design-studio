@@ -1,0 +1,114 @@
+## real run 2 fix prompt
+
+<studio-continue>
+The studio checked the updated route /patients (http://p-4a713931414b31616177.localhost:5721/patients) against the prototype after your last edit.
+- Render: route renders.
+- Port match against the prototype index.html: score 71 (top center 27 under 80). The bar is 80.
+- Kept app text, not scored: Ward list for today.
+- Data row text, not scored (the app data differs from the prototype sample rows): Hid 1 extra data row on the app page. / Farah Okafor / Cardiology / Greg Lindqvist / East
+Low areas and the app elements in them:
+- top center 27: main.patients-module__GMQEKW__page > h1.patients-module__GMQEKW__title "Patients", main.patients-module__GMQEKW__page > div.patients-module__GMQEKW__card > table.patients-module__GMQEKW__table "NAME WARD"
+The attached sheet, when there is one, shows the prototype, the route, and the different pixels in red.
+Do one fix loop. Fix the render error first, then the low areas, with the app kit and tokens. Do not call inspect_port: the studio checks the route again after your reply. Reply in one or two sentences with what you changed.
+</studio-continue>
+
+## mock run fix prompt
+
+<studio-continue>
+The studio checked the updated route /patients (http://p-4a713931414b31616177.localhost:5721/patients) against the prototype after your last edit.
+- Render: route renders.
+- Port match against the prototype index.html: score 13 (top center 10, top left 14 under 80). The bar is 80.
+Low areas and the app elements in them:
+- top center 10: main > h1 "Patients"
+- top left 14: no named element; check the spacing and the background there.
+The attached sheet, when there is one, shows the prototype, the route, and the different pixels in red.
+Do one fix loop. Fix the render error first, then the low areas, with the app kit and tokens. Do not call inspect_port: the studio checks the route again after your reply. Reply in one or two sentences with what you changed.
+</studio-continue>
+
+## mock run route-update tag
+
+<route-update file="app/patients/page.jsx">
+The route file exists in the app. Update it in place. Do not make a new route.
+
+Keep every data read: server component await calls, tRPC or fetch calls, params and searchParams use, loaders.
+
+Keep the exports Next needs: default, generateMetadata, dynamic, revalidate. Keep the imports that the kept code uses.
+
+Replace the markup and the classes with the prototype design. Map them to the app tokens and kit as the port plan says.
+
+Also restyle the components that the route imports from its own folder. Keep their data reads (hooks, queries) and exports.
+
+Bind the design to the route's own data. The prototype rows are sample data: do not write a sample row into the app.
+
+Style stack: no Tailwind, plain CSS in app/globals.css. Style with what the route uses now: a CSS module next to the route or inline styles. Tailwind classes do nothing in this app.
+
+<route-file-now>
+import { prefetchPatients } from "../../lib/server";
+import PatientList from "./patient-list";
+
+export const dynamic = "force-dynamic";
+
+export default async function PatientsPage() {
+  await prefetchPatients();
+  return (
+    <main style={{ padding: 32 }}>
+      <h1>Patients</h1>
+      <p>Ward list for today.</p>
+      <PatientList />
+    </main>
+  );
+}
+
+</route-file-now>
+
+<route-folder-file file="app/patients/patient-list.jsx">
+"use client";
+
+import { usePatients } from "../../lib/client";
+
+export default function PatientList() {
+  const rows = usePatients();
+  return (
+    <table>
+      <tbody>
+        {rows.map((row) => (
+          <tr key={row.id}><td>{row.name}</td><td>{row.ward}</td></tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+</route-folder-file>
+
+<route-file-at-copy>
+import { prefetchPatients } from "../../lib/server";
+import PatientList from "./patient-list";
+
+export const dynamic = "force-dynamic";
+
+export default async function PatientsPage() {
+  await prefetchPatients();
+  return (
+    <main style={{ padding: 32 }}>
+      <h1>Patients</h1>
+      <PatientList />
+    </main>
+  );
+}
+
+</route-file-at-copy>
+
+The app route changed since the copy. The diff below goes from the copy to the app now. Keep the app change.
+
+<route-file-diff>
+@@ -8 +8 @@
+   return (
+     <main style={{ padding: 32 }}>
+       <h1>Patients</h1>
++      <p>Ward list for today.</p>
+       <PatientList />
+     </main>
+   );
+</route-file-diff>
+</route-update>

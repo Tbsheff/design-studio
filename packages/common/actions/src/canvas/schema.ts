@@ -1,3 +1,4 @@
+import { CANVAS_MAX_HEIGHT } from "@design-studio/contracts/canvas-file";
 import { FRAME_STATE_KINDS } from "@design-studio/contracts/frame-state";
 import {
   LINK_DELAY_MAX,
@@ -32,7 +33,6 @@ import {
 import { StartPointSchema } from "./start/schema.js";
 
 const FRAME_REF_MAX = 120;
-
 const LINK_IDS_MAX = 50;
 
 const LinkIdSchema = Schema.String.check(Schema.isPattern(/^l\d{1,5}$/u));
@@ -229,7 +229,7 @@ const WriterIdSchema = Schema.String.check(
 );
 
 const PresenceSideSchema = Schema.Int.check(
-  Schema.isBetween({ maximum: 4000, minimum: 200 })
+  Schema.isBetween({ maximum: CANVAS_MAX_HEIGHT, minimum: 200 })
 );
 
 const PresenceLiveSizeSchema = Schema.Struct({

@@ -8,6 +8,7 @@ export const CANVAS_FILE_VERSION = 1;
 export const CANVAS_MAX_FRAMES = 24;
 export const CANVAS_MIN_SIDE = 200;
 export const CANVAS_MAX_SIDE = 4000;
+export const CANVAS_MAX_HEIGHT = 8000;
 export const CANVAS_MAX_COORD = 100_000;
 export const CANVAS_LABEL_MAX = 40;
 export const CANVAS_GAP = 80;
@@ -118,14 +119,14 @@ function sectionSide(value: unknown): number | null {
   return n >= CANVAS_SECTION_MIN_SIDE && n <= CANVAS_MAX_COORD * 2 ? n : null;
 }
 
-function side(value: unknown): number | null {
+function side(value: unknown, max: number): number | null {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     return null;
   }
 
   const n = Math.round(value);
 
-  return n >= CANVAS_MIN_SIDE && n <= CANVAS_MAX_SIDE ? n : null;
+  return n >= CANVAS_MIN_SIDE && n <= max ? n : null;
 }
 
 function coord(value: unknown): number | null {
@@ -136,6 +137,20 @@ function coord(value: unknown): number | null {
   const n = Math.round(value);
 
   return Math.abs(n) <= CANVAS_MAX_COORD ? n : null;
+}
+
+function toClampedSide(value: number, max: number): number {
+  return Math.round(Math.min(max, Math.max(CANVAS_MIN_SIDE, value)));
+}
+
+export function toFrameSize(
+  width: number,
+  height: number
+): Pick<CanvasFileFrame, "height" | "width"> {
+  return {
+    height: toClampedSide(height, CANVAS_MAX_HEIGHT),
+    width: toClampedSide(width, CANVAS_MAX_SIDE),
+  };
 }
 
 export function parseCanvasFrame(raw: unknown): CanvasFileFrame | null {
@@ -149,8 +164,8 @@ export function parseCanvasFrame(raw: unknown): CanvasFileFrame | null {
     return null;
   }
 
-  const width = side(f.width);
-  const height = side(f.height);
+  const width = side(f.width, CANVAS_MAX_SIDE);
+  const height = side(f.height, CANVAS_MAX_HEIGHT);
   const x = coord(f.x);
   const y = coord(f.y);
 

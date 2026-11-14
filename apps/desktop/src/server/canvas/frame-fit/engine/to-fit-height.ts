@@ -1,4 +1,4 @@
-import { CANVAS_MAX_SIDE } from "@design-studio/contracts/canvas-file";
+import { CANVAS_MAX_HEIGHT } from "@design-studio/contracts/canvas-file";
 
 type FitStep =
   | { readonly kind: "done"; readonly height: number }
@@ -17,7 +17,7 @@ interface FitPreset {
 const SCREEN_WARNING =
   "The page has sections sized to the screen height (100vh), so it grows with the frame. The frame is set to its height at the device size.";
 
-const TALL_WARNING = `The page is taller than ${CANVAS_MAX_SIDE} px. The frame stops at ${CANVAS_MAX_SIDE} px.`;
+const TALL_WARNING = `The page is taller than ${CANVAS_MAX_HEIGHT} px. The frame stops at ${CANVAS_MAX_HEIGHT} px.`;
 
 const toBaseHeight = (
   width: number,
@@ -27,7 +27,7 @@ const toBaseHeight = (
   presets.find((preset) => preset.width === width)?.height ?? fallback.height;
 
 const toFirstStep = (base: number, scrollHeight: number): FitStep => {
-  const height = Math.min(CANVAS_MAX_SIDE, Math.max(base, scrollHeight));
+  const height = Math.min(CANVAS_MAX_HEIGHT, Math.max(base, scrollHeight));
 
   if (height === base) {
     return { height, kind: "done" };
@@ -41,7 +41,7 @@ const toCheckedFit = (height: number, scrollHeight: number): FitResult => {
     return { height, warning: null };
   }
 
-  if (height === CANVAS_MAX_SIDE) {
+  if (height === CANVAS_MAX_HEIGHT) {
     return { height, warning: TALL_WARNING };
   }
 

@@ -3,11 +3,10 @@ import {
   CANVAS_GAP,
   CANVAS_MAX_COORD,
   CANVAS_MAX_FRAMES,
-  CANVAS_MAX_SIDE,
-  CANVAS_MIN_SIDE,
   cleanFrameLabel,
   cleanFramePath,
   nextFrameId,
+  toFrameSize,
 } from "@design-studio/contracts/canvas-file";
 import type {
   CanvasFile,
@@ -165,10 +164,7 @@ function sizeOf(
     base?.height ??
     CANVAS_VIEWPORTS.desktop.height;
 
-  const clamp = (n: number) =>
-    Math.round(Math.min(CANVAS_MAX_SIDE, Math.max(CANVAS_MIN_SIDE, n)));
-
-  return { height: clamp(height), width: clamp(width) };
+  return toFrameSize(width, height);
 }
 
 function relationOf(

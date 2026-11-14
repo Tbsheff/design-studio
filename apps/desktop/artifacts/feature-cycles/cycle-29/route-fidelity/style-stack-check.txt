@@ -1,0 +1,2 @@
+tw-app [ 'app/items/list.jsx', 'app/items/items.module.css' ] => Style stack: Tailwind 4, from package.json. Style with Tailwind classes and the app theme tokens.
+rf-next [ 'app/patients/patient-list.jsx', 'app/patients/patients.module.css' ] => Style stack: CSS modules, no Tailwind. Style with the CSS module that the route folder uses.

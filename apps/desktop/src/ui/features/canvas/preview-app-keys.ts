@@ -2,6 +2,8 @@ import type { AppKey } from "@design-studio/contracts";
 
 import { LAYER_STYLE_KEY_EVENT } from "../../domain/layer-style-key-events.js";
 import type { LayerStyleAppKey } from "../../domain/layer-style-key-events.js";
+import { STACKING_KEY_EVENT } from "../../domain/stacking-key-events.js";
+import type { StackingAppKey } from "../../domain/stacking-key-events.js";
 import { requestCanvasTool } from "../../platform/canvas-tool.js";
 import type { CanvasToolId } from "../../platform/canvas-tool.js";
 import { findElement } from "../../platform/find-element.js";
@@ -45,6 +47,23 @@ const runPreviewStyleKey = (id: AppKey): boolean => {
   return true;
 };
 
+const STACKING_APP_KEYS: ReadonlySet<AppKey> = new Set<StackingAppKey>([
+  "layer-backward",
+  "layer-forward",
+]);
+
+const runPreviewStackingKey = (id: AppKey): boolean => {
+  if (!STACKING_APP_KEYS.has(id)) {
+    return false;
+  }
+
+  globalThis.dispatchEvent(
+    new CustomEvent(STACKING_KEY_EVENT, { detail: { id } })
+  );
+
+  return true;
+};
+
 const isPlaying = (): boolean =>
   findElement(document.body, ".play-bar") !== null;
 
@@ -77,4 +96,9 @@ const runPreviewToolKey = (id: AppKey): boolean => {
 const toPreviewCommandId = (id: AppKey): string | null =>
   COMMAND_OF_KEY[id] ?? null;
 
-export { runPreviewStyleKey, runPreviewToolKey, toPreviewCommandId };
+export {
+  runPreviewStackingKey,
+  runPreviewStyleKey,
+  runPreviewToolKey,
+  toPreviewCommandId,
+};

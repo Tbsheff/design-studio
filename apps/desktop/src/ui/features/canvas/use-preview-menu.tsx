@@ -19,7 +19,6 @@ import {
 } from "../../canvas-preview-slots.js";
 import type { GenerateTabProps } from "../../canvas-preview-slots.js";
 import type { PreviewPort } from "../../platform/bridge.js";
-import { uiStore } from "../../platform/storage.js";
 import { CreateComponentDialog } from "../design-system/index.js";
 import { DevNoteSlot, useDevNoteHost } from "../dev-note/index.js";
 import {
@@ -37,6 +36,7 @@ import {
 } from "../layer-style/index.js";
 import { PatternSlot, usePatternHost } from "../pattern/index.js";
 import { PropSlot, usePropHost } from "../prop/index.js";
+import { useStackingKeys } from "../stacking/index.js";
 import type { LayerEdits } from "../versions-layers-tokens/use-layer-edits.js";
 import { toLayerPickItems } from "./layer-pick-menu.js";
 import { toAfterSelectChild } from "./layer-pick-model.js";
@@ -44,6 +44,7 @@ import type { MenuAnchor } from "./layer-pick-model.js";
 import {
   createItem,
   disabledBy,
+  toLayersItem,
   toTransformMenuItems,
 } from "./preview-menu-create.js";
 import { PreviewMenu } from "./preview-menu.js";
@@ -198,13 +199,7 @@ const menuItems = (
     label: "Zoom to selection",
     run: () => options5.zoom("selection"),
   },
-  {
-    icon: "layers",
-    id: "layers",
-    keyId: "layers",
-    label: "Show in layers",
-    run: () => uiStore.set({ layersOpen: true }),
-  },
+  toLayersItem(),
   ...structureItems(options5),
   ...toTransformMenuItems(),
   ...pasteItem(options5, target),
@@ -457,6 +452,7 @@ const usePreviewMenu = (options: Options): PreviewMenuHandle => {
   const { directionId, projectId } = options.ids;
   const { notify } = options.edits;
   useLayerStyleKeys({ host: hosts.layerStyle, notify, selection });
+  useStackingKeys({ ...base, port: options.port, selection });
 
   const handlers = useMemo(
     () => ({ onClose: close, onCreate: openCreate }),

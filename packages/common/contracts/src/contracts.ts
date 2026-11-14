@@ -363,6 +363,24 @@ export interface SelectionContext {
   owners?: { name: string; stack: string }[];
   ancestors: string[];
   path?: string[];
+  stack?: SelectionStack | null;
+}
+
+export interface StackPeer {
+  readonly domIndex: number;
+  readonly isStackItem: boolean;
+  readonly makesLayer: boolean;
+  readonly position: string;
+  readonly rect: { x: number; y: number; width: number; height: number };
+  readonly selector: string;
+  readonly source: SourceLoc | null;
+  readonly tag: string;
+  readonly z: number | null;
+}
+
+export interface SelectionStack {
+  readonly peers: readonly StackPeer[];
+  readonly self: StackPeer;
 }
 
 export interface ComponentUse {
@@ -1606,6 +1624,8 @@ export type AppKey =
   | "inspector"
   | "style-copy"
   | "style-paste"
+  | "layer-forward"
+  | "layer-backward"
   | "view-outline";
 
 const MOD_APP_KEYS: Record<string, AppKey> = {
@@ -1648,6 +1668,22 @@ const MOD_ALT_APP_KEYS = new Map<string, AppKey>([
   ["KeyC", "style-copy"],
   ["KeyV", "style-paste"],
 ]);
+
+const LAYER_APP_KEYS = new Map<string, AppKey>([
+  ["BracketLeft", "layer-backward"],
+  ["BracketRight", "layer-forward"],
+]);
+
+const layerAppKeyOf = (
+  event: PlainKeyEvent,
+  typing: boolean
+): AppKey | null => {
+  if (typing || event.shiftKey || !(event.metaKey || event.ctrlKey)) {
+    return null;
+  }
+
+  return LAYER_APP_KEYS.get(event.code) ?? null;
+};
 
 const modAltAppKeyOf = (
   event: PlainKeyEvent,
@@ -1701,6 +1737,12 @@ export function appKeyOf(
 ): AppKey | null {
   if (event.altKey) {
     return altAppKeyOf(event, typing);
+  }
+
+  const layerKey = layerAppKeyOf(event, typing);
+
+  if (layerKey) {
+    return layerKey;
   }
 
   const modKey =
@@ -1893,6 +1935,7 @@ export type ParentToBridge =
       type: "describe-anchors";
       requestId: string;
       anchors: AnchorQuery[];
+      hasStack?: boolean;
     }
   | { ns: "studio"; token: string; type: "request-tree" }
   | { ns: "studio"; token: string; type: "hover-node"; id: number | null }

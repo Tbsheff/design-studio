@@ -100,6 +100,18 @@ const EDIT_KEYS = [
     label: "Justify text",
   },
   {
+    group: "Selection",
+    id: "bring-forward",
+    keys: ["Mod+]"],
+    label: "Bring forward: paint over the next layer that overlaps it",
+  },
+  {
+    group: "Selection",
+    id: "send-backward",
+    keys: ["Mod+["],
+    label: "Send backward: paint under the next layer that overlaps it",
+  },
+  {
     group: "Edit",
     id: "copy-style",
     keys: ["Mod+Alt+C"],

@@ -21,13 +21,15 @@ import { hasRouteChange, toStartSnapshot } from "./port-review-snapshot.js";
 import { toRouteFileNow } from "./port-route-update.js";
 import type { ImagePart } from "./user-message.js";
 
-const CHECK_TAG = /<port-check\b(?<attributes>[^>]*)\/>/u;
+const CHECK_TAG = /<port-check\b(?<attributes>[^>]*)\/>/gu;
 
 const ROUTE_FILE = /`(?<file>[^`\s]+\/page\.[jt]sx?)`/gu;
 
 const GROUP_SEGMENT = /^\(.*\)$/u;
 
 const CONTINUE_TAG = "studio-continue";
+
+const UPDATE_OPEN = ["<", 'route-update file="'].join("");
 
 const MASKED_TEXT_MAX = 5;
 
@@ -41,12 +43,16 @@ interface PortCheckRef {
   readonly targetProjectId: string;
 }
 
-interface PortReviewGaps {
-  readonly appDirectionId: string;
-  readonly files: readonly string[];
+interface PortRouteGaps {
   readonly isUpdate: boolean;
   readonly ref: PortCheckRef;
   readonly url: string;
+}
+
+interface PortReviewGaps extends PortRouteGaps {
+  readonly appDirectionId: string;
+  readonly files: readonly string[];
+  readonly routes: readonly PortRouteGaps[];
   readonly workTree: string;
 }
 
@@ -83,13 +89,7 @@ const toAttribute = (attributes: string, key: string): string => {
   return found?.groups?.["value"] ?? "";
 };
 
-const toPortCheckRef = (prompt: string): PortCheckRef | null => {
-  const attributes = CHECK_TAG.exec(prompt)?.groups?.["attributes"] ?? null;
-
-  if (attributes === null) {
-    return null;
-  }
-
+const toRefOf = (attributes: string): PortCheckRef | null => {
   const ref: PortCheckRef = {
     directionId: toAttribute(attributes, "directionId"),
     path: toAttribute(attributes, "path"),
@@ -104,6 +104,20 @@ const toPortCheckRef = (prompt: string): PortCheckRef | null => {
 
   return ref;
 };
+
+const toPortCheckRefs = (prompt: string): PortCheckRef[] =>
+  [...prompt.matchAll(CHECK_TAG)].flatMap((found) => {
+    const ref = toRefOf(found.groups?.["attributes"] ?? "");
+
+    if (ref === null) {
+      return [];
+    }
+
+    return [ref];
+  });
+
+const toPortCheckRef = (prompt: string): PortCheckRef | null =>
+  toPortCheckRefs(prompt)[0] ?? null;
 
 const toRouteUrl = (base: string, routePath: string): string => {
   const segments = routePath
@@ -129,20 +143,56 @@ const isPortRun = (ctx: PortReviewContext): boolean =>
   ctx.request.mode === "edit" &&
   !isLeanRun(ctx.request);
 
-const toCheckGaps = (ctx: PortReviewContext): PortReviewGaps | null => {
-  const checkRef = toPortCheckRef(ctx.request.prompt);
-  const base = ctx.previewUrl;
+const toPathOpen = (tag: string, page: string): string =>
+  ["<", tag, ' path="', page, '">'].join("");
 
-  if (!isPortRun(ctx) || base === null || checkRef === null) {
+const toPageSection = (prompt: string, page: string): string => {
+  const start = prompt.indexOf(toPathOpen("port-plan", page));
+
+  const end = prompt.indexOf(toPathOpen("prototype-source", page), start);
+
+  if (start === -1 || end === -1) {
+    return "";
+  }
+
+  return prompt.slice(start, end);
+};
+
+const isRouteUpdate = (
+  prompt: string,
+  refs: readonly PortCheckRef[],
+  ref: PortCheckRef
+): boolean => {
+  if (refs.length === 1) {
+    return toRouteFileNow(prompt) !== null;
+  }
+
+  return toPageSection(prompt, ref.path).includes(UPDATE_OPEN);
+};
+
+const toCheckGaps = (ctx: PortReviewContext): PortReviewGaps | null => {
+  const { prompt } = ctx.request;
+  const refs = toPortCheckRefs(prompt);
+  const base = ctx.previewUrl;
+  const first = refs[0] ?? null;
+
+  if (!isPortRun(ctx) || base === null || first === null) {
     return null;
   }
 
-  return {
-    appDirectionId: ctx.direction.id,
-    files: toRouteFiles(ctx.request.prompt),
-    isUpdate: toRouteFileNow(ctx.request.prompt) !== null,
+  const routeGaps = refs.map((checkRef) => ({
+    isUpdate: isRouteUpdate(prompt, refs, checkRef),
     ref: checkRef,
     url: toRouteUrl(base, checkRef.routePath),
+  }));
+
+  return {
+    appDirectionId: ctx.direction.id,
+    files: toRouteFiles(prompt),
+    isUpdate: routeGaps[0]?.isUpdate ?? false,
+    ref: first,
+    routes: routeGaps,
+    url: toRouteUrl(base, first.routePath),
     workTree: ctx.direction.workTree,
   };
 };
@@ -209,7 +259,7 @@ const toTag = (name: string, isClose: boolean): string => {
   return ["<", name, ">"].join("");
 };
 
-const toRouteKind = (gaps: PortReviewGaps): string => {
+const toRouteKind = (gaps: PortRouteGaps): string => {
   if (gaps.isUpdate) {
     return "updated";
   }
@@ -332,19 +382,26 @@ const toAreaLines = (match: PortMatchRead): string[] => {
   ];
 };
 
-const toFixPrompt = (gaps: PortReviewGaps, check: PortCheck): string =>
+const toFixLines = (gaps: PortRouteGaps, check: PortCheck): string[] => [
+  `The studio checked the ${toRouteKind(gaps)} route ${gaps.ref.routePath} (${gaps.url}) against the prototype after your last edit.`,
+  `- Render: ${toRenderText(check.render)}.`,
+  `- Port match against the prototype ${gaps.ref.path}: ${toScoreText(check.match)}. The bar is ${REFERENCE_LOW_SCORE}.`,
+  ...toShiftLines(check.match.firstShift),
+  ...toMaskedLines(check.match),
+  ...toAreaLines(check.match),
+];
+
+const toContinueText = (lines: readonly string[]): string =>
   [
     toTag(CONTINUE_TAG, false),
-    `The studio checked the ${toRouteKind(gaps)} route ${gaps.ref.routePath} (${gaps.url}) against the prototype after your last edit.`,
-    `- Render: ${toRenderText(check.render)}.`,
-    `- Port match against the prototype ${gaps.ref.path}: ${toScoreText(check.match)}. The bar is ${REFERENCE_LOW_SCORE}.`,
-    ...toShiftLines(check.match.firstShift),
-    ...toMaskedLines(check.match),
-    ...toAreaLines(check.match),
+    ...lines,
     "The attached sheet, when there is one, shows the prototype, the route, and the different pixels in red.",
     "Do one fix loop. Fix the render error first, then the low areas, with the app kit and tokens. Do not call inspect_port: the studio checks the route again after your reply. Reply in one or two sentences with what you changed.",
     toTag(CONTINUE_TAG, true),
   ].join("\n");
+
+const toFixPrompt = (gaps: PortRouteGaps, check: PortCheck): string =>
+  toContinueText(toFixLines(gaps, check));
 
 const toHidText = (check: PortCheck): string => {
   const hid =
@@ -384,10 +441,14 @@ const toPortChecked = (
 
 export {
   isFixNeeded,
+  isLowMatch,
   toCheckText,
+  toContinueText,
+  toFixLines,
   toFixPrompt,
   toHidText,
   toPortCheckRef,
+  toPortCheckRefs,
   toPortChecked,
   toPortGaps,
   toRecord,
@@ -401,4 +462,5 @@ export type {
   PortReview,
   PortReviewGaps,
   PortReviewInput,
+  PortRouteGaps,
 };

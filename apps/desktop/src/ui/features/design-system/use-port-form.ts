@@ -108,7 +108,7 @@ const usePortForm = (
   );
 
   const source = useAction(routes.inspectSourcePage, sourceInput).data ?? null;
-  const route = typedRoute ?? toSourceRoute(source, chosenApp);
+  const route = typedRoute ?? toSourceRoute(source, chosenApp, null);
 
   const plan = usePlan({
     path,
@@ -118,7 +118,12 @@ const usePortForm = (
     targetProjectId: chosenApp,
   });
 
-  const routeText = toShownRoute(route, plan.flow, path);
+  const routeText = toShownRoute(
+    typedRoute ?? toSourceRoute(source, chosenApp, plan.flow),
+    plan.flow,
+    path
+  );
+
   const cleanRoute = toCleanRoute(routeText);
   const pages = usePagePicks(plan.flow);
 

@@ -33,6 +33,18 @@ interface FlowMove {
   readonly to: string;
 }
 
+interface CopyRoute {
+  readonly route: string;
+  readonly url: string;
+}
+
+interface FlowCheckRoute {
+  readonly path: string;
+  readonly route: string | null;
+}
+
+type CopySource = Pick<PortFlowInput["source"], "direction">;
+
 const FULL_UPDATES_MAX = 3;
 
 const DIFF_TEXT_MAX = 24_000;
@@ -79,13 +91,20 @@ const toRouteOfFile = (target: FlowTarget, file: string): string | null => {
   return cleanPortRoute(folder.split(path.sep).join("/"));
 };
 
+const isDynamicRoute = (route: string): boolean =>
+  route
+    .split("/")
+    .some(
+      (part) => part.length > 2 && part.startsWith("[") && part.endsWith("]")
+    );
+
 const toCopyRoute = async (
-  input: PortFlowInput,
+  source: CopySource,
   target: FlowTarget,
   page: string
-): Promise<string | null> => {
+): Promise<CopyRoute | null> => {
   const entry = await toCopyEntry({
-    source: { direction: input.source.direction, path: page },
+    source: { direction: source.direction, path: page },
     target: { direction: target.direction, project: target.project, route: "" },
   });
 
@@ -95,8 +114,61 @@ const toCopyRoute = async (
     return null;
   }
 
-  return toRouteOfFile(target, file);
+  const route = toRouteOfFile(target, file);
+
+  if (route === null) {
+    return null;
+  }
+
+  return { route, url: portRouteUrl(entry.routePath) };
 };
+
+const isCopyUnderBase = (base: string, copy: CopyRoute): boolean =>
+  isUnderBase(base, copy.route) || isUnderBase(base, copy.url);
+
+const toPatternRoute = async (
+  source: CopySource,
+  target: FlowTarget & { readonly route: string },
+  page: string
+): Promise<string> => {
+  const copy = await toCopyRoute(source, target, page);
+
+  if (copy === null || !isDynamicRoute(copy.route)) {
+    return target.route;
+  }
+
+  if (copy.url !== portRouteUrl(target.route)) {
+    return target.route;
+  }
+
+  return copy.route;
+};
+
+const toCheckRoute = async (
+  source: CopySource,
+  target: FlowTarget,
+  page: Pick<PortFlowPage, "path" | "route">
+): Promise<FlowCheckRoute> => {
+  if (!isDynamicRoute(page.route)) {
+    return { path: page.path, route: page.route };
+  }
+
+  const copy = await toCopyRoute(source, target, page.path);
+
+  if (copy === null || portRouteUrl(copy.route) !== portRouteUrl(page.route)) {
+    return { path: page.path, route: null };
+  }
+
+  return { path: page.path, route: copy.url };
+};
+
+const listFlowCheckRoutes = (
+  input: StartableInput,
+  pages: readonly Pick<PortFlowPage, "path" | "route">[]
+): Promise<FlowCheckRoute[]> =>
+  Promise.all(
+    pages.map((page) => toCheckRoute(input.source, input.target, page))
+  );
 
 const toWantedRoutes = async (
   input: PortFlowInput,
@@ -109,16 +181,16 @@ const toWantedRoutes = async (
     return flow.pages.map(() => null);
   }
 
-  const routes = await Promise.all(
-    flow.pages.map((page) => toCopyRoute(input, target, page.path))
+  const copies = await Promise.all(
+    flow.pages.map((page) => toCopyRoute(input.source, target, page.path))
   );
 
-  return routes.map((route) => {
-    if (route === null || !isUnderBase(base, route)) {
+  return copies.map((copy) => {
+    if (copy === null || !isCopyUnderBase(base, copy)) {
       return null;
     }
 
-    return route;
+    return copy.route;
   });
 };
 
@@ -310,6 +382,13 @@ const toFlowUpdateLead = (blocks: readonly FlowRouteBlock[]): string => {
   return [`Existing route files: ${files}.`, ...FLOW_UPDATE_LINES].join("\n");
 };
 
-export { listFlowRouteBlocks, toFlowUpdateLead, toFlowUpdatePlan };
+export {
+  isDynamicRoute,
+  listFlowCheckRoutes,
+  listFlowRouteBlocks,
+  toFlowUpdateLead,
+  toFlowUpdatePlan,
+  toPatternRoute,
+};
 
-export type { FlowRouteBlock };
+export type { FlowCheckRoute, FlowRouteBlock };

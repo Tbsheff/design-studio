@@ -6,6 +6,7 @@ import { runAgentTool, runConfirmedAgentTool } from "../mcp/index.js";
 import { toDecoder } from "../platform/decode/index.js";
 import { inspectPortMatch, inspectRouteRender } from "./port-review-read.js";
 import type { InspectCall } from "./port-review-read.js";
+import { runRoutesReview } from "./port-review-routes.js";
 import {
   createRouteSnapshot,
   restoreRouteSnapshot,
@@ -324,7 +325,7 @@ const runValuesFirst = (
   return runValuesPass(input, first);
 };
 
-const runPortReview = async (input: PortReviewInput): Promise<PortReview> => {
+const runPageReview = async (input: PortReviewInput): Promise<PortReview> => {
   const firstCheck = await inspectRoute(input);
 
   if (!isFixNeeded(firstCheck)) {
@@ -347,6 +348,14 @@ const runPortReview = async (input: PortReviewInput): Promise<PortReview> => {
   });
 
   return toReview({ ...loops, first: firstCheck, pass });
+};
+
+const runPortReview = (input: PortReviewInput): Promise<PortReview> => {
+  if (input.gaps.routes.length > 1) {
+    return runRoutesReview(input, { inspectRoute, runValuesFirst });
+  }
+
+  return runPageReview(input);
 };
 
 export { runPortReview };

@@ -16,9 +16,11 @@ import type { PortRunCall } from "../run-log/index.js";
 import { applyPortAssets, deletePortAssets } from "./port-assets.js";
 import type { PortAssetCopy } from "./port-assets.js";
 import {
+  listFlowCheckRoutes,
   toFlowUpdatePlan,
   listFlowRouteBlocks,
   toFlowUpdateLead,
+  toPatternRoute,
 } from "./port-flow-update.js";
 import { listPortLooks, toPortLookPage } from "./port-look.js";
 import { buildPortPlan, readSourcePage, sourcePagePath } from "./port-plan.js";
@@ -252,13 +254,14 @@ const startFlowRun = async (
     throw new BadRequestError("Pick at least one page to move.");
   }
 
-  const [htmls, blocks] = await Promise.all([
+  const [htmls, blocks, checks] = await Promise.all([
     Promise.all(
       flow.pages.map((page) =>
         readSourcePage(input.source.direction.workTree, page.path)
       )
     ),
     listFlowRouteBlocks(input, flow),
+    listFlowCheckRoutes(input, flow.pages),
   ]);
 
   const pages = flow.pages.map((page, index) => ({
@@ -278,6 +281,7 @@ const startFlowRun = async (
     toFlowPrompt(input, flow, sources, {
       assets,
       blocks,
+      checks,
       lead: toFlowUpdateLead(blocks),
     })
   );
@@ -294,29 +298,49 @@ const startFlowRun = async (
   );
 };
 
+const toPatternInput = async (
+  input: StartableInput
+): Promise<StartableInput> => {
+  const route = await toPatternRoute(
+    input.source,
+    input.target,
+    input.source.path
+  );
+
+  return { ...input, target: { ...input.target, route } };
+};
+
 const startPageRun = async (
   deps: PortStartDeps,
-  input: StartableInput
+  typed: StartableInput
 ): Promise<PortStartResult> => {
+  const input = await toPatternInput(typed);
   const plan = await buildPortPlan(input);
+  const page = { path: input.source.path, route: input.target.route };
 
-  const [update, html] = await Promise.all([
+  const [update, html, checks] = await Promise.all([
     toRouteUpdate(input, plan),
     readSourcePage(input.source.direction.workTree, input.source.path),
+    listFlowCheckRoutes(input, [page]),
   ]);
 
-  const page = { html, path: input.source.path };
+  const sourcePage = { html, path: input.source.path };
 
   const [assets, source] = await Promise.all([
-    toCopyAssets(input, input.target.route, [page]),
-    toPortLookPage(input, page),
+    toCopyAssets(input, input.target.route, [sourcePage]),
+    toPortLookPage(input, sourcePage),
   ]);
+
+  const checkRoute = checks[0]?.route ?? input.target.route;
 
   const runId = await startAssetRun(
     deps,
     input,
     assets,
-    toUpdatedPrompt(toPagePrompt(input, plan, source, assets), update)
+    toUpdatedPrompt(
+      toPagePrompt(input, plan, source, { assets, checkRoute }),
+      update
+    )
   );
 
   const routeFile = plan.target?.routeFile ?? null;

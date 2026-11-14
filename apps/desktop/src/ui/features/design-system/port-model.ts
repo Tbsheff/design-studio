@@ -106,12 +106,43 @@ const toRouteError = (route: string, picked: PortFlowPage[]): string | null => {
   return toTakenText(toTakenPages(picked));
 };
 
+const DYNAMIC_PART = /^\[[^\]/]+\]$/u;
+
+const GROUP_PART = /^\(.*\)$/u;
+
+const toRouteParts = (route: string): string[] =>
+  route.split("/").filter((part) => part !== "" && !GROUP_PART.test(part));
+
+const isPatternOf = (pattern: string, route: string | null): boolean => {
+  const parts = toRouteParts(pattern);
+  const actual = toRouteParts(route ?? "");
+
+  return (
+    route !== null &&
+    parts.some((part) => DYNAMIC_PART.test(part)) &&
+    parts.length === actual.length &&
+    parts.every(
+      (part, index) => part === actual[index] || DYNAMIC_PART.test(part)
+    )
+  );
+};
+
+const toEntryPage = (flow: PortFlowPlan | null): PortFlowPage | null =>
+  flow?.pages.find((page) => page.path === flow.source.entry) ?? null;
+
 const toSourceRoute = (
   source: PortCopySource | null,
-  appId: string
+  appId: string,
+  flow: PortFlowPlan | null
 ): string | null => {
   if (source === null || source.appProjectId !== appId) {
     return null;
+  }
+
+  const page = toEntryPage(flow);
+
+  if (page?.routeExists && isPatternOf(page.route, source.routePath)) {
+    return page.route;
   }
 
   return source.routePath;
@@ -130,7 +161,7 @@ const toRouteUpdate = (
   picked: PortFlowPage[]
 ): PortRouteUpdate | null => {
   const page = picked[0] ?? null;
-  const sourceRoute = toSourceRoute(source, appId);
+  const sourceRoute = toSourceRoute(source, appId, null);
 
   if (source === null || page === null || picked.length !== 1) {
     return null;
@@ -140,7 +171,10 @@ const toRouteUpdate = (
     return null;
   }
 
-  if (!isSameRoute(routeText, sourceRoute)) {
+  const isPattern =
+    isSameRoute(routeText, page.route) && isPatternOf(page.route, sourceRoute);
+
+  if (!isSameRoute(routeText, sourceRoute) && !isPattern) {
     return null;
   }
 

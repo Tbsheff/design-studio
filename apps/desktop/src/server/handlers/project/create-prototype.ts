@@ -107,6 +107,7 @@ const importRouteCopy = Effect.fn("project.createPrototype.importRouteCopy")(
     const canvas = yield* CanvasWriter;
 
     const imported = yield* pages.import({
+      appRoute: null,
       directionId: target.directionId,
       name: ENTRY_NAME,
       projectId: target.projectId,

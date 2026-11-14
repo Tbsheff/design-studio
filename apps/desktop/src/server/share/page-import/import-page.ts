@@ -35,6 +35,8 @@ const FIRST_VERSION_WAIT_MS = 20_000;
 
 const LABEL_MAX = 40;
 
+const APP_NOW_LABEL = "App now";
+
 const DESKTOP_MIN = 1024;
 
 const TABLET_MIN = 768;
@@ -290,9 +292,21 @@ const toResultOf = (
   width: placement.frame.width,
 });
 
+interface ImportCopyRequest extends PageImportRequest {
+  readonly appRoute: string | null;
+}
+
+const toFrameLabel = (request: ImportCopyRequest, title: string): string => {
+  if (request.appRoute === null) {
+    return title.slice(0, LABEL_MAX);
+  }
+
+  return `${APP_NOW_LABEL} · ${request.appRoute}`.slice(0, LABEL_MAX);
+};
+
 const importPageCopy = async (
   target: ImportTarget,
-  request: PageImportRequest,
+  request: ImportCopyRequest,
   commit: ImportCommit | null
 ): Promise<ImportOutcome> => {
   await toCheckTarget(target);
@@ -321,7 +335,7 @@ const importPageCopy = async (
     target,
     {
       height: viewportHeight,
-      label: written.title.slice(0, LABEL_MAX),
+      label: toFrameLabel(request, written.title),
       page: written.page,
       width: request.width,
     },
@@ -335,4 +349,4 @@ const importPageCopy = async (
 
 export { importPageCopy };
 
-export type { ImportCommit, ImportOutcome, ImportTarget };
+export type { ImportCommit, ImportCopyRequest, ImportOutcome, ImportTarget };

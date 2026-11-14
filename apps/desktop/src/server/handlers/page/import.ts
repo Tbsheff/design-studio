@@ -11,6 +11,7 @@ const handle = Effect.fn("page.import")(function* run(input: ImportPageInput) {
   const writer = yield* PageWriter;
 
   return yield* writer.import({
+    appRoute: null,
     directionId: input.directionId,
     name: input.name,
     projectId: input.projectId,

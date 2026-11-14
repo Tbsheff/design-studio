@@ -1,6 +1,7 @@
 import type { PortReviewRecord } from "@design-studio/contracts/port";
 
 import { REFERENCE_LOW_SCORE } from "../../shared/reference.js";
+import { toHighKitCount } from "./port-review-kit.js";
 import {
   createRouteSnapshot,
   restoreRouteSnapshot,
@@ -19,6 +20,8 @@ import type {
   PortRouteGaps,
 } from "./port-review.js";
 import type { ImagePart } from "./user-message.js";
+
+const KIT_DROP_MAX = 2;
 
 interface RoutePass {
   readonly check: PortCheck;
@@ -191,7 +194,19 @@ const isLowerSet = (
 ): boolean => {
   const [was, now] = toScoreSum(before, after);
 
-  return now < was;
+  const kitWas = before.reduce(
+    (sum, route) => sum + toHighKitCount(route.check.kit),
+    0
+  );
+
+  const kitNow = after.reduce(
+    (sum, route) => sum + toHighKitCount(route.check.kit),
+    0
+  );
+
+  const isKitTrade = kitNow < kitWas && was - now <= KIT_DROP_MAX;
+
+  return now < was && !isKitTrade;
 };
 
 const isRaisedSet = (

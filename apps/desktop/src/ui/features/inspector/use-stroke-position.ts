@@ -14,7 +14,6 @@ import {
   isStrokePosition,
   toCenterPatch,
   toChangedStyle,
-  toKeptPlacePatch,
   toNoOutline,
   toPositionPatch,
   toRingColorClass,
@@ -23,12 +22,15 @@ import {
   toRingWidthClass,
   toStrokeLook,
   toStrokePosition,
+  toVariantLook,
 } from "./stroke-position-model.js";
 import type {
   ClassChange,
   RingStroke,
   StrokePosition,
 } from "./stroke-position-model.js";
+import { toKeptPlacePatch, toVariantStroke } from "./stroke-variant-model.js";
+import type { VariantStroke } from "./stroke-variant-model.js";
 import { useEditVariant } from "./use-edit-variant.js";
 
 interface StrokePositionControls {
@@ -169,20 +171,26 @@ const useRingWrites = (
 
 interface PickState {
   readonly edit: DirectEdit;
+  readonly isVariant: boolean;
   readonly isTailwind: boolean;
   readonly position: StrokePosition;
   readonly ring: RingStroke | null;
+  readonly stroke: VariantStroke | null;
   readonly writeClasses: (write: ClassWrite) => void;
 }
 
+const NO_SET: readonly string[] = [];
+
 const applyPositionPick = (state: PickState, next: string): void => {
-  const { edit, isTailwind, position, ring, writeClasses } = state;
+  const { edit, isTailwind, isVariant, position, ring, stroke, writeClasses } =
+    state;
 
   if (!isStrokePosition(next) || next === position) {
     return;
   }
 
-  const look = toStrokeLook(position, edit.values, ring, edit.dirty);
+  const seen = toStrokeLook(position, edit.values, ring, edit.dirty);
+  const look = toVariantLook(seen, stroke, edit.values);
   const patch = toPositionPatch(next, look, isTailwind);
 
   if (ring) {
@@ -195,7 +203,12 @@ const applyPositionPick = (state: PickState, next: string): void => {
   }
 
   edit.previewForced(
-    toKeptPlacePatch(patch, edit.values, { next, position, width: look.width })
+    toKeptPlacePatch(patch, edit.values, {
+      isVariant,
+      next,
+      position,
+      width: look.width,
+    })
   );
   edit.commit();
 };
@@ -216,8 +229,11 @@ const useStrokePosition = (
     [outerHTML, styles, variant]
   );
 
-  const position = toStrokePosition(edit.values, ring);
-  const isTailwind = tailwind !== null;
+  const set = classes?.variants?.set ?? NO_SET;
+  const stroke = useMemo(() => toVariantStroke(set, variant), [set, variant]);
+  const position = stroke?.position ?? toStrokePosition(edit.values, ring);
+  const isVariant = variant !== "";
+  const isTailwind = tailwind !== null && !isVariant;
   const writeClasses = useClassWrite(edit, selection, setError);
 
   const outlineEdit = useMemo(
@@ -228,10 +244,18 @@ const useStrokePosition = (
   const handlePositionPick = useCallback(
     (next: string) =>
       applyPositionPick(
-        { edit, isTailwind, position, ring, writeClasses },
+        {
+          edit,
+          isTailwind,
+          isVariant,
+          position,
+          ring,
+          stroke,
+          writeClasses,
+        },
         next
       ),
-    [edit, isTailwind, position, ring, writeClasses]
+    [edit, isTailwind, isVariant, position, ring, stroke, writeClasses]
   );
 
   const handleRemove = useCallback(() => {

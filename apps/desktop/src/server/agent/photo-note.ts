@@ -7,7 +7,7 @@ import type { DriverInput } from "./lifecycle.js";
 import { isPhotoSearchOn } from "./photo-search.js";
 
 const PHOTO_NOTE =
-  "Photo slots are gray boxes. Turn on image search in the image sheet (Turn on image search for this project) or with STUDIO_IMAGE_SEARCH=on for real photos.";
+  "Photo slots show art from your colors. Turn on image search for real photos (image sheet, or STUDIO_IMAGE_SEARCH=on).";
 
 const PHOTO_NOTE_FILE = "photo-note.json";
 

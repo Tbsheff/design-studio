@@ -216,14 +216,14 @@ function landingPage(title: string): string {
     .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; margin-top: 64px; }
     .card { background: var(--surface, #fff); border: 1px solid var(--line); border-radius: var(--radius-md, 12px); padding: 24px; }
     .card h2 { font-size: 1.125rem; margin: 0 0 8px; }
-    .card p { margin: 0; color: var(--muted); }
+    .card p { margin: 0; color: var(--muted); } .hero-photo { margin-top: 48px; aspect-ratio: 16 / 9; border-radius: var(--radius-md, 12px); background: var(--line); display: grid; place-items: center; color: var(--muted); }
   </style>
 </head>
 <body>
   <main>
     <h1>${heading}</h1>
     <p class="lede">A clear starting point. Replace this copy with the real story of the product.</p>
-    <button class="cta" type="button">Get started</button>
+    <button class="cta" type="button">Get started</button><div class="hero-photo" data-photo="${heading.toLowerCase()}">Hero photo</div>
     <section class="cards" aria-label="Highlights">
       <article class="card"><h2>First idea</h2><p>Describe the first thing people should know.</p></article>
       <article class="card"><h2>Second idea</h2><p>Explain how it works in one or two lines.</p></article>

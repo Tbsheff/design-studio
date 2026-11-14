@@ -55,7 +55,7 @@ const APP_STEP = `App work: use the app's real components and tokens. Call \`mcp
 
 const APP_REVIEW_STEP = `Review: call \`mcp__studio__review_frame\` on the frame that shows the page you changed (call canvas_list first; add a frame for that route with canvas_place when none shows it). Fix every finding in your new UI that has a directFix with \`mcp__studio__edit_element\` (style is directFix.style), and the high findings that need judgment with Edit. List findings in code you did not touch; do not fix them. Also take a mobile screenshot of that page. When you skip either one, the studio runs it and sends you back for a fix loop.`;
 
-const PHOTO_STEP = `Photos: after the first draft, call \`mcp__studio__apply_image_search\` once per page, with the page path. Never call it again on a page it filled. It fills every \`data-photo\` slot with a real photo and lists the slots it missed. Replace each img slot in \`missed\` with a gray-box div that keeps \`data-photo\` and a short label, so no img stays without a src. Image search is on.`;
+const PHOTO_STEP = `Photos: after the first draft, call \`mcp__studio__apply_image_search\` once per page, with the page path. Never call it again on a page it filled. It fills every \`data-photo\` slot with a real photo and lists the slots it missed. The studio paints art from the page colors in each HTML slot in \`missed\`. On a JSX page, replace each img slot in \`missed\` with a div that keeps \`data-photo\` and a short label, so no img stays without a src. Image search is on.`;
 
 function toPhotoSteps(context: RunLevelContext): readonly string[] {
   if (context.isImageSearchOn === true) {

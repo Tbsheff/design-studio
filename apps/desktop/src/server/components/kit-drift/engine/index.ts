@@ -10,6 +10,12 @@ export { toScriptDrift } from "./to-script-drift.js";
 
 export { LOOK_TAGS, toTsxCardDrift } from "./to-tsx-card-drift.js";
 
+export {
+  LOOK_COMPONENT,
+  LOOK_SCAN_TAGS,
+  toTsxLookMatches,
+} from "./to-tsx-look-plan.js";
+
 export type { MatchInput } from "./to-drift-matches.js";
 
 export type { MarkupDrift, MarkupInput } from "./to-markup-drift.js";
@@ -23,6 +29,8 @@ export type {
   TsxLookInput,
   TsxLookTag,
 } from "./to-tsx-card-drift.js";
+
+export type { TsxLookPlanInput } from "./to-tsx-look-plan.js";
 
 export type {
   DriftMatch,

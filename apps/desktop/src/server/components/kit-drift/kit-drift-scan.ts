@@ -4,6 +4,7 @@ import path from "node:path";
 import { toDriftMatches } from "./engine/index.js";
 import type { DriftMatch } from "./engine/index.js";
 import { KitDriftError } from "./errors.js";
+import { listFileLooks } from "./kit-drift-look.js";
 import { isInsideKit } from "./kit-inventory.js";
 import type { KitInventory } from "./kit-inventory.js";
 import { listFileElements, listSourceFiles } from "./source-files.js";
@@ -76,17 +77,21 @@ const listDriftIn = async (
 ): Promise<FileDrift[]> => {
   const scanned = await Promise.all(
     absolutes.map(async (absolute): Promise<FileDrift> => {
-      const elements = await listFileElements(ts, absolute);
       const file = toRelative(inventory.root, absolute);
+
+      const [elements, looks] = await Promise.all([
+        listFileElements(ts, absolute),
+        listFileLooks(ts, inventory, absolute, file),
+      ]);
+
+      const raw = toDriftMatches({ elements, file, kit: inventory.components });
 
       return {
         absolute,
         file,
-        matches: toDriftMatches({
-          elements,
-          file,
-          kit: inventory.components,
-        }),
+        matches: [...raw, ...looks].toSorted(
+          (left, right) => left.line - right.line || left.column - right.column
+        ),
       };
     })
   );

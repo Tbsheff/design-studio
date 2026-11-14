@@ -6,6 +6,7 @@ import { applySplices, toDriftSplices } from "./engine/index.js";
 import type { DriftMatch, DriftSkipReason, Splice } from "./engine/index.js";
 import { toNeed } from "./kit-drift-import.js";
 import type { ImportScope } from "./kit-drift-import.js";
+import { toLookInventory } from "./kit-drift-look.js";
 import { listDriftFiles, listDriftIn } from "./kit-drift-scan.js";
 import type { FileDrift } from "./kit-drift-scan.js";
 import { isInsideKit } from "./kit-inventory.js";
@@ -235,10 +236,11 @@ const createSelectionPlan = async (
 const createKitDriftPlan = async (
   run: DirectionRun,
   ts: Ts,
-  inventory: KitInventory,
+  kitInventory: KitInventory,
   ids: readonly string[]
 ): Promise<KitDriftPlan> => {
   const { project } = run;
+  const inventory = toLookInventory(ts, kitInventory);
   const scope: ImportScope = { inventory, project, ts };
   const files = await listDriftFiles(ts, inventory, null);
   const selection = toSelection(files, ids);

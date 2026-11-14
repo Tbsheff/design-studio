@@ -1,0 +1,163 @@
+call-action kit-drift.apply on http://127.0.0.1:7460. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] error, 4 ms, git spawns: not counted (server side)
+{
+  "_tag": "BadRequest",
+  "code": null,
+  "error": "BadRequest",
+  "message": "This direction has no saved version yet; keep or discard the unfinished changes first"
+}
+
+[mcp] ok, 205 ms, git spawns: not counted (server side)
+{
+  "changed": [
+    "1f3b503e26fa181c",
+    "1f3c195b26fd1e21",
+    "37ca194e2b18319c"
+  ],
+  "files": [
+    "app/status/page.tsx"
+  ],
+  "skipped": [
+    {
+      "id": "1fa48fbe2a0c2a18",
+      "reason": "spread-props"
+    },
+    {
+      "id": "1f3c9f6b26ff2221",
+      "reason": "needs-parts"
+    }
+  ],
+  "versionId": "pending-ef8bd500a317ab27"
+}
+
+[agent] ok, 5 ms, git spawns: not counted (server side)
+{
+  "changed": [],
+  "files": [],
+  "skipped": [
+    {
+      "id": "1f3b503e26fa181c",
+      "reason": "not-found"
+    },
+    {
+      "id": "1f3c195b26fd1e21",
+      "reason": "not-found"
+    },
+    {
+      "id": "37ca194e2b18319c",
+      "reason": "not-found"
+    },
+    {
+      "id": "1fa48fbe2a0c2a18",
+      "reason": "not-found"
+    },
+    {
+      "id": "1f3c9f6b26ff2221",
+      "reason": "not-found"
+    }
+  ],
+  "versionId": null
+}
+
+diff http -> mcp:
+-   "_tag": "BadRequest",
++   "changed": [
+-   "code": null,
++     "1f3b503e26fa181c",
+-   "error": "BadRequest",
++     "1f3c195b26fd1e21",
+-   "message": "This direction has no saved version yet; keep or discard the unfinished changes first"
++     "37ca194e2b18319c"
+- }
++   ],
+- 
++   "files": [
+- 
++     "app/status/page.tsx"
+- 
++   ],
+- 
++   "skipped": [
+- 
++     {
+- 
++       "id": "1fa48fbe2a0c2a18",
+- 
++       "reason": "spread-props"
+- 
++     },
+- 
++     {
+- 
++       "id": "1f3c9f6b26ff2221",
+- 
++       "reason": "needs-parts"
+- 
++     }
+- 
++   ],
+- 
++   "versionId": "pending-ef8bd500a317ab27"
+- 
++ }
+
+diff http -> agent:
+-   "_tag": "BadRequest",
++   "changed": [],
+-   "code": null,
++   "files": [],
+-   "error": "BadRequest",
++   "skipped": [
+-   "message": "This direction has no saved version yet; keep or discard the unfinished changes first"
++     {
+- }
++       "id": "1f3b503e26fa181c",
+- 
++       "reason": "not-found"
+- 
++     },
+- 
++     {
+- 
++       "id": "1f3c195b26fd1e21",
+- 
++       "reason": "not-found"
+- 
++     },
+- 
++     {
+- 
++       "id": "37ca194e2b18319c",
+- 
++       "reason": "not-found"
+- 
++     },
+- 
++     {
+- 
++       "id": "1fa48fbe2a0c2a18",
+- 
++       "reason": "not-found"
+- 
++     },
+- 
++     {
+- 
++       "id": "1f3c9f6b26ff2221",
+- 
++       "reason": "not-found"
+- 
++     }
+- 
++   ],
+- 
++   "versionId": null
+- 
++ }
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 1 error results
+
+fix: compare the outputs above, then run call-action again with the id kit-drift.apply and the same input

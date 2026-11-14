@@ -29,6 +29,16 @@ interface EscapeHandlers {
 
 type PostNudge = (dx: number, dy: number) => boolean;
 
+const hasTextSelection = (): boolean => {
+  const selection = globalThis.getSelection();
+
+  return selection !== null && !selection.isCollapsed;
+};
+
+const isKeptForText = (key: string, event: KeyboardEvent): boolean =>
+  isTypingElement(eventElement(event)) ||
+  (key === "copy" && hasTextSelection());
+
 type KeyboardHandlers = Pick<MessageHandlers, "nudge" | "select-relative">;
 
 const createPostNudge = (context: BridgeContext): PostNudge => {
@@ -131,11 +141,7 @@ const createKeyForwarders = (
     const { selected } = state;
     const key = !event.repeat && structureKeyOf(event, IS_MAC);
 
-    if (
-      !key ||
-      !selected?.isConnected ||
-      isTypingElement(eventElement(event))
-    ) {
+    if (!key || !selected?.isConnected || isKeptForText(key, event)) {
       return false;
     }
 

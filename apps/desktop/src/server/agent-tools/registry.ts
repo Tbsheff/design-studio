@@ -32,10 +32,24 @@ const RUN_SCOPE_FIELDS: ReadonlySet<string> = new Set([
   "projectId",
 ]);
 
+const TARGET_SCOPE_FIELDS: ReadonlySet<string> = new Set(["targetProjectId"]);
+
+const TARGET_SCOPED_ACTIONS: ReadonlySet<string> = new Set(["port.inspect"]);
+
+const toScopeFields = (action: AnyAction): ReadonlySet<string> => {
+  if (TARGET_SCOPED_ACTIONS.has(action.id)) {
+    return TARGET_SCOPE_FIELDS;
+  }
+
+  return RUN_SCOPE_FIELDS;
+};
+
 const toAgentAction = (action: AnyAction): AgentAction[] => {
   if (!("name" in action.agent)) {
     return [];
   }
+
+  const scopeFields = toScopeFields(action);
 
   return [
     {
@@ -43,7 +57,7 @@ const toAgentAction = (action: AnyAction): AgentAction[] => {
       binding: action.agent,
       fields: Object.fromEntries(
         Object.entries(toSdkFields(action)).filter(
-          ([key]) => !RUN_SCOPE_FIELDS.has(key)
+          ([key]) => !scopeFields.has(key)
         )
       ),
     },
@@ -88,6 +102,6 @@ const buildAgentTools = (
   return AGENT_ACTIONS.map((entry) => toAgentTool(call, toolFn, entry));
 };
 
-export { AGENT_ACTION_NAMES, buildAgentTools };
+export { AGENT_ACTION_NAMES, TARGET_SCOPED_ACTIONS, buildAgentTools };
 
 export type { AgentArgs, AgentResult, AgentTool, CallAction };

@@ -5,6 +5,7 @@ import type { McpApprovalOutcome } from "@design-studio/contracts";
 import { Effect, Schema } from "effect";
 import type { JsonSchema } from "effect";
 
+import { TARGET_SCOPED_ACTIONS } from "../agent-tools/index.js";
 import type { AgentArgs } from "../agent-tools/registry.js";
 import { actionDeniedMessage } from "../agent/ask-gate.js";
 import type { ActionAsk } from "../agent/ask-gate.js";
@@ -340,6 +341,25 @@ interface RunScope {
   readonly projectId: string;
 }
 
+const toScopeEntries = (
+  action: AnyAction,
+  scope: RunScope
+): readonly (readonly [string, string])[] => {
+  if (TARGET_SCOPED_ACTIONS.has(action.id)) {
+    return [["targetProjectId", scope.projectId]];
+  }
+
+  const fields = new Set(Object.keys(action.input.fields));
+
+  return SCOPE_KEYS.flatMap((key) => {
+    if (!fields.has(key)) {
+      return [];
+    }
+
+    return [[key, scope[key]] as const];
+  });
+};
+
 const toScopedArgs = (
   action: AnyAction,
   args: WireArgs,
@@ -349,17 +369,7 @@ const toScopedArgs = (
     return args;
   }
 
-  const fields = new Set(Object.keys(action.input.fields));
-
-  const scoped = SCOPE_KEYS.flatMap((key) => {
-    if (!fields.has(key)) {
-      return [];
-    }
-
-    return [[key, scope[key]]];
-  });
-
-  return { ...args, ...Object.fromEntries(scoped) };
+  return { ...args, ...Object.fromEntries(toScopeEntries(action, scope)) };
 };
 
 const actionCaller = (

@@ -22,8 +22,8 @@ import { OUTLINE_PROPS, toOutlineToken } from "./outline.js";
 import {
   ROTATE_SCALE_PROPS,
   toPropGroup,
-  toRotateScaleEdits,
-  toRotateScaleToken,
+  toRotateScaleEdits as toTurnEdits,
+  toRotateScaleToken as toTurnToken,
 } from "./rotate-scale.js";
 import type { TailwindTheme, ThemeNamespace } from "./theme-model.js";
 import { emValue, lengthToPx, percent, plainNumber } from "./units.js";
@@ -722,7 +722,7 @@ function singleToken(
   }
 
   const outline =
-    toOutlineToken(prop, value, theme) ?? toRotateScaleToken(prop, value);
+    toOutlineToken(prop, value, theme) ?? toTurnToken(prop, value, theme);
 
   if (outline) {
     return outline;
@@ -866,7 +866,7 @@ export function cssEdits(
   theme: TailwindTheme
 ): CssEdit[] | null {
   const special =
-    toBorderEdits(prop, value, theme) ?? toRotateScaleEdits(prop, value);
+    toBorderEdits(prop, value, theme) ?? toTurnEdits(prop, value, theme);
 
   if (special) {
     return special;

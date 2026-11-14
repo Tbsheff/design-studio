@@ -3,6 +3,7 @@ import type { SelectionContext } from "@design-studio/contracts";
 import { useCallback, useMemo, useTransition } from "react";
 import type { PointerEvent as ReactPointerEvent, RefObject } from "react";
 
+import { api } from "../../api.js";
 import { createLiveStore } from "../../platform/live-store.js";
 import type { LiveStore } from "../../platform/live-store.js";
 import { useAction } from "../../platform/query.js";
@@ -12,12 +13,14 @@ import { toScale } from "./resize-handles-model.js";
 import {
   isRotateDrag,
   toGroupAngles,
+  toMoveStyle,
   toPointerAngle,
   toPreviewRotate,
   toRotateBase,
   toRotateBatch,
   toRotateBody,
   toRotateEdit,
+  toRotateLayout,
   toRotateValue,
 } from "./rotate-drag-model.js";
 import type {
@@ -25,7 +28,10 @@ import type {
   RotateBatchBody,
   RotateBody,
   RotateLabel,
+  RotateLayerInput,
+  RotateLayout,
   RotatePoint,
+  RotateStyle,
 } from "./rotate-drag-model.js";
 
 interface RotateDrag {
@@ -35,8 +41,10 @@ interface RotateDrag {
 
 interface RotateRequest {
   readonly angles: readonly number[];
+  readonly layout: Promise<RotateLayout | null>;
   readonly options: Options;
   readonly targets: readonly SelectionContext[];
+  readonly turn: number;
 }
 
 interface RotateSession {
@@ -48,6 +56,8 @@ interface RotateSession {
 interface RotateMove {
   angles: readonly number[];
   isMoved: boolean;
+  layout: RotateLayout | null;
+  turn: number;
 }
 
 interface RotateFrame {
@@ -72,6 +82,8 @@ const toFrame = (handle: HTMLElement): RotateFrame => {
 };
 
 const postPreview = (run: RotateRun): void => {
+  const { layout, turn } = run.state;
+
   for (const [index, target] of run.targets.entries()) {
     const base = run.bases[index];
     const angle = run.state.angles[index] ?? null;
@@ -79,19 +91,87 @@ const postPreview = (run: RotateRun): void => {
     if (base && angle !== null) {
       run.session.live.current.post({
         selector: target.selector,
-        style: { rotate: toPreviewRotate(angle, base) },
+        style: {
+          rotate: toPreviewRotate(angle, base),
+          ...toMoveStyle(layout, index, turn),
+        },
         type: "preview-style",
       });
     }
   }
 };
 
+const toClassesOf = async (
+  options: Options,
+  target: SelectionContext
+): Promise<{
+  readonly classes: readonly string[] | null;
+  readonly isTailwind: boolean;
+} | null> => {
+  if (options.directionId === null || target.source === null) {
+    return null;
+  }
+
+  try {
+    const answer = await api.elementClasses(
+      options.projectId,
+      options.directionId,
+      target.source
+    );
+
+    const isTailwind = answer.variants?.mode === "classes";
+
+    if (answer.tailwind?.mode === "classes") {
+      return { classes: answer.tailwind.classes, isTailwind };
+    }
+
+    return { classes: null, isTailwind };
+  } catch {
+    return null;
+  }
+};
+
+const toLayoutOf = async (
+  options: Options,
+  targets: readonly SelectionContext[]
+): Promise<RotateLayout | null> => {
+  if (targets.length < 2) {
+    return null;
+  }
+
+  const answers = await Promise.all(
+    targets.map(async (target) => await toClassesOf(options, target))
+  );
+
+  if (answers.every((answer) => answer === null)) {
+    return null;
+  }
+
+  const inputs: RotateLayerInput[] = targets.map((target, index) => ({
+    classes: answers[index]?.classes ?? null,
+    target,
+  }));
+
+  return toRotateLayout(
+    inputs,
+    answers.some((answer) => answer?.isTailwind ?? false)
+  );
+};
+
+const trackLayout = async (
+  pending: Promise<RotateLayout | null>,
+  state: RotateMove
+): Promise<void> => {
+  state.layout = await pending;
+};
+
 const toLabel = (
   frame: RotateFrame,
-  angle: number,
+  turned: { readonly angle: number; readonly isEach: boolean },
   event: PointerEvent
 ): RotateLabel => ({
-  angle,
+  angle: turned.angle,
+  isEach: turned.isEach,
   x: (event.clientX - frame.left) / frame.zoom,
   y: (event.clientY - frame.top) / frame.zoom,
 });
@@ -120,9 +200,16 @@ const moveRotate = (run: RotateRun, event: PointerEvent): void => {
 
   const turned = toGroupAngles(bases, delta, event.shiftKey);
   state.angles = turned.angles;
+  state.turn = turned.label;
 
   postPreview(run);
-  session.label.set(toLabel(frame, turned.label, event));
+  session.label.set(
+    toLabel(
+      frame,
+      { angle: turned.label, isEach: state.layout?.isEach ?? false },
+      event
+    )
+  );
 };
 
 const isTurned = (run: RotateRun): boolean =>
@@ -141,8 +228,11 @@ const listenRotate = (
   const frame = toFrame(handle);
   const bases = targets.map((target) => toRotateBase(target));
   const angles = bases.map((base) => base.start);
-  const state: RotateMove = { angles, isMoved: false };
+  const state: RotateMove = { angles, isMoved: false, layout: null, turn: 0 };
   const run = { bases, frame, session, start, state, targets };
+  const pending = toLayoutOf(session.live.current, targets);
+
+  void trackLayout(pending, state);
 
   const end = (isCommitting: boolean): void => {
     abort.abort();
@@ -169,8 +259,10 @@ const listenRotate = (
     end(true);
     session.commit({
       angles: state.angles,
+      layout: pending,
       options: session.live.current,
-      targets,
+      targets: run.targets,
+      turn: state.turn,
     });
   };
 
@@ -211,18 +303,30 @@ const beginRotate = (
 
 const toOptimisticId = (): string => `rotate-${crypto.randomUUID()}`;
 
+const toCommitStyles = (
+  request: RotateRequest,
+  layout: RotateLayout | null
+): readonly RotateStyle[] =>
+  request.targets.map((_target, index) => ({
+    rotate: toRotateValue(request.angles[index] ?? 0),
+    ...toMoveStyle(layout, index, request.turn),
+  }));
+
 const postOptimistic = (
   options: Options,
   targets: readonly SelectionContext[],
-  angles: readonly number[]
+  styles: readonly RotateStyle[]
 ): readonly string[] =>
   targets.map((target, index) => {
     const id = toOptimisticId();
-    const rotate = toRotateValue(angles[index] ?? 0);
 
     options.post({
       id,
-      patch: { selector: target.selector, style: { rotate }, trusted: true },
+      patch: {
+        selector: target.selector,
+        style: styles[index] ?? {},
+        trusted: true,
+      },
       type: "optimistic-apply",
       written: false,
     });
@@ -251,10 +355,11 @@ const postSettled = (
 
 const toCommitBody = (
   ids: { readonly directionId: string; readonly projectId: string },
-  request: RotateRequest
+  request: RotateRequest,
+  styles: readonly RotateStyle[]
 ): RotateBody | RotateBatchBody => {
   const edits = request.targets.map((target, index) =>
-    toRotateEdit(target, { rotate: toRotateValue(request.angles[index] ?? 0) })
+    toRotateEdit(target, styles[index] ?? {})
   );
 
   const [first] = request.targets;
@@ -282,11 +387,16 @@ const useRotateCommit = (): RotateSession["commit"] => {
         return;
       }
 
-      const ids = postOptimistic(options, targets, request.angles);
-
       startWork(async () => {
+        const styles = toCommitStyles(request, await request.layout);
+        const ids = postOptimistic(options, targets, styles);
+
         const result = await run(
-          toCommitBody({ directionId, projectId: options.projectId }, request)
+          toCommitBody(
+            { directionId, projectId: options.projectId },
+            request,
+            styles
+          )
         );
 
         if (result === null) {

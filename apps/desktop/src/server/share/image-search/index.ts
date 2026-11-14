@@ -3,6 +3,7 @@ export { ImageSearchStore } from "./image-search-store.js";
 export { ImageSearchWriter } from "./image-search-writer.js";
 
 export type {
+  ApplyImageSearchCommand,
   ImageOwner,
   ImagePlaceTarget,
   InsertImageSearchCommand,

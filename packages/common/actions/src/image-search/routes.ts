@@ -1,5 +1,11 @@
 // @generated
 const routes = {
+  applyImageSearch: {
+    id: "image-search.apply",
+    invalidates: ["version.list"],
+    method: "POST",
+    path: "/api/projects/:projectId/d/:directionId/image-search/apply",
+  },
   getImageSearch: {
     id: "image-search.get",
     invalidates: [],

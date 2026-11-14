@@ -2,15 +2,22 @@ export type { InsertScope } from "../../direct-edit/components-ops/index.js";
 
 export {
   assertCanEdit,
+  planAsset,
   publishVersion,
+  resolveSource,
   saveDeferred,
+  setHtmlAttrs,
+  setJsxAttrs,
   writeAtomic,
   writeNewFile,
 } from "../../direct-edit/index.js";
 
-export type { DirectEditDeps } from "../../direct-edit/index.js";
+export type { AttrChanges, DirectEditDeps } from "../../direct-edit/index.js";
 
-export { DirectEditError } from "../../direct-edit/engine/index.js";
+export {
+  DirectEditError,
+  parseSource,
+} from "../../direct-edit/engine/index.js";
 
 export {
   imageFromUrl,
@@ -49,6 +56,7 @@ export {
 } from "@design-studio/contracts/image-search";
 
 export type {
+  ImageOrientation,
   ImageSearchHit,
   ImageSearchRequest,
   ImageSearchResult,
@@ -66,5 +74,7 @@ export type {
 } from "@design-studio/contracts";
 
 export { toDecoder } from "../../platform/decode/index.js";
+
+export { isOwnAgentRun } from "../../platform/call-origin/index.js";
 
 export { runFileLockGuard } from "../../platform/path-lock/index.js";

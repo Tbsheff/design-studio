@@ -37,6 +37,7 @@ import { handle as listImplicitLinksCanvasHandle } from "./list-implicit-links.j
 import { handle as listLinksCanvasHandle } from "./list-links.js";
 import { handle as moveFramesCanvasHandle } from "./move-frames.js";
 import { handle as setDocCanvasHandle } from "./set-doc.js";
+import { handle as setFrameHeightsCanvasHandle } from "./set-frame-heights.js";
 import { handle as setFrameStateCanvasHandle } from "./set-frame-state.js";
 import { handle as setGuidesCanvasHandle } from "./set-guides.js";
 import { handle as setLayoutGridCanvasHandle } from "./set-layout-grid.js";
@@ -86,6 +87,7 @@ const CanvasEntries = {
   listLinksCanvas: { handle: listLinksCanvasHandle },
   moveFramesCanvas: { handle: moveFramesCanvasHandle },
   setDocCanvas: { handle: setDocCanvasHandle },
+  setFrameHeightsCanvas: { handle: setFrameHeightsCanvasHandle },
   setFrameStateCanvas: { handle: setFrameStateCanvasHandle },
   setGuidesCanvas: { handle: setGuidesCanvasHandle },
   setLayoutGridCanvas: { handle: setLayoutGridCanvasHandle },

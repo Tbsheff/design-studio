@@ -166,6 +166,12 @@ const routes = {
     method: "PUT",
     path: "/api/projects/:projectId/canvas",
   },
+  setFrameHeightsCanvas: {
+    id: "canvas.setFrameHeights",
+    invalidates: ["canvas.inspect"],
+    method: "PUT",
+    path: "/api/projects/:projectId/canvas/frames/heights",
+  },
   setFrameStateCanvas: {
     id: "canvas.setFrameState",
     invalidates: ["canvas.listFrameStates"],

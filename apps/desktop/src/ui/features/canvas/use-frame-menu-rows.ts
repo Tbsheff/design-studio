@@ -8,6 +8,7 @@ import type {
 } from "./frame-menu-groups-model.js";
 import {
   useCopyPngEntry,
+  useFitEntry,
   useRedesignEntry,
   useScreenEntry,
   useTidyEntry,
@@ -29,6 +30,7 @@ const useFrameMenuRows = (
   const copyPngEntry = useCopyPngEntry(root);
   const redesignEntry = useRedesignEntry(path);
   const tidyEntry = useTidyEntry(root);
+  const fitEntry = useFitEntry(root);
   const layoutGridEntry = useLayoutGridEntry(root);
 
   return useMemo(() => {
@@ -36,6 +38,7 @@ const useFrameMenuRows = (
       screenEntry,
       copyPngEntry,
       tidyEntry,
+      fitEntry,
       layoutGridEntry,
     ];
 
@@ -50,6 +53,7 @@ const useFrameMenuRows = (
     return toFrameMenuRows([...entries, ...own]);
   }, [
     copyPngEntry,
+    fitEntry,
     layoutGridEntry,
     own,
     port,

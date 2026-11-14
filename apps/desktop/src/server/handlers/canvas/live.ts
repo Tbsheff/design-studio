@@ -3,6 +3,7 @@ import { Layer } from "effect";
 import {
   CanvasStore,
   CanvasWriter,
+  FrameFitWriter,
   FrameImportWriter,
   FrameTidyWriter,
   LinkedFrameWriter,
@@ -18,6 +19,7 @@ import { ProjectWriter } from "../../store/index.js";
 const CanvasLive = Layer.mergeAll(
   CanvasStore.layer,
   CanvasWriter.layer,
+  FrameFitWriter.layer,
   FrameImportWriter.layer.pipe(Layer.provide(ProjectWriter.layer)),
   FrameTidyWriter.layer,
   LinkedFrameWriter.layer,

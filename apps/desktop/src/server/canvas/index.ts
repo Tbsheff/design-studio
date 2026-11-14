@@ -30,6 +30,8 @@ export { FrameImportWriter, toImportPrompt } from "./frame-import/index.js";
 
 export { FrameTidyWriter } from "./frame-tidy/index.js";
 
+export { FrameFitWriter } from "./frame-fit/index.js";
+
 export { StateCheckStore, toStateLikeness } from "./state-frames/index.js";
 
 export { applyFrameState } from "./app-flow/index.js";

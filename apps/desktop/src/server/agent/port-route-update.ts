@@ -125,6 +125,17 @@ const getText = async (file: string): Promise<string | null> => {
 
 const toPagePath = (page: string): string => page.replace(/^\/+/u, "");
 
+const toSnapshotText = (
+  entry: RouteCopyEntry | null,
+  file: string
+): Promise<string | null> => {
+  if (entry === null) {
+    return Promise.resolve(null);
+  }
+
+  return getText(file);
+};
+
 const toCopyEntry = async (
   input: RouteUpdateInput
 ): Promise<RouteCopyEntry | null> => {
@@ -167,6 +178,34 @@ const toLayoutLine = (entry: RouteCopyEntry | null): string => {
   return `The prototype page also shows the parts that ${layouts.join(", ")} render, for example the app header and nav. Those files stay as they are, and the route renders inside them. Do not copy that markup into the route.`;
 };
 
+const toUpdateOf = async (
+  input: RouteUpdateInput,
+  file: string,
+  entry: RouteCopyEntry | null
+): Promise<RouteUpdate> => {
+  const folder = encodeURIComponent(toPagePath(input.source.path));
+  const sourceTree = input.source.direction.workTree;
+  const snapshotFile = path.join(sourceTree, SNAPSHOT_DIR, folder, file);
+  const nowFile = path.join(input.target.direction.workTree, file);
+
+  const [now, copyText] = await Promise.all([
+    getText(nowFile),
+    toSnapshotText(entry, snapshotFile),
+  ]);
+
+  const targetTree = input.target.direction.workTree;
+  const folderFiles = await listRouteFolderFiles(targetTree, file, now ?? "");
+
+  return {
+    file,
+    folderFiles,
+    layoutLine: toLayoutLine(entry),
+    now: now ?? "",
+    snapshot: copyText,
+    styleStack: await toStyleStackLine(targetTree, file, folderFiles),
+  };
+};
+
 const toRouteUpdate = async (
   input: RouteUpdateInput,
   plan: PortPlan
@@ -185,27 +224,7 @@ const toRouteUpdate = async (
     );
   }
 
-  const folder = encodeURIComponent(toPagePath(input.source.path));
-  const sourceTree = input.source.direction.workTree;
-  const snapshotFile = path.join(sourceTree, SNAPSHOT_DIR, folder, file);
-  const nowFile = path.join(input.target.direction.workTree, file);
-
-  const [now, snapshot] = await Promise.all([
-    getText(nowFile),
-    getText(snapshotFile),
-  ]);
-
-  const targetTree = input.target.direction.workTree;
-  const folderFiles = await listRouteFolderFiles(targetTree, file, now ?? "");
-
-  return {
-    file,
-    folderFiles,
-    layoutLine: toLayoutLine(entry),
-    now: now ?? "",
-    snapshot: snapshot ?? null,
-    styleStack: await toStyleStackLine(targetTree, file, folderFiles),
-  };
+  return toUpdateOf(input, file, entry);
 };
 
 const toCut = (text: string): string => {
@@ -462,6 +481,16 @@ const toRouteUpdateNotes = async (
   ];
 };
 
-export { toRouteFileNow, toRouteUpdate, toRouteUpdateNotes, toUpdatedPrompt };
+export {
+  toCopyEntry,
+  toDiffText,
+  isRouteCopyOf,
+  toRouteFileNow,
+  toRouteUpdate,
+  toRouteUpdateNotes,
+  toUpdatedPrompt,
+  toUpdateOf,
+  toUpdateTag,
+};
 
-export type { RouteFileText, RouteUpdate, RouteUpdateInput };
+export type { RouteCopyEntry, RouteFileText, RouteUpdate, RouteUpdateInput };

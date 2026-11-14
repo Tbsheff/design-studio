@@ -90,12 +90,20 @@ const toTakenText = (taken: PortFlowPage[]): string | null => {
   return null;
 };
 
+const toTakenPages = (picked: PortFlowPage[]): PortFlowPage[] => {
+  if (picked.length > 1) {
+    return [];
+  }
+
+  return picked.filter((page) => page.routeExists);
+};
+
 const toRouteError = (route: string, picked: PortFlowPage[]): string | null => {
   if (!cleanPortRoute(route)) {
     return ROUTE_HINT;
   }
 
-  return toTakenText(picked.filter((page) => page.routeExists));
+  return toTakenText(toTakenPages(picked));
 };
 
 const toSourceRoute = (
@@ -215,13 +223,37 @@ const toStartedText = (result: PortStartResult): string => {
 const toNoteClass = (isError: boolean): string =>
   toChoice(isError, "port-note error", "port-note");
 
+const toFlowWritesText = (
+  count: number,
+  appName: string,
+  updated: number
+): string => {
+  const fresh = count - updated;
+  const many = [updated, COPY.textRouteFilesInPlace].join(" ");
+  const kept = toChoice(updated > 1, many, COPY.textOneRouteFileInPlace);
+  const parts = [`${COPY.textUpdates}${kept}`];
+
+  if (fresh > 0) {
+    const added = [fresh, COPY.textNewRouteFiles].join(" ");
+    const files = toChoice(fresh > 1, added, COPY.textOneNewRouteFile);
+    parts.push(`${COPY.textAndWrites}${files}`);
+  }
+
+  return `${parts.join(" ")} ${COPY.textIn}${appName}${COPY.textGlyph2}`;
+};
+
 const toWritesText = (
   count: number,
   appName: string,
-  update: PortRouteUpdate | null
+  update: PortRouteUpdate | null,
+  updated: number
 ): string => {
   if (update !== null) {
     return `${COPY.textUpdates}${update.file} ${COPY.textIn}${appName}${COPY.textGlyph2}`;
+  }
+
+  if (count > 1 && updated > 0) {
+    return toFlowWritesText(count, appName, updated);
   }
 
   const files = toChoice(

@@ -4,7 +4,7 @@ import {
 } from "@design-studio/contracts/port";
 
 import {
-  buildFlowPlan,
+  toFlowUpdatePlan,
   buildPortPlan,
   sourcePagePath,
   toPortPlanInput,
@@ -109,7 +109,7 @@ export function registerPortRoutes(deps: PortRouteDeps): void {
       const input = await toPortPlanInput(deps.projects, query);
 
       return query.flow || query.paths
-        ? buildFlowPlan({ ...input, paths: query.paths })
+        ? toFlowUpdatePlan({ ...input, paths: query.paths })
         : buildPortPlan(input);
     },
   });

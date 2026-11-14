@@ -168,7 +168,11 @@ const preview = Effect.fn("port.start.preview")(function* card(
   const routes = toCardRoutes(plan);
   const taken = toTakenRoutes(routes);
 
-  if (taken.length > 0 && !(yield* isRouteCopyUpdate(input, routes))) {
+  if (
+    !isFlow &&
+    taken.length > 0 &&
+    !(yield* isRouteCopyUpdate(input, routes))
+  ) {
     return yield* new Conflict({
       message: `The app already has ${taken.join(", ")}. Pick a new route.`,
     });

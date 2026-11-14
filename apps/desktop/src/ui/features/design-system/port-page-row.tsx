@@ -23,7 +23,7 @@ const PageRow = ({
       <span className="port-page-name truncate">{path}</span>
       <span className="port-page-route mono truncate">{page.url}</span>
       {page.routeExists && isChecked && (
-        <span className="port-page-taken">{COPY.textExists}</span>
+        <span className="port-page-update truncate">{`${COPY.textUpdates}${page.routeFile ?? page.url}`}</span>
       )}
     </label>
   );

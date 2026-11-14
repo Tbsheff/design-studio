@@ -1,0 +1,11 @@
+Fake app request log for the 3 healthy shots above (http, mcp, agent). dest=- is the warm fetch of warmAppPage (page not live); dest=document is the frame navigation. No node fetch with accept=text/html (the removed dev-page-check request).
+2026-11-14T14:35:49.524Z GET / dest=- accept=*/*
+2026-11-14T14:35:49.528Z GET / dest=- accept=text/html
+2026-11-14T14:35:49.528Z GET /?__studio_headless=1&__studio_parent=http%3A%2F%2F127.0.0.1%3A5391 dest=document accept=text/html,applicatio
+2026-11-14T14:35:49.545Z GET /favicon.ico dest=image accept=image/jxl,image/avif
+2026-11-14T14:35:49.912Z GET / dest=- accept=*/*
+2026-11-14T14:35:49.915Z GET /?__studio_headless=1&__studio_parent=http%3A%2F%2F127.0.0.1%3A5391 dest=document accept=text/html,applicatio
+2026-11-14T14:35:49.924Z GET /favicon.ico dest=image accept=image/jxl,image/avif
+2026-11-14T14:35:50.291Z GET / dest=- accept=*/*
+2026-11-14T14:35:50.294Z GET /?__studio_headless=1&__studio_parent=http%3A%2F%2F127.0.0.1%3A5391 dest=document accept=text/html,applicatio
+2026-11-14T14:35:50.303Z GET /favicon.ico dest=image accept=image/jxl,image/avif

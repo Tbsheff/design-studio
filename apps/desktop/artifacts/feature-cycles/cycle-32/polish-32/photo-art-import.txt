@@ -1,0 +1,36 @@
+JSX page after photo fill (2 art slots, search on):
+import "./App.css";
+
+export function App() {
+  return (
+    <main>
+      <h1>Corner Coffee Cart</h1>
+      <img alt="Cart" width={480} height={320} src="/6332446581-90a5135301-b-bd13ed481c.jpg" />
+      <img alt="Latte" width={240} height={180} src="/50520306126-56c9d9939e-b-18333993dd.jpg" />
+    </main>
+  );
+}
+photo-art.css lines: 0
+
+200 25ms {"label":"Photos: 2 on src/App.tsx","state":{"canUndo":true,"canRedo":true,"undoLabel":"Photo art","redoLabel":"Photos: 2 on src/App.tsx"},"version":{"changedFiles":["src/App.tsx","ASSETS.md"
+After undo:
+import "./App.css";
+import "./photo-art.css";
+
+export function App() {
+  return (
+    <main>
+      <h1>Corner Coffee Cart</h1>
+      <img data-photo="coffee cart street" alt="Cart" width={480} height={320} data-photo-art="f73f1fbc" src="/assets/photo-art-c7b4c52c.svg" />
+      <img data-photo="latte art cup" alt="Latte" width={240} height={180} data-photo-art="aff5bedb" src="/assets/photo-art-21c9fbc9.svg" />
+    </main>
+  );
+}
+photo-art.css lines: 4
+
+200 25ms {"label":"Photos: 2 on src/App.tsx","state":{"canUndo":true,"canRedo":false,"undoLabel":"Photos: 2 on src/App.tsx","redoLabel":null},"version":{"changedFiles":["src/App.tsx","ASSETS.md","src/
+After redo:
+import "./App.css";
+
+export function App() {
+photo-art.css lines: 0

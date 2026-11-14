@@ -1,0 +1,3 @@
+Healthy shot, then the fake app stops, then a shot (one studio server):
+200 484ms {"data":"iVBORw0KGgoAAAANSUhEUgAABaAAAAOECAIAAADYL
+409 36ms {"_tag":"Conflict","code":null,"error":"Conflict","message":"The dev server answered 502 for /, so the page shows an error, not the design: The app dev server is not answering The app dev server is not answering http://127.0.0.1:12992: connect ECONNREFUSED 127.0.0.1:12992. Press the app button at the bottom left of the canvas for the log and the fix. Call app_doctor to read the dev server status and logs, fix the cause, then call get_screenshot again."}

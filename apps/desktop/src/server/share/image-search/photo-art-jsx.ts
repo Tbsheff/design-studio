@@ -386,11 +386,44 @@ const toSheetImported = (code: string, relative: string): string => {
   return `${code.slice(0, end)}\n${SHEET_IMPORT}${code.slice(end)}`;
 };
 
+const toSheetImport = (
+  root: BabelProgram | null
+): { readonly end: number; readonly start: number } | null => {
+  const found = (root?.body ?? []).find(
+    (node) =>
+      node.type === "ImportDeclaration" &&
+      node.specifiers.length === 0 &&
+      node.source.value === `./${SHEET_NAME}`
+  );
+
+  const start = found?.start ?? null;
+  const end = found?.end ?? null;
+
+  if (start === null || end === null) {
+    return null;
+  }
+
+  return { end, start };
+};
+
+const toSheetUnimported = (code: string, relative: string): string => {
+  const range = toSheetImport(toParsedRoot(code, relative));
+
+  if (range === null) {
+    return code;
+  }
+
+  const after = code.slice(range.end).replace(/^[^\S\n]*\n/u, "");
+
+  return `${code.slice(0, range.start)}${after}`;
+};
+
 export {
   isArtPage,
   isJsxPage,
   toPageSlots,
   toSheetImported,
+  toSheetUnimported,
   toSlotAttrs,
   toSlotLabel,
   toSlotLabelFree,

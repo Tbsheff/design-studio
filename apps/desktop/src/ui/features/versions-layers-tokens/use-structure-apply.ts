@@ -19,7 +19,7 @@ const settleStructure = (
   outcome: StructureOutcome
 ): void => {
   const { head, result, token } = outcome;
-  const [first] = result.select;
+  const [first, ...rest] = result.select;
   const { liveRef, reselect } = context;
 
   if (result.version.id === head) {
@@ -36,6 +36,10 @@ const settleStructure = (
     fromSelector: liveRef.current.selection.at(-1)?.selector ?? "",
     loc: toLocKey(first),
     move: true,
+    others: rest.map((other) => ({
+      sourceLoc: toLocKey(other),
+      tag: other.tag,
+    })),
     tag: first.tag,
     text: "",
     token,

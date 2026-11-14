@@ -10,7 +10,7 @@ import type {
 } from "@design-studio/contracts/export";
 
 import type { RenderClip } from "../../shared/render-rpc.js";
-import type { PreviewService } from "../../shared/server-ports.js";
+import type { PreviewService, RenderPage } from "../../shared/server-ports.js";
 import { BadRequestError } from "../platform/errors/index.js";
 import { withPagePath } from "../project-source/index.js";
 import { expandScrollRoot } from "./scroll-root.js";
@@ -88,7 +88,8 @@ export async function captureFrame(
   scope: ExportScope,
   selector?: string,
   maxCssHeight?: number,
-  padding = 0
+  padding = 0,
+  checkPage: ((page: RenderPage) => Promise<void>) | null = null
 ): Promise<Shot> {
   if (!preview.withPage)
     throw new Error("this preview backend cannot export images");
@@ -99,6 +100,7 @@ export async function captureFrame(
       withPagePath(url, frame.path),
       { width: frame.width, height: frame.height, scale },
       async (page) => {
+        await checkPage?.(page);
         await waitForPage(page);
         await page.evaluate(HIDE_DEV_CHROME).catch(() => undefined);
         if (selector || scope !== "frame") await expandScrollRoot(page);

@@ -99,6 +99,7 @@ const toReselectText = (pending: Reselect): string => {
 };
 
 const toReselectMessage = (pending: Reselect): ParentMessageBody => ({
+  others: pending.others,
   sourceLoc: pending.loc,
   tag: pending.tag,
   text: toReselectText(pending),

@@ -44,6 +44,7 @@ type LayerChange =
 
 interface Reselect {
   loc: string;
+  others: readonly { readonly sourceLoc: string; readonly tag: string }[];
   tag: string;
   text: string;
   token: string | null;

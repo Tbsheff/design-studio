@@ -2,7 +2,7 @@ import { readdir } from "node:fs/promises";
 import path from "node:path";
 
 import { SHEET_NAME } from "./photo-art-colors.js";
-import { isJsxPage } from "./photo-art-jsx.js";
+import { isJsxPage, toSheetUnimported } from "./photo-art-jsx.js";
 import { isFile, toReadText } from "./photo-art-plan.js";
 import type { ArtFileChange, PhotoArtPlan } from "./photo-art-plan.js";
 import type { PhotoPage } from "./photo-pick.js";
@@ -166,4 +166,21 @@ const toTrimmedArt = async (
   return { ...art, sheet: await toTrimmedSheet(page, code, art.sheet) };
 };
 
-export { toTrimmedArt, toTrimmedHtml };
+const isEmptySheet = (sheet: ArtFileChange | null): boolean =>
+  sheet !== null && sheet.after.trim() === "";
+
+const toTrimmedFill = async (
+  page: PhotoPage,
+  code: string,
+  art: PhotoArtPlan
+): Promise<{ readonly art: PhotoArtPlan; readonly code: string }> => {
+  const trimmed = await toTrimmedArt(page, code, art);
+
+  if (!isJsxPage(page.relative) || !isEmptySheet(trimmed.sheet)) {
+    return { art: trimmed, code };
+  }
+
+  return { art: trimmed, code: toSheetUnimported(code, page.relative) };
+};
+
+export { toTrimmedFill, toTrimmedHtml };

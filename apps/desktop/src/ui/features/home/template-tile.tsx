@@ -1,6 +1,6 @@
 import type { Starter } from "@design-studio/contracts";
 import { useCallback } from "react";
-import type { ReactElement, RefObject } from "react";
+import type { ReactElement } from "react";
 
 import type { HomeTemplate } from "./home-template-model.js";
 import { toTemplateArt } from "./template-art.js";
@@ -9,22 +9,22 @@ const TemplateTile = ({
   template,
   isSelected,
   isDisabled,
-  startersRef,
+  starters,
   onPick,
 }: {
   readonly template: HomeTemplate;
   readonly isSelected: boolean;
   readonly isDisabled: boolean;
-  readonly startersRef: RefObject<Starter[]>;
+  readonly starters: readonly Starter[] | null;
   readonly onPick: (template: HomeTemplate, starter: Starter | null) => void;
 }): ReactElement => {
   const pick = useCallback((): void => {
-    const starter = startersRef.current.find(
+    const starter = starters?.find(
       (candidate) => candidate.id === template.starterId
     );
 
     onPick(template, starter ?? null);
-  }, [onPick, startersRef, template]);
+  }, [onPick, starters, template]);
 
   return (
     <button

@@ -1,0 +1,10 @@
+REQ /api/starters 113 ms
+starters requests after Home load: 1
+template tiles: 12
+starters requests after template grid open: 1
+tiles: blank,mobile,slides,document,wireframe,animation,mockups,dashboard,landing,form,email,pairing
+starter row after form tile (starter index 5): Form starter
+Open it now
+No run, no cost
+prompt changed on pick: true "Design a form for "
+starters requests total: 1

@@ -148,6 +148,7 @@ const toReviewNote = (
   }
 
   const passes = ran.map((record, index) => toPassText(record, index));
+
   const parts = [
     `${label}: the agent skipped the ${toRanText(first)} after its last edit, so the studio ran them (desktop and 390 px)`,
     ...passes,

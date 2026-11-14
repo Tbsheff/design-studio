@@ -17,9 +17,6 @@ const FLOW_COUNTS = new WeakMap<FlowContext, number>();
 
 const LISTED_LINES = 6;
 
-const COPY_CLAUSE =
-  "Copy it with update_matches_page, or change both on purpose.";
-
 const isFlowRun = (ctx: FlowContext): boolean =>
   ctx.project.kind === "html" &&
   !ctx.project.app &&
@@ -74,9 +71,12 @@ const toPartSpot = (gap: PageFlowGap): string => {
   return ` (selector ${gap.selector})`;
 };
 
+const toCopyClause = (gap: PageFlowGap): string =>
+  `Copy the ${gap.part} of the first page${toPartSpot(gap)} to ${gap.page} with update_matches_page, or change both on purpose.`;
+
 const toFlowLine = (gap: PageFlowGap): string => {
   if (gap.kind === "part-changed" || gap.kind === "part-missing") {
-    return `- Flow: ${gap.detail}${toPartSpot(gap)} ${COPY_CLAUSE}`;
+    return `- Flow: ${gap.detail} ${toCopyClause(gap)}`;
   }
 
   if (gap.kind === "token-changed") {

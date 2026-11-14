@@ -221,8 +221,16 @@ const toLiveTarget = (
   event: StudioEvent,
   live: MutableRefObject<ChangeRingsInput>,
   since: MutableRefObject<number>
-): SpotTarget | null =>
-  toSpotTarget(event, live.current.directionId, since.current);
+): SpotTarget | null => {
+  if (
+    event.type === "version.created" &&
+    (event.version.parentId ?? "") === ""
+  ) {
+    return null;
+  }
+
+  return toSpotTarget(event, live.current.directionId, since.current);
+};
 
 const toPair = (input: ChangeRingsInput): string =>
   `${input.projectId}/${input.directionId ?? ""}`;

@@ -17,7 +17,7 @@ const runReviewDirectEdit = defineAction({
   agent: { off: "legacy-agent" },
   confirm: "none",
   description:
-    "Run the studio Review panel checks on one canvas frame and return the findings: color contrast, tap target size, missing alt text and other axe-core rules, off-token values, clipped content, type scale, line length, line height and spacing steps, and breaks of the project design rules (see get_design_rules). Each finding has an id, severity, element, selector, source and message. fix is a direct fix that needs no judgment, or null. Read only. Apply a fix with apply_fix.",
+    "Run the studio Review panel checks on one canvas frame and return the findings: color contrast, tap target size, missing alt text and other axe-core rules, off-token values, clipped content, type scale, line length, line height and spacing steps, hover and focus styles and broken images, and breaks of the project design rules (see get_design_rules). Each finding has an id, severity, element, selector, source and message. fix is a direct fix that needs no judgment, or null. Read only. Apply a fix with apply_fix.",
   errors: [
     Forbidden,
     BadRequest,

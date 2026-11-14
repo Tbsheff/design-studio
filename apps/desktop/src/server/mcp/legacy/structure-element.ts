@@ -20,6 +20,7 @@ interface StructureTarget {
 interface StructureBody {
   into?: StructureTarget;
   op: StructureOp;
+  replace?: StructureTarget[];
   targets: StructureTarget[];
 }
 
@@ -65,6 +66,16 @@ const moreTargets = (
   return Promise.all(also.map((item) => targetAt(deps, url, item.selector)));
 };
 
+const toReplaceTargets = (
+  deps: EditDeps,
+  url: string,
+  input: EditElementInput
+): Promise<StructureTarget[]> => {
+  const slots = input.replace ?? [];
+
+  return Promise.all(slots.map((item) => targetAt(deps, url, item.selector)));
+};
+
 const countText = (
   targets: readonly StructureTarget[],
   tag: string
@@ -84,15 +95,39 @@ const intoText = (into: StructureTarget | null): string => {
   return "";
 };
 
+const toSummary = (
+  op: StructureOp,
+  targets: readonly StructureTarget[],
+  places: {
+    readonly into: StructureTarget | null;
+    readonly slots: StructureTarget[];
+  }
+): string => {
+  const what = countText(targets, targets[0]?.tag ?? "element");
+
+  if (places.slots.length > 0) {
+    return `Replaced ${countText(places.slots, places.slots[0]?.tag ?? "element")} with ${what}`;
+  }
+
+  return `${OP_WORDS[op]} ${what}${intoText(places.into)}`;
+};
+
 const structureBody = (
   op: StructureOp,
   targets: StructureTarget[],
-  into: StructureTarget | null
+  places: {
+    readonly into: StructureTarget | null;
+    readonly slots: StructureTarget[];
+  }
 ): StructureBody => {
   const body: StructureBody = { op, targets };
 
-  if (into) {
-    body.into = into;
+  if (places.into) {
+    body.into = places.into;
+  }
+
+  if (places.slots.length > 0) {
+    body.replace = places.slots;
   }
 
   return body;
@@ -125,13 +160,17 @@ const structureElement = async (
 
   const targets = [element, ...more];
 
+  const slots = await toReplaceTargets(deps, url, input);
+
+  const places = { into, slots };
+
   const result = await callAction<StructureEditResult>(deps, applyDirectEdit, {
-    ...structureBody(op, targets, into),
+    ...structureBody(op, targets, places),
     directionId: direction.id,
     projectId: project.id,
   });
 
-  const summary = `${OP_WORDS[op]} ${countText(targets, element.tag)}${intoText(into)}`;
+  const summary = toSummary(op, targets, places);
 
   return {
     activity: versionActivity(project, direction, summary, result.version),

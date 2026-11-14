@@ -265,7 +265,7 @@ function viewMenu(
       ),
       { type: "separator" },
       { role: "reload" },
-      { role: "forceReload" },
+      { accelerator: "CmdOrCtrl+Alt+Shift+R", role: "forceReload" },
       { role: "toggleDevTools" },
       { type: "separator" },
       { role: "togglefullscreen" },

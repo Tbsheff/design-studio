@@ -169,6 +169,7 @@ const DirectEditFields = {
   move: OptionalUnknownSchema,
   name: OptionalUnknownSchema,
   op: OptionalUnknownSchema,
+  replace: OptionalUnknownSchema,
   replaceStyle: OptionalUnknownSchema,
   selector: OptionalUnknownSchema,
   source: OptionalUnknownSchema,

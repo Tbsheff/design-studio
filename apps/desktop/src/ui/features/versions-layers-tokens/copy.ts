@@ -109,10 +109,16 @@ const COPY = {
     "The design changed after the cut. Cut the layer again.",
   noticeClipboardBlocked:
     "Design Studio cannot write to the clipboard. Paste works only in this file.",
+  noticeCopyFirst: "Copy a layer first. Then select the layers to replace.",
   noticeHiddenElsewhere:
     "Its CSS or a parent hides this layer, so Show cannot change it here.",
   noticeNoSource:
     "Design Studio cannot find this layer in the code, so it cannot change it here.",
+  noticePasted: "Pasted.",
+  noticeReplaceChanged:
+    "The design changed after the copy. Copy the layer again.",
+  noticeReplaceOtherFile:
+    "Paste to replace works only in the file of the copied layers.",
   noticeSelectAgain: "The layer moved. Select it again.",
   overlayFinding: "Finding changes…",
   overlayNoChanges: "No visible changes",

@@ -279,6 +279,12 @@ export const KEYMAP = [
     group: "Selection",
   },
   {
+    id: "layer-paste-replace",
+    label: "Paste to replace selection",
+    keys: ["Mod+Shift+R"],
+    group: "Selection",
+  },
+  {
     id: "layer-group",
     label: "Group selection",
     keys: ["Mod+G"],

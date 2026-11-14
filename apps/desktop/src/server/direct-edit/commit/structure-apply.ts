@@ -15,6 +15,7 @@ import type {
   ResolvedSource,
   EditScope,
 } from "../../events/index.js";
+import { toReplacePlan } from "../engine/slot-replace.js";
 import { structureDoc, type StructureDoc } from "../engine/structure-docs.js";
 import {
   planStructure,
@@ -99,7 +100,8 @@ async function assertSameFile(
   request: StructureEditRequest,
   groups: FileWork[]
 ): Promise<void> {
-  const place = request.into ?? request.before ?? request.after;
+  const place =
+    request.into ?? request.before ?? request.after ?? request.replace?.[0];
 
   if (!ONE_FILE_OPS.has(request.op) && !(request.op === "duplicate" && place)) {
     return;
@@ -113,10 +115,12 @@ async function assertSameFile(
     return;
   }
 
-  const resolved = await resolveSource(workTree, place.source.file);
+  for (const each of request.replace ?? [place]) {
+    const resolved = await resolveSource(workTree, each.source.file);
 
-  if (resolved.file !== groups[0]?.target.file) {
-    throw refuse("Elements can move only inside the same file");
+    if (resolved.file !== groups[0]?.target.file) {
+      throw refuse("Elements can move only inside the same file");
+    }
   }
 }
 
@@ -304,14 +308,17 @@ async function planFile(
   );
 
   const place = placement(request, locate);
+  const slots = request.replace?.map((slot) => locate(slot, "ref"));
 
-  const plan = planStructure(original, {
-    op: request.op,
-    nodes,
-    place,
-    frame: frameFor(work, request, doc, nodes, original, ctx.gap),
-    closeTag: doc.closeTag,
-  });
+  const plan = slots
+    ? toReplacePlan(original, nodes, slots)
+    : planStructure(original, {
+        op: request.op,
+        nodes,
+        place,
+        frame: frameFor(work, request, doc, nodes, original, ctx.gap),
+        closeTag: doc.closeTag,
+      });
 
   const positions = plan.select.map((offset) => positionAt(plan.code, offset));
   doc.verify(plan.code, positions);
@@ -355,6 +362,10 @@ function structureTitle(
     return `Wrap ${what} in frame`;
   }
 
+  if (request.replace) {
+    return `Replace ${subject(request.replace.map(() => "layer"))} with ${what}`;
+  }
+
   if (request.op === "move" && placeTag) {
     return request.into
       ? `Move ${what} into ${placeTag}`
@@ -373,6 +384,16 @@ function structurePrompt(request: StructureEditRequest): string {
     .join(", ");
 
   const place = request.into ?? request.before ?? request.after;
+
+  if (request.replace) {
+    const slots = request.replace
+      .map(
+        (slot) => `${slot.source.file}:${slot.source.line}:${slot.source.col}`
+      )
+      .join(", ");
+
+    return `Structure edit: replace ${slots} with copies of ${locs}`;
+  }
 
   const where = place
     ? ` ${request.into ? "into" : request.before ? "before" : "after"} ${place.source.file}:${place.source.line}:${place.source.col}`

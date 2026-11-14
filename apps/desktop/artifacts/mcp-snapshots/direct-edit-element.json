@@ -1187,6 +1187,25 @@
               "additionalProperties": false
             }
           },
+          "replace": {
+            "description": "For op duplicate: elements to replace with a copy of selector and also, like Mod+Shift+R (paste to replace) in the studio. Each one is replaced at its place in its parent. All changes are one version and one undo step. They must be in the file of the copied elements.",
+            "minItems": 1,
+            "maxItems": 49,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "selector": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000,
+                  "description": "CSS selector or layer id."
+                }
+              },
+              "required": ["selector"],
+              "additionalProperties": false
+            }
+          },
           "wait": {
             "type": "string",
             "enum": ["render"],

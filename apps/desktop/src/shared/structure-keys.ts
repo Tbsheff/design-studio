@@ -10,6 +10,7 @@ export const STRUCTURE_KEY_IDS: Record<StructureKey, KeyId> = {
   duplicate: "layer-duplicate",
   group: "layer-group",
   paste: "layer-paste",
+  "paste-replace": "layer-paste-replace",
   unwrap: "layer-unwrap",
   wrap: "layer-wrap",
 };

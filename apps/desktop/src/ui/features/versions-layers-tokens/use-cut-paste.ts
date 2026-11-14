@@ -10,9 +10,12 @@ import { toPasteStep, toWaiting } from "./copy-paste-model.js";
 import type { WaitingLayers } from "./copy-paste-model.js";
 import { COPY } from "./copy.js";
 import type { EditContext } from "./layer-edit-context.js";
-import { toCutFirstNotice, toCutNotice } from "./layer-edits-model.js";
+import { toCutNotice } from "./layer-edits-model.js";
 import type { StructureDeps } from "./layer-structure-deps.js";
 import { useCopyLayers } from "./use-copy-layers.js";
+import type { CopyLayersInput } from "./use-copy-layers.js";
+import { usePasteClipboard } from "./use-paste-clipboard.js";
+import { usePasteReplace } from "./use-paste-replace.js";
 
 interface CutPasteInput {
   readonly applyStructure: (request: StructureEditRequest) => Promise<void>;
@@ -25,37 +28,14 @@ interface CutPaste {
   readonly copySelection: () => void;
   readonly cutSelection: () => void;
   readonly pasteInto: () => void;
+  readonly pasteReplace: () => void;
 }
 
-const usePasteClipboard = (
-  context: EditContext,
-  deps: StructureDeps
-): (() => void) => {
+const useCutLayers = (input: CopyLayersInput): (() => void) => {
+  const { context, deps, setWaiting } = input;
   const { liveRef, notify } = context;
 
   return useCallback((): void => {
-    const { current } = liveRef;
-    const last = current.selection.at(-1);
-    const { directionId } = current;
-
-    if (current.enabled && directionId && last) {
-      deps.pasteJsx(
-        { directionId, projectId: current.projectId },
-        last,
-        notify
-      );
-    } else {
-      notify(toCutFirstNotice(shortcutLabel("layer-cut", deps.isMac)));
-    }
-  }, [deps, liveRef, notify]);
-};
-
-const useCutPaste = (input: CutPasteInput): CutPaste => {
-  const { applyStructure, context, deps } = input;
-  const { liveRef, notify } = context;
-  const [waiting, setWaiting] = useState<WaitingLayers | null>(null);
-
-  const cutSelection = useCallback((): void => {
     const targets = deps.selectionTargets(liveRef.current.selection);
 
     if (!targets) {
@@ -68,11 +48,26 @@ const useCutPaste = (input: CutPasteInput): CutPaste => {
     notify(
       toCutNotice(targets.length, shortcutLabel("layer-paste", deps.isMac))
     );
-  }, [deps, liveRef, notify]);
+  }, [deps, liveRef, notify, setWaiting]);
+};
+
+const useCutPaste = (input: CutPasteInput): CutPaste => {
+  const { applyStructure, context, deps } = input;
+  const { liveRef, notify } = context;
+  const [waiting, setWaiting] = useState<WaitingLayers | null>(null);
+
+  const cutSelection = useCutLayers({ context, deps, setWaiting });
 
   const copySelection = useCopyLayers({ context, deps, setWaiting });
 
   const pasteClipboard = usePasteClipboard(context, deps);
+
+  const pasteReplace = usePasteReplace({
+    applyStructure,
+    context,
+    deps,
+    waiting,
+  });
 
   const pasteWaiting = useCallback(
     async (pending: WaitingLayers, into: StructureTarget): Promise<void> => {
@@ -124,6 +119,7 @@ const useCutPaste = (input: CutPasteInput): CutPaste => {
     copySelection,
     cutSelection,
     pasteInto,
+    pasteReplace,
   };
 };
 

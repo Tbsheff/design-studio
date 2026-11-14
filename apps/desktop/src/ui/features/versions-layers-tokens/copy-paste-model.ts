@@ -67,10 +67,33 @@ const isClipboardMoved = (
 ): boolean =>
   clipboard !== null && markup !== null && clipboard.trim() !== markup.trim();
 
+const isSameLoc = (first: StructureTarget, second: StructureTarget): boolean =>
+  first.source.file === second.source.file &&
+  first.source.line === second.source.line &&
+  first.source.col === second.source.col;
+
+const isCopiedLayer = (
+  targets: readonly StructureTarget[],
+  into: StructureTarget
+): boolean => targets.some((target) => isSameLoc(target, into));
+
+const toFlatText = (text: string): string =>
+  text.replaceAll(/\s+/gu, " ").trim();
+
+const isSameMarkup = (code: string | null, markup: string | null): boolean =>
+  code !== null &&
+  markup !== null &&
+  toFlatText(code).length > 0 &&
+  toFlatText(code) === toFlatText(markup);
+
 const toDuplicateRequest = (
   targets: StructureTarget[],
   into: StructureTarget
 ): StructureEditRequest => {
+  if (isCopiedLayer(targets, into)) {
+    return { op: "duplicate", targets };
+  }
+
   if (isLeafTag(into.tag ?? "")) {
     return { after: into, op: "duplicate", targets };
   }
@@ -113,6 +136,55 @@ const toPasteStep = (input: PasteInput): PasteStep => {
   return {
     kind: "structure",
     request: toDuplicateRequest(waiting.targets, into),
+  };
+};
+
+type ReplaceNotice = "changed" | "copy-first" | "no-source" | "other-file";
+
+type ReplaceStep =
+  | { readonly kind: "notice"; readonly notice: ReplaceNotice }
+  | { readonly kind: "structure"; readonly request: StructureEditRequest };
+
+interface ReplaceInput {
+  readonly head: string | null;
+  readonly slots: StructureTarget[] | null;
+  readonly waiting: WaitingLayers | null;
+}
+
+const toReplaceNotice = (input: ReplaceInput): ReplaceNotice | null => {
+  const { head, slots, waiting } = input;
+
+  if (waiting?.kind !== "copy") {
+    return "copy-first";
+  }
+
+  if (!slots || slots.length === 0) {
+    return "no-source";
+  }
+
+  if (waiting.head !== head) {
+    return "changed";
+  }
+
+  if (!slots.every((slot) => isSameFile(waiting.targets, slot))) {
+    return "other-file";
+  }
+
+  return null;
+};
+
+const toReplaceStep = (input: ReplaceInput): ReplaceStep => {
+  const notice = toReplaceNotice(input);
+  const targets = input.waiting?.targets ?? [];
+  const replace = input.slots ?? [];
+
+  if (notice) {
+    return { kind: "notice", notice };
+  }
+
+  return {
+    kind: "structure",
+    request: { op: "duplicate", replace, targets },
   };
 };
 
@@ -184,6 +256,15 @@ const toWaiting = (
   return { head, kind, markup, targets };
 };
 
-export { toCopyNotice, toCopyTargets, toMarkup, toPasteStep, toWaiting };
+export {
+  isLeafTag,
+  isSameMarkup,
+  toCopyNotice,
+  toCopyTargets,
+  toMarkup,
+  toPasteStep,
+  toReplaceStep,
+  toWaiting,
+};
 
-export type { PasteStep, WaitingLayers };
+export type { PasteStep, ReplaceNotice, WaitingLayers };

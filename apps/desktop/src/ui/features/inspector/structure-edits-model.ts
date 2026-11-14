@@ -139,6 +139,7 @@ const LABELS: Record<StructureKey, string> = {
   duplicate: "Duplicate",
   group: "Group selection",
   paste: "Paste here",
+  "paste-replace": "Paste to replace",
   unwrap: "Unwrap",
   wrap: "Wrap in auto layout",
 };
@@ -160,6 +161,7 @@ const ICONS: Record<StructureKey, IconName> = {
   duplicate: "copy",
   group: "layers",
   paste: "arrowDown",
+  "paste-replace": "restore",
   unwrap: "expand",
   wrap: "frame",
 };

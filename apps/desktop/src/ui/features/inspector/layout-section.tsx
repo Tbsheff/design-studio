@@ -40,6 +40,7 @@ const LayoutSection = ({
     <AutoLayoutSection
       edit={edit}
       selection={selection}
+      classes={classes}
       title={copy.layout}
       lead={lead}
     >

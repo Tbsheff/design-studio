@@ -4,7 +4,7 @@ import type {
 } from "@design-studio/contracts";
 import { useEffect, useState } from "react";
 
-import { useAskChat } from "../../features/chat";
+import { loadAskChat } from "../../features/chat";
 import { isDirectEditable } from "../../features/inspector";
 import { ASK_CHAT_EVENT } from "../../platform/ask-chat";
 import { focusComposerAtEnd } from "../../platform/focus";
@@ -17,6 +17,8 @@ import type {
   StudioPanes,
   StudioUi,
 } from "./studio-ui-types";
+
+const useAskChat = await loadAskChat();
 
 const setColumn = (tab: ColumnTab, isOpen: boolean): void => {
   uiStore.set({ editorColumn: { isOpen, tab } });

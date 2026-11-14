@@ -8,8 +8,16 @@ import {
 } from "./delta-batch-model.js";
 import { levelGist, levelHint, levelLabel } from "./level-model.js";
 import { runStepText } from "./live-status-model.js";
+import type { McpToasts as McpToastsView } from "./mcp-toasts.js";
 import { parseDraft, toDraft } from "./settings-draft-model.js";
 import type { SettingsDraft } from "./settings-draft-model.js";
+import type { useAskChat as UseAskChat } from "./use-ask-chat.js";
+
+const loadAskChat = async (): Promise<typeof UseAskChat> => {
+  const loaded = await import("./use-ask-chat.js");
+
+  return loaded.useAskChat;
+};
 
 const ChatPanel = lazy(async () => {
   const loaded = await import("./chat-panel.js");
@@ -29,11 +37,13 @@ const ClarifyForm = lazy(async () => {
   return { default: loaded.ClarifyForm };
 });
 
-const McpToasts = lazy(async () => {
+const loadMcpToasts = async (): Promise<typeof McpToastsView> => {
   const loaded = await import("./mcp-toasts.js");
 
-  return { default: loaded.McpToasts };
-});
+  return loaded.McpToasts;
+};
+
+const McpToasts = lazy(async () => ({ default: await loadMcpToasts() }));
 
 const McpEditStrip = lazy(async () => {
   const loaded = await import("./mcp-feed.js");
@@ -58,6 +68,8 @@ export {
   levelGist,
   levelHint,
   levelLabel,
+  loadAskChat,
+  loadMcpToasts,
   parseDraft,
   runStepText,
   toDraft,
@@ -67,8 +79,6 @@ export {
 };
 
 export type { SettingsDraft };
-
-export { useAskChat } from "./use-ask-chat.js";
 
 export { useActiveRun } from "./use-active-run.js";
 

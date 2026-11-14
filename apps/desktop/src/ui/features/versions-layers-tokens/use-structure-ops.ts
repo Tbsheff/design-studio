@@ -24,12 +24,19 @@ interface StructureOps {
 const useStructureOps = (input: StructureOpsInput): StructureOps => {
   const { applyStructure, context, deps } = input;
   const { liveRef, notify } = context;
-  const { canPaste, cutSelection, pasteInto } = useCutPaste(input);
+  const cutPaste = useCutPaste(input);
+  const { canPaste, copySelection, cutSelection, pasteInto } = cutPaste;
 
   const structureKey = useCallback(
     (key: StructureKey): void => {
       if (key === "cut") {
         cutSelection();
+
+        return;
+      }
+
+      if (key === "copy") {
+        copySelection();
 
         return;
       }
@@ -48,7 +55,15 @@ const useStructureOps = (input: StructureOpsInput): StructureOps => {
         notify(deps.noSource);
       }
     },
-    [applyStructure, cutSelection, deps, liveRef, notify, pasteInto]
+    [
+      applyStructure,
+      copySelection,
+      cutSelection,
+      deps,
+      liveRef,
+      notify,
+      pasteInto,
+    ]
   );
 
   const dropNode = useCallback(

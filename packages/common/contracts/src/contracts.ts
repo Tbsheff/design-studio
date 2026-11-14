@@ -2134,6 +2134,7 @@ export type StructureKey =
   | "wrap"
   | "unwrap"
   | "cut"
+  | "copy"
   | "paste"
   | "group";
 

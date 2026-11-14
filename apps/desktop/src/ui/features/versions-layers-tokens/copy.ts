@@ -107,6 +107,8 @@ const COPY = {
   moreActionsPrefix: "More actions for ",
   noticeChangedAfterCut:
     "The design changed after the cut. Cut the layer again.",
+  noticeClipboardBlocked:
+    "Design Studio cannot write to the clipboard. Paste works only in this file.",
   noticeHiddenElsewhere:
     "Its CSS or a parent hides this layer, so Show cannot change it here.",
   noticeNoSource:

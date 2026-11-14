@@ -4,6 +4,7 @@ import { matchesKey } from "./keymap.js";
 import type { KeyId, KeyInput } from "./keymap.js";
 
 export const STRUCTURE_KEY_IDS: Record<StructureKey, KeyId> = {
+  copy: "layer-copy",
   cut: "layer-cut",
   delete: "layer-delete",
   duplicate: "layer-duplicate",

@@ -18,12 +18,22 @@ interface Shortcut {
   readonly structure: StructureKey | null;
 }
 
+const hasTextSelection = (): boolean => {
+  const selection = globalThis.getSelection();
+
+  return selection !== null && !selection.isCollapsed;
+};
+
 const toShortcut = (event: KeyboardEvent, isMac: boolean): Shortcut => {
   const move = reorderMoveOf(event);
   let structure: StructureKey | null = null;
 
   if (!move && !event.repeat) {
     structure = structureKeyOf(event, isMac);
+  }
+
+  if (structure === "copy" && hasTextSelection()) {
+    structure = null;
   }
 
   return { move, structure };

@@ -267,6 +267,12 @@ export const KEYMAP = [
     group: "Selection",
   },
   {
+    id: "layer-copy",
+    label: "Copy layers",
+    keys: ["Mod+C"],
+    group: "Selection",
+  },
+  {
     id: "layer-paste",
     label: "Paste into selection",
     keys: ["Mod+V"],

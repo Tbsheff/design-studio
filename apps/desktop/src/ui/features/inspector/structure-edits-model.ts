@@ -133,11 +133,12 @@ interface StructureMenuState {
 }
 
 const LABELS: Record<StructureKey, string> = {
+  copy: "Copy",
   cut: "Cut to move",
   delete: "Delete",
   duplicate: "Duplicate",
   group: "Group selection",
-  paste: "Move cut layers here",
+  paste: "Paste here",
   unwrap: "Unwrap",
   wrap: "Wrap in auto layout",
 };
@@ -153,6 +154,7 @@ const toMenuLabel = (key: StructureKey, count: number): string => {
 };
 
 const ICONS: Record<StructureKey, IconName> = {
+  copy: "code",
   cut: "arrowRight",
   delete: "trash",
   duplicate: "copy",
@@ -167,6 +169,7 @@ const MENU_ORDER: StructureKey[] = [
   "group",
   "wrap",
   "unwrap",
+  "copy",
   "cut",
   "paste",
   "delete",
@@ -185,7 +188,7 @@ const toBlockReason = (
   }
 
   if (key === "paste" && !state.canPaste) {
-    return "Cut a layer first, then select where it goes.";
+    return "Copy or cut a layer first, then select where it goes.";
   }
 
   return null;

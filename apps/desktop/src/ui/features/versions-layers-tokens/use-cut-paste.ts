@@ -1,12 +1,18 @@
-import type { StructureEditRequest } from "@design-studio/contracts";
-import { useCallback, useState } from "react";
+import type {
+  StructureEditRequest,
+  StructureTarget,
+} from "@design-studio/contracts";
+import { startTransition, useCallback, useState } from "react";
 
 import { shortcutLabel } from "../../../shared/keymap.js";
+import { getClipboardText } from "../../platform/clipboard.js";
+import { toPasteStep, toWaiting } from "./copy-paste-model.js";
+import type { WaitingLayers } from "./copy-paste-model.js";
 import { COPY } from "./copy.js";
 import type { EditContext } from "./layer-edit-context.js";
 import { toCutFirstNotice, toCutNotice } from "./layer-edits-model.js";
-import type { CutState } from "./layer-edits-types.js";
 import type { StructureDeps } from "./layer-structure-deps.js";
+import { useCopyLayers } from "./use-copy-layers.js";
 
 interface CutPasteInput {
   readonly applyStructure: (request: StructureEditRequest) => Promise<void>;
@@ -16,14 +22,38 @@ interface CutPasteInput {
 
 interface CutPaste {
   readonly canPaste: boolean;
+  readonly copySelection: () => void;
   readonly cutSelection: () => void;
   readonly pasteInto: () => void;
 }
 
+const usePasteClipboard = (
+  context: EditContext,
+  deps: StructureDeps
+): (() => void) => {
+  const { liveRef, notify } = context;
+
+  return useCallback((): void => {
+    const { current } = liveRef;
+    const last = current.selection.at(-1);
+    const { directionId } = current;
+
+    if (current.enabled && directionId && last) {
+      deps.pasteJsx(
+        { directionId, projectId: current.projectId },
+        last,
+        notify
+      );
+    } else {
+      notify(toCutFirstNotice(shortcutLabel("layer-cut", deps.isMac)));
+    }
+  }, [deps, liveRef, notify]);
+};
+
 const useCutPaste = (input: CutPasteInput): CutPaste => {
   const { applyStructure, context, deps } = input;
   const { liveRef, notify } = context;
-  const [cut, setCut] = useState<CutState | null>(null);
+  const [waiting, setWaiting] = useState<WaitingLayers | null>(null);
 
   const cutSelection = useCallback((): void => {
     const targets = deps.selectionTargets(liveRef.current.selection);
@@ -34,55 +64,67 @@ const useCutPaste = (input: CutPasteInput): CutPaste => {
       return;
     }
 
-    setCut({ head: liveRef.current.headVersionId, targets });
+    setWaiting(() => toWaiting("cut", liveRef.current.headVersionId, targets));
     notify(
       toCutNotice(targets.length, shortcutLabel("layer-paste", deps.isMac))
     );
   }, [deps, liveRef, notify]);
 
-  const pasteCut = useCallback(
-    (pending: CutState): void => {
-      const { current } = liveRef;
-      const into = deps.selectionTargets(current.selection.slice(-1))?.[0];
+  const copySelection = useCopyLayers({ context, deps, setWaiting });
 
-      if (!into) {
-        notify(deps.noSource);
+  const pasteClipboard = usePasteClipboard(context, deps);
 
-        return;
+  const pasteWaiting = useCallback(
+    async (pending: WaitingLayers, into: StructureTarget): Promise<void> => {
+      let clipboard: string | null = null;
+
+      if (pending.kind === "copy") {
+        clipboard = await getClipboardText();
       }
 
-      setCut(null);
+      const head = liveRef.current.headVersionId;
+      const step = toPasteStep({ clipboard, head, into, waiting: pending });
 
-      if (pending.head !== current.headVersionId) {
+      const shouldClear =
+        pending.kind === "cut" ||
+        (step.kind === "clipboard" && step.shouldClear);
+
+      if (shouldClear) {
+        setWaiting(() => null);
+      }
+
+      if (step.kind === "changed") {
         notify(COPY.noticeChangedAfterCut);
-
-        return;
+      } else if (step.kind === "structure") {
+        await applyStructure(step.request);
+      } else {
+        pasteClipboard();
       }
-
-      applyStructure({ into, op: "move", targets: pending.targets });
     },
-    [applyStructure, deps, liveRef, notify]
+    [applyStructure, liveRef, notify, pasteClipboard]
   );
 
   const pasteInto = useCallback((): void => {
-    const { current } = liveRef;
-    const last = current.selection.at(-1);
-    const { directionId } = current;
+    const into = deps.selectionTargets(liveRef.current.selection.slice(-1));
+    const target = into?.[0];
 
-    if (cut) {
-      pasteCut(cut);
-    } else if (current.enabled && directionId && last) {
-      deps.pasteJsx(
-        { directionId, projectId: current.projectId },
-        last,
-        notify
-      );
+    if (!waiting) {
+      pasteClipboard();
+    } else if (target) {
+      startTransition(async () => {
+        await pasteWaiting(waiting, target);
+      });
     } else {
-      notify(toCutFirstNotice(shortcutLabel("layer-cut", deps.isMac)));
+      notify(deps.noSource);
     }
-  }, [cut, deps, liveRef, notify, pasteCut]);
+  }, [deps, liveRef, notify, pasteClipboard, pasteWaiting, waiting]);
 
-  return { canPaste: cut !== null, cutSelection, pasteInto };
+  return {
+    canPaste: waiting !== null,
+    copySelection,
+    cutSelection,
+    pasteInto,
+  };
 };
 
 export { useCutPaste };

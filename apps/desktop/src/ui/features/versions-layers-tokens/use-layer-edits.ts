@@ -1,5 +1,7 @@
+import type { SourceLoc } from "@design-studio/contracts";
 import { useMemo } from "react";
 
+import { api } from "../../api.js";
 import { IS_MAC } from "../commands/index.js";
 import {
   NO_SOURCE,
@@ -8,7 +10,7 @@ import {
   toSelectionTargets,
 } from "../inspector/index.js";
 import type { LayerEdits, LayerEditsOptions } from "./layer-edits-types.js";
-import type { StructureDeps } from "./layer-structure-deps.js";
+import type { PasteIds, StructureDeps } from "./layer-structure-deps.js";
 import { useLatestRef } from "./use-latest-ref.js";
 import { useLatest } from "./use-latest.js";
 import { useLayerActions } from "./use-layer-actions.js";
@@ -18,11 +20,21 @@ import { useStructureOps } from "./use-structure-ops.js";
 
 const isMac = IS_MAC;
 
+const readElementSource = async (
+  ids: PasteIds,
+  loc: SourceLoc
+): Promise<string | null> => {
+  const answer = await api.elementSource(ids.projectId, ids.directionId, loc);
+
+  return answer.code;
+};
+
 const STRUCTURE_DEPS: StructureDeps = {
   dropRequest: toDropRequest,
   isMac: IS_MAC,
   noSource: NO_SOURCE,
   pasteJsx: applyPasteJsx,
+  readSource: readElementSource,
   selectionTargets: toSelectionTargets,
 };
 

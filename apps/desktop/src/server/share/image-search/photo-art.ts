@@ -1,4 +1,4 @@
-import { readFile, readdir, stat } from "node:fs/promises";
+import { readdir } from "node:fs/promises";
 import path from "node:path";
 
 import type { ProjectStore } from "../../../shared/server-ports.js";
@@ -9,30 +9,27 @@ import {
   runFileLockGuard,
   saveDeferred,
   savesSettled,
-  setHtmlAttrs,
   writeAtomic,
-  writeNewFile,
 } from "./deps.js";
-import type { AttrChanges, DirectEditDeps, Version } from "./deps.js";
-import { toArtHash, toPhotoArt } from "./engine/index.js";
+import type { AttrChanges, DirectEditDeps, Project, Version } from "./deps.js";
 import { isImageSearchOn } from "./gate.js";
-import { toArtColors } from "./photo-art-colors.js";
+import {
+  isArtPage,
+  toPageSlots,
+  toSlotAttrs,
+  toSlotLabelFree,
+} from "./photo-art-jsx.js";
+import {
+  toArtAssetFiles,
+  toArtCode,
+  toArtPlan,
+  toReadText,
+  toWriteArtAssets,
+} from "./photo-art-plan.js";
+import type { PhotoArtPlan } from "./photo-art-plan.js";
 import type { PhotoFillScope, PhotoPage } from "./photo-pick.js";
-import { ART_ATTR, isHtmlPage, toPhotoSlots } from "./photo-slots.js";
+import { PHOTO_ATTR } from "./photo-slots.js";
 import type { PhotoSlot } from "./photo-slots.js";
-import { toLabelFree, toLabelText } from "./photo-tag.js";
-
-interface PhotoArtAsset {
-  readonly exists: boolean;
-  readonly file: string;
-  readonly relative: string;
-  readonly svg: string;
-}
-
-interface PhotoArtPlan {
-  readonly assets: readonly PhotoArtAsset[];
-  readonly changes: ReadonlyMap<PhotoSlot, AttrChanges>;
-}
 
 interface SlotEdit {
   readonly changes: AttrChanges;
@@ -52,12 +49,9 @@ interface PhotoArtDone {
   readonly versionId: string | null;
 }
 
-interface ArtFileChange {
-  readonly after: string;
-  readonly before: string;
-  readonly created: boolean;
-  readonly file: string;
-  readonly relative: string;
+interface ArtFillDone {
+  readonly note: string;
+  readonly versionId: string | null;
 }
 
 interface RunArtIds {
@@ -67,48 +61,11 @@ interface RunArtIds {
 
 const ART_TITLE = "Photo art";
 
-const ART_FOLDER = "assets";
-
-const ART_BACKGROUND = "background-size: cover; background-position: center";
-
-const ART_EXTRAS = new Set([
-  "background-position: center",
-  "background-size: cover",
-]);
-
-const SPACES = /\s+/gu;
-
-const isArtImage = (part: string): boolean =>
-  part.startsWith("background-image:") && part.includes("photo-art-");
-
-const toArtFreeStyle = (style: string | null): string => {
-  const own = (style ?? "").trim();
-
-  if (!own.includes("photo-art-")) {
-    return own;
-  }
-
-  return own
-    .split(";")
-    .map((part) => part.replaceAll(SPACES, " ").trim())
-    .filter((part) => part !== "" && !isArtImage(part) && !ART_EXTRAS.has(part))
-    .join("; ");
-};
-
-const isPlainSlot = (slot: PhotoSlot): boolean =>
-  !slot.hasArt && !slot.hasImage;
+const SOURCE_FOLDER = "src";
 
 const isRunDraft = (scope: PhotoFillScope): boolean =>
   scope.direction.headVersionId === null &&
   isOwnAgentRun(scope.project.id, scope.direction.id);
-
-const toReadText = async (file: string): Promise<string> => {
-  try {
-    return await readFile(file, "utf-8");
-  } catch {
-    return "";
-  }
-};
 
 const toReadNames = async (folder: string): Promise<readonly string[]> => {
   try {
@@ -116,101 +73,6 @@ const toReadNames = async (folder: string): Promise<readonly string[]> => {
   } catch {
     return [];
   }
-};
-
-const isFile = async (file: string): Promise<boolean> => {
-  try {
-    const info = await stat(file);
-
-    return info.isFile();
-  } catch {
-    return false;
-  }
-};
-
-const toArtStyle = (slot: PhotoSlot, src: string): string => {
-  const own = toArtFreeStyle(slot.style);
-  const added = `background-image: url(${src}); ${ART_BACKGROUND}`;
-
-  if (own === "") {
-    return added;
-  }
-
-  return `${own}; ${added}`;
-};
-
-const toArtChanges = (
-  page: PhotoPage,
-  slot: PhotoSlot,
-  asset: { readonly hash: string; readonly src: string }
-): AttrChanges => {
-  if (slot.isImg) {
-    return {
-      [ART_ATTR]: asset.hash,
-      alt: slot.alt ?? slot.query,
-      src: asset.src,
-    } satisfies AttrChanges;
-  }
-
-  const position = { col: slot.col, line: slot.line };
-
-  return {
-    [ART_ATTR]: asset.hash,
-    "aria-label": toLabelText(page.source, position) ?? slot.query,
-    role: "img",
-    style: toArtStyle(slot, asset.src),
-  } satisfies AttrChanges;
-};
-
-const toArtPlan = async (
-  scope: PhotoFillScope,
-  page: PhotoPage,
-  slots: readonly PhotoSlot[]
-): Promise<PhotoArtPlan> => {
-  const open = slots.filter((slot) => isPlainSlot(slot));
-
-  if (!isHtmlPage(page.relative) || open.length === 0) {
-    return { assets: [], changes: new Map() };
-  }
-
-  const colors = await toArtColors(scope.workTree, page);
-  const drafts = new Map<string, Omit<PhotoArtAsset, "exists">>();
-  const changes = new Map<PhotoSlot, AttrChanges>();
-
-  for (const slot of open) {
-    const svg = toPhotoArt({
-      colors,
-      orientation: slot.orientation,
-      words: slot.query,
-    });
-
-    const hash = toArtHash(svg);
-    const relative = `${ART_FOLDER}/photo-art-${hash}.svg`;
-
-    const src = path.posix.relative(
-      path.posix.dirname(page.relative),
-      relative
-    );
-
-    drafts.set(relative, {
-      file: path.join(scope.workTree, relative),
-      relative,
-      svg,
-    });
-    changes.set(slot, toArtChanges(page, slot, { hash, src }));
-  }
-
-  const listed = [...drafts.values()];
-  const found = await Promise.all(listed.map((draft) => isFile(draft.file)));
-
-  const assets = listed.map((draft, index) => ({
-    exists: found[index] ?? false,
-    file: draft.file,
-    relative: draft.relative,
-    svg: draft.svg,
-  }));
-
-  return { assets, changes };
 };
 
 const toEditedSource = (
@@ -228,10 +90,10 @@ const toEditedSource = (
     const position = { col: edit.slot.col, line: edit.slot.line };
 
     if (edit.isLabelFree) {
-      code = toLabelFree(code, position);
+      code = toSlotLabelFree(page.relative, code, position);
     }
 
-    code = setHtmlAttrs(code, position, edit.changes);
+    code = toSlotAttrs(page.relative, code, position, edit.changes);
   }
 
   return code;
@@ -240,52 +102,28 @@ const toEditedSource = (
 const toArtEdits = (plan: PhotoArtPlan): readonly SlotEdit[] =>
   [...plan.changes].map(([slot, art]) => ({
     changes: art,
-    isLabelFree: !slot.isImg,
+    isLabelFree: !slot.isImg && !plan.isRepaint,
     slot,
   }));
 
-const toArtAssetFiles = (plan: PhotoArtPlan): readonly ArtFileChange[] =>
-  plan.assets.flatMap((asset) => {
-    if (asset.exists) {
-      return [];
-    }
-
-    return [
-      {
-        after: asset.svg,
-        before: "",
-        created: true,
-        file: asset.file,
-        relative: asset.relative,
-      },
-    ];
-  });
-
-const toWriteArtAssets = async (plan: PhotoArtPlan): Promise<void> => {
-  const fresh = plan.assets.filter((asset) => !asset.exists);
-
-  await Promise.all(
-    fresh.map(async (asset) => {
-      if (!(await isFile(asset.file))) {
-        await writeNewFile(asset.file, asset.svg);
-      }
-    })
-  );
-};
-
-const toPageArt = async (
-  scope: PhotoFillScope,
-  page: PhotoPage
-): Promise<PageArt> => {
-  const plan = await toArtPlan(scope, page, toPhotoSlots(page.source));
+const toPlanArt = (page: PhotoPage, plan: PhotoArtPlan): PageArt => {
   const edits = toArtEdits(plan);
 
   if (edits.length === 0) {
     return { code: page.source, count: 0, page, plan };
   }
 
-  return { code: toEditedSource(page, edits), count: edits.length, page, plan };
+  const code = toArtCode(page, toEditedSource(page, edits), plan);
+  const count = edits.length;
+
+  return { code, count, page, plan };
 };
+
+const toPageArt = async (
+  scope: PhotoFillScope,
+  page: PhotoPage
+): Promise<PageArt> =>
+  toPlanArt(page, await toArtPlan(scope, page, toPageSlots(page)));
 
 const toWritePageArt = async (arts: readonly PageArt[]): Promise<void> => {
   await Promise.all(arts.map((art) => toWriteArtAssets(art.plan)));
@@ -358,14 +196,44 @@ const applyPhotoArt = async (
   return { count, versionId: version.id };
 };
 
+const toArtNote = (count: number, relative: string): string => {
+  if (count === 0) {
+    return `Image search is off. ${relative} has no plain ${PHOTO_ATTR} slot, so nothing changed.`;
+  }
+
+  if (count === 1) {
+    return "Image search is off. The studio painted 1 art slot.";
+  }
+
+  return `Image search is off. The studio painted ${count} art slots.`;
+};
+
+const toArtFill = async (
+  deps: DirectEditDeps,
+  scope: PhotoFillScope,
+  page: PhotoPage
+): Promise<ArtFillDone> => {
+  const done = await applyPhotoArt(deps, scope, [page]);
+
+  return {
+    note: toArtNote(done.count, page.relative),
+    versionId: done.versionId,
+  };
+};
+
 const toRunPages = async (
   workTree: string,
-  entry: string
+  project: Project
 ): Promise<readonly PhotoPage[]> => {
-  const names = await toReadNames(workTree);
+  const [names, sources] = await Promise.all([
+    toReadNames(workTree),
+    toReadNames(path.join(workTree, SOURCE_FOLDER)),
+  ]);
 
-  const relatives = [...new Set([entry, ...names])].filter((name) =>
-    isHtmlPage(name)
+  const nested = sources.map((name) => `${SOURCE_FOLDER}/${name}`);
+
+  const relatives = [...new Set([project.entry, ...names, ...nested])].filter(
+    (name) => isArtPage(project, name)
   );
 
   const pages = await Promise.all(
@@ -398,7 +266,7 @@ const applyRunPhotoArt = async (
     return { count: 0, versionId: null };
   }
 
-  const pages = await toRunPages(direction.workTree, project.entry);
+  const pages = await toRunPages(direction.workTree, project);
   const scope = { direction, project, workTree: direction.workTree };
 
   return await applyPhotoArt(deps, scope, pages);
@@ -408,12 +276,11 @@ export {
   applyPhotoArt,
   applyRunPhotoArt,
   isRunDraft,
-  toArtAssetFiles,
-  toArtEdits,
-  toArtFreeStyle,
-  toArtPlan,
+  toArtFill,
   toEditedSource,
-  toWriteArtAssets,
+  toPlanArt,
+  toRunPages,
+  toWritePageArt,
 };
 
-export type { PhotoArtDone, PhotoArtPlan, RunArtIds, SlotEdit };
+export type { PageArt, PhotoArtDone, RunArtIds, SlotEdit };

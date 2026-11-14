@@ -1,5 +1,6 @@
 import { setTimeout as sleep } from "node:timers/promises";
 
+import type { AnyAction } from "@design-studio/actions/_core/action";
 import type { FirstVersionState } from "@design-studio/contracts";
 
 const MS_PER_FILE = 1.2;
@@ -15,6 +16,13 @@ interface Job {
   readonly estimateMs: number;
   readonly done: Promise<null>;
 }
+
+const DIRECTION_PATH = "/d/:directionId/";
+
+const SOURCE_READS: ReadonlySet<string> = new Set([
+  "direct-edit.getTree",
+  "version.list",
+]);
 
 const jobs = new Map<string, Job>();
 const failures = new Map<string, string>();
@@ -179,8 +187,21 @@ const toFirstVersionWaitText = (projectId: string): string => {
   return `The studio is still saving the first version of this app${toFilesText(state.files)}, so it can undo your edits. It should be ready in about ${state.etaSeconds} s. Call this tool again then. Screenshots and file reads work now.`;
 };
 
+const isProjectWrite = (action: AnyAction): boolean =>
+  action.access !== "read" &&
+  action.scope === "project" &&
+  action.needs === "project.update";
+
+const isSourceWrite = (action: AnyAction): boolean =>
+  action.http.path.includes(DIRECTION_PATH) ||
+  action.invalidates.some((id) => SOURCE_READS.has(id));
+
+const isFirstVersionWrite = (action: AnyAction): boolean =>
+  isProjectWrite(action) && isSourceWrite(action);
+
 export {
   isFirstVersionDone,
+  isFirstVersionWrite,
   isFirstVersionFailed,
   isFirstVersionRunning,
   startFirstVersion,

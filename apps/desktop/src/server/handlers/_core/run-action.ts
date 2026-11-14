@@ -9,6 +9,7 @@ import { Effect, Schema } from "effect";
 import { EventQueue } from "../../events/index.js";
 import {
   Authorizer,
+  isFirstVersionWrite,
   LocalOrgScope,
   LocalPrincipal,
   ProjectAccess,
@@ -88,24 +89,8 @@ const checkScope = (
     yield* access.visible(input.projectId);
   });
 
-const DIRECTION_PATH = "/d/:directionId/";
-
-const SOURCE_READS: ReadonlySet<string> = new Set([
-  "direct-edit.getTree",
-  "version.list",
-]);
-
-const isSourceWrite = (action: AnyAction): boolean =>
-  action.http.path.includes(DIRECTION_PATH) ||
-  action.invalidates.some((id) => SOURCE_READS.has(id));
-
-const isProjectWrite = (action: AnyAction): boolean =>
-  action.access !== "read" &&
-  action.scope === "project" &&
-  action.needs === "project.update";
-
 const isHeldWrite = (action: AnyAction, input: Decoded): boolean =>
-  isProjectWrite(action) && "directionId" in input && isSourceWrite(action);
+  isFirstVersionWrite(action) && "directionId" in input;
 
 const toReadyWait = (
   action: AnyAction,

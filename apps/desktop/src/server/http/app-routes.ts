@@ -27,6 +27,7 @@ import {
   toFirstVersionWaitText,
 } from "../store/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
+import { isHeldActionPath } from "./first-version-routes.js";
 
 const SOURCE_PATTERN = /^(.+):(\d+):(\d+)$/;
 const EDITOR_TIMEOUT_MS = 5000;
@@ -221,8 +222,11 @@ export async function holdEditsForFirstVersion(
 }
 
 export const applyFirstVersionHold = (app: Hono, deps: AppRouteDeps): void => {
-  app.use("/api/projects/:pid/d/:did/*", async (c, next) => {
-    if (c.req.method !== "GET" && EDIT_ROUTES.test(c.req.path)) {
+  app.use("/api/projects/:pid/*", async (c, next) => {
+    if (
+      c.req.method !== "GET" &&
+      (EDIT_ROUTES.test(c.req.path) || isHeldActionPath(c.req.path))
+    ) {
       await holdEditsForFirstVersion(deps, c.req.param("pid"));
     }
 

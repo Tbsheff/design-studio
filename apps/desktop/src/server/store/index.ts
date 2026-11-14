@@ -50,6 +50,7 @@ export { ProjectAccess } from "./project-access.js";
 export {
   isFirstVersionDone,
   isFirstVersionFailed,
+  isFirstVersionWrite,
   isFirstVersionRunning,
   startFirstVersion,
   toFirstVersionEstimateMs,

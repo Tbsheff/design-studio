@@ -38,7 +38,7 @@ Files:
 
 Checked:
 - Fake Next app route `/patients` (calls `prefetch` from a `server-only` module and throws "DATABASE_URL is not set", so it answers 500).
-- `call-action.ts project.createPrototype` with `routePath: "/patients"`: the offer is the same on HTTP, MCP and agent. The 2 diffs are only the new project ids, folders and times (each call makes a project). Output: `undo-patch/call-action-create-prototype.txt`.
+- `call-action.ts project.createPrototype` with `routePath: "/patients"`: the offer is the same on HTTP, MCP and agent. The 2 diffs are only the new project ids, folders and times (each call makes a project). call-action prints fail on those 2 diffs. Output: `undo-patch/call-action-create-prototype.txt`.
 - A route that renders one empty `div` gets the offer with "The route copy has almost no content." The route `/` gets `fixtureOffer: null`.
 - UI, dark: the offer, then "Make a data fixture": `POST fixtures` 200, `POST prototypes` 200, the new prototype opens with the patient list and the mock run ran (`fixture-copy-dark.png`).
 - Screenshots: `offer-dark.png`, `offer-light.png`, `fixture-copy-dark.png`. Driver: `offer-driver.txt`.
@@ -47,6 +47,7 @@ Checked:
 ## Left out
 
 - The undo patch (step 2): dropped by the gate.
+- On the offer path, "Open the copy" opens a project with no run, so the typed prompt is not run.
 - A failed or empty copy still leaves its prototype project. After "Make a data fixture" the user has 2 prototype projects for the route.
 - The offer does not check that the route reads server data. `fixture.create` refuses when it cannot strip the page, and the dialog shows that error.
 - The run prompt of the fixture copy names the fixture route (`Redesign /__studio-fixture/<id>: ...`), not the source route.

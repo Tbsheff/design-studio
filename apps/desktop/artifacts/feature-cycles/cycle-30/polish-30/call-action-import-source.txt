@@ -1,0 +1,50 @@
+call-action page.importSource on http://127.0.0.1:5590. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 5711 ms, git spawns: not counted (server side)
+{
+  "frameId": "f3",
+  "page": "index-app-2.html",
+  "routePath": "/patients",
+  "sourcePage": "index.html",
+  "versionId": "e1bcb077dfe058cd2ba80c18546de6318a164ff4"
+}
+
+[mcp] ok, 5387 ms, git spawns: not counted (server side)
+{
+  "frameId": "f4",
+  "page": "index-app-3.html",
+  "routePath": "/patients",
+  "sourcePage": "index.html",
+  "versionId": "96699e3ecddee7da00828e1b7cf73802803c63fe"
+}
+
+[agent] ok, 5192 ms, git spawns: not counted (server side)
+{
+  "frameId": "f5",
+  "page": "index-app-4.html",
+  "routePath": "/patients",
+  "sourcePage": "index.html",
+  "versionId": "cad36adb0c782f7749ed28c02d3a8b59969a2ea4"
+}
+
+diff http -> mcp:
+-   "frameId": "f3",
++   "frameId": "f4",
+-   "page": "index-app-2.html",
++   "page": "index-app-3.html",
+-   "versionId": "e1bcb077dfe058cd2ba80c18546de6318a164ff4"
++   "versionId": "96699e3ecddee7da00828e1b7cf73802803c63fe"
+
+diff http -> agent:
+-   "frameId": "f3",
++   "frameId": "f5",
+-   "page": "index-app-2.html",
++   "page": "index-app-4.html",
+-   "versionId": "e1bcb077dfe058cd2ba80c18546de6318a164ff4"
++   "versionId": "cad36adb0c782f7749ed28c02d3a8b59969a2ea4"
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 0 error results
+
+fix: compare the outputs above, then run call-action again with the id page.importSource and the same input

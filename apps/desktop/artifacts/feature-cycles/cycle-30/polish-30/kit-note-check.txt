@@ -1,0 +1,14 @@
+finds [
+  'label:Label@6 dropped=text-sm kept=field-label',
+  'label:Label@8 dropped= kept=field-label',
+  'table:Table@11 dropped=w-full kept=grid'
+]
+lines - 2 labels are hand-styled (index.html:6, index.html:8). Use the Label recipe: `flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50`. Add these classes and data-slot="label" to each one and keep the page CSS for the look, so Move to app maps it to Label.
+- 1 table is hand-styled (index.html:11). Use the Table recipe: `w-full caption-bottom text-sm`. Add these classes and data-slot="table" to each one and keep the page CSS for the look, so Move to app maps it to Table.
+after lines 0
+--- note both
+Studio check: the agent skipped the mobile screenshot and review_frame after its last edit, so the studio ran them (desktop and 390 px); pass 1: 2 finding(s) on changed lines, a fix loop ran; pass 2: 0 finding(s) on changed lines, no fix loop; 3 controls did not use the app kit, 0 after the fix loop.
+--- note kit only, no loop
+Studio check: 3 controls did not use the app kit; no fix loop ran.
+--- note review only
+Studio check: the agent skipped the mobile screenshot and review_frame after its last edit, so the studio ran them (desktop and 390 px); pass 1: 2 finding(s) on changed lines, a fix loop ran.

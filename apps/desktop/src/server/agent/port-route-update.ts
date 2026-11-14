@@ -9,6 +9,7 @@ import { toDecoder } from "../platform/decode/index.js";
 import { ConflictError } from "../platform/errors/index.js";
 import { listRouteFolderFiles, toStyleStackLine } from "./port-route-folder.js";
 import type { RouteFolderFile } from "./port-route-folder.js";
+import { RULE_LINES } from "./port-rule-lines.js";
 
 interface RouteUpdateInput {
   readonly source: {
@@ -82,17 +83,6 @@ const REACT_HOOKS: ReadonlySet<string> = new Set([
   "useSyncExternalStore",
   "useTransition",
 ]);
-
-const RULE_LINES = [
-  "The route file exists in the app. Update it in place. Do not make a new route.",
-  "Keep every data read: server component await calls, tRPC or fetch calls, params and searchParams use, loaders.",
-  "Keep the exports Next needs: default, generateMetadata, dynamic, revalidate. Keep the imports that the kept code uses.",
-  "Replace the markup and the classes with the prototype design. Map them to the app tokens and kit as the port plan says.",
-  "Also restyle the components that the route imports from its own folder. Keep their data reads (hooks, queries) and exports.",
-  "Bind the design to the route's own data. The prototype rows are sample data: do not write a sample row into the app.",
-  "Change the route files only with the Edit or Write tool. Do not change them with Bash: sed -i fails on macOS.",
-  "First, before any other route write, call the tool mcp__studio__apply_port with only routePath (load it with ToolSearch). It writes the measured prototype values (spacing, size, gap) into the route files. Then make the other changes with Edit.",
-];
 
 const RouteFileSchema = Schema.Struct({ file: Schema.String });
 
@@ -289,11 +279,11 @@ const toFolderBlock = (folderFile: RouteFolderFile): string =>
     ">",
   ].join("");
 
-const toUpdateTag = (update: RouteUpdate): string => {
+const toUpdateTag = (update: RouteUpdate, rules: readonly string[]): string => {
   const diff = toDiffText(update);
 
   const body = [
-    ...RULE_LINES,
+    ...rules,
     update.layoutLine,
     update.styleStack,
     toBlock(NOW_TAG, update.now),
@@ -328,7 +318,7 @@ const toUpdatedPrompt = (
   const at = prompt.indexOf(PLAN_CLOSE);
 
   if (at === -1) {
-    return [prompt, toUpdateTag(update)].join("\n\n");
+    return [prompt, toUpdateTag(update, RULE_LINES)].join("\n\n");
   }
 
   const end = at + PLAN_CLOSE.length;
@@ -336,7 +326,7 @@ const toUpdatedPrompt = (
   return [
     prompt.slice(0, end),
     "\n\n",
-    toUpdateTag(update),
+    toUpdateTag(update, RULE_LINES),
     prompt.slice(end),
   ].join("");
 };

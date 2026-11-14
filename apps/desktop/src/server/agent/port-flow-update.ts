@@ -18,6 +18,7 @@ import {
   toUpdateTag,
 } from "./port-route-update.js";
 import type { RouteUpdate, RouteUpdateInput } from "./port-route-update.js";
+import { RULE_LINES } from "./port-rule-lines.js";
 import type { StartableInput } from "./port-start-prompt.js";
 
 interface FlowRouteBlock {
@@ -53,9 +54,11 @@ const UPDATE_TAG = "route-update";
 
 const DIFF_TAG = "route-file-diff";
 
+const RULES_HEAD = "Rules for every route-update block below:";
+
 const FLOW_UPDATE_LINES = [
   "These route files exist in the app. Update them in place. Do not make new routes for these pages.",
-  "Each route-update block below names one existing route file. Its rules apply to that file. Keep the data reads of every file.",
+  "Each route-update block below names one existing route file and holds its text, data reads and diff. Keep the data reads of every file.",
   "Link the pages with the app paths of the link map. A path with a [segment] (for example /visits/[id]) is a dynamic route: build the href from the row data, for example the visit id in place of [id].",
   "When you call apply_port or inspect_port for a dynamic route, pass a real path as routePath, for example /visits/1.",
 ];
@@ -327,9 +330,7 @@ const toTag = (name: string, isClose: boolean): string => {
 const toShortTag = (update: RouteUpdate): string => {
   const diff = toDiffText(update).slice(0, DIFF_TEXT_MAX);
 
-  const lines = [
-    "The route file exists in the app. Update it in place. Do not make a new route. Its text is not in this prompt: read the file first.",
-  ];
+  const lines = ["Its text is not in this prompt: read the file first."];
 
   if (diff !== "") {
     lines.push(
@@ -359,7 +360,7 @@ const listFlowRouteBlocks = async (
     const page = flow.pages[index] ?? null;
 
     if (update !== null && page !== null) {
-      let text = toUpdateTag(update);
+      let text = toUpdateTag(update, []);
 
       if (blocks.length >= FULL_UPDATES_MAX) {
         text = toShortTag(update);
@@ -379,7 +380,12 @@ const toFlowUpdateLead = (blocks: readonly FlowRouteBlock[]): string => {
 
   const files = blocks.map((block) => `\`${block.file}\``).join(", ");
 
-  return [`Existing route files: ${files}.`, ...FLOW_UPDATE_LINES].join("\n");
+  return [
+    `Existing route files: ${files}.`,
+    ...FLOW_UPDATE_LINES,
+    RULES_HEAD,
+    ...RULE_LINES,
+  ].join("\n");
 };
 
 export {

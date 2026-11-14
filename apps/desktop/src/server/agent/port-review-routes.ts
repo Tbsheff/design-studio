@@ -46,12 +46,15 @@ interface RoutePassNote {
   readonly route: string;
 }
 
+type LoopStop = "flat" | "loops" | "quit" | "time";
+
 interface RoutesState {
   readonly best: readonly RouteCheck[];
   readonly first: readonly RouteCheck[];
   readonly isUndone: boolean;
   readonly loops: number;
   readonly passes: readonly RoutePassNote[];
+  readonly stop: LoopStop | null;
 }
 
 interface RoutesStep {
@@ -64,6 +67,7 @@ interface RoutesLoop {
   readonly best: readonly RouteCheck[];
   readonly isUndone: boolean;
   readonly loops: number;
+  readonly stop: LoopStop | null;
 }
 
 interface RoutesSnapshotted {
@@ -77,6 +81,52 @@ const SECOND_LOOP_MS = 60_000;
 
 const IMAGES_MAX = 4;
 
+const ROUTES_AT_ONCE = 3;
+
+const STOP_TEXTS: Readonly<Record<LoopStop, string>> = {
+  flat: "stopped because the fix loop did not raise the scores",
+  loops: `stopped after ${LOOPS_MAX} fix loops`,
+  quit: "stopped because the fix prompt did not run",
+  time: "stopped at the time limit",
+};
+
+const listLimited = async <Item, Value>(
+  items: readonly Item[],
+  limit: number,
+  task: (item: Item) => Promise<Value>
+): Promise<Value[]> => {
+  const queue = [...items.entries()];
+  const values = new Map<number, Value>();
+
+  const runLane = async (): Promise<void> => {
+    const entry = queue.shift() ?? null;
+
+    if (entry === null) {
+      return;
+    }
+
+    const [at, item] = entry;
+    values.set(at, await task(item));
+    await runLane();
+  };
+
+  const lanes = Array.from({ length: Math.min(limit, items.length) }, () =>
+    runLane()
+  );
+
+  await Promise.all(lanes);
+
+  return items.flatMap((_item, at) => {
+    const value = values.get(at) ?? null;
+
+    if (value === null) {
+      return [];
+    }
+
+    return [value];
+  });
+};
+
 const toRouteInput = (
   input: PortReviewInput,
   route: PortRouteGaps
@@ -85,22 +135,31 @@ const toRouteInput = (
   gaps: { ...input.gaps, ...route, routes: [route] },
 });
 
+const toRouteCheck = async (
+  input: PortReviewInput,
+  steps: RouteSteps
+): Promise<RouteCheck> => ({ check: await steps.inspectRoute(input), input });
+
+const toCheckedAgain = (
+  item: RouteCheck,
+  steps: RouteSteps
+): Promise<RouteCheck> => {
+  if (item.check.match.score !== null) {
+    return Promise.resolve(item);
+  }
+
+  return toRouteCheck(item.input, steps);
+};
+
 const listRouteChecks = async (
   inputs: readonly PortReviewInput[],
   steps: RouteSteps
 ): Promise<RouteCheck[]> => {
-  const head = inputs[0] ?? null;
+  const checks = await listLimited(inputs, ROUTES_AT_ONCE, (input) =>
+    toRouteCheck(input, steps)
+  );
 
-  if (head === null) {
-    return [];
-  }
-
-  const check = await steps.inspectRoute(head);
-
-  return [
-    { check, input: head },
-    ...(await listRouteChecks(inputs.slice(1), steps)),
-  ];
+  return listLimited(checks, 1, (item) => toCheckedAgain(item, steps));
 };
 
 const isAnyFixNeeded = (checks: readonly RouteCheck[]): boolean =>
@@ -161,12 +220,16 @@ const toRoutesImages = (checks: readonly RouteCheck[]): ImagePart[] =>
     .flatMap((item) => item.check.match.images)
     .slice(0, IMAGES_MAX);
 
-const isLoopOver = (step: RoutesStep): boolean => {
-  if (!isAnyFixNeeded(step.best) || step.ran >= LOOPS_MAX) {
-    return true;
+const toLoopStop = (step: RoutesStep): LoopStop | null => {
+  if (step.ran >= LOOPS_MAX) {
+    return "loops";
   }
 
-  return step.ran > 0 && Date.now() - step.startedAt > SECOND_LOOP_MS;
+  if (step.ran > 0 && Date.now() - step.startedAt > SECOND_LOOP_MS) {
+    return "time";
+  }
+
+  return null;
 };
 
 const runRoutesLoop = async (
@@ -204,20 +267,23 @@ const runRoutesLoops = async (
   steps: RouteSteps,
   step: RoutesStep
 ): Promise<RoutesLoop> => {
+  const stop = toLoopStop(step);
+
   const done: RoutesLoop = {
     best: step.best,
     isUndone: false,
     loops: step.ran,
+    stop,
   };
 
-  if (isLoopOver(step)) {
+  if (!isAnyFixNeeded(step.best) || stop !== null) {
     return done;
   }
 
   const { next, snapshot } = await runWithRouteSnapshot(input, steps, step);
 
   if (next === null) {
-    return done;
+    return { ...done, stop: "quit" };
   }
 
   if (isLowerSet(step.best, next) && snapshot !== null) {
@@ -227,7 +293,7 @@ const runRoutesLoops = async (
   }
 
   if (step.ran === 0 && !isRaisedSet(step.best, next)) {
-    return { best: next, isUndone: false, loops: 1 };
+    return { best: next, isUndone: false, loops: 1, stop: "flat" };
   }
 
   return runRoutesLoops(input, steps, {
@@ -262,20 +328,14 @@ const toPassNotes = (passed: readonly RoutePassed[]): RoutePassNote[] =>
     return [{ pass: entry.pass, route: entry.item.input.gaps.ref.routePath }];
   });
 
-const listRoutePasses = async (
+const listRoutePasses = (
   checks: readonly RouteCheck[],
   steps: RouteSteps
-): Promise<RoutePassed[]> => {
-  const item = checks[0] ?? null;
-
-  if (item === null) {
-    return [];
-  }
-
-  const pass = await toRoutePass(item, steps);
-
-  return [{ item, pass }, ...(await listRoutePasses(checks.slice(1), steps))];
-};
+): Promise<RoutePassed[]> =>
+  listLimited(checks, 1, async (item) => ({
+    item,
+    pass: await toRoutePass(item, steps),
+  }));
 
 const runRoutePasses = async (
   checks: readonly RouteCheck[],
@@ -345,6 +405,10 @@ const toRoutesNote = (state: RoutesState): string => {
     parts.push(toLoopsNote(state));
   }
 
+  if (state.stop !== null && isAnyFixNeeded(state.best)) {
+    parts.push(STOP_TEXTS[state.stop]);
+  }
+
   if (parts.length === 0) {
     return head;
   }
@@ -397,6 +461,7 @@ const runRoutesReview = async (
       isUndone: false,
       loops: 0,
       passes: [],
+      stop: null,
     });
   }
 

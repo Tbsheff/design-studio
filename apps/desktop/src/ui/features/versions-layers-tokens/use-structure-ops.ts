@@ -25,7 +25,9 @@ const useStructureOps = (input: StructureOpsInput): StructureOps => {
   const { applyStructure, context, deps } = input;
   const { liveRef, notify } = context;
   const cutPaste = useCutPaste(input);
-  const { canPaste, copySelection, cutSelection, pasteInto } = cutPaste;
+
+  const { canPaste, copySelection, cutSelection, pasteInto, pasteReplace } =
+    cutPaste;
 
   const structureKey = useCallback(
     (key: StructureKey): void => {
@@ -47,6 +49,12 @@ const useStructureOps = (input: StructureOpsInput): StructureOps => {
         return;
       }
 
+      if (key === "paste-replace") {
+        pasteReplace();
+
+        return;
+      }
+
       const targets = deps.selectionTargets(liveRef.current.selection);
 
       if (targets) {
@@ -63,6 +71,7 @@ const useStructureOps = (input: StructureOpsInput): StructureOps => {
       liveRef,
       notify,
       pasteInto,
+      pasteReplace,
     ]
   );
 

@@ -2130,14 +2130,11 @@ export interface StructureEditResult {
 }
 
 export type StructureKey =
-  | "delete"
-  | "duplicate"
-  | "wrap"
-  | "unwrap"
+  | Exclude<StructureOp, "move" | "clear">
   | "cut"
   | "copy"
   | "paste"
-  | "group";
+  | "paste-replace";
 
 export interface EditHistoryState {
   canUndo: boolean;

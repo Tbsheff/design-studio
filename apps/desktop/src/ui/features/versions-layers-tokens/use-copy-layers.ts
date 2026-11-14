@@ -98,4 +98,4 @@ const useCopyLayers = (input: CopyLayersInput): (() => void) => {
 
 export { useCopyLayers };
 
-export type { SetWaiting };
+export type { CopyLayersInput, SetWaiting };

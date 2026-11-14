@@ -9,7 +9,7 @@ import {
 import type { MutableRefObject } from "react";
 
 import { copy } from "./copy.js";
-import { api, insertError } from "./deps.js";
+import { api, insertError, useEditVariant } from "./deps.js";
 import type { FillInfo, PreviewPort, SelectionContext } from "./deps.js";
 import {
   bodyOf,
@@ -117,7 +117,8 @@ const useFill = (ids: FillIds, scope: FillScope): FillView => {
   const { fallback, port, target } = scope;
   const { selector } = target;
   const [round, setRound] = useState(0);
-  const loaded = useFillInfo(ids, target.source, round);
+  const variant = useEditVariant();
+  const loaded = useFillInfo(ids, target.source, round, variant);
   const [edited, setEdited] = useState<Edited | null>(null);
   const [own, setOwn] = useState<FillNote | null>(null);
   const [pending, startTransition] = useTransition();
@@ -156,6 +157,7 @@ const useFill = (ids: FillIds, scope: FillScope): FillView => {
         await api.setFill(ids.projectId, ids.directionId, {
           fill: bodyOf(draft),
           target: { selector: target.selector, source: loc, tag: target.tag },
+          variant,
         });
         setOwn({ kind: "ok", text: copy.applied });
         setRound((count) => count + 1);
@@ -163,7 +165,7 @@ const useFill = (ids: FillIds, scope: FillScope): FillView => {
         setOwn({ kind: "error", text: insertError(error) });
       }
     });
-  }, [draft, ids, target]);
+  }, [draft, ids, target, variant]);
 
   const { loading } = loaded;
   const note = noteOf(own, loaded.error);

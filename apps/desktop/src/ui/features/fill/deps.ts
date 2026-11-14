@@ -10,6 +10,8 @@ export { ColorField } from "../inspector/inspector-fields.js";
 
 export type { DirectEdit } from "../inspector/use-direct-edit.js";
 
+export { useEditVariant } from "../inspector/index.js";
+
 export type { SelectionContext } from "@design-studio/contracts";
 
 export {

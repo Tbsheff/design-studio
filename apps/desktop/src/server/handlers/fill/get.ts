@@ -14,6 +14,7 @@ const handle = Effect.fn("fill.get")(function* run(input: GetFillInput) {
     directionId: input.directionId,
     projectId: input.projectId,
     source: { col: input.col, file: input.file, line: input.line },
+    variant: input.variant,
   });
 
   return {

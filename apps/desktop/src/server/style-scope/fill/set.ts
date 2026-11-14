@@ -1,9 +1,13 @@
 import { planClasses } from "./classes.js";
-import type { ClassChanges } from "./classes.js";
+import type { ClassChanges, FillPaintPlan } from "./classes.js";
 import { commitAll, guardEdit } from "./commit.js";
 import type { FillEditScope } from "./commit.js";
 import { gradientCss } from "./css.js";
-import { parseDirectEditRequest, planDirectEdit } from "./deps.js";
+import {
+  normalizeVariant,
+  parseDirectEditRequest,
+  planDirectEdit,
+} from "./deps.js";
 import type {
   DirectEditDeps,
   DirectEditRequest,
@@ -28,6 +32,7 @@ interface FillTarget {
 interface FillSetRequest {
   input: FillInput;
   target: FillTarget;
+  variant: string;
 }
 
 interface FillSetPlan {
@@ -76,26 +81,39 @@ const toStyleOf = (fill: FillSpec, blend: FillBlend | null): FillStyle => {
 
 const toClassesOf = (
   site: FillSite,
-  fill: FillSpec,
-  blend: FillBlend | null
+  paint: FillPaintPlan
 ): ClassChanges | null => {
   if (site.mode !== "classes" || !site.theme) {
     return null;
   }
 
-  return planClasses(site.classes, fill, blend, site.theme);
+  return planClasses(site.classes, paint, site.theme);
+};
+
+const toVariantOf = (raw: string): string => {
+  const variant = normalizeVariant(raw);
+
+  if (variant === null) {
+    throw new FillError(
+      `The variant ${raw} is not a known state or breakpoint. Use a prefix such as hover:, md: or data-[state=open]:.`
+    );
+  }
+
+  return variant;
 };
 
 const toEditRequest = (
   target: FillTarget,
   classes: ClassChanges | null,
-  fill: FillSpec,
-  blend: FillBlend | null
+  paint: FillPaintPlan
 ): DirectEditRequest => {
+  const { blend, fill, variant } = paint;
+
   const base = {
     selector: target.selector ?? "",
     source: target.source,
     tag: target.tag,
+    variant,
   };
 
   if (classes) {
@@ -113,12 +131,23 @@ const toKindText = (fill: FillSpec): string => {
   return `${fill.type} gradient`;
 };
 
-const toTitleOf = (fill: FillSpec, blend: FillBlend | null): string => {
-  if (blend) {
-    return `Fill: ${toKindText(fill)}, ${blend.mode} blend`;
+const toVariantText = (variant: string): string => {
+  if (variant === "") {
+    return "";
   }
 
-  return `Fill: ${toKindText(fill)}`;
+  return ` (${variant.slice(0, -1)})`;
+};
+
+const toTitleOf = (paint: FillPaintPlan): string => {
+  const { blend, fill, variant } = paint;
+  const head = `Fill${toVariantText(variant)}: ${toKindText(fill)}`;
+
+  if (blend) {
+    return `${head}, ${blend.mode} blend`;
+  }
+
+  return head;
 };
 
 const toUnchanged = (classes: ClassChanges | null): boolean =>
@@ -140,7 +169,8 @@ const toPlanFillSet = async (
     request.input
   );
 
-  const classes = toClassesOf(site, fill, blend);
+  const paint = { blend, fill, variant: toVariantOf(request.variant) };
+  const classes = toClassesOf(site, paint);
 
   if (toUnchanged(classes)) {
     throw new FillError(SAME);
@@ -148,7 +178,7 @@ const toPlanFillSet = async (
 
   const planned = await planDirectEdit(
     scope.workTree,
-    toEditRequest(request.target, classes, fill, blend),
+    toEditRequest(request.target, classes, paint),
     null,
     { projectKind: scope.project.kind }
   );
@@ -162,7 +192,7 @@ const toPlanFillSet = async (
     classes,
     fill,
     mode: site.mode,
-    title: toTitleOf(fill, blend),
+    title: toTitleOf(paint),
     written: [
       {
         code: planned.patch.code,

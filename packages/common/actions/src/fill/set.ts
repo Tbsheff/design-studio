@@ -9,6 +9,7 @@ import {
   FillChangeSchema,
   FillInputSchema,
   FillTargetFields,
+  FillVariantSchema,
 } from "./schema.js";
 
 const setFill = defineAction({
@@ -22,7 +23,7 @@ const setFill = defineAction({
   },
   confirm: "none",
   description:
-    "Set the fill of one element. type solid takes color or token. type linear takes angle and 2 to 6 stops. type radial takes form, at and 2 to 6 stops. Each stop is color or token with a position in percent. Optional blendMode with blendProperty. In Tailwind it writes bg-linear or bg-radial classes with from, via and to classes. Otherwise it writes background-image with a gradient. Saves one version.",
+    "Set the fill of one element. type solid takes color or token. type linear takes angle and 2 to 6 stops. type radial takes form, at and 2 to 6 stops. Each stop is color or token with a position in percent. Optional blendMode with blendProperty. In Tailwind it writes bg-linear or bg-radial classes with from, via and to classes. Otherwise it writes background-image with a gradient. variant is a state or breakpoint prefix such as hover:, md:hover: or data-[state=open]:, and the default is the base style. Saves one version.",
   errors: [BadRequest, Conflict, NotFound],
   http: {
     method: "POST",
@@ -33,6 +34,7 @@ const setFill = defineAction({
     ...FillTargetFields,
     fill: FillInputSchema,
     target: ElementTargetSchema,
+    variant: FillVariantSchema,
   }),
   invalidates: ["fill.get"],
   mcp: { name: "set_fill" },

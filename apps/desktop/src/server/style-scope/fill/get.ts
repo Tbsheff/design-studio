@@ -1,4 +1,4 @@
-import { isBackgroundClass } from "./classes.js";
+import { isBackgroundUtility, isSameVariant } from "./classes.js";
 import { paintFromCss, parseGradient } from "./css.js";
 import { BLEND_MODES, classify, classProps, parseClass } from "./deps.js";
 import type {
@@ -136,23 +136,52 @@ const toClassFill = (site: FillSite, theme: TailwindTheme): FillSpec | null => {
   return { paint: paintOfValue(solid.slice("bg-".length)), type: "solid" };
 };
 
-const toClassInfo = (site: FillSite, theme: TailwindTheme): FillInfo => ({
-  blend: blendOf(site.classes),
-  classes: site.classes.filter((token) => isBackgroundClass(token, theme)),
-  css: null,
-  file: site.relative,
-  fill: toClassFill(site, theme),
-  mode: "classes",
-});
+const toVariantSite = (site: FillSite, variant: string): FillSite => {
+  if (variant === "") {
+    return site;
+  }
+
+  const classes = site.classes.flatMap((token) => {
+    const parsed = parseClass(token);
+
+    if (!isSameVariant(parsed.variants, variant)) {
+      return [];
+    }
+
+    return [token.slice(parsed.variants.length)];
+  });
+
+  return { ...site, classes };
+};
+
+const toClassInfo = (
+  site: FillSite,
+  theme: TailwindTheme,
+  variant: string
+): FillInfo => {
+  const scoped = toVariantSite(site, variant);
+
+  return {
+    blend: blendOf(scoped.classes),
+    classes: site.classes.filter((token) =>
+      isBackgroundUtility(token, theme, variant)
+    ),
+    css: null,
+    file: site.relative,
+    fill: toClassFill(scoped, theme),
+    mode: "classes",
+  };
+};
 
 const inspectFill = async (
   scope: FillScope,
-  loc: SourceLoc
+  loc: SourceLoc,
+  variant: string
 ): Promise<FillInfo> => {
   const site = await loadFillSite(scope, loc);
 
   if (site.mode === "classes" && site.theme) {
-    return toClassInfo(site, site.theme);
+    return toClassInfo(site, site.theme, variant);
   }
 
   const found = toCssFill(site.tag);

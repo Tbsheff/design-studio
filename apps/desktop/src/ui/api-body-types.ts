@@ -62,6 +62,7 @@ interface FillInputBody {
 interface FillSetBody {
   fill: FillInputBody;
   target: TextStyleTargetBody;
+  variant: string;
 }
 
 interface SpacingStep {

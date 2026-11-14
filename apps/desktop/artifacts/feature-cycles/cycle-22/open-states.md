@@ -37,3 +37,21 @@ Branch `feat/open-states`. No new action.
 - `artifacts/mcp-snapshots` is not changed. The input enum and description diffs for `set_state_style`, `list_state_styles` and `set_forced_state` wait for approval at merge.
 - `pnpm run check:scripts` fails: check-actions has 558 hits (baseline 410). No hit is in a file that this pick changes. Not checked on main.
 - The `.claude/goal` roadmap is not in the worktree, so no Appendix A glob was added.
+
+## State fill fix
+
+Branch `fix/state-fill`. Fixes the Fill Apply bug in "Left out".
+
+- Changed: `fill.set` and `fill.get` take `variant` (default `""`, the base style), as `DirectEditRequest.variant` does. Tool names stay `set_fill` and `get_fill`. The Fill section sends the picked prefix from `useEditVariant`.
+- Tailwind: every fill class (solid, gradient head, stops, blend) gets the prefix. Apply removes only fill classes with the same prefix, so the base `bg-*` stays.
+- CSS pages: the variant goes to the direct edit style path, which writes a `.sv-xxxxxx:hover` or `[data-state="open"]` rule.
+- UI (mock agent, Tailwind page, dark and light): Hover wrote `hover:bg-[#2563eb]`, Cmd+Z removed it, Open wrote `data-[state=open]:bg-[#e2e8f0]`. Base `bg-white` did not change. The Fill field shows the state fill after Apply. Shots in `state-fill/`.
+- MCP `set_fill`: Tailwind `hover:` wrote `hover:bg-[#0f172a]`. CSS `hover:` and `data-[state=open]:` wrote state rules, and `.trigger` kept `background: white` (`mcp-css.txt`, `mcp-tw.txt`).
+- `call-action.ts fill.set` with `md:data-[state=open]:` and a linear gradient wrote `md:data-[state=open]:bg-linear-90` with prefixed `from` and `to` stops. MCP and the agent answered "already has this fill" because the action is not idempotent.
+- MCP `set_fill` on the CSS page with a linear gradient and `hover:` wrote `.sv-xxxxxx:hover { background-image: linear-gradient(...) }` (`mcp-css-gradient.txt`).
+- `call-action.ts fill.get` with `hover:`: pass, 3 surfaces, 0 diffs (`call-action-get-hover.txt`).
+- `pnpm run typecheck`, `pnpm run typecheck:tsrs`, `pnpm run lint:gate` and `pnpm run build:ui` pass.
+- Audit of other inspector writers:
+  - Take state: direct edit fields (text color and the rest), grid, motion, stacking, fill.
+  - Ignore state: Effect (shadow, blur) writes stylesheet effect classes. Layer style apply and text style apply write a saved style to the base. The Border Inside/Outside switch (`use-stroke-position.ts`) builds its class request with variant `""`. Each needs prefixed explicit classes, not a one-field change, so each is left for a later pick.
+- Left out: `fill.get` on a CSS page reads only the base fill, not the state rule. The `set_fill` and `get_fill` input diffs in `artifacts/mcp-snapshots` wait for approval at merge.

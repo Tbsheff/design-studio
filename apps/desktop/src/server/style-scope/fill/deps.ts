@@ -21,6 +21,8 @@ export {
 
 export { COLOR_SNAP_DELTA, matchColor } from "../../../shared/token-match.js";
 
+export { normalizeVariant } from "../../../shared/variants.js";
+
 export {
   BLEND_MODES,
   BLEND_PROPERTIES,

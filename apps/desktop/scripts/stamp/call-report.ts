@@ -109,6 +109,47 @@ const canonical = (value: Json): Json => {
 const pretty = (value: Json): string =>
   JSON.stringify(canonical(value), null, 2);
 
+const PER_CALL = "(per call)";
+
+const VERSION_ID = /^(?:pending-[0-9a-f]+|[0-9a-f]{40})$/u;
+
+const VERSION_TIME = /\b\d{1,2}:\d{2}(?::\d{2})?\b|\d{4}-\d{2}-\d{2}T\d{2}/u;
+
+const PER_CALL_FIELDS = new Map([
+  ["title", VERSION_TIME],
+  ["versionId", VERSION_ID],
+]);
+
+const isPerCall = (key: string, value: Json): boolean => {
+  const pattern = PER_CALL_FIELDS.get(key) ?? null;
+
+  if (pattern === null || value === null || value instanceof Object) {
+    return false;
+  }
+
+  return pattern.test(String(value));
+};
+
+const toComparable = (value: Json): Json => {
+  if (Array.isArray(value)) {
+    return value.map((entry: Json) => toComparable(entry));
+  }
+
+  if (isObject(value)) {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, entry]) => {
+        if (isPerCall(key, entry)) {
+          return [key, PER_CALL];
+        }
+
+        return [key, toComparable(entry)];
+      })
+    );
+  }
+
+  return value;
+};
+
 const lineDiff = (left: string, right: string): string[] => {
   const before = left.split("\n");
   const after = right.split("\n");
@@ -143,7 +184,10 @@ const formatResult = (result: SurfaceResult): string => {
 };
 
 const diffPair = (first: Outcome, other: Outcome): string | null => {
-  const lines = lineDiff(pretty(first.output), pretty(other.output));
+  const lines = lineDiff(
+    pretty(toComparable(first.output)),
+    pretty(toComparable(other.output))
+  );
 
   if (lines.length === 0 && first.isError === other.isError) {
     return null;

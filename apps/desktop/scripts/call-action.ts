@@ -8,6 +8,8 @@ import {
   isOutcome,
   startApprover,
 } from "./stamp/call-report.js";
+import { getUndoCount, runReset, toResetTarget } from "./stamp/call-reset.js";
+import type { ResetTarget } from "./stamp/call-reset.js";
 import { isObject, parseText } from "./stamp/call-types.js";
 import type {
   CallableAction,
@@ -141,29 +143,115 @@ const safely = async (
   }
 };
 
-const callSurfaces = async (context: Context): Promise<SurfaceResult[]> => {
-  const http = await safely("http", () => callHttp(context));
-  const mcp = await safely("mcp", () => callMcp(context));
-  const agent = await safely("agent", () => callAgent(context));
+interface SurfaceRun {
+  readonly results: SurfaceResult[];
+  readonly resets: string[];
+  readonly isResetFailed: boolean;
+}
 
-  return [http, mcp, agent];
+interface SurfaceStep {
+  readonly call: (context: Context) => Promise<SurfaceResult>;
+  readonly surface: Surface;
+}
+
+const SURFACE_STEPS: readonly SurfaceStep[] = [
+  { call: callHttp, surface: "http" },
+  { call: callMcp, surface: "mcp" },
+  { call: callAgent, surface: "agent" },
+];
+
+const RESET_SKIP = "the reset after an earlier surface failed";
+
+interface ResetPoint {
+  readonly start: number;
+  readonly target: ResetTarget;
+}
+
+const runResetAfter = async (
+  context: Context,
+  reset: ResetPoint | null,
+  surface: Surface
+): Promise<{ readonly isFailed: boolean; readonly lines: string[] }> => {
+  if (reset === null) {
+    return { isFailed: false, lines: [] };
+  }
+
+  const after = await runReset(context, reset.target, reset.start);
+
+  return { isFailed: after.isFailed, lines: [`[${surface}] ${after.line}`] };
 };
+
+const runWithReset = async (
+  context: Context,
+  steps: readonly SurfaceStep[],
+  reset: ResetPoint | null,
+  done: SurfaceRun
+): Promise<SurfaceRun> => {
+  const [step, ...rest] = steps;
+
+  if (!step) {
+    return done;
+  }
+
+  if (done.isResetFailed) {
+    const skipped: SurfaceResult = {
+      reason: RESET_SKIP,
+      surface: step.surface,
+    };
+
+    return runWithReset(context, rest, reset, {
+      ...done,
+      results: [...done.results, skipped],
+    });
+  }
+
+  const result = await safely(step.surface, () => step.call(context));
+  const after = await runResetAfter(context, reset, step.surface);
+
+  return runWithReset(context, rest, reset, {
+    isResetFailed: after.isFailed,
+    resets: [...done.resets, ...after.lines],
+    results: [...done.results, result],
+  });
+};
+
+const toResetPoint = async (context: Context): Promise<ResetPoint | null> => {
+  const target = toResetTarget(context);
+
+  if (target === null) {
+    return null;
+  }
+
+  const start = await getUndoCount(context, target);
+
+  return { start, target };
+};
+
+const callSurfaces = async (context: Context): Promise<SurfaceRun> =>
+  runWithReset(context, SURFACE_STEPS, await toResetPoint(context), {
+    isResetFailed: false,
+    resets: [],
+    results: [],
+  });
 
 const report = (
   context: Context,
-  results: readonly SurfaceResult[],
+  run: SurfaceRun,
   answered: readonly string[]
 ): boolean => {
+  const { results } = run;
   const failed = results.filter((result) => "error" in result).length;
   const outcomes = results.filter((result) => isOutcome(result));
   const errors = outcomes.filter((outcome) => outcome.isError).length;
   const diffs = diffOutcomes(outcomes);
-  const isFailed = diffs.length + failed + errors > 0 || outcomes.length === 0;
+  const isBroken = diffs.length + failed + errors > 0;
+  const isFailed = isBroken || outcomes.length === 0 || run.isResetFailed;
   const verdict = (isFailed && "fail") || "pass";
 
   const lines = [
     ...results.map((result) => formatResult(result)),
     ...diffs,
+    ...run.resets,
     `answered approval cards: ${answered.join(", ") || "none"}`,
     `call-action: ${verdict}, ${outcomes.length} surfaces ran, ${diffs.length} diffs, ${failed} failed surfaces, ${errors} error results`,
   ];
@@ -192,11 +280,11 @@ const main = async (): Promise<void> => {
     `call-action ${action.id} on ${base}. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.\n\n`
   );
 
-  const results = await callSurfaces(context);
+  const run = await callSurfaces(context);
 
   await approver.stop();
 
-  const isFailed = report(context, results, approver.answered);
+  const isFailed = report(context, run, approver.answered);
 
   process.exitCode = Number(isFailed);
 };

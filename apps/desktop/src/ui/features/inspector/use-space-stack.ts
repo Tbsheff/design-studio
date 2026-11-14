@@ -33,10 +33,14 @@ const toLayoutStack = (
     return null;
   }
 
-  return toSpaceStack(toTailwindClasses(classes), {
-    x: styles?.["stack-gap-x"] ?? null,
-    y: styles?.["stack-gap-y"] ?? null,
-  });
+  return toSpaceStack(
+    toTailwindClasses(classes),
+    classes?.variants?.set ?? [],
+    {
+      x: styles?.["stack-gap-x"] ?? null,
+      y: styles?.["stack-gap-y"] ?? null,
+    }
+  );
 };
 
 const toStackEdit = (

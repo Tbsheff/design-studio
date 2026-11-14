@@ -340,6 +340,27 @@ interface RunScope {
   readonly projectId: string;
 }
 
+const TARGET_SCOPED_ACTIONS: ReadonlySet<string> = new Set(["port.inspect"]);
+
+const toScopeEntries = (
+  action: AnyAction,
+  scope: RunScope
+): readonly (readonly [string, string])[] => {
+  if (TARGET_SCOPED_ACTIONS.has(action.id)) {
+    return [["targetProjectId", scope.projectId]];
+  }
+
+  const fields = new Set(Object.keys(action.input.fields));
+
+  return SCOPE_KEYS.flatMap((key) => {
+    if (!fields.has(key)) {
+      return [];
+    }
+
+    return [[key, scope[key]] as const];
+  });
+};
+
 const toScopedArgs = (
   action: AnyAction,
   args: WireArgs,
@@ -349,17 +370,7 @@ const toScopedArgs = (
     return args;
   }
 
-  const fields = new Set(Object.keys(action.input.fields));
-
-  const scoped = SCOPE_KEYS.flatMap((key) => {
-    if (!fields.has(key)) {
-      return [];
-    }
-
-    return [[key, scope[key]]];
-  });
-
-  return { ...args, ...Object.fromEntries(scoped) };
+  return { ...args, ...Object.fromEntries(toScopeEntries(action, scope)) };
 };
 
 const actionCaller = (

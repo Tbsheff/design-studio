@@ -101,6 +101,7 @@ function refreshed(
 
 export class PeekPages {
   private readonly pages = new Map<string, WarmPage>();
+  private readonly entering: string[] = [];
   private dirtyAt = 0;
   private codeAt = 0;
   private coldDirtyAt = 0;
@@ -196,13 +197,14 @@ export class PeekPages {
   ): Promise<T> {
     const key = keyOf(url, viewport);
     for (let attempt = 0; ; attempt += 1) {
+      this.entering.push(key);
       const warm = await this.enter(
         key,
         url,
         viewport,
         exclusive,
         layoutOnly && attempt === 0
-      );
+      ).finally(() => this.entering.splice(this.entering.indexOf(key), 1));
       const leave = this.occupy(warm, exclusive);
       try {
         return exclusive ? await this.alone(warm, task) : await task(warm.page);
@@ -230,8 +232,9 @@ export class PeekPages {
         warm.lock = null;
         release();
       }
-      if (warm.busy === 0)
-        for (const waiter of warm.drained.splice(0)) waiter();
+      if (warm.busy > 0) return;
+      for (const waiter of warm.drained.splice(0)) waiter();
+      this.sweep();
     };
   }
 
@@ -461,10 +464,12 @@ export class PeekPages {
     const byUse = [...this.pages.entries()].sort(
       (a, b) => b[1].usedAt - a[1].usedAt
     );
+    const entering = new Set(this.entering);
     byUse.forEach(([key, warm], index) => {
       if (
-        index >= MAX_PAGES ||
-        (warm.busy === 0 && now - warm.usedAt > IDLE_MS)
+        warm.busy === 0 &&
+        !entering.has(key) &&
+        (index >= MAX_PAGES || now - warm.usedAt > IDLE_MS)
       )
         this.drop(key);
     });

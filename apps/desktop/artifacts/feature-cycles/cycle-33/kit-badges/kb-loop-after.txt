@@ -1,0 +1,3 @@
+- 1 button is hand-styled (index.html:18). Use the Button recipe: `inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50` (variant default). Add these classes and data-slot="button" to each one and keep the page CSS for the look, so Move to app maps it to Button. 
+
+note: 1 controls did not use the app kit; a fix loop ran

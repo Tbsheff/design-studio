@@ -386,4 +386,22 @@ const strokePositionCopy = {
   widthLabel: "Stroke width",
 };
 
-export { borderSideCopy, copy, spaceStackCopy, strokePositionCopy };
+const dividerCopy = {
+  color: "Color",
+  colorLabel: "Line color",
+  colorPlaceholder: "border",
+  editInCode: "Edit in code",
+  linesBetween: "Lines between",
+  reverseTip:
+    "This stack uses divide-y-reverse or divide-x-reverse. Edit it in code",
+  width: "Width",
+  widthLabel: "Line width",
+};
+
+export {
+  borderSideCopy,
+  copy,
+  dividerCopy,
+  spaceStackCopy,
+  strokePositionCopy,
+};

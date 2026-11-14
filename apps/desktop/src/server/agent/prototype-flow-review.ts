@@ -93,7 +93,11 @@ const listFlowGaps = async (
   ctx: FlowContext
 ): Promise<readonly PageFlowGap[]> => {
   try {
-    const flow = await inspectFlowPages(ctx.direction.workTree, null);
+    const flow = await inspectFlowPages(
+      ctx.direction.workTree,
+      null,
+      ctx.project.entry
+    );
 
     return flow.gaps;
   } catch {

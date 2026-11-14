@@ -10,8 +10,6 @@ import { toFlowGaps } from "./engine/to-flow-gaps.js";
 import type { FlowPage } from "./engine/to-flow-gaps.js";
 import { toFlowLinks } from "./engine/to-flow-links.js";
 
-const START_PAGE = "index.html";
-
 const HTML_PAGE = /\.html?$/iu;
 
 const NOT_HTML =
@@ -76,8 +74,11 @@ const toRootPage = (pages: readonly FlowPage[]): FlowPage | null => {
   return pages.find((page) => !linked.has(page.file)) ?? pages.at(0) ?? null;
 };
 
-const toStartPage = async (workTree: string): Promise<FlowPage | null> => {
-  const index = await toFlowPage(workTree, START_PAGE);
+const toStartPage = async (
+  workTree: string,
+  start: string
+): Promise<FlowPage | null> => {
+  const index = await toFlowPage(workTree, start);
 
   if (index !== null) {
     return index;
@@ -98,16 +99,21 @@ const toStartPage = async (workTree: string): Promise<FlowPage | null> => {
 
 const toFirstPage = async (
   workTree: string,
-  entry: string | null
+  entry: string | null,
+  start: string
 ): Promise<FlowPage> => {
-  let first = await toStartPage(workTree);
+  let first: FlowPage | null = null;
 
   if (entry !== null) {
     first = await toFlowPage(workTree, entry);
   }
 
+  if (entry === null) {
+    first = await toStartPage(workTree, start);
+  }
+
   if (first === null) {
-    throw new NotFoundError(toEntryMissing(entry ?? START_PAGE));
+    throw new NotFoundError(toEntryMissing(entry ?? start));
   }
 
   return first;
@@ -115,9 +121,10 @@ const toFirstPage = async (
 
 const inspectFlowPages = async (
   workTree: string,
-  entry: string | null
+  entry: string | null,
+  start: string
 ): Promise<PageFlow> => {
-  const first = await toFirstPage(workTree, entry);
+  const first = await toFirstPage(workTree, entry, start);
   const pages = await listFlowPages(workTree, [first], [first]);
 
   return {
@@ -134,7 +141,11 @@ const inspectDirectionFlow = async (
     throw new BadRequestError(NOT_HTML);
   }
 
-  return await inspectFlowPages(run.direction.workTree, entry);
+  return await inspectFlowPages(
+    run.direction.workTree,
+    entry,
+    run.project.entry
+  );
 };
 
 export { inspectDirectionFlow, inspectFlowPages };

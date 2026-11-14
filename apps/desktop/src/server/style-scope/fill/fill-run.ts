@@ -16,6 +16,7 @@ import type { FillInput } from "./spec.js";
 
 interface GetFillCommand extends DirectionIds {
   readonly source: SourceLoc;
+  readonly variant: string;
 }
 
 interface SetFillCommand extends DirectionIds {
@@ -58,7 +59,8 @@ const runFillGet = (
     ({ direction, project }) =>
       inspectFill(
         { direction, project, workTree: direction.workTree },
-        command.source
+        command.source,
+        command.variant
       ),
     toFillFailure
   );

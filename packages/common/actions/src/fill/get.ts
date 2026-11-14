@@ -6,7 +6,11 @@ import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { PageFields } from "../_core/list-page.js";
-import { FillInfoSchema, FillTargetFields } from "./schema.js";
+import {
+  FillInfoSchema,
+  FillTargetFields,
+  FillVariantSchema,
+} from "./schema.js";
 
 const getFill = defineAction({
   access: "read",
@@ -18,7 +22,7 @@ const getFill = defineAction({
   },
   confirm: "none",
   description:
-    "Read the fill of one element: a solid color or a linear or radial gradient parsed into stops with token names, with any mix-blend-mode or background-blend-mode, from its Tailwind classes or its CSS. Read only. The limit caps each list in the result.",
+    "Read the fill of one element: a solid color or a linear or radial gradient parsed into stops with token names, with any mix-blend-mode or background-blend-mode, from its Tailwind classes or its CSS. Read only. variant reads the classes for one state or breakpoint prefix, such as hover: or data-[state=open]:. The limit caps each list in the result.",
   errors: [BadRequest, Conflict, NotFound],
   http: { method: "GET", path: "/api/projects/:projectId/d/:directionId/fill" },
   id: "fill.get",
@@ -26,6 +30,7 @@ const getFill = defineAction({
     ...FillTargetFields,
     ...ElementSourceFields,
     limit: PageFields.limit,
+    variant: FillVariantSchema,
   }),
   invalidates: [],
   mcp: { name: "get_fill" },

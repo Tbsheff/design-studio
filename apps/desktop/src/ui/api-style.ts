@@ -92,9 +92,10 @@ const styleApi = {
   getFill: (
     pid: string,
     did: string,
-    source: SourceLoc
+    source: SourceLoc,
+    variant: string
   ): Promise<RouteOutput<typeof fillRoutes.getFill>> =>
-    call(fillRoutes.getFill, toStyleQuery(pid, did, source)),
+    call(fillRoutes.getFill, { ...toStyleQuery(pid, did, source), variant }),
   getSpacing: (
     pid: string,
     did: string,

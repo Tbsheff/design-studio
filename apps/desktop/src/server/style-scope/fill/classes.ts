@@ -167,6 +167,9 @@ const toFillClasses = (fill: FillSpec, theme: TailwindTheme): string[] => {
 const toBlendClass = (blend: FillBlend): string =>
   `${BLEND_PREFIX[blend.property]}${blend.mode}`;
 
+const isSameVariant = (variants: string, variant: string): boolean =>
+  variants === variant || normalizeVariant(variants) === variant;
+
 const isBackgroundUtility = (
   token: string,
   theme: TailwindTheme,
@@ -244,6 +247,8 @@ export {
   toArbitrary as arbitrary,
   BLEND_PREFIX,
   isBackgroundClass,
+  isBackgroundUtility,
+  isSameVariant,
   toPlanClasses as planClasses,
 };
 

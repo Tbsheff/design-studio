@@ -117,11 +117,11 @@ const useFill = (ids: FillIds, scope: FillScope): FillView => {
   const { fallback, port, target } = scope;
   const { selector } = target;
   const [round, setRound] = useState(0);
-  const loaded = useFillInfo(ids, target.source, round);
+  const variant = useEditVariant();
+  const loaded = useFillInfo(ids, target.source, round, variant);
   const [edited, setEdited] = useState<Edited | null>(null);
   const [own, setOwn] = useState<FillNote | null>(null);
   const [pending, startTransition] = useTransition();
-  const variant = useEditVariant();
   const { info } = loaded;
 
   const base = useMemo(() => draftOf(info, fallback), [fallback, info]);

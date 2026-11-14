@@ -122,7 +122,7 @@ function needsFirstVersion(project: Project): boolean {
   return Boolean(project.app) && project.directions[0]?.headVersionId === null;
 }
 
-function ensureFirstVersion(deps: AppRouteDeps, project: Project): void {
+function ensureFirstVersion(deps: FirstVersionDeps, project: Project): void {
   if (!needsFirstVersion(project) || isFirstVersionRunning(project.id)) {
     return;
   }
@@ -193,8 +193,13 @@ export async function finishAttach(
   };
 }
 
-async function holdEditsForFirstVersion(
-  deps: AppRouteDeps,
+type FirstVersionDeps = Pick<
+  AppRouteDeps,
+  "commitInit" | "projects" | "versions"
+>;
+
+export async function holdEditsForFirstVersion(
+  deps: FirstVersionDeps,
   pid: string
 ): Promise<void> {
   const project = await deps.projects.get(pid).catch(() => null);

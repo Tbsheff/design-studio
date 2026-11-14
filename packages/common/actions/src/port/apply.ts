@@ -15,7 +15,7 @@ const applyPort = defineAction({
     name: "apply_port",
     set: "app",
     short:
-      "Write the paired prototype values from inspect_port into the app route source, as Tailwind classes or CSS, then score the route again.",
+      "Write the paired prototype values from inspect_port into the app route source, then score the route again. In a Move to app run, pass only routePath.",
   },
   confirm: "user",
   description:

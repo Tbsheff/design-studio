@@ -35,6 +35,7 @@ import {
   sourcePagePath,
 } from "./port-plan.js";
 import type { PortPlanInput } from "./port-plan.js";
+import { toStartTag } from "./port-review-snapshot.js";
 import { toRouteUpdate, toUpdatedPrompt } from "./port-route-update.js";
 
 interface PortStartDeps {
@@ -355,12 +356,13 @@ const startAssetRun = async (
   promptText: string
 ): Promise<string> => {
   const { direction, project } = input.target;
+  const startTag = await toStartTag(direction.workTree);
 
   try {
     return await deps.startRun(
       project,
       direction,
-      toPortRequest(project, promptText)
+      toPortRequest(project, `${promptText}${startTag}`)
     );
   } catch (error) {
     await deletePortAssets(assets.written);

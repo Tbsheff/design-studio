@@ -1,0 +1,8 @@
+# apply_port through the SDK MCP server in a port run (in-memory MCP client, stub CallAction)
+apply_port allowed in a port run: true
+apply_port schema keys: [ 'routePath' ] required: [ 'routePath' ]
+callTool result: [{"type":"text","text":"stub ok"}] isError: false
+stub saw: [{"id":"port.apply","args":{"routePath":"/patients"}}]
+
+# git diff-tree --relative from a subfolder app (apps/web in a scratch repo)
+app/x/page.jsx

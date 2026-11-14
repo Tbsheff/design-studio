@@ -1,3 +1,4 @@
+import { EDIT_KEYS } from "./keymap-edit.js";
 import { TOOL_KEYS } from "./keymap-tools.js";
 import { VIEW_KEYS } from "./keymap-view.js";
 
@@ -234,6 +235,7 @@ export const KEYMAP = [
     keys: ["Shift+V"],
     group: "Selection",
   },
+  ...EDIT_KEYS,
   {
     id: "layer-delete",
     label: "Delete",
@@ -372,6 +374,7 @@ const ARROWS: Record<string, string> = {
   Esc: "Escape",
   Space: " ",
 };
+const CODES: Record<string, string> = { ".": "Period", ",": "Comma" };
 const SHIFTED = new Set(["?", "@", "!", "+", "_"]);
 
 export interface KeyInput {
@@ -387,6 +390,8 @@ function keyMatches(chord: Chord, event: KeyInput): boolean {
   const want = ARROWS[chord.key] ?? chord.key;
   if (/^[A-Z]$/.test(want)) return event.code === `Key${want}`;
   if (/^[0-9]$/.test(want)) return event.code === `Digit${want}`;
+  if (want === "0-9") return /^Digit\d$/.test(event.code);
+  if (CODES[want]) return event.code === CODES[want];
   if (want === "]" || want === "[")
     return event.code === (want === "]" ? "BracketRight" : "BracketLeft");
   return event.key === want || event.key.toLowerCase() === want.toLowerCase();

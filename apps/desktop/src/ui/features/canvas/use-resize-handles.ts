@@ -13,6 +13,7 @@ import { scaleMode } from "../../platform/scale-mode.js";
 import {
   applyCommit,
   createCurrentEditRequest,
+  editVariantStore,
   startOptimistic,
 } from "../inspector/index.js";
 import {
@@ -150,7 +151,8 @@ const useResizeHandles = (options: Options): ResizeHandles => {
 
   const { label: rotateLabel, onRotateDown } = useRotateDrag(
     live,
-    rotateTargets
+    rotateTargets,
+    editVariantStore.get
   );
 
   const { box: groupBox, onGroupDown } = useGroupResize(live, rotateTargets);

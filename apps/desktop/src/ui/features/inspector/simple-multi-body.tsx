@@ -12,6 +12,7 @@ import { SelectMatchingSection } from "./select-matching-section.js";
 import type { EditorProps, MultiEdit } from "./simple-model.js";
 import { TokenNotes } from "./token-notes.js";
 import type { UseInspectorTokensResult } from "./token-scope-model.js";
+import { useEditKeys } from "./use-edit-keys.js";
 import type { Rotation } from "./use-rotation.js";
 
 interface SimpleMultiBodyProps {
@@ -35,6 +36,7 @@ const SimpleMultiBody = ({
   const { dismiss, note } = tokens.snap;
   const { reset } = edit;
   const source = useMemo(() => <span className="ins-source" />, []);
+  const keysRoot = useEditKeys(edit, false);
 
   const textStyle = useMemo(
     () =>
@@ -49,7 +51,11 @@ const SimpleMultiBody = ({
   );
 
   return (
-    <section className="inspector ins-simple" aria-label={copy.designInspector}>
+    <section
+      ref={keysRoot}
+      className="inspector ins-simple"
+      aria-label={copy.designInspector}
+    >
       <MetaRow
         tag={`${selection.length} elements`}
         source={source}

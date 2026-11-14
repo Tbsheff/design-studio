@@ -1,6 +1,7 @@
 import type { Project } from "@design-studio/contracts";
 
-import type { PreviewService } from "../../shared/server-ports.js";
+import type { PreviewService, RenderPage } from "../../shared/server-ports.js";
+import { ConflictError } from "../platform/errors/index.js";
 
 interface PageAnswer {
   readonly isDown: boolean;
@@ -27,6 +28,23 @@ const DOCUMENT_HEADERS = {
 } as const;
 
 const SLOW: PageAnswer = { isDown: false, status: 0, text: "" };
+
+const LANDED_TEXT_MAX = 4000;
+
+const LANDED_EXPRESSION = `(() => {
+  const entry = performance.getEntriesByType("navigation")[0];
+  const status = entry && typeof entry.responseStatus === "number" ? entry.responseStatus : 0;
+  const text = document.body ? document.body.innerText.slice(0, ${LANDED_TEXT_MAX}) : "";
+  return { at: performance.timeOrigin, status, text };
+})()`;
+
+interface Landed {
+  readonly at: number;
+  readonly status: number;
+  readonly text: string;
+}
+
+type PageCheck = (page: RenderPage) => Promise<void>;
 
 const toWithoutTag = (html: string, tag: string): string => {
   const lower = html.toLowerCase();
@@ -118,16 +136,12 @@ const toFailedText = (preview: PreviewService, project: Project): string => {
   return ` The dev server failed: ${status.message ?? "no message"}.`;
 };
 
-const toDevPageError = async (
+const toFailure = (
   preview: PreviewService,
   project: Project,
-  url: string
-): Promise<string | null> => {
-  if (!project.app) {
-    return null;
-  }
-
-  const answer = await toPageAnswer(url);
+  url: string,
+  answer: PageAnswer
+): string | null => {
   const route = new URL(url).pathname;
 
   if (answer.isDown) {
@@ -143,4 +157,51 @@ const toDevPageError = async (
   return `The dev server answered ${answer.status} for ${route}, so the page shows an error, not the design: ${text}.${toFailedText(preview, project)} ${HINT}`;
 };
 
-export { toDevPageError };
+const toLandedAnswer = async (
+  page: RenderPage,
+  url: string,
+  startedAt: number
+): Promise<PageAnswer> => {
+  const landed = await page.evaluate<Landed>(LANDED_EXPRESSION);
+
+  if (landed.at < startedAt || landed.status === 0) {
+    return toPageAnswer(url);
+  }
+
+  if (landed.status < SERVER_ERROR) {
+    return { isDown: false, status: landed.status, text: "" };
+  }
+
+  const words = landed.text.replaceAll(SPACES, " ").trim();
+
+  return {
+    isDown: false,
+    status: landed.status,
+    text: toWithoutEndDots(words.slice(0, TEXT_MAX).trim()),
+  };
+};
+
+const toDevPageCheck = (
+  preview: PreviewService,
+  project: Project,
+  url: string
+): PageCheck | null => {
+  if (!project.app) {
+    return null;
+  }
+
+  const startedAt = Date.now();
+
+  return async (page: RenderPage): Promise<void> => {
+    const answer = await toLandedAnswer(page, url, startedAt);
+    const failure = toFailure(preview, project, url, answer);
+
+    if (failure !== null) {
+      throw new ConflictError(failure);
+    }
+  };
+};
+
+export { toDevPageCheck };
+
+export type { PageCheck };

@@ -10,14 +10,14 @@ import {
   scopeOf,
   toProbeTarget,
 } from "../page-probe/index.js";
-import { BadRequestError, ConflictError } from "../platform/errors/index.js";
+import { BadRequestError } from "../platform/errors/index.js";
 import { withPagePath } from "../project-source/index.js";
 import type { ExportSource } from "../project-source/index.js";
 import { attemptNull, toOptional } from "./attempt-null.js";
 import { captureFrame } from "./capture.js";
 import type { Shot } from "./capture.js";
 import { toSchemedPreview } from "./color-scheme.js";
-import { toDevPageError } from "./dev-page-check.js";
+import { toDevPageCheck } from "./dev-page-check.js";
 import { pickFrame } from "./frame-shot-pick.js";
 import type { FramePick } from "./frame-shot-pick.js";
 import {
@@ -137,14 +137,15 @@ const describe = (context: ShotContext, shot: Shot): string => {
 const shoot = async (context: ShotContext, url: string): Promise<Shot> => {
   const { frame, page, preview, query } = context;
   const selectors: string[] = [];
+  const pageUrl = withPagePath(url, toOptional(page));
 
   if (query.element) {
-    const pageUrl = withPagePath(url, toOptional(page));
     const selector = await toSelector(context, pageUrl, query.element);
 
     selectors.push(selector);
   }
 
+  const check = toDevPageCheck(preview, context.src.project, pageUrl);
   let scope: "frame" | "page" = "frame";
 
   if (query.isFullPage) {
@@ -159,7 +160,8 @@ const shoot = async (context: ShotContext, url: string): Promise<Shot> => {
     scope,
     selectors.at(0),
     MAX_SHOT_HEIGHT,
-    query.padding ?? DEFAULT_PADDING
+    query.padding ?? DEFAULT_PADDING,
+    check
   );
 };
 
@@ -172,16 +174,6 @@ const openAndShoot = async (context: ShotContext): Promise<ScreenshotView> => {
       withFrameStateHost(opened.url, toOptional(pick.state)),
       pick.forced
     );
-
-    const failure = await toDevPageError(
-      context.preview,
-      src.project,
-      withPagePath(url, toOptional(context.page))
-    );
-
-    if (failure !== null) {
-      throw new ConflictError(failure);
-    }
 
     const shot = await shoot(context, url);
 

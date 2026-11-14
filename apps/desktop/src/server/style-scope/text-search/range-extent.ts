@@ -8,6 +8,16 @@ import { childNodesOf, pluginsOf } from "./scan-jsx.js";
 
 type HtmlNode = DefaultTreeAdapterMap["node"];
 
+type TagTest = (tag: string, open: string) => boolean;
+
+interface StyledQuery {
+  readonly column: number;
+  readonly end: number;
+  readonly isMatch: TagTest;
+  readonly line: number;
+  readonly start: number;
+}
+
 interface Extent {
   readonly closeEnd: number;
   readonly closeStart: number;
@@ -150,6 +160,80 @@ const toHtmlExtent = (
   return null;
 };
 
+const isAround = (extent: Extent, outer: Extent, query: StyledQuery): boolean =>
+  extent.openStart >= outer.openEnd &&
+  extent.closeEnd <= outer.closeStart &&
+  extent.openEnd <= query.start &&
+  extent.closeStart >= query.end;
+
+const toInnermost = (
+  extents: readonly Extent[],
+  source: string,
+  outer: Extent,
+  query: StyledQuery
+): Extent | null => {
+  let found: Extent | null = null;
+
+  for (const extent of extents) {
+    const open = source.slice(extent.openStart, extent.openEnd);
+
+    if (
+      isAround(extent, outer, query) &&
+      query.isMatch(extent.tag, open) &&
+      extent.openStart >= (found?.openStart ?? -1)
+    ) {
+      found = extent;
+    }
+  }
+
+  return found;
+};
+
+const toJsxExtents = (file: string, source: string): Extent[] => {
+  const program = parse(source, {
+    errorRecovery: false,
+    plugins: pluginsOf(file),
+    sourceType: "module",
+  });
+
+  const stack: AstNode[] = [program];
+  const extents: Extent[] = [];
+
+  for (let node = stack.pop(); node; node = stack.pop()) {
+    if (isJsxNode(node) && node.type === "JSXElement") {
+      const extent = toJsxExtentOf(node);
+
+      if (extent) {
+        extents.push(extent);
+      }
+    }
+
+    stack.push(...childNodesOf(node));
+  }
+
+  return extents;
+};
+
+const toHtmlExtents = (source: string): Extent[] => {
+  const stack: HtmlNode[] = [
+    parseHtml(source, { sourceCodeLocationInfo: true }),
+  ];
+
+  const extents: Extent[] = [];
+
+  for (let node = stack.pop(); node; node = stack.pop()) {
+    const extent = toHtmlExtentOf(node);
+
+    if (extent) {
+      extents.push(extent);
+    }
+
+    stack.push(...toChildrenOf(node));
+  }
+
+  return extents;
+};
+
 const toLayerExtent = (
   file: string,
   source: string,
@@ -163,6 +247,37 @@ const toLayerExtent = (
   return toJsxExtent(file, source, line, column);
 };
 
-export { HTML_FILE, toLayerExtent as layerExtent };
+const toInnerExtent = (
+  file: string,
+  source: string,
+  outer: Extent,
+  query: StyledQuery
+): Extent | null => {
+  if (HTML_FILE.test(file)) {
+    return toInnermost(toHtmlExtents(source), source, outer, query);
+  }
 
-export type { Extent };
+  return toInnermost(toJsxExtents(file, source), source, outer, query);
+};
+
+const toStyledExtent = (
+  file: string,
+  source: string,
+  query: StyledQuery
+): Extent | null => {
+  const layer = toLayerExtent(file, source, query.line, query.column);
+
+  if (layer === null) {
+    return null;
+  }
+
+  if (query.isMatch(layer.tag, source.slice(layer.openStart, layer.openEnd))) {
+    return layer;
+  }
+
+  return toInnerExtent(file, source, layer, query);
+};
+
+export { HTML_FILE, toLayerExtent as layerExtent, toStyledExtent };
+
+export type { Extent, StyledQuery };

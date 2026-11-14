@@ -36,19 +36,38 @@ const INLINE_TAGS = new Set([
 
 const BLOCKED_EVENTS = ["paste", "cut", "drop", "dragover"] as const;
 
-const isInlineTextChild = (element: Element): boolean =>
+const NEST_DEPTH_MAX = 3;
+
+const INLINE_DISPLAYS = new Set(["contents", "inline", "inline-block"]);
+
+const isBreak = (element: Element): boolean => element instanceof HTMLBRElement;
+
+const isInlineDisplay = (element: HTMLElement): boolean =>
+  INLINE_DISPLAYS.has(getComputedStyle(element).display);
+
+const isInlineTree = (element: Element, depth: number): boolean =>
   element instanceof HTMLElement &&
   INLINE_TAGS.has(element.tagName.toLowerCase()) &&
-  element.children.length === 0;
+  isInlineDisplay(element) &&
+  [...element.children].every(
+    (child) =>
+      isBreak(child) ||
+      (depth < NEST_DEPTH_MAX && isInlineTree(child, depth + 1))
+  );
+
+const isInlineTextChild = (element: Element): boolean =>
+  isInlineTree(element, 1);
 
 const isMixedLayer = (element: Element): boolean =>
   element.children.length > 0 &&
-  [...element.children].every((child) => isInlineTextChild(child));
+  [...element.children].every(
+    (child) => isBreak(child) || isInlineTextChild(child)
+  );
 
 const toSnapshot = (element: HTMLElement): NodeSnapshot => {
   const children = new Map<Node, readonly Node[]>();
   const data = new Map<Node, string>();
-  const parents: Node[] = [element, ...element.children];
+  const parents: Node[] = [element, ...element.querySelectorAll("*")];
 
   for (const parent of parents) {
     const nodes = [...parent.childNodes];
@@ -78,17 +97,70 @@ const restoreSnapshot = (snapshot: NodeSnapshot): void => {
   }
 };
 
+const toStepOf = (node: Node): number => {
+  if (node instanceof Text) {
+    return node.data.length;
+  }
+
+  if (node instanceof HTMLBRElement) {
+    return 1;
+  }
+
+  return 0;
+};
+
+const toPlainLength = (node: Node): number => {
+  if (node instanceof Text || node instanceof HTMLBRElement) {
+    return toStepOf(node);
+  }
+
+  let length = 0;
+
+  for (const child of node.childNodes) {
+    length += toPlainLength(child);
+  }
+
+  return length;
+};
+
+const toPlainOffset = (
+  element: HTMLElement,
+  node: Node,
+  offset: number
+): number => {
+  const before = document.createRange();
+  before.selectNodeContents(element);
+  before.setEnd(node, offset);
+
+  return toPlainLength(before.cloneContents());
+};
+
+const toBreakPoint = (node: HTMLBRElement): TextPoint | null => {
+  const parent = node.parentNode;
+
+  if (parent === null) {
+    return null;
+  }
+
+  return { node: parent, offset: [...parent.childNodes].indexOf(node) };
+};
+
 const toTextPoint = (element: HTMLElement, at: number): TextPoint | null => {
-  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_ALL);
+
   let left = at;
   let node = walker.nextNode();
 
-  while (node instanceof Text) {
-    if (left <= node.data.length) {
+  while (node !== null) {
+    if (node instanceof Text && left <= node.data.length) {
       return { node, offset: left };
     }
 
-    left -= node.data.length;
+    if (node instanceof HTMLBRElement && left === 0) {
+      return toBreakPoint(node);
+    }
+
+    left -= toStepOf(node);
     node = walker.nextNode();
   }
 
@@ -117,32 +189,44 @@ const selectTextRange = (
   return true;
 };
 
-const toMixedParentOf = (element: Element | null): HTMLElement | null => {
-  const parent = element?.parentElement ?? null;
+const isInlineTag = (element: Element): boolean =>
+  INLINE_TAGS.has(element.tagName.toLowerCase());
 
-  if (
-    element === null ||
-    parent === null ||
-    !isInlineTextChild(element) ||
-    !isMixedLayer(parent)
-  ) {
-    return null;
+const toMixedParentOf = (element: Element | null): HTMLElement | null => {
+  let current = element;
+  let found: HTMLElement | null = null;
+
+  for (let depth = 0; depth < NEST_DEPTH_MAX; depth += 1) {
+    const parent = current?.parentElement ?? null;
+
+    if (current === null || parent === null || !isInlineTag(current)) {
+      break;
+    }
+
+    if (isMixedLayer(parent)) {
+      found = parent;
+    }
+
+    current = parent;
   }
 
-  return parent;
+  return found;
+};
+
+const toChildStart = (parent: HTMLElement, child: Element): number => {
+  const holder = child.parentNode;
+
+  if (holder === null) {
+    return 0;
+  }
+
+  return toPlainOffset(parent, holder, [...holder.childNodes].indexOf(child));
 };
 
 const selectChildText = (parent: HTMLElement, child: Element): boolean => {
-  const before = document.createRange();
-  before.selectNodeContents(parent);
-  before.setEndBefore(child);
-  const start = before.toString().length;
+  const start = toChildStart(parent, child);
 
-  return selectTextRange(
-    parent,
-    start,
-    start + (child.textContent ?? "").length
-  );
+  return selectTextRange(parent, start, start + toPlainLength(child));
 };
 
 const preventEvent = (event: Event): void => {
@@ -201,7 +285,7 @@ const toInputBlock = (
 };
 
 const primeChildSources = (element: HTMLElement): void => {
-  for (const child of element.children) {
+  for (const child of element.querySelectorAll("*")) {
     void appSourceFor(child);
   }
 };
@@ -240,6 +324,7 @@ export {
   selectChildText,
   selectTextRange,
   toMixedParentOf,
+  toPlainOffset,
   toSnapshot,
 };
 

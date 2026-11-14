@@ -1,6 +1,7 @@
 import { markupAttribute } from "./encode.js";
-import { HTML_FILE, layerExtent } from "./range-extent.js";
+import { HTML_FILE, toStyledExtent } from "./range-extent.js";
 import type { Segment } from "./segment.js";
+import { toSplitOuter } from "./split-inner.js";
 
 type RangeStyle = "bold" | "class" | "italic" | "link" | "strike" | "underline";
 
@@ -23,6 +24,7 @@ type RangeOutcome =
   | { readonly isOk: false; readonly message: string };
 
 interface Part {
+  readonly isOwn: boolean;
   readonly kept: readonly number[];
   readonly segment: Segment;
   readonly text: string;
@@ -59,7 +61,7 @@ const TAGS = {
   bold: ["strong", "b"],
   class: ["span"],
   italic: ["em", "i"],
-  link: ["a"],
+  link: ["a", "link"],
   strike: ["s", "del", "strike"],
   underline: ["u", "ins"],
 } as const satisfies Readonly<Record<RangeStyle, readonly string[]>>;
@@ -199,7 +201,7 @@ const toJsxKept = (text: string): number[] => {
   return kept;
 };
 
-const toPart = (segment: Segment, isJsx: boolean): Part => {
+const toPart = (segment: Segment, isJsx: boolean, spec: RangeSpec): Part => {
   let kept = Array.from({ length: segment.text.length }, (_unused, at) => at);
 
   if (isJsx) {
@@ -218,7 +220,10 @@ const toPart = (segment: Segment, isJsx: boolean): Part => {
     })
     .join("");
 
-  return { kept, segment, text };
+  const isOwn =
+    segment.layer.line === spec.line && segment.layer.col === spec.column;
+
+  return { isOwn, kept, segment, text };
 };
 
 const toPlaced = (
@@ -237,15 +242,17 @@ const toPlaced = (
   for (const part of parts) {
     const at = target.indexOf(part.text, cursor);
 
-    if (at === -1) {
+    if (at === -1 && part.isOwn) {
       return null;
     }
 
-    for (const [offset, index] of part.kept.entries()) {
-      placed[at + offset] = { index, segment: part.segment };
-    }
+    if (at !== -1) {
+      for (const [offset, index] of part.kept.entries()) {
+        placed[at + offset] = { index, segment: part.segment };
+      }
 
-    cursor = at + part.text.length;
+      cursor = at + part.text.length;
+    }
   }
 
   return placed;
@@ -392,40 +399,39 @@ const toUnwrapped = (
   ends: RawEnds,
   spec: RangeSpec
 ): RangeOutcome => {
-  const extent = layerExtent(file, source, spec.line, spec.column);
+  const extent = toStyledExtent(file, source, {
+    column: spec.column,
+    end: ends.end,
+    isMatch: (tag, open) => isStyledTag(spec, tag, open),
+    line: spec.line,
+    start: ends.start,
+  });
 
   if (extent === null) {
-    return toFail("This layer has no closing tag, so no style can be removed.");
-  }
-
-  const open = source.slice(extent.openStart, extent.openEnd);
-
-  if (!isStyledTag(spec, extent.tag, open)) {
     return toFail(
       "This layer does not have that style. Select the styled text."
     );
   }
 
-  const close = source.slice(extent.closeStart, extent.closeEnd);
-  const before = source.slice(extent.openEnd, ends.start);
-  const after = source.slice(ends.end, extent.closeStart);
-  let head = "";
-  let tail = "";
+  const open = source.slice(extent.openStart, extent.openEnd);
 
-  if (before !== "") {
-    head = open + before + close;
-  }
+  const split = toSplitOuter({
+    after: source.slice(ends.end, extent.closeStart),
+    before: source.slice(extent.openEnd, ends.start),
+    close: source.slice(extent.closeStart, extent.closeEnd),
+    isJsx: !HTML_FILE.test(file),
+    middle: source.slice(ends.start, ends.end),
+    open,
+  });
 
-  if (after !== "") {
-    tail = open + after + close;
+  if (!split.isOk) {
+    return split;
   }
 
   return {
     code:
       source.slice(0, extent.openStart) +
-      head +
-      source.slice(ends.start, ends.end) +
-      tail +
+      split.code +
       source.slice(extent.closeEnd),
     isOk: true,
   };
@@ -444,7 +450,7 @@ const toWrapRange = (
   }
 
   const isJsx = !HTML_FILE.test(file);
-  const parts = segments.map((segment) => toPart(segment, isJsx));
+  const parts = segments.map((segment) => toPart(segment, isJsx, spec));
   const placed = toPlaced(parts, spec.text);
 
   if (placed === null) {

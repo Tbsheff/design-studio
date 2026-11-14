@@ -248,7 +248,13 @@ const installClickMenus = (context: BridgeContext): void => {
     const element = hitOf(event);
     let target: Element | null = null;
 
-    if (state.mode === "select" || element === state.selected) {
+    const mixed = toMixedParentOf(element);
+
+    if (
+      state.mode === "select" ||
+      element === state.selected ||
+      (mixed !== null && mixed === state.selected)
+    ) {
       target = element;
     }
 

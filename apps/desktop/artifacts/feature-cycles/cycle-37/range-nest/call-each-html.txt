@@ -1,0 +1,7 @@
+[http] isError=false {"file":"index.html","versionId":"pending-*"}
+[http] source: <p class="lede" id="lede">Read <a href="/terms"><strong>the </strong></a><strong>terms</strong> before you book.<br>Classes start at <strong>7 am</strong>.</p>
+[mcp] isError=false {"file":"index.html","versionId":"pending-*"}
+[mcp] source: <p class="lede" id="lede">Read <a href="/terms"><strong>the </strong></a><strong>terms</strong> before you book.<br>Classes start at <strong>7 am</strong>.</p>
+[agent] isError=false {"file":"index.html","versionId":"pending-*"}
+[agent] source: <p class="lede" id="lede">Read <a href="/terms"><strong>the </strong></a><strong>terms</strong> before you book.<br>Classes start at <strong>7 am</strong>.</p>
+same source on all 3 surfaces: true

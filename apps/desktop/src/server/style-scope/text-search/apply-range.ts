@@ -2,6 +2,7 @@ import { readFile, stat } from "node:fs/promises";
 
 import { TEXT_SEARCH_FILE_BYTES_MAX, assertCanEdit } from "./deps.js";
 import { TextSearchError } from "./errors.js";
+import { layerExtent } from "./range-extent.js";
 import { htmlSegments } from "./scan-html.js";
 import { jsxSegments } from "./scan-jsx.js";
 import { scopeOf } from "./scope.js";
@@ -59,16 +60,42 @@ const toSegmentsOf = (relative: string, source: string): Segment[] => {
   return jsxSegments(relative, source);
 };
 
+const isOwnSegment = (request: TextRangeRequest, segment: Segment): boolean =>
+  segment.layer.line === request.layer.line &&
+  segment.layer.col === request.layer.column;
+
+const toStartOf = (segment: Segment): number => segment.pieces[0]?.start ?? 0;
+
 const toLayerSegments = (
   request: TextRangeRequest,
   source: string
-): Segment[] =>
-  toSegmentsOf(request.layer.file, source).filter(
-    (segment) =>
-      segment.kind === "text" &&
-      segment.layer.line === request.layer.line &&
-      segment.layer.col === request.layer.column
+): Segment[] => {
+  const texts = toSegmentsOf(request.layer.file, source).filter(
+    (segment) => segment.kind === "text"
   );
+
+  const own = texts.filter((segment) => isOwnSegment(request, segment));
+
+  const extent = layerExtent(
+    request.layer.file,
+    source,
+    request.layer.line,
+    request.layer.column
+  );
+
+  if (extent === null) {
+    return own;
+  }
+
+  return texts
+    .filter(
+      (segment) =>
+        isOwnSegment(request, segment) ||
+        (toStartOf(segment) >= extent.openEnd &&
+          toStartOf(segment) < extent.closeStart)
+    )
+    .toSorted((left, right) => toStartOf(left) - toStartOf(right));
+};
 
 const toOutcomeOf = (
   file: ScopeFile,

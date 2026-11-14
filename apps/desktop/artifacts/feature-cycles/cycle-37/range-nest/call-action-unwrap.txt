@@ -1,0 +1,39 @@
+call-action text.applyRange on http://127.0.0.1:6720. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 10 ms, git spawns: not counted (server side)
+{
+  "file": "index.html",
+  "versionId": "pending-ae829eebd094be94"
+}
+
+[mcp] error, 21 ms, git spawns: not counted (server side)
+"The range crosses a {...} expression or another part of the layer. Select text inside one text part."
+
+[agent] error, 4 ms, git spawns: not counted (server side)
+"The range crosses a {...} expression or another part of the layer. Select text inside one text part."
+
+diff http -> mcp:
+- {
++ "The range crosses a {...} expression or another part of the layer. Select text inside one text part."
+-   "file": "index.html",
++ 
+-   "versionId": "pending-ae829eebd094be94"
++ 
+- }
++ 
+
+diff http -> agent:
+- {
++ "The range crosses a {...} expression or another part of the layer. Select text inside one text part."
+-   "file": "index.html",
++ 
+-   "versionId": "pending-ae829eebd094be94"
++ 
+- }
++ 
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 2 error results
+
+fix: compare the outputs above, then run call-action again with the id text.applyRange and the same input

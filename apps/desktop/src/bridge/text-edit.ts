@@ -280,7 +280,7 @@ export function createTextEditor(deps: TextEditDeps): TextEditor {
       element,
       selector,
       snapshot,
-      original: element.textContent ?? "",
+      original: plainText(element),
       hadEditable: element.getAttribute("contenteditable"),
       isHeld: false,
       isRangeMode,

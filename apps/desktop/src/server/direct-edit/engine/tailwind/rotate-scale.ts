@@ -1,5 +1,6 @@
 import type { Classified } from "./classes.js";
 import type { CssEdit } from "./map.js";
+import type { ClassEdit } from "./plan.js";
 
 type RotateScaleGroup = "rotate" | "scale-x" | "scale-y";
 
@@ -258,12 +259,101 @@ const toPropGroup = (group: string): string => {
   return group;
 };
 
+const ROTATE_PART = /(?:^|\s)rotate(?:z)?\([^)]*\)/giu;
+
+const TRANSFORM_CLASS = /^\[transform:(?<value>.+)\]$/u;
+
+const TRANSFORM_UTILITY = /^-?(?:translate|scale|skew)-/u;
+
+type StyleChanges = Record<string, string | null>;
+
+const isRotateWrite = (style: StyleChanges): boolean =>
+  Object.hasOwn(style, "rotate") && !Object.hasOwn(style, "transform");
+
+const toTransformWithoutRotate = (value: string): string | null => {
+  const rest = value
+    .replaceAll(ROTATE_PART, " ")
+    .trim()
+    .split(/\s+/u)
+    .join(" ");
+
+  if (rest === "" || rest === "none") {
+    return null;
+  }
+
+  return rest;
+};
+
+const toTransformClassEdits = (token: string): ClassEdit[] => {
+  const value = TRANSFORM_CLASS.exec(token)?.groups?.value ?? null;
+
+  if (value === null || !/rotate(?:z)?\(/iu.test(value)) {
+    return [];
+  }
+
+  const rest = toTransformWithoutRotate(value.split("_").join(" "));
+  const remove: ClassEdit = { kind: "remove", token };
+
+  if (rest === null) {
+    return [remove];
+  }
+
+  return [remove, { kind: "add", token: `[transform:${toArbitrary(rest)}]` }];
+};
+
+const toKeywordEdits = (classes: readonly string[]): ClassEdit[] => {
+  const hasOther = classes.some((token) => TRANSFORM_UTILITY.test(token));
+
+  if (hasOther || !classes.includes("transform")) {
+    return [];
+  }
+
+  return [{ kind: "remove", token: "transform" }];
+};
+
+const toRotateTransformEdits = (
+  classes: readonly string[],
+  style: StyleChanges
+): ClassEdit[] => {
+  if (!isRotateWrite(style)) {
+    return [];
+  }
+
+  return [
+    ...classes.flatMap((token) => toTransformClassEdits(token)),
+    ...toKeywordEdits(classes),
+  ];
+};
+
+const toRotateTransformChanges = (
+  declarations: readonly { readonly prop: string; readonly value: string }[],
+  style: StyleChanges
+): ReadonlyMap<string, string | null> => {
+  const transform =
+    declarations.find((entry) => entry.prop === "transform") ?? null;
+
+  if (!isRotateWrite(style) || transform === null) {
+    return new Map(Object.entries(style));
+  }
+
+  if (!/rotate(?:z)?\(/iu.test(transform.value)) {
+    return new Map(Object.entries(style));
+  }
+
+  return new Map([
+    ...Object.entries(style),
+    ["transform", toTransformWithoutRotate(transform.value)],
+  ]);
+};
+
 export {
   ROTATE_SCALE_PROPS,
   toPropGroup,
   toRotateScaleClass,
   toRotateScaleEdits,
   toRotateScaleToken,
+  toRotateTransformChanges,
+  toRotateTransformEdits,
 };
 
 export type { RotateScaleGroup };

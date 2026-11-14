@@ -5,6 +5,7 @@ import { DirectEditError } from "../errors.js";
 import { cssEdits, isMappedProperty } from "./map.js";
 import { ClassEditError, planClassEdit, siteClasses } from "./plan.js";
 import type { ClassEdit, ClassPlan, ClassSite } from "./plan.js";
+import { toRotateTransformEdits } from "./rotate-scale.js";
 import type { TailwindTheme } from "./theme-model.js";
 
 export type { TailwindTheme } from "./theme-model.js";
@@ -182,7 +183,11 @@ export function decideClassEdit(
   try {
     const plan = planClassEdit(
       resolved,
-      [...fromStyle.edits, ...explicit],
+      [
+        ...fromStyle.edits,
+        ...toRotateTransformEdits(siteClasses(resolved), style),
+        ...explicit,
+      ],
       theme
     );
     const inlineProps = styled

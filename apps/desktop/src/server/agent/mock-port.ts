@@ -25,7 +25,8 @@ import type {
   PortReview,
   PortReviewGaps,
 } from "./port-review.js";
-import { toRouteFileNow, toRouteUpdateNotes } from "./port-route-update.js";
+import { toRouteUpdateNotes } from "./port-route-notes.js";
+import { toRouteFileNow } from "./port-route-update.js";
 import type { RouteFileText } from "./port-route-update.js";
 import { toPortRunCaller } from "./tool-groups/port-apply-call.js";
 

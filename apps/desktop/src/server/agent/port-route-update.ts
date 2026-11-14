@@ -50,40 +50,9 @@ const DIFF_TAG = "route-file-diff";
 
 const FOLDER_TAG = "route-folder-file";
 
-const FOLDER_HEAD_END = '">\n';
-
 const PLAN_CLOSE = "</port-plan>";
 
 const ROUTE_TEXT_MAX = 24_000;
-
-const AWAIT_CALL = /\bawait\s+(?<name>[A-Za-z_$][\w$.]*)\s*\(/gu;
-
-const QUERY_CALL =
-  /\b(?<name>[A-Za-z_$][\w$.]*\.(?:useQuery|useSuspenseQuery|useInfiniteQuery|query|prefetch))\s*\(/gu;
-
-const PARAM_READ = /\b(?<name>params|searchParams)\b/gu;
-
-const HOOK_CALL = /\b(?<name>use[A-Z]\w*)\s*\(/gu;
-
-const REACT_HOOKS: ReadonlySet<string> = new Set([
-  "useActionState",
-  "useCallback",
-  "useContext",
-  "useDeferredValue",
-  "useEffect",
-  "useFormStatus",
-  "useId",
-  "useImperativeHandle",
-  "useInsertionEffect",
-  "useLayoutEffect",
-  "useMemo",
-  "useOptimistic",
-  "useReducer",
-  "useRef",
-  "useState",
-  "useSyncExternalStore",
-  "useTransition",
-]);
 
 const RULE_LINES = [
   "The route file exists in the app. Update it in place. Do not make a new route.",
@@ -369,126 +338,14 @@ const toRouteFileNow = (prompt: string): RouteFileText | null => {
   return { file: head, text };
 };
 
-const toDataReads = (text: string): Set<string> => {
-  const names = new Set<string>();
-
-  for (const pattern of [AWAIT_CALL, QUERY_CALL, PARAM_READ, HOOK_CALL]) {
-    for (const found of text.matchAll(pattern)) {
-      names.add(found.groups?.["name"] ?? "");
-    }
-  }
-
-  names.delete("");
-
-  for (const hook of REACT_HOOKS) {
-    names.delete(hook);
-  }
-
-  return names;
-};
-
-const toReadsText = (kept: number, total: number): string => {
-  if (total === 1 && kept === 1) {
-    return "kept 1 data read";
-  }
-
-  if (kept === total) {
-    return `kept ${total} data reads`;
-  }
-
-  return `kept ${kept} of ${total} data reads`;
-};
-
-const toFolderFilesBefore = (prompt: string): RouteFileText[] =>
-  prompt
-    .split(`<${FOLDER_TAG} file="`)
-    .slice(1)
-    .flatMap((part) => {
-      const head = part.indexOf(FOLDER_HEAD_END);
-      const end = part.indexOf(`\n</${FOLDER_TAG}>`);
-
-      if (head === -1 || end === -1) {
-        return [];
-      }
-
-      return [
-        {
-          file: part.slice(0, head),
-          text: part.slice(head + FOLDER_HEAD_END.length, end),
-        },
-      ];
-    });
-
-interface FileReads {
-  readonly isChanged: boolean;
-  readonly kept: number;
-  readonly total: number;
-}
-
-const toFileReads = (before: string, after: string): FileReads => {
-  const reads = [...toDataReads(before)];
-  const now = toDataReads(after);
-
-  return {
-    isChanged: before !== after,
-    kept: reads.filter((name) => now.has(name)).length,
-    total: reads.length,
-  };
-};
-
-const toFileList = (names: readonly string[]): string => {
-  if (names.length <= 1) {
-    return names.join("");
-  }
-
-  return `${names.slice(0, -1).join(", ")} and ${names.at(-1) ?? ""}`;
-};
-
-const toRouteUpdateNotes = async (
-  prompt: string,
-  workTree: string
-): Promise<string[]> => {
-  const before = toRouteFileNow(prompt);
-
-  if (before === null) {
-    return [];
-  }
-
-  const files = [before, ...toFolderFilesBefore(prompt)];
-
-  const afters = await Promise.all(
-    files.map(
-      async (item) => (await getText(path.join(workTree, item.file))) ?? ""
-    )
-  );
-
-  const reads = files.map((item, index) =>
-    toFileReads(item.text, afters[index] ?? "")
-  );
-
-  const kept = reads.reduce((sum, item) => sum + item.kept, 0);
-  const total = reads.reduce((sum, item) => sum + item.total, 0);
-
-  const changed = files.slice(1).flatMap((item, index) => {
-    if (reads[index + 1]?.isChanged === true) {
-      return [path.basename(item.file)];
-    }
-
-    return [];
-  });
-
-  return [
-    `Updated ${toFileList([before.file, ...changed])} (${toReadsText(kept, total)}).`,
-  ];
-};
-
 export {
+  FOLDER_TAG,
+  getText,
   toCopyEntry,
   toDiffText,
   isRouteCopyOf,
   toRouteFileNow,
   toRouteUpdate,
-  toRouteUpdateNotes,
   toUpdatedPrompt,
   toUpdateOf,
   toUpdateTag,

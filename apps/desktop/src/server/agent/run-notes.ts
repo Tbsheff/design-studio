@@ -3,7 +3,7 @@ import type { DriverInput, DriverOutcome } from "./lifecycle.js";
 import { EDIT_TOOL_NAMES } from "./permissions.js";
 import { toPhotoNotes } from "./photo-note.js";
 import { toAssetNotes } from "./port-assets.js";
-import { toRouteUpdateNotes } from "./port-route-update.js";
+import { toRouteUpdateNotes } from "./port-route-notes.js";
 import type { RunToolState } from "./types.js";
 
 const toEditCount = (run: RunToolState): number =>

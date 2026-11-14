@@ -17,7 +17,9 @@
 - Works in the app on `fp-proto`: type "dm", press Down, then Enter. The h1 gets `font-family: 'DM Sans', ...`. Cmd+Z restores it.
 - Saved screenshots: `font-pick/font-list-app-dark.png`, `font-pick/font-list-app-light.png` and `font-pick/font-list-proto-dark.png`.
 - Passed: `pnpm run typecheck`, `pnpm run lint:gate` (59625 diagnostics, baseline 89733), `pnpm run build:ui`, and `check-bundle` (B1 274,703 B, delta 0).
-- Passed: `gen-routes --check`.
+- Works: committing a System row in `fp-next`. Georgia writes `font-[Georgia,serif]`, and the canvas renders Georgia.
+- Works: committing the pack row in `fp-proto`. Fraunces writes `var(--font-display)`, and the canvas renders Fraunces. Cmd+Z restores both.
+- Passed: `pnpm run typecheck:tsrs` and `gen-routes --check`.
 - Unchanged: `check-actions` text scan at 560 hits, the same count as main. The op count went from 383 to 384, and `font.list` has no ops finding.
 - Did no real-model run.
 

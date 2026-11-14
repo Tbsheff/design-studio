@@ -8,9 +8,15 @@ const MAX_STARTERS = 4;
 
 const starterStore = createLiveStore<Starter[] | null>(null);
 
+const viewers = new Set<symbol>();
+
 const runStarterRead = async (): Promise<void> => {
   try {
-    starterStore.set(await api.starters());
+    const list = await api.starters();
+
+    if (viewers.size > 0) {
+      starterStore.set(list);
+    }
   } catch {
     starterStore.set(null);
   }
@@ -20,9 +26,21 @@ const useStarters = (): Starter[] => {
   const list = useLive(starterStore);
 
   useEffect(() => {
+    const viewer = Symbol("starters");
+
+    viewers.add(viewer);
+
     if (starterStore.get() === null) {
       runStarterRead();
     }
+
+    return (): void => {
+      viewers.delete(viewer);
+
+      if (viewers.size === 0) {
+        starterStore.set(null);
+      }
+    };
   }, []);
 
   return useMemo(() => (list ?? []).slice(0, MAX_STARTERS), [list]);

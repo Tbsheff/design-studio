@@ -6,11 +6,8 @@ import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { PageFields } from "../_core/list-page.js";
-import {
-  FillInfoSchema,
-  FillTargetFields,
-  FillVariantSchema,
-} from "./schema.js";
+import { StyleVariantSchema } from "../_core/style-variant.js";
+import { FillInfoSchema, FillTargetFields } from "./schema.js";
 
 const getFill = defineAction({
   access: "read",
@@ -30,7 +27,7 @@ const getFill = defineAction({
     ...FillTargetFields,
     ...ElementSourceFields,
     limit: PageFields.limit,
-    variant: FillVariantSchema,
+    variant: StyleVariantSchema,
   }),
   invalidates: [],
   mcp: { name: "get_fill" },

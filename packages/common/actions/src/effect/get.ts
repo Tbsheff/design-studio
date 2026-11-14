@@ -6,6 +6,7 @@ import { ElementSourceFields } from "../_core/element-target.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
+import { StyleVariantSchema } from "../_core/style-variant.js";
 import { EffectInfoSchema, EffectTargetFields } from "./schema.js";
 
 const LimitRange = Schema.isBetween({ maximum: EFFECT_STACK_MAX, minimum: 1 });
@@ -27,7 +28,7 @@ const getEffect = defineAction({
   },
   confirm: "none",
   description:
-    "Read every effect on one layer: its own stack and the named effect style it uses. Read only. Each effect has a kind, an enabled flag and typed values. The limit caps how many effects return.",
+    "Read every effect on one layer: its own stack and the named effect style it uses. Read only. Each effect has a kind, an enabled flag and typed values. variant reads the shadows and blurs for one state or breakpoint prefix, such as hover: or data-[state=open]:. The limit caps how many effects return.",
   errors: [BadRequest, Conflict, NotFound],
   http: {
     method: "GET",
@@ -38,6 +39,7 @@ const getEffect = defineAction({
     ...EffectTargetFields,
     ...ElementSourceFields,
     limit: LimitSchema,
+    variant: StyleVariantSchema,
   }),
   invalidates: [],
   mcp: { name: "get_effect" },

@@ -19,14 +19,24 @@ import { inspectEffects } from "./get.js";
 import { listEffectStyles } from "./list.js";
 import type { EffectPage } from "./list.js";
 import { toEffectSetPlan } from "./plan.js";
-import type { EffectSetRequest, EffectTarget } from "./set-plan.js";
+import type {
+  EffectScope,
+  EffectSetPlan,
+  EffectSetRequest,
+  EffectTarget,
+} from "./set-plan.js";
 import { toStyleCreatePlan, toStyleDeletePlan } from "./style-plan.js";
+import { toVariantEffectPlan, toVariantOf } from "./variant-plan.js";
+import { inspectVariantEffects } from "./variant-read.js";
 
 interface GetEffectCommand extends DirectionIds {
   readonly source: EffectTarget["source"];
+  readonly variant: string;
 }
 
-interface SetEffectCommand extends DirectionIds, EffectSetRequest {}
+interface SetEffectCommand extends DirectionIds, EffectSetRequest {
+  readonly variant: string;
+}
 
 interface ListEffectCommand extends DirectionIds {
   readonly cursor: string | null;
@@ -42,13 +52,39 @@ interface DeleteEffectCommand extends DirectionIds {
   readonly name: string;
 }
 
+const toEffectInfo = (
+  scope: EffectScope,
+  command: GetEffectCommand
+): Promise<EffectInfo> => {
+  const variant = toVariantOf(command.variant);
+
+  if (variant === "") {
+    return inspectEffects(scope, command.source);
+  }
+
+  return inspectVariantEffects(scope, command.source, variant);
+};
+
+const toSetPlan = (
+  scope: EffectScope,
+  command: SetEffectCommand
+): Promise<EffectSetPlan> => {
+  const variant = toVariantOf(command.variant);
+
+  if (variant === "") {
+    return toEffectSetPlan(scope, command);
+  }
+
+  return toVariantEffectPlan(scope, command, variant);
+};
+
 const runEffectGet = (
   command: GetEffectCommand
 ): Effect.Effect<EffectInfo, KnownFailure> =>
   runDirectionRead(
     command,
     ({ direction, project }) =>
-      inspectEffects({ project, workTree: direction.workTree }, command.source),
+      toEffectInfo({ project, workTree: direction.workTree }, command),
     toEffectFailure
   );
 
@@ -70,7 +106,7 @@ const runEffectSet = (
     async ({ direction, project, runtime }): Promise<EffectChange> => {
       const scope = { direction, project, workTree: direction.workTree };
       applyEditGuard(runtime.editDeps, scope);
-      const plan = await toEffectSetPlan(scope, command);
+      const plan = await toSetPlan(scope, command);
 
       const version = await runCommit(
         runtime.editDeps,

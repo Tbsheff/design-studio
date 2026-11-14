@@ -17,19 +17,21 @@ interface EffectPanelProps {
   readonly directionId: string;
   readonly projectId: string;
   readonly target: SelectionContext;
+  readonly variant: string;
 }
 
 const EffectPanel = ({
   directionId,
   projectId,
   target,
+  variant,
 }: EffectPanelProps): ReactElement => {
   const ids = useMemo(
     () => ({ directionId, projectId }),
     [directionId, projectId]
   );
 
-  const effects = useEffects(ids, target);
+  const effects = useEffects(ids, target, variant);
   const handlers = useEffectHandlers(effects);
   const { info } = effects;
   const list = useMemo(() => info?.effects ?? [], [info]);

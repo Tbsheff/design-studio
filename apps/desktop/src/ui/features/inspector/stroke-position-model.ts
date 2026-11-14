@@ -6,6 +6,12 @@ import { strokePositionCopy } from "./copy.js";
 import { toParsedNumber } from "./css-value-model.js";
 import type { StyleValues } from "./css-value-model.js";
 import type { NumberFieldConfig } from "./simple-model.js";
+import {
+  isRingBase,
+  toBaseName,
+  toClassRingWidth,
+} from "./stroke-variant-model.js";
+import type { VariantStroke } from "./stroke-variant-model.js";
 
 type StrokePosition = "inside" | "center" | "outside";
 
@@ -95,26 +101,37 @@ const toClassNames = (outerHTML: string): readonly string[] =>
     .split(/\s+/u)
     .filter(Boolean);
 
-const isRingClass = (name: string): boolean =>
-  !name.includes(":") &&
-  (name.startsWith("ring-") || name === "ring") &&
-  !name.startsWith("ring-offset");
-
 const toRingStroke = (
   outerHTML: string,
-  styles: Readonly<Record<string, string>>
+  styles: Readonly<Record<string, string>>,
+  variant: string
 ): RingStroke | null => {
+  const names = toClassNames(outerHTML).filter((name) => {
+    const base = toBaseName(name, variant);
+
+    return base !== null && isRingBase(base);
+  });
+
+  const bases = names.map((name) => name.slice(variant.length));
   const shadow = (styles["--tw-ring-shadow"] ?? NO_VALUE).trim();
-  const width = Number(RING_SHADOW_PX_RE.exec(shadow)?.groups?.width ?? 0);
+  let width = Number(RING_SHADOW_PX_RE.exec(shadow)?.groups?.width ?? 0);
+
+  if (variant !== NO_VALUE || width <= 0) {
+    width = toClassRingWidth(bases) || width;
+  }
 
   if (width <= 0) {
     return null;
   }
 
   return {
-    classes: toClassNames(outerHTML).filter((name) => isRingClass(name)),
+    classes: names,
     color: styles["--tw-ring-color"]?.trim() ?? NO_VALUE,
-    isInset: shadow.startsWith("inset"),
+    isInset:
+      shadow.startsWith("inset") ||
+      bases.some(
+        (base) => base.startsWith("inset-ring") || base === "ring-inset"
+      ),
     width,
   };
 };
@@ -174,6 +191,22 @@ const toStrokeLook = (
     color: values[OUTLINE_COLOR],
     style: values[OUTLINE_STYLE],
     width: toPx(values[OUTLINE_WIDTH_PROP]),
+  };
+};
+
+const toVariantLook = (
+  seen: StrokeLook,
+  stroke: VariantStroke | null,
+  values: StyleValues
+): StrokeLook => {
+  if (stroke === null || hasOutline(values)) {
+    return seen;
+  }
+
+  return {
+    color: toFirstPart(values[BORDER_COLOR]),
+    style: seen.style,
+    width: stroke.width,
   };
 };
 
@@ -332,6 +365,7 @@ export {
   toStrokeLook,
   toStrokePosition,
   toStrokePositionOptions,
+  toVariantLook,
 };
 
 export type { ClassChange, RingStroke, StrokeLook, StrokePosition };

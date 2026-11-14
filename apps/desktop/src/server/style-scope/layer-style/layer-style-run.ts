@@ -23,6 +23,7 @@ interface ApplyLayerStyleCommand {
   readonly projectId: string;
   readonly sourceLayerId: string;
   readonly targetLayerIds: readonly string[];
+  readonly variant: string;
 }
 
 const MAIN_DIRECTION_ID = "main";
@@ -61,6 +62,7 @@ const runLayerStyleApply = (
         groups: command.groups,
         sourceLayerId: command.sourceLayerId,
         targetLayerIds: command.targetLayerIds,
+        variant: command.variant,
       }),
     toLayerStyleFailure
   );

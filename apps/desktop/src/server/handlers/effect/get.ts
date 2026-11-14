@@ -14,6 +14,7 @@ const handle = Effect.fn("effect.get")(function* run(input: GetEffectInput) {
     directionId: input.directionId,
     projectId: input.projectId,
     source: { col: input.col, file: input.file, line: input.line },
+    variant: input.variant,
   });
 
   return { ...info, effects: info.effects.slice(0, input.limit) };

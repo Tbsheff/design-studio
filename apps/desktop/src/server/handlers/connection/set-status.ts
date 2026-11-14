@@ -1,7 +1,7 @@
-import { Effect } from "effect";
-
 import type { Input } from "@design-studio/actions/_core/action";
 import type { setStatusConnection } from "@design-studio/actions/connection/set-status";
+import { Effect } from "effect";
+
 import { McpSettingsWriter } from "../../mcp-life/index.js";
 import type { Handle } from "../_core/handler.js";
 

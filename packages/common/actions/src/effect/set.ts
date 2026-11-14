@@ -5,6 +5,7 @@ import { ElementTargetSchema } from "../_core/element-target.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
+import { StyleVariantSchema } from "../_core/style-variant.js";
 import {
   EffectChangeSchema,
   EffectSetFields,
@@ -22,7 +23,7 @@ const setEffect = defineAction({
   },
   confirm: "none",
   description:
-    "Set the effects of one layer in one version. effects is the full ordered stack: drop-shadow, inner-shadow, layer-blur, background-blur, noise, glass and shader, each with an enabled flag. styleName applies a saved effect style by name, null removes it. The stack is saved as a stylesheet class, so exports keep it. A shader also writes a small WebGL script and keeps a CSS fallback background. Saves one version.",
+    "Set the effects of one layer in one version. effects is the full ordered stack: drop-shadow, inner-shadow, layer-blur, background-blur, noise, glass and shader, each with an enabled flag. styleName applies a saved effect style by name, null removes it. The stack is saved as a stylesheet class, so exports keep it. A shader also writes a small WebGL script. variant is a state or breakpoint prefix such as hover:, md:hover: or data-[state=open]:, and the default is the base style. A variant takes shadows and blurs only. Saves one version.",
   errors: [BadRequest, Conflict, NotFound],
   http: {
     method: "POST",
@@ -33,6 +34,7 @@ const setEffect = defineAction({
     ...EffectTargetFields,
     ...EffectSetFields,
     target: ElementTargetSchema,
+    variant: StyleVariantSchema,
   }),
   invalidates: ["effect.get", "effect.list"],
   mcp: { name: "set_effect" },

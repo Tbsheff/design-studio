@@ -5,6 +5,7 @@ import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { ProjectIdSchema } from "../_core/ids.js";
+import { StyleVariantSchema } from "../_core/style-variant.js";
 import {
   ApplyGroupsSchema,
   DirectionFieldSchema,
@@ -24,7 +25,7 @@ const applyLayerStyle = defineAction({
   },
   confirm: "none",
   description:
-    "Copy style groups from one source layer to 1 to 50 target layers. Each target loses the classes of the chosen groups and gets the source classes of those groups. State and breakpoint prefixes such as hover: and md: stay with their group. Default groups are fill, text, spacing, border, radius and effect. Layout and size stay unless you pick them. On a plain CSS page it writes declarations. A target that comes from data or from a shared component is skipped with a reason. All targets save as one version and one undo step.",
+    "Copy style groups from one source layer to 1 to 50 target layers. Each target loses the classes of the chosen groups and gets the source classes of those groups. Default groups are fill, text, spacing, border, radius and effect. On a plain CSS page it writes declarations. variant is a state or breakpoint prefix such as hover:, md:hover: or data-[state=open]:, and the default is the base style. With a variant, the base classes of the source get the prefix and only classes with that prefix go. Targets from data or a shared component are skipped. Saves one version.",
   errors: [BadRequest, Conflict, NotFound],
   http: { method: "POST", path: "/api/projects/:projectId/layer-style/apply" },
   id: "layer-style.apply",
@@ -34,6 +35,7 @@ const applyLayerStyle = defineAction({
     projectId: ProjectIdSchema,
     sourceLayerId: LayerIdSchema,
     targetLayerIds: TargetLayerIdsSchema,
+    variant: StyleVariantSchema,
   }),
   invalidates: ["layer-style.get", "direct-edit.getTree"],
   mcp: { name: "apply_layer_style" },

@@ -1,0 +1,69 @@
+call-action effect.set on http://127.0.0.1:47310. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 11 ms, git spawns: not counted (server side)
+{
+  "className": null,
+  "files": [
+    "index.html"
+  ],
+  "hasShaderRuntime": false,
+  "styleName": null,
+  "title": "Effects (hover): drop-shadow",
+  "versionId": "pending-4f77f9356a3b7ce4"
+}
+
+[mcp] error, 8 ms, git spawns: not counted (server side)
+"The layer already has these effects for this state."
+
+[agent] error, 3 ms, git spawns: not counted (server side)
+"The layer already has these effects for this state."
+
+diff http -> mcp:
+- {
++ "The layer already has these effects for this state."
+-   "className": null,
++ 
+-   "files": [
++ 
+-     "index.html"
++ 
+-   ],
++ 
+-   "hasShaderRuntime": false,
++ 
+-   "styleName": null,
++ 
+-   "title": "Effects (hover): drop-shadow",
++ 
+-   "versionId": "pending-4f77f9356a3b7ce4"
++ 
+- }
++ 
+
+diff http -> agent:
+- {
++ "The layer already has these effects for this state."
+-   "className": null,
++ 
+-   "files": [
++ 
+-     "index.html"
++ 
+-   ],
++ 
+-   "hasShaderRuntime": false,
++ 
+-   "styleName": null,
++ 
+-   "title": "Effects (hover): drop-shadow",
++ 
+-   "versionId": "pending-4f77f9356a3b7ce4"
++ 
+- }
++ 
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 2 error results
+
+fix: compare the outputs above, then run call-action again with the id effect.set and the same input

@@ -28,6 +28,7 @@ import {
   toCopyCss,
   toSelectionTargets,
   toStructureMenuEntries,
+  useEditVariant,
 } from "../inspector/index.js";
 import { LayerStyleSlot, useLayerStyleHost } from "../layer-style/index.js";
 import { PatternSlot, usePatternHost } from "../pattern/index.js";
@@ -425,6 +426,7 @@ const usePreviewMenu = (options: Options): PreviewMenuHandle => {
   const pick = useLayerPick(options.port?.current ?? null, at?.local ?? null);
   const base = toHostBase(options);
   const isReact = options.ids.kind === "react";
+  const variant = useEditVariant();
 
   const hosts: MenuHosts = {
     devNotes: useDevNoteHost({
@@ -435,7 +437,7 @@ const usePreviewMenu = (options: Options): PreviewMenuHandle => {
       projectId: options.ids.projectId,
     }),
     icons: useIconHost({ ...base, selection }),
-    layerStyle: useLayerStyleHost({ ...base, selection }),
+    layerStyle: useLayerStyleHost({ ...base, selection, variant }),
     patterns: usePatternHost({ ...base, isReact }),
     photos: useImageSearchHost({ ...base, selection }),
     pickItems: toLayerPickItems(pick, close),

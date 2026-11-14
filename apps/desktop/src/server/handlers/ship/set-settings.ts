@@ -1,7 +1,7 @@
-import { Effect } from "effect";
-
 import type { Input } from "@design-studio/actions/_core/action";
 import type { setSettingsShip } from "@design-studio/actions/ship/set-settings";
+import { Effect } from "effect";
+
 import { ShipRunner } from "../../ship/index.js";
 import type { Handle } from "../_core/handler.js";
 

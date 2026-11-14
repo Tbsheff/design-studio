@@ -13,8 +13,18 @@ export {
 
 export { toEffectTokens, toOpeningTag } from "./tag-scan.js";
 
+export {
+  fromVariantDeclarations,
+  fromVariantToken,
+  isEffectBase,
+  toVariantStyle,
+  toVariantTokens,
+} from "./variant-classes.js";
+
 export type { EffectDeclaration } from "./compile.js";
 
 export type { RawRule, RulePayload } from "./sheet-rules.js";
 
 export type { TagLoc } from "./tag-scan.js";
+
+export type { VariantStyle } from "./variant-classes.js";

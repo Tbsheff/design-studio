@@ -45,6 +45,7 @@ const McpApprovalSchema = Schema.Struct({
   createdAt: Schema.Number,
   detail: Schema.String,
   expiresAt: Schema.Number,
+  folder: Schema.NullOr(Schema.String),
   id: Schema.String,
   projectId: Schema.NullOr(Schema.String),
   title: Schema.String,

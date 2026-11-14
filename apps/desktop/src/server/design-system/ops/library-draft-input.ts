@@ -180,6 +180,25 @@ const isDraftSourceTrusted = async (
   return results.every(Boolean);
 };
 
+const toUntrustedFolder = async (
+  input: DraftInput,
+  roots: readonly string[]
+): Promise<string | null> => {
+  const { folderPath } = input;
+
+  if (!folderPath || (await isSourceOk(folderPath, roots, false))) {
+    return null;
+  }
+
+  try {
+    const absolute = toAbsolute(folderPath);
+
+    return (await toRealPath(absolute)) ?? absolute;
+  } catch {
+    return null;
+  }
+};
+
 const readTokens = async (
   input: DraftInput,
   dataDir: string
@@ -287,6 +306,7 @@ export {
   toDraftRaw,
   toImages,
   toSourceLines,
+  toUntrustedFolder,
 };
 
 export type { DraftInput };

@@ -809,10 +809,7 @@ export type StudioEventBody =
   | { type: "mcp.point"; point: McpPoint }
   | { type: "design-system.sources"; sources: DraftSourcesState }
   | { type: "app.status"; status: AppServerStatus }
-  | {
-      type: "frame-states.changed";
-      states: FrameStatesView;
-    }
+  | { type: "frame-states.changed"; states: FrameStatesView }
   | { type: "layer-locks.changed"; keys: string[] }
   | { type: "edit.planned"; id: string; patches: DomPatch[] }
   | { type: "edit.unplanned"; id: string };
@@ -850,6 +847,7 @@ export interface McpApprovalRecord {
   client: string;
   createdAt: number;
   expiresAt: number;
+  folder: string | null;
 }
 
 export type CanvasWriteSource =

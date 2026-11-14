@@ -7,7 +7,11 @@ import type { PackProblem, PackSummary } from "@design-studio/contracts";
 import { NotFoundError } from "../../platform/errors/index.js";
 import { packProblems } from "../packs.js";
 import type { PackRuntime } from "./library-core.js";
-import { isDraftSourceTrusted, toSourceLines } from "./library-draft-input.js";
+import {
+  isDraftSourceTrusted,
+  toSourceLines,
+  toUntrustedFolder,
+} from "./library-draft-input.js";
 import type { DraftInput } from "./library-draft-input.js";
 
 type ApplyInput = Input<typeof applyPackPack>;
@@ -120,11 +124,19 @@ const toDraftCard = async (
   const sources = toSourceLines(input);
   const name = toLine(input.name ?? "a new design system");
 
-  return {
+  const card: ApprovalCard = {
     action: "Create a design system draft",
     detail: `The studio reads ${sources.join("; ") || "the sources"} and copies the tokens it finds into a new draft project, where outside agents can read them.`,
     title: `Create ${name} from ${toLine(sources.join(", ") || "sources")}`,
   };
+
+  const folder = await toUntrustedFolder(input, roots);
+
+  if (folder === null) {
+    return card;
+  }
+
+  return { ...card, folder };
 };
 
 export {

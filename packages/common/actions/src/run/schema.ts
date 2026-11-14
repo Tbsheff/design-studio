@@ -38,8 +38,13 @@ const AckSchema = Schema.Struct({ ok: Schema.Boolean });
 
 const RunStartedSchema = Schema.Struct({ runId: Schema.String });
 
+const RunCanvasSummarySchema = Schema.Struct({
+  frameId: Schema.optionalKey(Schema.String),
+  path: Schema.String,
+});
+
 const RunRequestSummarySchema = Schema.Struct({
-  canvas: Schema.optionalKey(Schema.Struct({ path: Schema.String })),
+  canvas: Schema.optionalKey(RunCanvasSummarySchema),
   prompt: Schema.String,
 });
 

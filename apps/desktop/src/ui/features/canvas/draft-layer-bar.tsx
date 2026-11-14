@@ -1,7 +1,12 @@
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
-import { toFileName, toKilobytes } from "./draft-frame-model.js";
+import {
+  isUnderKilobyte,
+  toDraftBytes,
+  toFileName,
+  toKilobytes,
+} from "./draft-frame-model.js";
 import type { RunDraftWire } from "./draft-frame-model.js";
 
 interface DraftLayerBarProps {
@@ -16,6 +21,14 @@ const toVerb = (draft: RunDraftWire): string => {
   return copy.draftWriting;
 };
 
+const toSizeText = (bytes: number): string => {
+  if (isUnderKilobyte(bytes)) {
+    return `${bytes}${copy.draftBytes}`;
+  }
+
+  return `${toKilobytes(bytes)}${copy.draftKb}`;
+};
+
 const DraftLayerBar = ({ draft }: DraftLayerBarProps): ReactElement => (
   <div className="draft-frame-bar">
     <span className="spinner" aria-hidden="true" />
@@ -23,8 +36,7 @@ const DraftLayerBar = ({ draft }: DraftLayerBarProps): ReactElement => (
       {toVerb(draft)}
       {toFileName(draft.path ?? "")}
       {copy.draftDot}
-      {toKilobytes(draft.bytes)}
-      {copy.draftKb}
+      {toSizeText(toDraftBytes(draft))}
     </span>
   </div>
 );

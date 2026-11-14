@@ -74,7 +74,7 @@ const ChangePill = ({ control }: ChangePillProps): ReactElement | null => {
     [clear, step]
   );
 
-  if (!spot) {
+  if (!spot || spot.rings.length === 0) {
     return null;
   }
 

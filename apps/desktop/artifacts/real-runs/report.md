@@ -74,3 +74,39 @@ Total: $1.78.
 - `run3-live-light.png`: blank edit draft during the follow-up run.
 - `states-live-dark.png`: state run 1 of 2, draft over the default frame.
 - `states-end-dark.png`: sequence line, designed error UI in both board frames, overlapping banners.
+
+## Fixes
+
+Branch `fix/real-run-bugs`. Checked with the mock agent, then with real runs (data in `ds-wt/real-run-fixes-data`, scripts in `ds-wt/rrf/`).
+
+| Bug | Cause | Fix | Check |
+|---|---|---|---|
+| 8. Context fills fast | 242 studio tool schemas (about 79k tokens) were sent on every call, because `tools` left out `ToolSearch`, so the SDK could not defer them. Each run also loaded the same 2 skills again (about 7k tokens). | Add `ToolSearch` to the builtin tools; keep a hot set loaded (`screenshot`, `render_check`, `design_review`, `edit_element`, `define_tweaks`, `studio_help`). Keep the ids of recommended skills in the session ledger and do not recommend them again on resume. Old `studio-continue` screenshots are dropped with the other old screenshots when the cache is cold; images the user attached stay. | Real runs, below. Image trim checked offline on the old session: 18 of 18 old screenshots go, a user image stays. |
+| 1. "0 changes" after a CSS-only run | Changed layers came only from body element spans. A hunk inside `<style>` had no span. | Match the selectors of the changed rules (tag, id, class, descendant and child) to body elements, as kind `style`. Hide the pill when no ring resolves. | Run 2 diff of the old bakery project: 0 to 27 layers. Real run 2: pill "24 changes". `fix-css-pill-light.png` |
+| 2. State draft on the default frame | The draft layer always drew on the active frame. | Take `canvas.frameId` from `run.started` (or the running run on late load) and place the layer on that frame. | Real state run: layer at the Empty data frame. `fix-state-draft-dark.png` |
+| 3. Blank edit draft | Each new html replaced the back slot before it loaded, so with fast edits no slot loaded and the white layer stayed. | Queue new html until the back slot loads; keep the layer clear until a page shows. | Mock edit with fonts slowed by 3 s, and real run 2: never blank. `fix-edit-draft-light.png` |
+| 4. Bar stuck at "1 KB" | The bar showed the edit fragment size. | Show the page size; show B under 1 KB. | Real runs: "7 KB", "8 KB", "816 B" |
+| 7. Banners overlap | Presence line, stage note and change pill had fixed tops. | Each one moves below the one above it. | Real state run: 60-88, 108-144, 152-180 px |
+
+### Context, bakery session (tokens)
+
+| Point | Before | After |
+|---|---|---|
+| Start of run 1 | 95,978 | 20,062 |
+| End of run 1 | about 124,500 | 52,291 |
+| End of run 2 | about 152,000 | 78,394 |
+| Share of 200k after 2 runs | 76% | 39% |
+| Skill loads in run 2 | 2 (7k) | 0 |
+
+### Time to first draft
+
+7.7 s (was 9.3 s). The rest is the model: a `ToolSearch` turn for `TodoWrite` (the SDK defers it now), 2 skill loads, and thinking. No other cheap cause.
+
+### Left
+
+- The SDK reports a 1M-token window for `claude-sonnet-5-5`; the UI meter assumes 200k unless the model name has `[1m]`.
+- The draft layer stays hidden while "Checking your dev server" covers the stage, also on a state frame. The second state run showed no draft for this reason.
+- Growth per run is still about 26k tokens (run 2: 52k to 78k). Screenshots from earlier runs are now the largest part. They go only when the prompt cache is cold (5 min), to keep cache cost down.
+- The default frame still shows white during a state run while "Checking your dev server" covers the stage. That is the cover, not the draft layer.
+- Not in this branch: sequence line names a skipped state, board labels go stale after a re-pin, 404 on page load.
+- Real runs: 4, not 3. The state sequence started 2 runs.

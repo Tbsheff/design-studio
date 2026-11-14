@@ -16,6 +16,7 @@ export const OLD_SCREENSHOT_NOTE =
 interface Block {
   type?: string;
   content?: unknown;
+  text?: string;
 }
 
 function trimToolResult(block: Block): Block {
@@ -40,6 +41,25 @@ function trimToolResult(block: Block): Block {
     : block;
 }
 
+const TAG_START = "\u003C";
+
+const STUDIO_CONTINUE = `${TAG_START}studio-continue>`;
+
+function isStudioContinue(blocks: readonly Block[]): boolean {
+  return blocks.some(
+    (block) =>
+      block.type === "text" && (block.text ?? "").startsWith(STUDIO_CONTINUE)
+  );
+}
+
+function toTrimmedImage(block: Block, isContinue: boolean): Block {
+  if (!isContinue || block.type !== "image") {
+    return block;
+  }
+
+  return { text: OLD_SCREENSHOT_NOTE, type: "text" };
+}
+
 export function withoutOldScreenshots(
   entry: SessionStoreEntry
 ): SessionStoreEntry {
@@ -49,11 +69,16 @@ export function withoutOldScreenshots(
     return entry;
   }
 
+  const blocks = message.content as Block[];
+  const isContinue = isStudioContinue(blocks);
+
   return {
     ...entry,
     message: {
       ...message,
-      content: (message.content as Block[]).map(trimToolResult),
+      content: blocks.map((block) =>
+        toTrimmedImage(trimToolResult(block), isContinue)
+      ),
     },
   };
 }

@@ -65,8 +65,36 @@ const toAgentOnlyTools = (
   ),
 ];
 
-const isStudioTool = (entry: unknown): entry is AgentTool =>
-  entry instanceof Object && "name" in entry && "handler" in entry;
+const ALWAYS_LOADED = new Set([
+  "screenshot",
+  "render_check",
+  "design_review",
+  "edit_element",
+  "define_tweaks",
+  HELP_TOOL,
+]);
+
+type ToolEntry = ReturnType<typeof toAgentOnlyTools>[number];
+
+const isStudioTool = (entry: ToolEntry): entry is AgentTool =>
+  "name" in entry && "handler" in entry;
+
+const ALWAYS_LOAD_META = { "anthropic/alwaysLoad": true };
+
+const toAllowedTools = (
+  entry: ToolEntry,
+  allowed: ReadonlySet<string>
+): readonly AgentTool[] => {
+  if (!isStudioTool(entry) || !allowed.has(entry.name)) {
+    return [];
+  }
+
+  if (!ALWAYS_LOADED.has(entry.name)) {
+    return [entry];
+  }
+
+  return [{ ...entry, _meta: ALWAYS_LOAD_META }];
+};
 
 const createStudioMcpServer = async (
   deps: StudioToolDeps
@@ -98,10 +126,7 @@ const createStudioMcpServer = async (
 
   return createSdkMcpServer({
     name: "studio",
-    tools: all.filter(
-      (entry): entry is AgentTool =>
-        isStudioTool(entry) && allowed.has(entry.name)
-    ),
+    tools: all.flatMap((entry) => toAllowedTools(entry, allowed)),
     version: "0.1.0",
   });
 };

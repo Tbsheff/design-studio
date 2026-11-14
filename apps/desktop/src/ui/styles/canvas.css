@@ -167,6 +167,11 @@
 }
 
 .stage {
+  --stage-message-top: calc(
+    var(--s-6) + var(--viewrow-h, 0px) + var(--banner-h, 0px) +
+      var(--stage-presence-h, 0px)
+  );
+
   flex: 1;
   min-height: 0;
   position: relative;
@@ -187,7 +192,7 @@
 
 .stage-message {
   position: absolute;
-  top: calc(var(--s-6) + var(--viewrow-h, 0px) + var(--banner-h, 0px));
+  top: var(--stage-message-top);
   left: 50%;
   transform: translateX(-50%);
   z-index: 2;
@@ -202,6 +207,14 @@
   font-size: var(--t-xs);
   font-weight: 500;
   white-space: nowrap;
+}
+
+.stage:has(> .agent-presence-line) {
+  --stage-presence-h: 36px;
+}
+
+.stage:has(> .stage-message) > .change-pill {
+  top: calc(var(--stage-message-top) + 44px);
 }
 
 .artboard {
@@ -1735,6 +1748,10 @@ dialog.canvas-menu {
 .draft-layer[data-solo="true"] {
   bottom: auto;
   height: 48px;
+  background: none;
+}
+
+.draft-layer[data-ready="false"] {
   background: none;
 }
 

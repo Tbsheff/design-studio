@@ -51,6 +51,7 @@ const copy = {
   designPreview: "Design preview",
   dismiss: "Dismiss",
   done: "Done ",
+  draftBytes: " B",
   draftDot: " · ",
   draftEditing: "Editing ",
   draftKb: " KB",

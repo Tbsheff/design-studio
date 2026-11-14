@@ -5,8 +5,14 @@ import type { Project } from "@design-studio/contracts";
 import { splitHunks } from "../../shared/hunk.js";
 import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
 import { isSpanFile, toElementSpans } from "./change-spans.js";
+import { toStyleTargets } from "./change-style.js";
 import { toChangedLayers } from "./engine/to-changed-layers.js";
-import type { FileChange } from "./engine/to-changed-layers.js";
+import type {
+  ChangedLayersResult,
+  FileChange,
+} from "./engine/to-changed-layers.js";
+import { toStyleLayers } from "./engine/to-style-layers.js";
+import type { StyleChange } from "./engine/to-style-layers.js";
 import type { VersionReadRuntime } from "./version-read-core.js";
 
 interface ChangeQuery {
@@ -14,6 +20,11 @@ interface ChangeQuery {
   readonly from: string | null;
   readonly projectId: string;
   readonly to: string | null;
+}
+
+interface SourceChange {
+  readonly change: FileChange;
+  readonly style: StyleChange;
 }
 
 interface VersionPair {
@@ -79,7 +90,7 @@ const toFileChange = async (
     readonly patch: string;
     readonly path: string;
   }
-): Promise<FileChange> => {
+): Promise<SourceChange> => {
   const oldPath = entry.oldPath ?? entry.path;
 
   const [after, before] = await Promise.all([
@@ -87,11 +98,43 @@ const toFileChange = async (
     toSource(runtime, project, pair.from, oldPath),
   ]);
 
+  const hunks = splitHunks(entry.patch);
+
   return {
-    after: toElementSpans(after, entry.path),
-    before: toElementSpans(before, oldPath),
-    file: entry.path,
-    hunks: splitHunks(entry.patch),
+    change: {
+      after: toElementSpans(after, entry.path),
+      before: toElementSpans(before, oldPath),
+      file: entry.path,
+      hunks,
+    },
+    style: { ...toStyleTargets(after, entry.path), file: entry.path, hunks },
+  };
+};
+
+const toMergedLayers = (
+  changes: readonly SourceChange[]
+): ChangedLayersResult => {
+  const found = toChangedLayers(
+    changes.map((entry) => entry.change),
+    CHANGE_ITEM_MAX
+  );
+
+  const seen = new Set(found.items.map((item) => item.layerId));
+
+  const items = [...found.items];
+
+  for (const entry of changes) {
+    for (const item of toStyleLayers(entry.style)) {
+      if (!seen.has(item.layerId)) {
+        seen.add(item.layerId);
+        items.push(item);
+      }
+    }
+  }
+
+  return {
+    isTruncated: found.isTruncated || items.length > CHANGE_ITEM_MAX,
+    items: items.slice(0, CHANGE_ITEM_MAX),
   };
 };
 
@@ -117,7 +160,7 @@ const inspectChangedLayers = async (
     })
   );
 
-  const found = toChangedLayers(changes, CHANGE_ITEM_MAX);
+  const found = toMergedLayers(changes);
 
   return {
     from: pair.from,

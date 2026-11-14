@@ -104,6 +104,11 @@ import {
   unseenScreens,
 } from "./screen-review.js";
 import { createScreenshotTrimStore } from "./screenshot-trim-store.js";
+import {
+  toRunModelMs,
+  toShownSkills,
+  toUnshownSkills,
+} from "./session-skills.js";
 import { recommendedSkillsBlock, recommendSkills } from "./skill-match.js";
 import { prepareSkills, type PreparedSkills } from "./skills.js";
 import { loadTasteRules, type TasteRule } from "./taste.js";
@@ -326,7 +331,8 @@ function prepareMessage(
   resume: string | null
 ): PreparedMessage {
   const { config } = setup;
-  const recommendedSkills = setup.runSkills.recommended;
+  const prior = priorFor(input, resume);
+  const recommendedSkills = toUnshownSkills(setup.runSkills.recommended, prior);
   const withSkills = leanEdit(input)
     ? { ...parts, text: `${LEAN_RUN_BLOCK}\n\n${parts.text}` }
     : withRunLevel(
@@ -341,12 +347,7 @@ function prepareMessage(
         }
       );
   const sent = resume
-    ? withUpdatedInstructions(
-        withSkills,
-        prompt.text,
-        prompt.hash,
-        priorFor(input, resume)
-      )
+    ? withUpdatedInstructions(withSkills, prompt.text, prompt.hash, prior)
     : withSkills;
   return { sent, updatedInstructions: sent !== withSkills, recommendedSkills };
 }
@@ -358,18 +359,6 @@ function priorFor(
   const prior = input.prior ?? null;
   if (!resume || !prior || prior.sessionId !== resume) return null;
   return prior;
-}
-
-function runModelMs(
-  cumulativeApiMs: number,
-  durationMs: number | null,
-  prior: PriorSession | null
-): number {
-  if (!prior) return cumulativeApiMs;
-  if (prior.apiMs !== null) return Math.max(0, cumulativeApiMs - prior.apiMs);
-  return durationMs === null
-    ? cumulativeApiMs
-    : Math.min(cumulativeApiMs, durationMs);
 }
 
 function mapResult(
@@ -385,7 +374,7 @@ function mapResult(
     costUsd: Math.max(0, sessionCostUsd - (prior?.costUsd ?? 0)),
     sessionTotals: { costUsd: sessionCostUsd, apiMs: cumulativeApiMs },
     durationMs,
-    modelMs: runModelMs(cumulativeApiMs, durationMs, prior),
+    modelMs: toRunModelMs(cumulativeApiMs, durationMs, prior),
   };
   if (result.subtype === "success") {
     const failed = result.is_error;
@@ -1194,6 +1183,7 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
       outcome.sessionTotals = {
         ...outcome.sessionTotals,
         promptHash: setup.promptHash,
+        skillIds: toShownSkills(prior, setup.setup.runSkills.recommended),
       };
     setup.spentUsd += outcome.costUsd;
     setup.sessionId = state.sessionId ?? setup.sessionId ?? null;

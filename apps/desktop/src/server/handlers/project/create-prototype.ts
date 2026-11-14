@@ -1,4 +1,4 @@
-import type { Input } from "@design-studio/actions/_core/action";
+import type { Input, Output } from "@design-studio/actions/_core/action";
 import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
 import { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import type { createPrototypeProject } from "@design-studio/actions/project/create-prototype";
@@ -23,6 +23,10 @@ import type { Handle } from "../_core/handler.js";
 
 type CreatePrototypeProjectInput = Input<typeof createPrototypeProject>;
 
+type FixtureOffer = NonNullable<
+  Output<typeof createPrototypeProject>["fixtureOffer"]
+>;
+
 interface RouteRunBody {
   readonly canvas: {
     readonly frameId: string;
@@ -41,12 +45,6 @@ interface RouteCopy {
   readonly height: number;
   readonly page: string;
   readonly width: number;
-}
-
-interface FixtureOffer {
-  readonly appProjectId: string;
-  readonly reason: string;
-  readonly route: string;
 }
 
 interface CopyOutcome {

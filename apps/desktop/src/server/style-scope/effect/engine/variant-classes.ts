@@ -234,6 +234,17 @@ const toShadowItem = (text: string): EffectItem | null => {
   };
 };
 
+const toShadowItems = (value: string): EffectItem[] =>
+  toSplitTopLevel(value).flatMap((text) => {
+    const item = toShadowItem(text);
+
+    if (item === null) {
+      return [];
+    }
+
+    return [item];
+  });
+
 const toFilterItems = (value: string): EffectItem[] => {
   const blur = BLUR_RE.exec(value)?.groups?.["radius"] ?? null;
 
@@ -272,9 +283,7 @@ const fromVariantDeclarations = (
 
   for (const entry of declarations) {
     if (entry.property === BOX_SHADOW && entry.value !== NONE) {
-      for (const text of toSplitTopLevel(entry.value)) {
-        shadows.push(...(toShadowItem(text) ?? []));
-      }
+      shadows.push(...toShadowItems(entry.value));
     }
 
     if (entry.property === FILTER) {

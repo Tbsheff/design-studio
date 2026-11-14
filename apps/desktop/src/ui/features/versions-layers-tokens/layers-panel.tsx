@@ -92,7 +92,7 @@ const LayersPanel = ({
     tree,
   });
 
-  const { list, rename, rowMenu, selectedNode } = state;
+  const { list, listRef, onKeyDown, rename, rowMenu, rowsRef } = state;
 
   return (
     <aside className="layers" aria-label={COPY.labelLayers}>
@@ -100,28 +100,28 @@ const LayersPanel = ({
         frameName={frameName}
         isBusy={busy}
         onClose={onClose ?? null}
-        onRunTool={toRunTool(selectedNode, edits)}
+        onRunTool={toRunTool(state.selectedNode, edits)}
         toTip={tipWithKey}
       />
       <LayerSearchField search={state.search} />
       <LayersList
-        ref={state.listRef}
+        ref={listRef}
         isBusy={busy}
         isDragging={list.drag.dragging !== null}
         isEmpty={isEmpty}
         isSearching={state.search.isActive}
         rowCount={state.rows.length}
         selectedIndex={list.selectedIndex}
-        selectedNode={selectedNode}
+        selectedNode={state.selectedNode}
         tree={tree}
-        onKeyDown={state.onKeyDown}
+        onKeyDown={onKeyDown}
         onPointerCancel={state.handlePointerCancel}
         onPointerMove={state.handlePointerMove}
         onPointerUp={state.handlePointerUp}
         onScroll={state.handleScroll}
       >
         <LayersRows
-          ref={state.rowsRef}
+          ref={rowsRef}
           callbacks={state.callbacks}
           collapsed={state.collapsed}
           dimmed={state.dimmed}

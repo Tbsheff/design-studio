@@ -1,5 +1,6 @@
 import type { Project, RunMode } from "@design-studio/contracts";
 
+import { TOOL_SEARCH_TOOL } from "../platform/tool-policy/index.js";
 import type { AgentSet } from "./legacy/agent-ops.js";
 import { AGENT_OPS } from "./legacy/agent-ops.js";
 import { blockedInCritique } from "./permissions.js";
@@ -98,6 +99,10 @@ export function studioToolsFor(
 
 export function leanBuiltins(names: string[]): string[] {
   return names.filter(
-    (name) => name !== "TodoWrite" && name !== "Bash" && name !== "Skill"
+    (name) =>
+      name !== "TodoWrite" &&
+      name !== "Bash" &&
+      name !== "Skill" &&
+      name !== TOOL_SEARCH_TOOL
   );
 }

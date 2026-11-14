@@ -16,6 +16,7 @@ export const OLD_SCREENSHOT_NOTE =
 interface Block {
   type?: string;
   content?: unknown;
+  text?: string;
 }
 
 function trimToolResult(block: Block): Block {
@@ -40,6 +41,14 @@ function trimToolResult(block: Block): Block {
     : block;
 }
 
+function toTrimmedImage(block: Block): Block {
+  if (block.type !== "image") {
+    return block;
+  }
+
+  return { text: OLD_SCREENSHOT_NOTE, type: "text" };
+}
+
 export function withoutOldScreenshots(
   entry: SessionStoreEntry
 ): SessionStoreEntry {
@@ -53,7 +62,9 @@ export function withoutOldScreenshots(
     ...entry,
     message: {
       ...message,
-      content: (message.content as Block[]).map(trimToolResult),
+      content: (message.content as Block[]).map((block) =>
+        toTrimmedImage(trimToolResult(block))
+      ),
     },
   };
 }

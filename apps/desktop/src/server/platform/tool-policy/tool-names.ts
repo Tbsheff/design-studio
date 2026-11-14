@@ -25,6 +25,7 @@ const READ_TOOLS = ["Read", "Glob", "Grep"];
 const READ_ONLY_TOOLS = new Set(READ_TOOLS);
 const SKILL_TOOL = "Skill";
 const TODO_TOOL = "TodoWrite";
+const TOOL_SEARCH_TOOL = "ToolSearch";
 const WRITE_TOOLS = ["Write", "Edit"];
 
 const PATH_TOOLS = new Set([
@@ -62,7 +63,7 @@ const baseToolNames = (policy: ToolSet): string[] => {
 };
 
 const builtinToolNames = (policy: ToolSet): string[] => {
-  const names = baseToolNames(policy);
+  const names = [...baseToolNames(policy), TOOL_SEARCH_TOOL];
 
   if (policy.allowBash && policy.mode === "edit") {
     names.push("Bash");
@@ -97,6 +98,7 @@ export {
   READ_TOOLS,
   SKILL_TOOL,
   TODO_TOOL,
+  TOOL_SEARCH_TOOL,
   WRITE_PATH_TOOLS,
   blockedInCritique,
   blockedInPlan,

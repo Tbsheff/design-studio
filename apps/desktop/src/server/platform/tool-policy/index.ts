@@ -176,6 +176,7 @@ export {
   READ_TOOLS,
   SKILL_TOOL,
   TODO_TOOL,
+  TOOL_SEARCH_TOOL,
   blockedInCritique,
   builtinToolNames,
   permittedToolNames,

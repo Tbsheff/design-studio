@@ -104,6 +104,7 @@ export interface SessionTotals {
   costUsd: number;
   apiMs: number | null;
   promptHash?: string | null;
+  skillIds?: readonly string[] | null;
 }
 
 export interface PriorSession extends SessionTotals {
@@ -212,14 +213,13 @@ async function loadPriorSession(
   try {
     const raw = JSON.parse(
       await readFile(sessionLedgerPath(runsDir, sessionId), "utf-8")
-    ) as Record<string, unknown>;
-    const promptHash =
-      typeof raw["promptHash"] === "string" ? raw["promptHash"] : null;
+    ) as Record<string, unknown> & SessionTotals;
     return {
       sessionId,
       costUsd: finiteOrNull(raw["costUsd"]) ?? fallback.costUsd,
       apiMs: finiteOrNull(raw["apiMs"]),
-      promptHash,
+      promptHash: raw.promptHash ?? null,
+      skillIds: raw.skillIds ?? null,
     };
   } catch {
     return fallback;

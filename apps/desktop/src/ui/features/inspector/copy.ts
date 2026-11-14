@@ -395,7 +395,7 @@ const rotationCopy = {
   noSelection: "Select one layer first",
   rotate: "Rotate…",
   rotateKeywords: "rotate rotation angle degrees turn",
-  short: "°",
+  short: "↻",
   tip: "Rotation in degrees. Shift and an arrow key step 15°",
 };
 

@@ -1,0 +1,66 @@
+# Mock [port-keep], fresh app, before the base version hold (values pass refused: no_base_version)
+run 49GQVMbCcqpZ6AWf63jqP status completed session mock-main-49GQVMbCcqpZ6AWf63jqP cost 0 durationMs 291
+sent resume: [null, null]
+tools: Write, mcp__studio__render_check, mcp__studio__screenshot, mcp__studio__screenshot, mcp__studio__render_check, Write
+
+Moved the prototype into `app/patients/page.jsx`.
+
+Studio port check: score 65 (top center 26, top left 75 under 80), route renders, a fix loop ran; after it score 65 (top center 26, top left 75 under 80), route renders; hid 1 extra data row on the app page.
+
+Updated app/patients/page.jsx (kept 2 data reads).
+
+finalCheck {"errors": 0, "high": 0, "low": 0, "medium": 0, "ranBy": "studio", "port": {"fixLoop": true, "rendered": true, "score": 65}}
+
+# Mock [port-keep] [port-bash], fresh app, Bash-only write, after the hold
+run 4V0MK-_DpSwIFMmRCiIac status completed session mock-main-4V0MK-_DpSwIFMmRCiIac cost 0 durationMs 307
+sent resume: [null, null]
+tools: Bash, mcp__studio__render_check, mcp__studio__screenshot, mcp__studio__screenshot, mcp__studio__render_check, Write
+
+Moved the prototype into `app/patients/page.jsx`.
+
+Studio port check: score 65 (top center 26, top left 75 under 80), route renders. Studio check: wrote 8 prototype values (max-w-220, mb-6, text-[32px], leading-[normal], text-[15px]); port score 65 -> 95; a fix loop lowered the score; its edits were undone; kept score 95 (top center 75 under 80), route renders; hid 1 extra data row on the app page.
+
+Updated app/patients/page.jsx and patient-list.jsx (kept 2 data reads).
+
+finalCheck {"errors": 0, "high": 0, "low": 0, "medium": 0, "ranBy": "studio", "port": {"fixLoop": true, "rendered": true, "score": 95}}
+
+# Mock [port-keep] [port-bash], Move to app 1 on one app
+run CLXTzXW-6AVULHrBtBUzG status completed session mock-main-CLXTzXW-6AVULHrBtBUzG cost 0 durationMs 295
+sent resume: [null, null]
+tools: Bash, mcp__studio__render_check, mcp__studio__screenshot, mcp__studio__screenshot, mcp__studio__render_check, Write
+
+Moved the prototype into `app/patients/page.jsx`.
+
+Studio port check: score 65 (top center 26, top left 75 under 80), route renders. Studio check: wrote 8 prototype values (max-w-220, mb-6, text-[32px], leading-[normal], text-[15px]); port score 65 -> 95; a fix loop lowered the score; its edits were undone; kept score 95 (top center 75 under 80), route renders; hid 1 extra data row on the app page.
+
+Updated app/patients/page.jsx and patient-list.jsx (kept 2 data reads).
+
+finalCheck {"errors": 0, "high": 0, "low": 0, "medium": 0, "ranBy": "studio", "port": {"fixLoop": true, "rendered": true, "score": 95}}
+
+# Mock [port-keep] [port-bash], Move to app 2 on the same app (new session, no resume)
+run gBrAjS9f90NDLn8rKHAqm status completed session mock-main-gBrAjS9f90NDLn8rKHAqm cost 0 durationMs 303
+sent resume: [null, null]
+tools: Bash, mcp__studio__render_check, mcp__studio__screenshot, mcp__studio__screenshot, mcp__studio__render_check, Write
+
+Moved the prototype into `app/patients/page.jsx`.
+
+Studio port check: score 65 (top center 26, top left 75 under 80), route renders. Studio check: wrote 8 prototype values (max-w-220, mb-6, text-[32px], leading-[normal], text-[15px]); port score 65 -> 95; a fix loop lowered the score; its edits were undone; kept score 95 (top center 75 under 80), route renders; hid 1 extra data row on the app page.
+
+Updated app/patients/page.jsx and patient-list.jsx (kept 2 data reads).
+
+finalCheck {"errors": 0, "high": 0, "low": 0, "medium": 0, "ranBy": "studio", "port": {"fixLoop": true, "rendered": true, "score": 95}}
+
+# Mock [port-keep] [port-apply], agent apply_port with only routePath
+run DLovELhZE6hSD-cD3dSEP status completed session mock-main-DLovELhZE6hSD-cD3dSEP cost 0 durationMs 289
+sent resume: [null, null]
+tools: Write, mcp__studio__render_check, mcp__studio__screenshot, mcp__studio__screenshot, mcp__studio__render_check, mcp__studio__apply_port, Write
+
+Moved the prototype into `app/patients/page.jsx`.
+
+Mock agent apply_port({ routePath: "/patients" }): {"applied":[{"app":"896px","file":"app/patients/page.jsx","property":"width","prototype":"880px","selector":"main.mx-auto","text":"Patients Name Ward","written":"max-w-220 (was max-w-4xl)"},{"app":"8px","file":"app/patients/page.jsx","property":"margin-bottom","prototype":"24px","selector":"main.mx-auto > h1.mb-2","text":"Patients","written":"mb-6 (was mb-2)"},{"app":"30px","file":"app/patients/page.jsx","property":"font-size","prototype":"32px","selector":"main.mx-auto > h1.mb-2","text":"Patients","written":"text-[32px] (was text-3xl)"},{"app":"36px","file":"app/patients/page.jsx","property":
+
+Studio port check: score 95 (top center 75 under 80), route renders. Studio check: wrote 0 prototype values; a fix loop lowered the score; its edits were undone; kept score 95 (top center 75 under 80), route renders; hid 1 extra data row on the app page.
+
+Updated app/patients/page.jsx and patient-list.jsx (kept 2 data reads).
+
+finalCheck {"errors": 0, "high": 0, "low": 0, "medium": 0, "ranBy": "studio", "port": {"fixLoop": true, "rendered": true, "score": 95}}

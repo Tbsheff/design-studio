@@ -34,6 +34,8 @@ const setForcedState = (request: ForcedStateRequest): ForcedStateChange => {
   const frameId = frameIdOf(request);
 
   if (request.state !== null && isEdgeStateName(request.state)) {
+    setForced(request.projectId, frameId, null, null);
+
     return {
       frameId,
       isStructural: true,

@@ -1,3 +1,4 @@
+import { SOURCE_LOC_ATTR } from "@design-studio/contracts";
 import {
   isEdgeStateName,
   toEdgePseudo,
@@ -13,6 +14,18 @@ const EDGE_CSS = `[${EDGE_ATTR}]{outline:2px dashed oklch(0.62 0.19 255) !import
 const toEdgeState = (states: readonly string[]): EdgeStateName | null =>
   states.find((state) => isEdgeStateName(state)) ?? null;
 
+const isSameSource = (
+  child: Element,
+  element: Element,
+  loc: string | null
+): boolean => {
+  if (loc === null) {
+    return child === element;
+  }
+
+  return child.getAttribute(SOURCE_LOC_ATTR) === loc;
+};
+
 const toEdgeTargets = (
   element: Element,
   state: EdgeStateName
@@ -24,9 +37,10 @@ const toEdgeTargets = (
   }
 
   const pseudo = `:${toEdgePseudo(state)}`;
+  const loc = element.getAttribute(SOURCE_LOC_ATTR);
 
   return [...parent.children].filter(
-    (child) => child.tagName === element.tagName && child.matches(pseudo)
+    (child) => isSameSource(child, element, loc) && child.matches(pseudo)
   );
 };
 

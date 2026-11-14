@@ -23,9 +23,9 @@ const FixtureOfferFoot = ({
   return (
     <>
       <output className={styles.offer} data-testid="fixture-offer">
-        <p className={styles.offerTitle}>{copy.fixtureTitle}</p>
-        <p className={styles.hint}>{offer.reason}</p>
-        <p className={styles.hint}>{copy.fixtureNote}</p>
+        <span className={styles.offerTitle}>{copy.fixtureTitle}</span>
+        <span className={styles.hint}>{offer.reason}</span>
+        <span className={styles.hint}>{copy.fixtureNote}</span>
       </output>
       <footer className={styles.foot}>
         {state.failure !== null && (

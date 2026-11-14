@@ -6,15 +6,8 @@ import type {
   PreviewService,
   VersionStore,
 } from "../../shared/server-ports.js";
-import {
-  firstVersionState,
-  firstVersionWaitText,
-} from "../app/first-version.js";
-import {
-  BadRequestError,
-  ConflictError,
-  NotFoundError,
-} from "../platform/errors/index.js";
+import { firstVersionState } from "../app/first-version.js";
+import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
 import { resolveSource } from "../project-source/index.js";
 import type { ExportSource, SourceDeps } from "../project-source/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
@@ -160,12 +153,8 @@ const resolveFrameSource = async (
   const direction = pickDirection(project, query.directionId);
   const head = direction.headVersionId;
 
-  if (!head && project.app) {
-    return liveAppSource(deps, project, direction);
-  }
-
   if (!head) {
-    throw new ConflictError(firstVersionWaitText(project.id));
+    return liveAppSource(deps, project, direction);
   }
 
   if (isWorkTree) {
@@ -176,6 +165,10 @@ const resolveFrameSource = async (
 };
 
 const versionLabel = (src: ExportSource): string => {
+  if (src.version.id === LIVE_VERSION_ID && !src.project.app) {
+    return "the prototype work tree (no saved version yet)";
+  }
+
   if (src.version.id === LIVE_VERSION_ID) {
     const state = firstVersionState(src.project.id);
 

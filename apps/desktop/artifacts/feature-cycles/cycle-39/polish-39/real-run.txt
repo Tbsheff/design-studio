@@ -1,0 +1,26 @@
+FRAME 200 {"frames":1,"placed":[{"direction":"main","height":900,"id":"f1","label":"Crew","page":"crew","width":1440,"x":0,"y":0}],"warnings":[]}
+START 200 {"runId":"6slbCQGzseF90s3ohdtRO"}
+STATUS completed wall s 24.4 cost 0.1108319 prompts 1
+NOTES
+Studio app check: the agent skipped the review_frame after its last edit, so the studio ran them (desktop and 390 px); pass 1: 0 finding(s) on changed lines (1 on old code not counted), no fix loop; Kit: 0 raw elements found on changed lines (1 on old code not counted); Dark: 0 items under AA.
+APPREVIEW null
+
+server log dark lines:
+5:photo-text: leased page, 0 nodes, 0 under AA, reasons [], 1 ms
+6:photo-text: leased page, 0 nodes, 0 under AA, reasons [], 1 ms
+7:photo-text: leased page, 0 nodes, 0 under AA, reasons [], 1 ms
+8:[agent] app dark check: rendered http://p-526d3869727134453661.localhost:6911/crew in 643 ms, 0 items under AA
+
+next build exit and tail:
+  Generating static pages using 5 workers (3/4) 
+✓ Generating static pages using 5 workers (4/4) in 154ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+└ ○ /crew
+
+
+○  (Static)  prerendered as static content
+

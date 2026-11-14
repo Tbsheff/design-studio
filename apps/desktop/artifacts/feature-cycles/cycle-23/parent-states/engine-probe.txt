@@ -1,0 +1,12 @@
+6 11 {"hasDataState":false,"name":"menu-item"}
+10 9 {"hasDataState":true,"name":null}
+12 53 {"hasDataState":true,"name":null}
+13 10 null
+group-hover: -> group-hover:
+md:group-hover/menu-item: -> md:group-hover/menu-item:
+group-data-[state=open]: -> group-data-[state=open]:
+md:group-data-[state=checked]/row: -> md:group-data-[state=checked]/row:
+dark:group-hover: -> dark:group-hover:
+data-[state=open]:hover: -> data-[state=open]:hover:
+group-hover -> group-hover:
+md:hover: -> md:hover:

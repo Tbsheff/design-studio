@@ -1,0 +1,19 @@
+## set_state_style {"projectId":"OEenzM7-if","directionId":"main","target":{"source":{"file":"index.html","line":10,"col":83},"selector":"#rowbtn"},"state":"group-hover","property":"background-color","value":"#2563eb"}
+{"breakpoint":"base","classes":{"add":["group-hover:bg-[#2563eb]"],"remove":[]},"files":["index.html"],"mode":"classes","prefix":"group-hover:","property":"background-color","state":"group-hover","title":"State group-hover: background-color #2563eb","value":"#2563eb","versionId":"pending-7f4db565a1f5ad16"}
+## set_forced_state {"projectId":"OEenzM7-if","directionId":"main","state":"group-open","layer":"#chev"}
+{"frameId":"f1","selector":"#chev","state":"group-open"}
+## get_screenshot {"projectId":"OEenzM7-if","directionId":"main","frameId":"f1"}
+(image saved /Volumes/DevProjects/code/ds-wt/parent-states/apps/desktop/artifacts/feature-cycles/cycle-23/parent-states/mcp-forced-group-open.png)
+1440 × 900 px of the work tree at version 6acf2aa6c8a8f74d753ca8e88a404e4a1fec3c85.
+## list_state_styles {"projectId":"OEenzM7-if","directionId":"main","file":"index.html","line":7,"col":1}
+{"forced":[{"frameId":"f1","selector":"#chev","state":"group-open"}],"group":{"hasDataState":true,"name":null},"layer":{"file":"index.html","mode":"classes","overrides":[{"breakpoint":"base","prefix":"group-data-[state=open]:","props":["transform","opacity"],"set":["group-data-[state=open]:rotate-180","group-data-[state=open]:opacity-50"],"state":"group-open"}],"reason":null},"states":["hover","focus-visible","active","disabled","dark","open","checked","selected","group-hover","group-open","group-checked"]}
+## set_forced_state {"projectId":"OEenzM7-if","directionId":"main","state":"group-hover","layer":"#rowbtn"}
+{"frameId":"f1","selector":"#rowbtn","state":"group-hover"}
+## get_screenshot {"projectId":"OEenzM7-if","directionId":"main","frameId":"f1"}
+(image saved /Volumes/DevProjects/code/ds-wt/parent-states/apps/desktop/artifacts/feature-cycles/cycle-23/parent-states/mcp-forced-group-hover.png)
+1440 × 900 px of the work tree at version 6acf2aa6c8a8f74d753ca8e88a404e4a1fec3c85.
+## set_forced_state {"projectId":"OEenzM7-if","directionId":"main","state":null}
+{"frameId":"f1","selector":null,"state":null}
+## get_screenshot {"projectId":"OEenzM7-if","directionId":"main","frameId":"f1"}
+(image saved /Volumes/DevProjects/code/ds-wt/parent-states/apps/desktop/artifacts/feature-cycles/cycle-23/parent-states/mcp-default.png)
+1440 × 900 px of the work tree at version 6acf2aa6c8a8f74d753ca8e88a404e4a1fec3c85.

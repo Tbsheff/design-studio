@@ -23,7 +23,9 @@ const FormFoot = ({
   return (
     <div className="modal-foot">
       {!noApp && form.chosenApp && (
-        <span className="port-foot-note">{toWritesText(count, appName)}</span>
+        <span className="port-foot-note">
+          {toWritesText(count, appName, form.update)}
+        </span>
       )}
       <span className="port-spacer" />
       <button type="button" className="btn ghost" onClick={onClose}>

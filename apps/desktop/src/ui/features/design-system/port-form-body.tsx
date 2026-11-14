@@ -33,6 +33,7 @@ const FormBody = ({
           links={form.pages.links}
           isLoading={form.plan.loading}
           error={form.plan.error}
+          update={form.update}
         />
       )}
       {error && (

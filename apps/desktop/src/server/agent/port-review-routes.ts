@@ -135,14 +135,32 @@ const toRouteInput = (
   gaps: { ...input.gaps, ...route, routes: [route] },
 });
 
-const listRouteChecks = (
+const toRouteCheck = async (
+  input: PortReviewInput,
+  steps: RouteSteps
+): Promise<RouteCheck> => ({ check: await steps.inspectRoute(input), input });
+
+const toCheckedAgain = (
+  item: RouteCheck,
+  steps: RouteSteps
+): Promise<RouteCheck> => {
+  if (item.check.match.score !== null) {
+    return Promise.resolve(item);
+  }
+
+  return toRouteCheck(item.input, steps);
+};
+
+const listRouteChecks = async (
   inputs: readonly PortReviewInput[],
   steps: RouteSteps
-): Promise<RouteCheck[]> =>
-  listLimited(inputs, ROUTES_AT_ONCE, async (input) => ({
-    check: await steps.inspectRoute(input),
-    input,
-  }));
+): Promise<RouteCheck[]> => {
+  const checks = await listLimited(inputs, ROUTES_AT_ONCE, (input) =>
+    toRouteCheck(input, steps)
+  );
+
+  return listLimited(checks, 1, (item) => toCheckedAgain(item, steps));
+};
 
 const isAnyFixNeeded = (checks: readonly RouteCheck[]): boolean =>
   checks.some((item) => isFixNeeded(item.check));

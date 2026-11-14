@@ -48,17 +48,17 @@ interface SourceInput {
   projectId: string;
 }
 
+const MAIN_DIRECTION = "main";
+
 const toSourceInput = (
   projectId: string,
   directionId: string | null,
   file: string
-): SourceInput | null => {
-  if (directionId === null) {
-    return null;
-  }
-
-  return { directionId, file, projectId };
-};
+): SourceInput => ({
+  directionId: directionId ?? MAIN_DIRECTION,
+  file,
+  projectId,
+});
 
 const toIsReady = (
   form: Pick<PortForm, "chosenApp" | "cleanRoute" | "htmlSource" | "pages">,

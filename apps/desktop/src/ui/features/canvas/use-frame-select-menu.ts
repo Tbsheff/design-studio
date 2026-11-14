@@ -10,6 +10,7 @@ import {
   isFrameAlignReady,
 } from "./frame-align-model.js";
 import type { FrameAlignLayout, FrameAlignTool } from "./frame-align-model.js";
+import { requestFrameFit } from "./frame-fit-model.js";
 import type {
   FrameMenuEntry,
   FrameMenuRow,
@@ -78,6 +79,8 @@ const useFrameSelectMenu = (
     removeFramesAt(ids);
   }, [ids, removeFramesAt]);
 
+  const fitSelected = useCallback((): void => requestFrameFit(ids), [ids]);
+
   const rows = useMemo(
     (): readonly FrameMenuRow[] => [
       {
@@ -105,6 +108,15 @@ const useFrameSelectMenu = (
       },
       {
         entry: {
+          icon: "frame",
+          id: "fit-frames",
+          label: copy.resizeToFit,
+          run: fitSelected,
+        },
+        kind: "item",
+      },
+      {
+        entry: {
           icon: "trash",
           id: "remove-frames",
           label: `${copy.frameSelectRemove}${count}${copy.frameSelectCount}`,
@@ -113,7 +125,7 @@ const useFrameSelectMenu = (
         kind: "item",
       },
     ],
-    [count, onAlign, removeSelected]
+    [count, fitSelected, onAlign, removeSelected]
   );
 
   return { menu, rows, toggle };

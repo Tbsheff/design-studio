@@ -17,6 +17,7 @@ import { useLive } from "../../platform/live-store.js";
 import { prototypeSource } from "../../platform/prototype-dialog.js";
 import { openRoutePrototype } from "../../platform/prototype-route.js";
 import { copy } from "./copy.js";
+import { requestFrameFit } from "./frame-fit-model.js";
 import { toMenuItems } from "./menu-items-model.js";
 
 const FRAME_SELECTOR = "[data-frame-id]";
@@ -180,6 +181,27 @@ const useTidyEntry = (root: RefObject<HTMLElement | null>): TidyEntry => {
   );
 };
 
+const useFitEntry = (root: RefObject<HTMLElement | null>): TidyEntry => {
+  const run = useCallback((): void => {
+    const frame = root.current?.closest<HTMLElement>(FRAME_SELECTOR) ?? null;
+    const frameId = frame?.dataset.frameId ?? null;
+
+    if (frameId !== null) {
+      requestFrameFit([frameId]);
+    }
+  }, [root]);
+
+  return useMemo(
+    () => ({
+      icon: "frame",
+      id: "fit-frame",
+      label: copy.resizeToFit,
+      run,
+    }),
+    [run]
+  );
+};
+
 interface RedesignEntry {
   readonly icon: "sparkle";
   readonly id: string;
@@ -222,6 +244,7 @@ export {
   openScreenCreate,
   toRootMenuItems,
   useCopyPngEntry,
+  useFitEntry,
   useMenu,
   useRedesignEntry,
   useScreenEntry,

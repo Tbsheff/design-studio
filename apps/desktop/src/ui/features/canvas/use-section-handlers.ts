@@ -31,11 +31,15 @@ const useSectionHandlers = (
       const base = api.snapshot();
       freeze();
 
-      startSectionDrag(event, zoom, (delta, isFinal) =>
-        api.apply(
-          toMovedEdit(base.layout, base.sections, section, delta),
-          isFinal
-        )
+      startSectionDrag(
+        event,
+        zoom,
+        (delta, isFinal) =>
+          api.apply(
+            toMovedEdit(base.layout, base.sections, section, delta),
+            isFinal
+          ),
+        true
       );
     },
     [api, section, zoom, freeze]
@@ -46,8 +50,15 @@ const useSectionHandlers = (
       const handle = event.currentTarget.dataset.handle as SectionHandle;
       const base = api.snapshot();
 
-      startSectionDrag(event, zoom, (delta, isFinal) =>
-        api.apply(toResizedEdit(base.sections, section, handle, delta), isFinal)
+      startSectionDrag(
+        event,
+        zoom,
+        (delta, isFinal) =>
+          api.apply(
+            toResizedEdit(base.sections, section, handle, delta),
+            isFinal
+          ),
+        false
       );
     },
     [api, section, zoom]

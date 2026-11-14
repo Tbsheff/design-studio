@@ -43,8 +43,20 @@ Real model (1 run, Sonnet 5.5, `DATABASE_URL=postgres://fake` on the dev server,
 - 19.3 s and $0.106. The data reads kept: `prefetchPatients` import and `await`, and `dynamic` (3 grep hits). The `PatientList` import and the app change ("Ward list for today.") were kept. Fixture rows written into the app: 0.
 - `render_check`: 0 errors, the route renders. `inspect_port` score: 48 (top left). The kept app paragraph is not in the prototype, so the score stays low.
 - Before and after: `real-run-page-before.jsx`, `real-run-page.jsx`.
+- **Run 1 did not edit `patient-list.jsx`.** The rule lines did not allow edits to sibling files. Commit `da86c2e4c` adds a rule: "Also restyle the components that the route imports from its own folder. Keep their data reads (hooks, queries) and exports."
 
-Final checks: `pnpm run typecheck` passes. `pnpm run lint:gate` passes (59615 diagnostics, baseline 89733). `pnpm run build:ui` passes. `gen-routes --check` passes.
+Real model, run 2 (after `da86c2e4c`):
+- The server restart cleared the in-memory edit history, so run 1 could not be undone. Run 2 started from the run-1 page.
+- 22.4 s and $0.188. `patient-list.jsx` changed (token classes) and keeps `usePatients()`. `page.jsx` keeps `prefetchPatients`, `dynamic` and the "Ward list for today." line. Sample rows in `app/` outside the fixture: 0.
+- `render_check`: 0 errors, the route renders. `inspect_port`: 48 before the fix loop, 77 after.
+- The agent went back to inline styles in `page.jsx`, because the fake app has no Tailwind.
+- Files: `real-run-2-page.jsx`, `real-run-2-patient-list.jsx`.
+
+Final checks:
+- `pnpm run typecheck`, `pnpm run typecheck:tsrs`, `pnpm run lint:gate` (59615 diagnostics, baseline 89733), `pnpm run build:ui` and `gen-routes --check` pass.
+- `pnpm run check:scripts` fails in `check-actions` ("558 hits (baseline 410)", E16 legacy names). Main `f8274310e` gives the same result, so this branch did not cause it.
+
+Files outside the pick-1 owned list: `handlers/port/{start,live}.ts`, `ui/features/design-system/{port-plan-summary.tsx,port-plan-file.tsx,port-form-body.tsx,port-form-foot.tsx}`.
 
 ## Left out
 

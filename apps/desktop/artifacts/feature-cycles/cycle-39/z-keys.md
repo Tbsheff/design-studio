@@ -32,7 +32,8 @@ Server on port 7040, `STUDIO_AGENT=mock`, data at `ds-wt/z-keys-data`. HTML fixt
 | Check | Result |
 |---|---|
 | Badge (selected with Shift+Tab from the photo), `Mod+]` in the shell | Passes: 1 `set_stacking` call with `zIndex 1`. The badge paints over the photo. Badge and photo boxes do not change |
-| Second press on the badge | Passes: "Already in front", 0 writes |
+| Second avatar, `Mod+[`, then `Mod+[` again 1.2 s later in the same session | Passes: 1 write, then "Already at the back". The fresh read sees the new z |
+| Second avatar, `Mod+[` twice 300 ms apart | Passes: 1 write. No second write and no "already has these stacking values" error |
 | Photo, `Mod+]` | Passes: "Already in front", 0 writes |
 | Photo, `Mod+[` | Passes: the badge gets z 1, the photo is under it |
 | Photo with `position` removed, `Mod+]` | Passes: `zIndex 0` and `position: relative` in 1 write. The box does not change |
@@ -54,7 +55,7 @@ No new action. MCP `set_stacking` on the paragraph (`zIndex 3`) gives the same o
 
 ## Gates
 
-`pnpm run typecheck` 0 errors. `pnpm run lint:gate` passes (59,623, baseline 89,733). `pnpm run build:ui` passes. `check-bundle` B1 274,703 B, delta 0. `gen-routes.ts --check` passes. The N12 grep finds only the 2 `Partial<Record<AppKey, ...>>` maps in `preview-app-keys.ts`. Neither needs an entry.
+`pnpm run typecheck` 0 errors. `pnpm run lint:gate` passes (59,623, baseline 89,733). `pnpm run build:ui` passes. `check-bundle` B1 274,703 B, delta 0. `gen-routes.ts --check` passes. `pnpm run typecheck:tsrs` passes. `pnpm run check:scripts` fails on main too. Its hits (E1 hand-written routes in `server/http/app-*-routes.ts`, S11 in `server/events/event-file.ts`) are in server files that this branch does not change. The N12 grep finds only the 2 `Partial<Record<AppKey, ...>>` maps in `preview-app-keys.ts`. Neither needs an entry.
 
 ## Notes
 

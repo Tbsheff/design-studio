@@ -50,6 +50,6 @@ These files have no owner in the spec:
 
 ## Left out / open
 
-- The share viewer showed no frame image. The UI sent `frames: ["f1"]`, and the server stored `frames: []`. This is server code that the pick does not touch. I did not compare it with main.
+- The share viewer showed no frame image. The UI sent `frames: ["f1"]`, and the server stored `frames: []`. Main `79d75cc9f` does the same, with the same request and data folder, so this pick did not cause it.
 - The check-bundle chunk-name failures stay until the merge step sets B1.
 - The margin under 300,000 B is 5,378 B. The next Home import over that fails B1.

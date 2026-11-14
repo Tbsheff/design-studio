@@ -1,0 +1,20 @@
+port.start (POST /api/port/start) first call, mock driver, Bonaparte clone ds-wt/po-bp (git clone --no-local, 46,860 files, appDir apps/dashboard).
+Each cycle: fresh STUDIO_DATA_DIR, new server, import clone and prototype, wait 5 s, 6 port.start calls (each run canceled before the next).
+The port.start path on the branch is the same code as main (only run-follow-up.ts changed), so one set covers both.
+
+First call per cycle (ms): 2784, 2688, 2354, 2553, 2496 -> p50 2553
+Later calls p50 per cycle (ms): 478, 439, 559, 424, 437
+
+Split (temporary timing logs, removed before commit; fresh data folder, wait 15 s after import):
+  createTree: index copy 5-7, git add -A 290-400, write-tree 57-99 -> toStartTag 366-511
+  holdEditsForFirstVersion (first app version save, first edit only): 1662
+  asset copy and look pages: 332-476
+  rest of startRun (design md, rules, repo context, runner.start): under 40
+Second and later calls: no first-version hold, tag about 380, total about 450.
+
+git-level createTree on the clone (p35-measure.sh, ms, add / total):
+  plain        add 337 372      total 473 517
+  refresh      add 332 405      total 526 604   (git update-index -q --refresh first)
+  cache        add 393 429      total 515 552   (-c core.untrackedCache=true -c index.threads=true)
+  both         add 362 384      total 551 584
+  add scoped to apps/dashboard: add 252-283, total 376-409

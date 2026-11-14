@@ -21,7 +21,7 @@ const applyImageSearch = defineAction({
   },
   confirm: "none",
   description:
-    "Fill every photo slot on one page in one call. A slot is an img or an element with a data-photo attribute that holds 2 to 6 search words. For each slot the studio searches the words, with the orientation from the slot width and height, takes the first result that the page does not use yet, copies it into the project assets folder, sets it as src or as a background image, removes data-photo and credits it in ASSETS.md. All slots change in one version and one undo step. A slot with no result keeps its placeholder and is listed in missed. Needs image search to be on.",
+    "Fill every photo slot on one page in one call. A slot is an img or an element with a data-photo attribute that holds 2 to 6 search words. For each slot the studio searches the words, with the orientation from the slot width and height, takes the first result that the page does not use yet, copies it into the project assets folder, sets it as src or as a background image, removes data-photo and credits it in ASSETS.md. All slots change in one version and one undo step. A slot with no result keeps its placeholder and is listed in missed. A filled background slot loses its plain text label. A page with no slot left returns at once with a note and runs no search, so call it once per page. Needs image search to be on.",
   errors: [BadRequest, Conflict, NotFound],
   http: {
     method: "POST",

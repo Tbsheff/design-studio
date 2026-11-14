@@ -1,7 +1,7 @@
 import type { BridgeToParent } from "@design-studio/contracts";
 
 import {
-  createRangeGuard,
+  createEditGuard,
   isMixedLayer,
   restoreSnapshot,
   selectTextRange,
@@ -72,7 +72,7 @@ interface Session {
   hadEditable: string | null;
   isHeld: boolean;
   isRangeMode: boolean;
-  release: (() => void) | null;
+  release: () => void;
 }
 
 function ensureStyle(): void {
@@ -163,7 +163,7 @@ export function createTextEditor(deps: TextEditDeps): TextEditor {
 
   const finish = (current: Session): void => {
     session = null;
-    current.release?.();
+    current.release();
     range.unwatch();
     const { element } = current;
     element.removeEventListener("blur", onBlur);
@@ -265,15 +265,14 @@ export function createTextEditor(deps: TextEditDeps): TextEditor {
     const snapshot = toSnapshot(element);
     const selector = deps.selectorFor(element);
     const isRangeMode = element.children.length > 0;
-    let release: (() => void) | null = null;
 
-    if (isRangeMode) {
-      release = createRangeGuard({
-        element,
-        onBlocked: () => deps.post({ type: "text-edit-blocked", selector }),
-        snapshot,
-      });
-    }
+    const release = createEditGuard({
+      element,
+      isRangeMode,
+      onBlocked: () => deps.post({ type: "text-edit-blocked", selector }),
+      onOuterChange: () => rebase(element),
+      snapshot,
+    });
 
     session = {
       element,
@@ -310,6 +309,28 @@ export function createTextEditor(deps: TextEditDeps): TextEditor {
       isRangeMode,
     });
   };
+
+  function rebase(element: HTMLElement): void {
+    const current = session;
+
+    if (current?.element !== element) {
+      return;
+    }
+
+    const last = range.lastRange();
+    finish(current);
+    deps.post({
+      type: "text-edit",
+      selector: current.selector,
+      state: "cancel",
+      isRangeMode: current.isRangeMode,
+    });
+    start(element);
+
+    if (last !== null && session?.element === element) {
+      selectTextRange(element, last.start, last.end);
+    }
+  }
 
   const resume = (
     element: HTMLElement,

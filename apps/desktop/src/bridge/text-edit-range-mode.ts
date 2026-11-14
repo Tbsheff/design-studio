@@ -1,11 +1,15 @@
+import { appSourceFor } from "./app-source.js";
+
 interface NodeSnapshot {
   readonly children: ReadonlyMap<Node, readonly Node[]>;
   readonly data: ReadonlyMap<Node, string>;
 }
 
-interface RangeGuardSetup {
+interface EditGuardSetup {
   readonly element: HTMLElement;
+  readonly isRangeMode: boolean;
   readonly onBlocked: () => void;
+  readonly onOuterChange: () => void;
   readonly snapshot: NodeSnapshot;
 }
 
@@ -117,8 +121,21 @@ const preventEvent = (event: Event): void => {
   event.preventDefault();
 };
 
-const createRangeGuard = (setup: RangeGuardSetup): (() => void) => {
-  const { element, onBlocked, snapshot } = setup;
+const isOuterNode = (node: Node): boolean =>
+  node instanceof Element && !(node instanceof HTMLBRElement);
+
+const isOuterChange = (records: readonly MutationRecord[]): boolean =>
+  records.some(
+    (record) =>
+      [...record.addedNodes].some((node) => isOuterNode(node)) ||
+      [...record.removedNodes].some((node) => isOuterNode(node))
+  );
+
+const toInputBlock = (
+  setup: EditGuardSetup,
+  restore: () => void
+): (() => void) => {
+  const { element, onBlocked } = setup;
   let hasBlocked = false;
 
   const block = (): void => {
@@ -134,7 +151,7 @@ const createRangeGuard = (setup: RangeGuardSetup): (() => void) => {
   };
 
   const onInput = (): void => {
-    restoreSnapshot(snapshot);
+    restore();
     block();
   };
 
@@ -155,8 +172,40 @@ const createRangeGuard = (setup: RangeGuardSetup): (() => void) => {
   };
 };
 
+const primeChildSources = (element: HTMLElement): void => {
+  for (const child of element.children) {
+    void appSourceFor(child);
+  }
+};
+
+const createEditGuard = (setup: EditGuardSetup): (() => void) => {
+  const observer = new MutationObserver((records) => {
+    if (isOuterChange(records)) {
+      setup.onOuterChange();
+    }
+  });
+
+  const restore = (): void => {
+    restoreSnapshot(setup.snapshot);
+    observer.takeRecords();
+  };
+
+  observer.observe(setup.element, { childList: true, subtree: true });
+  let releaseBlock: (() => void) | null = null;
+
+  if (setup.isRangeMode) {
+    releaseBlock = toInputBlock(setup, restore);
+    primeChildSources(setup.element);
+  }
+
+  return () => {
+    observer.disconnect();
+    releaseBlock?.();
+  };
+};
+
 export {
-  createRangeGuard,
+  createEditGuard,
   isInlineTextChild,
   isMixedLayer,
   restoreSnapshot,

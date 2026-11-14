@@ -29,7 +29,13 @@ interface TextRangeWatch {
   readonly selector: string;
 }
 
+interface TextRangeSpan {
+  readonly end: number;
+  readonly start: number;
+}
+
 interface TextRangeReporter {
+  readonly lastRange: () => TextRangeSpan | null;
   readonly onKey: (event: KeyboardEvent) => boolean;
   readonly unwatch: () => void;
   readonly watch: (target: TextRangeWatch) => void;
@@ -191,6 +197,23 @@ const toShot = (
   };
 };
 
+const toKeyBody = (
+  shot: TextRangeShot,
+  reading: RangeReading,
+  keyCommand: TextRangeCommand
+): Omit<TextRangeKeyMessage, "ns" | "token"> => ({
+  className: reading.target.element.getAttribute("class") ?? "",
+  command: keyCommand,
+  end: shot.end,
+  layer: shot.layer,
+  selector: shot.selector,
+  source: shot.source,
+  start: shot.start,
+  tag: shot.tag,
+  text: shot.text,
+  type: "text-range-key",
+});
+
 const toReadingKey = (reading: RangeReading | null): string => {
   if (reading === null) {
     return "null";
@@ -202,6 +225,7 @@ const toReadingKey = (reading: RangeReading | null): string => {
 const createTextRange = (deps: TextRangeDeps): TextRangeReporter => {
   let current: TextRangeWatch | null = null;
   let lastKey = "";
+  let lastSpan: TextRangeSpan | null = null;
 
   const report = (): void => {
     if (!current) {
@@ -216,6 +240,11 @@ const createTextRange = (deps: TextRangeDeps): TextRangeReporter => {
     }
 
     lastKey = key;
+
+    if (reading !== null) {
+      lastSpan = { end: reading.layerEnd, start: reading.layerStart };
+    }
+
     deps.post(toShot(deps, current, reading));
   };
 
@@ -233,6 +262,7 @@ const createTextRange = (deps: TextRangeDeps): TextRangeReporter => {
   const watch = (target: TextRangeWatch): void => {
     current = target;
     lastKey = "";
+    lastSpan = null;
     document.addEventListener("selectionchange", report);
   };
 
@@ -253,26 +283,15 @@ const createTextRange = (deps: TextRangeDeps): TextRangeReporter => {
     const shot = toShot(deps, current, reading);
 
     if (!shot.isDirty) {
-      const className = reading.target.element.getAttribute("class") ?? "";
-
-      deps.post({
-        className,
-        command,
-        end: shot.end,
-        layer: shot.layer,
-        selector: shot.selector,
-        source: shot.source,
-        start: shot.start,
-        tag: shot.tag,
-        text: shot.text,
-        type: "text-range-key",
-      });
+      deps.post(toKeyBody(shot, reading, command));
     }
 
     return true;
   };
 
-  return { onKey, unwatch, watch };
+  const lastRange = (): TextRangeSpan | null => lastSpan;
+
+  return { lastRange, onKey, unwatch, watch };
 };
 
 export { createTextRange };

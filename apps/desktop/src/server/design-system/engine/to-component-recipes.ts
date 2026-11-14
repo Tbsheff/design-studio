@@ -391,17 +391,24 @@ const toFoundComponent = (
   };
 };
 
+const toKebabName = (name: string): string =>
+  name.replaceAll(/(?<=[a-z0-9])(?=[A-Z])/gu, "-").toLowerCase();
+
+const isOwnSlot = (component: ComponentRecipe | null): boolean =>
+  component !== null && component.slot === toKebabName(component.name);
+
 const toFoundComponents = (context: SourceContext): ComponentRecipe[] => {
   const found = new Map<string, ComponentRecipe>();
 
   for (const index of context.tokens.keys()) {
     const owner = toOwner(context.starts, index);
-    const isNew = owner !== null && !found.has(owner.name);
+    const prior = found.get(owner?.name ?? "") ?? null;
+    const isOpen = owner !== null && !isOwnSlot(prior);
 
-    if (isNew && isClassName(context.tokens, index)) {
+    if (isOpen && isClassName(context.tokens, index)) {
       const component = toFoundComponent(context, index, owner);
 
-      if (component !== null) {
+      if (component !== null && (prior === null || isOwnSlot(component))) {
         found.set(owner.name, component);
       }
     }

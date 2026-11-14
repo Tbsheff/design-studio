@@ -20,6 +20,7 @@ type ImportSourcePageInput = Input<typeof importSourcePage>;
 interface SourceImport {
   readonly appProjectId: string;
   readonly directionId: string;
+  readonly fixtureRoute: string | null;
   readonly name: string;
   readonly projectId: string;
   readonly routePath: string;
@@ -52,22 +53,25 @@ const toSlashPath = (route: string): string =>
   `/${route.trim().split("/").filter(Boolean).join("/")}`;
 
 const toFixtureRoute = Effect.fn("page.importSource.toFixtureRoute")(
-  function* run(appProjectId: string, routePath: string) {
+  function* run(source: SourceImport) {
     const store = yield* FixtureStore;
 
     const { items } = yield* store.list({
       cursor: null,
       limit: FIXTURE_LIST_LIMIT,
-      projectId: appProjectId,
+      projectId: source.appProjectId,
     });
 
-    const wanted = toSlashPath(routePath);
+    const wanted = toSlashPath(source.routePath);
 
-    const fixture =
-      items.findLast((item) => toSlashPath(item.sourceRoute) === wanted) ??
-      null;
+    const matches = items.filter(
+      (item) => toSlashPath(item.sourceRoute) === wanted
+    );
 
-    return fixture?.route ?? null;
+    const same =
+      matches.find((item) => item.route === source.fixtureRoute) ?? null;
+
+    return same?.route ?? matches.at(-1)?.route ?? null;
   }
 );
 
@@ -97,10 +101,7 @@ const importSourceOrFixture = Effect.fn(
           return yield* error;
         }
 
-        const route = yield* toFixtureRoute(
-          source.appProjectId,
-          source.routePath
-        );
+        const route = yield* toFixtureRoute(source);
 
         if (route === null) {
           return yield* error;
@@ -138,6 +139,7 @@ const handle = Effect.fn("page.importSource")(function* run(
   const imported = yield* importSourceOrFixture({
     appProjectId: entry.appProjectId,
     directionId: input.directionId,
+    fixtureRoute: entry.fixtureRoute,
     name: toCopyName(input.file),
     projectId: input.projectId,
     routePath: entry.routePath,
@@ -150,6 +152,7 @@ const handle = Effect.fn("page.importSource")(function* run(
   yield* writer.record({
     appProjectId: entry.appProjectId,
     directionId: input.directionId,
+    fixtureRoute: entry.fixtureRoute,
     frameId: imported.frameId,
     page: imported.page,
     projectId: input.projectId,

@@ -13,6 +13,7 @@ import { toAppWorkTree } from "./route-source-target.js";
 
 interface EntryCommand {
   readonly appProjectId: string;
+  readonly fixtureRoute: string | null;
   readonly frameId: string;
   readonly page: string;
   readonly routePath: string;
@@ -49,6 +50,7 @@ const setCopyEntry = Effect.fn("RouteSource.setCopyEntry")(function* run(
     appProjectId: command.appProjectId,
     copiedAt: Date.now(),
     files: texts.map((item) => ({ file: item.file, sha: item.sha })),
+    fixtureRoute: command.fixtureRoute,
     frameId: command.frameId,
     hasSnapshot: yield* setSnapshot(workTree, command.page, texts),
     page: toPagePath(command.page),

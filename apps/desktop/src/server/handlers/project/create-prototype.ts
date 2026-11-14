@@ -335,6 +335,7 @@ const recordRouteSource = Effect.fn(
     .record({
       appProjectId: input.projectId,
       directionId: target.directionId,
+      fixtureRoute: label.fixtureRoute,
       frameId: copy.frameId,
       page: copy.page,
       projectId: target.projectId,

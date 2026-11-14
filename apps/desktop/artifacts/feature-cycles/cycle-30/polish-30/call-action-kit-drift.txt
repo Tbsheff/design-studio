@@ -1,0 +1,200 @@
+call-action kit-drift.list on http://127.0.0.1:5590. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 7 ms, git spawns: not counted (server side)
+{
+  "items": [
+    {
+      "column": 5,
+      "confidence": "high",
+      "droppedClasses": [
+        "text-sm"
+      ],
+      "file": "index.html",
+      "id": "0dd4c93b24fd987e",
+      "keptClasses": [
+        "field-label"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/label.tsx",
+        "name": "Label"
+      },
+      "line": 6,
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "label"
+    },
+    {
+      "column": 5,
+      "confidence": "high",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "0dd54f4d24ff9c80",
+      "keptClasses": [
+        "field-label"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/label.tsx",
+        "name": "Label"
+      },
+      "line": 8,
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "label"
+    },
+    {
+      "column": 3,
+      "confidence": "high",
+      "droppedClasses": [
+        "w-full"
+      ],
+      "file": "index.html",
+      "id": "17116fc928fdfa09",
+      "keptClasses": [
+        "grid"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/table.tsx",
+        "name": "Table"
+      },
+      "line": 11,
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "table"
+    }
+  ],
+  "next": null
+}
+
+[mcp] ok, 10 ms, git spawns: not counted (server side)
+{
+  "items": [
+    {
+      "column": 5,
+      "confidence": "high",
+      "droppedClasses": [
+        "text-sm"
+      ],
+      "file": "index.html",
+      "id": "0dd4c93b24fd987e",
+      "keptClasses": [
+        "field-label"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/label.tsx",
+        "name": "Label"
+      },
+      "line": 6,
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "label"
+    },
+    {
+      "column": 5,
+      "confidence": "high",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "0dd54f4d24ff9c80",
+      "keptClasses": [
+        "field-label"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/label.tsx",
+        "name": "Label"
+      },
+      "line": 8,
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "label"
+    },
+    {
+      "column": 3,
+      "confidence": "high",
+      "droppedClasses": [
+        "w-full"
+      ],
+      "file": "index.html",
+      "id": "17116fc928fdfa09",
+      "keptClasses": [
+        "grid"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/table.tsx",
+        "name": "Table"
+      },
+      "line": 11,
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "table"
+    }
+  ],
+  "next": null
+}
+
+[agent] ok, 4 ms, git spawns: not counted (server side)
+{
+  "items": [
+    {
+      "column": 5,
+      "confidence": "high",
+      "droppedClasses": [
+        "text-sm"
+      ],
+      "file": "index.html",
+      "id": "0dd4c93b24fd987e",
+      "keptClasses": [
+        "field-label"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/label.tsx",
+        "name": "Label"
+      },
+      "line": 6,
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "label"
+    },
+    {
+      "column": 5,
+      "confidence": "high",
+      "droppedClasses": [],
+      "file": "index.html",
+      "id": "0dd54f4d24ff9c80",
+      "keptClasses": [
+        "field-label"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/label.tsx",
+        "name": "Label"
+      },
+      "line": 8,
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "label"
+    },
+    {
+      "column": 3,
+      "confidence": "high",
+      "droppedClasses": [
+        "w-full"
+      ],
+      "file": "index.html",
+      "id": "17116fc928fdfa09",
+      "keptClasses": [
+        "grid"
+      ],
+      "kitComponent": {
+        "importPath": "components/ui/table.tsx",
+        "name": "Table"
+      },
+      "line": 11,
+      "suggestedSize": null,
+      "suggestedVariant": null,
+      "tag": "table"
+    }
+  ],
+  "next": null
+}
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

@@ -6,13 +6,14 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
   useSyncExternalStore,
   useTransition,
 } from "react";
 
 import { selectionRun } from "../../platform/ask-chat.js";
 import { useLive } from "../../platform/live-store.js";
-import { useAction } from "../../platform/query.js";
+import { subscribeDone, useAction } from "../../platform/query.js";
 import { canvasStore } from "./canvas-frames-model.js";
 import {
   isStateBoardSection,
@@ -85,6 +86,27 @@ const useVersionRecheck = (
   }, [headVersionId, refetch]);
 };
 
+const START_STATES_ID = runRoutes.startStatesRun.id;
+
+const useSeenSequence = (
+  projectId: string,
+  sectionId: string
+): [boolean, (seenId: string) => void] => {
+  const [seenId, setSeenId] = useState<string | null>(null);
+
+  useEffect(
+    () =>
+      subscribeDone((done) => {
+        if (done.actionId === START_STATES_ID && done.projectId === projectId) {
+          setSeenId(sectionId);
+        }
+      }),
+    [projectId, sectionId]
+  );
+
+  return [seenId === sectionId, setSeenId];
+};
+
 const useStateSequence = (
   projectId: string,
   section: CanvasSection
@@ -95,20 +117,28 @@ const useStateSequence = (
   const { run: runStart } = start;
   const { run: runStop } = stop;
   const sectionId = section.id;
+  const [hasSequence, setSeenId] = useSeenSequence(projectId, sectionId);
 
-  const sequenceQuery = useMemo(
-    () => ({ projectId, sequenceId: toSequenceId(sectionId) }),
-    [projectId, sectionId]
-  );
+  const sequenceQuery = useMemo(() => {
+    if (!hasSequence) {
+      return null;
+    }
+
+    return { projectId, sequenceId: toSequenceId(sectionId) };
+  }, [hasSequence, projectId, sectionId]);
 
   const { data } = useAction(runRoutes.getStatesRun, sequenceQuery);
   const phase = useMemo(() => toStateRunPhase(data), [data]);
 
   const handleDesign = useCallback((): void => {
     startTransition(async (): Promise<void> => {
-      await runStart({ projectId, section: sectionId });
+      const started = await runStart({ projectId, section: sectionId });
+
+      if (started !== null) {
+        setSeenId(sectionId);
+      }
     });
-  }, [projectId, runStart, sectionId]);
+  }, [projectId, runStart, sectionId, setSeenId]);
 
   const runId = toStopRunId(phase);
 

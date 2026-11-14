@@ -213,6 +213,34 @@ const toLineHeightValue = (
   return `${Math.max(0, Math.round(px) + step)}${PX}`;
 };
 
+const isOnTypeScale = (prop: TypeProp, values: StyleValues): boolean => {
+  const fontPx = toPx(values["font-size"]);
+
+  if (fontPx === null) {
+    return false;
+  }
+
+  if (prop === "font-size") {
+    return toScaleIndex(FONT_SCALE, fontPx) >= 0;
+  }
+
+  if (prop !== "line-height" || fontPx <= 0) {
+    return false;
+  }
+
+  const px = toLineHeightPx(values["line-height"], fontPx);
+
+  return px !== null && toScaleIndex(LEADING_SCALE, px / fontPx) >= 0;
+};
+
+const isEveryOnTypeScale = (
+  prop: TypeProp,
+  each: readonly StyleValues[] | null
+): boolean =>
+  each !== null &&
+  each.length > 1 &&
+  each.every((values) => isOnTypeScale(prop, values));
+
 const toTypeValue = (
   prop: TypeProp,
   values: StyleValues,
@@ -232,6 +260,12 @@ const toTypeValue = (
   return toLineHeightValue(values["line-height"], fontPx, step, isTailwind);
 };
 
-export { SEQUENCE_MS, toNextDigits, toOpacityValue, toTypeValue };
+export {
+  SEQUENCE_MS,
+  isEveryOnTypeScale,
+  toNextDigits,
+  toOpacityValue,
+  toTypeValue,
+};
 
 export type { DigitRun };

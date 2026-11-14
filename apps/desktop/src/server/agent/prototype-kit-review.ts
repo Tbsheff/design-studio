@@ -16,6 +16,12 @@ interface KitGroup {
   readonly key: string;
 }
 
+interface KitTally {
+  readonly first: number;
+  readonly last: number;
+  readonly passes: number;
+}
+
 type KitContext = Pick<AgentRunContext, "direction" | "project" | "request">;
 
 const KIT_COUNTS = new WeakMap<KitContext, number[]>();
@@ -173,29 +179,54 @@ const toReviewOpening = (gaps: AppReviewGaps, pass: number): string | null => {
 const isStudioRan = (record: AppReviewRecord): boolean =>
   record.mobileShot !== "agent" || record.review !== "agent";
 
-const toKitNote = (
-  ctx: KitContext,
-  records: readonly AppReviewRecord[]
-): string => {
+const toKitTally = (ctx: KitContext): KitTally | null => {
   const counts = KIT_COUNTS.get(ctx) ?? [];
   const first = counts[0] ?? 0;
-  const last = counts.at(-1) ?? 0;
 
   KIT_COUNTS.delete(ctx);
 
   if (first === 0) {
-    return "";
+    return null;
   }
 
-  if (!records.some((record) => record.fixLoop)) {
-    return `Studio check: ${first} controls did not use the app kit; no fix loop ran.`;
-  }
-
-  if (counts.length < 2) {
-    return `Studio check: ${first} controls did not use the app kit; a fix loop ran.`;
-  }
-
-  return `Studio check: ${first} controls did not use the app kit; a fix loop ran; after it ${last}.`;
+  return { first, last: counts.at(-1) ?? 0, passes: counts.length };
 };
 
-export { isStudioRan, listKitLines, toKitGaps, toKitNote, toReviewOpening };
+const toKitClause = (
+  tally: KitTally,
+  records: readonly AppReviewRecord[]
+): string => {
+  const head = `${tally.first} controls did not use the app kit`;
+
+  if (!records.some((record) => record.fixLoop)) {
+    return `${head}; no fix loop ran`;
+  }
+
+  if (tally.passes < 2) {
+    return `${head}; a fix loop ran`;
+  }
+
+  return `${head}; a fix loop ran; after it ${tally.last}`;
+};
+
+const toKitAfterClause = (tally: KitTally): string => {
+  const head = `${tally.first} controls did not use the app kit`;
+
+  if (tally.passes < 2) {
+    return head;
+  }
+
+  return `${head}, ${tally.last} after the fix loop`;
+};
+
+export {
+  isStudioRan,
+  listKitLines,
+  toKitAfterClause,
+  toKitClause,
+  toKitGaps,
+  toKitTally,
+  toReviewOpening,
+};
+
+export type { KitTally };

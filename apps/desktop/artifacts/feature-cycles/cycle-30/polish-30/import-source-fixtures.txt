@@ -1,0 +1,15 @@
+Two fixtures for /patients on rf-next-fx (/patients answers 500, no .db-ok):
+fx-f4fbf8 ward=north, fx-ee3c13 ward=south.
+Copies: alRhOAQdG3 from fx-f4fbf8, t39U93C_QT from fx-ee3c13.
+== copy-fx-f4fbf8
+"fixtureRoute": "/__studio-fixture/fx-f4fbf8"
+index-app-2.html: Ward north list
+index-app-3.html: Ward north list
+index-app-4.html: Ward north list
+index-app.html: Ward north list
+index.html: Ward north list
+== copy-fx-ee3c13
+"fixtureRoute": "/__studio-fixture/fx-ee3c13"
+index-app.html: Ward south list
+index.html: Ward south list
+On main, toFixtureRoute takes the latest fixture (fx-ee3c13, south) for both copies.

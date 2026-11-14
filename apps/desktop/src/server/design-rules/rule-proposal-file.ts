@@ -2,7 +2,9 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import type { ProposalStatus } from "@design-studio/actions/design-rule/proposal/schema";
-import { Schema } from "effect";
+import { Result, Schema } from "effect";
+
+import { toDecoder } from "../platform/decode/index.js";
 
 const STATUS_FILE = "rule-proposals.json";
 
@@ -17,9 +19,13 @@ type ProposalStatusFile = typeof ProposalStatusFileSchema.Type;
 
 const EMPTY_STATUS: ProposalStatusFile = { accepted: [], dismissed: [] };
 
-const toDecodedStatus = Schema.decodeUnknownPromise(
-  Schema.fromJsonString(ProposalStatusFileSchema)
+const toStatusResult = toDecoder(
+  Schema.fromJsonString(ProposalStatusFileSchema),
+  "ignore"
 );
+
+const toDecodedStatus = (text: string): ProposalStatusFile =>
+  Result.getOrThrow(toStatusResult(text));
 
 const toStatusPath = (projectDir: string): string =>
   path.join(projectDir, STATUS_FILE);
@@ -31,9 +37,7 @@ const getProposalStatus = async (
   projectDir: string
 ): Promise<ProposalStatusFile> => {
   try {
-    return await toDecodedStatus(
-      await readFile(toStatusPath(projectDir), "utf-8")
-    );
+    return toDecodedStatus(await readFile(toStatusPath(projectDir), "utf-8"));
   } catch (error) {
     if (isMissing(error)) {
       return EMPTY_STATUS;

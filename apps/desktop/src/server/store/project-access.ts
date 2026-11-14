@@ -1,18 +1,44 @@
 import { stat } from "node:fs/promises";
 import path from "node:path";
 
+import { Conflict } from "@design-studio/actions/_core/errors/conflict";
 import { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import { Context, Effect, Layer } from "effect";
 
 import { loadConfig } from "../platform/config/index.js";
+import {
+  isFirstVersionDone,
+  isFirstVersionFailed,
+  isFirstVersionRunning,
+  toFirstVersionWaitText,
+} from "./first-version-jobs.js";
 
 interface ProjectAccessApi {
   readonly visible: (projectId: string) => Effect.Effect<void, NotFound>;
+  readonly ready: (projectId: string) => Effect.Effect<void, Conflict>;
 }
 
 const SAFE_ID = /^[\w-]{1,64}$/u;
 
 const MISS_MESSAGE = "The project does not exist.";
+
+const FIRST_VERSION_WAIT_MS = 20_000;
+
+const ready = Effect.fn("ProjectAccess.ready")(function* run(
+  projectId: string
+) {
+  if (!isFirstVersionRunning(projectId)) {
+    return;
+  }
+
+  const isDone = yield* Effect.promise(() =>
+    isFirstVersionDone(projectId, FIRST_VERSION_WAIT_MS)
+  );
+
+  if (!isDone || isFirstVersionFailed(projectId)) {
+    return yield* new Conflict({ message: toFirstVersionWaitText(projectId) });
+  }
+});
 
 const createProjectAccess = (projectsRoot: string): ProjectAccessApi => {
   const hasProjectFile = (projectId: string): Effect.Effect<boolean> =>
@@ -37,7 +63,7 @@ const createProjectAccess = (projectsRoot: string): ProjectAccessApi => {
     }
   });
 
-  return { visible };
+  return { ready, visible };
 };
 
 class ProjectAccess extends Context.Service<ProjectAccess, ProjectAccessApi>()(

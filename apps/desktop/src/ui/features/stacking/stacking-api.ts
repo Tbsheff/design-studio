@@ -104,6 +104,72 @@ const writeStacking = (
   });
 };
 
-export { readStacking, writeStacking };
+interface ZTargetEdit {
+  readonly edit: StackingEdit;
+  readonly target: StackingTarget;
+}
 
-export type { StackingIds, StackingTarget };
+interface OtherTarget {
+  readonly selector: string;
+  readonly source: SourceLoc;
+  readonly tag: string;
+}
+
+interface OtherLayer {
+  readonly position?: StackingPosition | null;
+  readonly target: OtherTarget;
+  readonly zIndex: string | null;
+}
+
+const toOtherLayers = (layer: ZTargetEdit): OtherLayer[] => {
+  const { source: location } = layer.target;
+
+  if (location === null) {
+    return [];
+  }
+
+  const typed = toTypedEdit(layer.edit);
+  const zIndex = typed.zIndex ?? null;
+
+  const target: OtherTarget = {
+    selector: layer.target.selector,
+    source: location,
+    tag: layer.target.tag,
+  };
+
+  if (!("position" in typed)) {
+    return [{ target, zIndex }];
+  }
+
+  return [{ position: typed.position ?? null, target, zIndex }];
+};
+
+const writeZOrder = (
+  ids: StackingIds,
+  layers: readonly ZTargetEdit[],
+  breakpoint: string
+): Promise<StackingSetResult> => {
+  const first = layers.at(0) ?? null;
+  const location = first?.target.source ?? null;
+
+  if (first === null || location === null) {
+    return Promise.reject(new Error("This layer has no source location."));
+  }
+
+  return call(stackingRoutes.setStacking, {
+    ...toTypedEdit(first.edit),
+    breakpoint,
+    directionId: ids.directionId,
+    others: layers.slice(1).flatMap((layer) => toOtherLayers(layer)),
+    projectId: ids.projectId,
+    target: {
+      selector: first.target.selector,
+      source: location,
+      tag: first.target.tag,
+    },
+  });
+};
+
+export { readStacking, writeStacking, writeZOrder };
+
+export type { StackingIds, StackingTarget, ZTargetEdit };

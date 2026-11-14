@@ -2,12 +2,14 @@ import type { AnyAction } from "@design-studio/actions/_core/action";
 import type { ApprovalCard } from "@design-studio/actions/_core/approval-card";
 import type { StudioError } from "@design-studio/actions/_core/errors/all";
 import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
+import type { Conflict } from "@design-studio/actions/_core/errors/conflict";
 import type { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import { Effect, Schema } from "effect";
 
 import { EventQueue } from "../../events/index.js";
 import {
   Authorizer,
+  isFirstVersionWrite,
   LocalOrgScope,
   LocalPrincipal,
   ProjectAccess,
@@ -87,6 +89,23 @@ const checkScope = (
     yield* access.visible(input.projectId);
   });
 
+const isHeldWrite = (action: AnyAction, input: Decoded): boolean =>
+  isFirstVersionWrite(action) && "directionId" in input;
+
+const toReadyWait = (
+  action: AnyAction,
+  input: Decoded
+): Effect.Effect<void, Conflict, ProjectAccess> =>
+  Effect.gen(function* ready() {
+    if (!isHeldWrite(action, input) || !input.projectId) {
+      return;
+    }
+
+    const access = yield* ProjectAccess;
+
+    yield* access.ready(input.projectId);
+  });
+
 const announceDone = (
   action: AnyAction,
   input: Decoded
@@ -142,6 +161,7 @@ const makeRunner = <Action extends AnyAction>(
 
       yield* authorizer.require(action.needs);
       yield* checkScope(action, input);
+      yield* toReadyWait(action, input);
 
       if (preview !== null) {
         const card = yield* preview(input);

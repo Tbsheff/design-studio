@@ -14,18 +14,18 @@ import type {
   VersionStore,
 } from "../../shared/server-ports.js";
 import { bindDevServerRuntime } from "../app/dev-server-runtime.js";
-import {
-  firstVersionState,
-  firstVersionWaitText,
-  isFirstVersionRunning,
-  startFirstVersion,
-  waitForFirstVersion,
-  type AttachResponse,
-} from "../app/first-version.js";
+import type { AttachResponse } from "../app/first-version.js";
 import { setAsideLegacyCanvas } from "../canvas/index.js";
 import { warmKit } from "../components/props-service.js";
 import { BadRequestError, ConflictError } from "../platform/errors/index.js";
 import { userGit } from "../platform/git/index.js";
+import {
+  isFirstVersionDone,
+  isFirstVersionRunning,
+  startFirstVersion,
+  toFirstVersionState,
+  toFirstVersionWaitText,
+} from "../store/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import { isHeldActionPath } from "./first-version-routes.js";
 
@@ -188,7 +188,7 @@ export async function finishAttach(
 
   return {
     project: attached,
-    firstVersion: firstVersionState(attached.id),
+    firstVersion: toFirstVersionState(attached.id),
     legacyCanvas,
   };
 }
@@ -210,7 +210,7 @@ export async function holdEditsForFirstVersion(
 
   ensureFirstVersion(deps, project);
 
-  if (await waitForFirstVersion(pid, EDIT_WAIT_MS)) {
+  if (await isFirstVersionDone(pid, EDIT_WAIT_MS)) {
     const saved = await deps.projects.get(pid);
 
     if (!needsFirstVersion(saved)) {
@@ -218,11 +218,11 @@ export async function holdEditsForFirstVersion(
     }
   }
 
-  throw new ConflictError(firstVersionWaitText(pid));
+  throw new ConflictError(toFirstVersionWaitText(pid));
 }
 
 export const applyFirstVersionHold = (app: Hono, deps: AppRouteDeps): void => {
-  app.use("/api/projects/:pid/d/:did/*", async (c, next) => {
+  app.use("/api/projects/:pid/*", async (c, next) => {
     if (
       c.req.method !== "GET" &&
       (EDIT_ROUTES.test(c.req.path) || isHeldActionPath(c.req.path))

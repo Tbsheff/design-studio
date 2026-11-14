@@ -1,0 +1,53 @@
+call-action kit-drift.apply on http://127.0.0.1:6910. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 11 ms, git spawns: not counted (server side)
+{
+  "changed": [
+    "08aebe261454b085",
+    "139c391a367a4900"
+  ],
+  "files": [
+    "app/crew/page.tsx",
+    "app/loading/page.tsx"
+  ],
+  "skipped": [],
+  "versionId": "pending-de0eb9896f2670ed"
+}
+
+[mcp] ok, 49 ms, git spawns: not counted (server side)
+{
+  "changed": [
+    "08aebe261454b085",
+    "139c391a367a4900"
+  ],
+  "files": [
+    "app/crew/page.tsx",
+    "app/loading/page.tsx"
+  ],
+  "skipped": [],
+  "versionId": "pending-7717005b9ee7cfff"
+}
+
+[agent] ok, 8 ms, git spawns: not counted (server side)
+{
+  "changed": [
+    "08aebe261454b085",
+    "139c391a367a4900"
+  ],
+  "files": [
+    "app/crew/page.tsx",
+    "app/loading/page.tsx"
+  ],
+  "skipped": [],
+  "versionId": "pending-706710d670ec5300"
+}
+
+[http] reset: 1 undo
+
+[mcp] reset: 1 undo
+
+[agent] reset: 1 undo
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

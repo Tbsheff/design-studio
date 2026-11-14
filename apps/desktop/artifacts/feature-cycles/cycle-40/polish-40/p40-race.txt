@@ -1,0 +1,3 @@
+project rX-vm29yHe
+http (starts the first version): 200 311 ms {"changed":["08aebe261454b085"],"files":["app/crew/page.tsx"],"skipped":[],"versionId":"pending-bc14dadf4435dca5"}
+agent tool route, 30 ms later: 200 239 ms {"content":[{"text":"{\"changed\":[\"139c391a367a4900\"],\"files\":[\"app/loading/page.tsx\"],\"skipped\":[],\"versionId\":\"pending-b92f3ac9a32c7a89\"}","type":"text"}],"isError":false}

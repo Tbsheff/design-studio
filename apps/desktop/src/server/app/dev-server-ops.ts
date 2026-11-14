@@ -1,8 +1,8 @@
 import type { AttachAppRequest, Project } from "@design-studio/contracts";
 
 import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
+import { toFirstVersionState } from "../store/index.js";
 import type { DevServerRuntime } from "./dev-server-runtime.js";
-import { firstVersionState } from "./first-version.js";
 import { listAppRoutes } from "./routes.js";
 
 type Field = string | null | undefined;
@@ -46,7 +46,7 @@ const readView = async (runtime: DevServerRuntime, projectId: string) => {
 
   return {
     app: project.app,
-    firstVersion: firstVersionState(project.id),
+    firstVersion: toFirstVersionState(project.id),
     logs: apps?.logs(project.id) ?? [],
     status: apps?.status(project) ?? null,
   };

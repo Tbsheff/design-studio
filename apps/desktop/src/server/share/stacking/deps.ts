@@ -9,7 +9,12 @@ export { elementClassInfo } from "../../direct-edit/commit/index.js";
 
 export { htmlVariantProps } from "../../direct-edit/engine/index.js";
 
-export { planDirectEdit } from "../../direct-edit/index.js";
+export {
+  patchSource,
+  planDirectEdit,
+  resolveSource,
+  themeForFile,
+} from "../../direct-edit/index.js";
 
 export { prefixOf } from "../../style-scope/engine/index.js";
 

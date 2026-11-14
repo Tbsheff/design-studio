@@ -5,8 +5,9 @@ import type {
   DesignSystemDraftResult,
   Project,
 } from "@design-studio/contracts";
-import { Option, Schema } from "effect";
+import { Option, Result, Schema } from "effect";
 
+import { toDecoder } from "../../platform/decode/index.js";
 import { COVERAGE_FILE, META_FILE } from "../extract/draft.js";
 import type { LoadedPack } from "../packs.js";
 import type { PackWriteRuntime } from "./library-core.js";
@@ -18,13 +19,23 @@ const DraftMetaSchema = Schema.Struct({
 
 const CoverageMarkSchema = Schema.Struct({ grade: Schema.String });
 
-const decodeMeta = Schema.decodeUnknownOption(
-  Schema.fromJsonString(DraftMetaSchema)
+const toMetaResult = toDecoder(
+  Schema.fromJsonString(DraftMetaSchema),
+  "ignore"
 );
 
-const decodeCoverageMark = Schema.decodeUnknownOption(
-  Schema.fromJsonString(CoverageMarkSchema)
+const toCoverageMarkResult = toDecoder(
+  Schema.fromJsonString(CoverageMarkSchema),
+  "ignore"
 );
+
+const decodeMeta = (text: string): Option.Option<typeof DraftMetaSchema.Type> =>
+  Result.getSuccess(toMetaResult(text));
+
+const decodeCoverageMark = (
+  text: string
+): Option.Option<typeof CoverageMarkSchema.Type> =>
+  Result.getSuccess(toCoverageMarkResult(text));
 
 const toTextOrNull = async (file: string): Promise<string | null> => {
   try {

@@ -1,7 +1,7 @@
 import { AllActions } from "@design-studio/actions";
 import type { AnyAction } from "@design-studio/actions/_core/action";
 
-const DIRECTION_PATH = "/d/:directionId/";
+import { isFirstVersionWrite } from "../store/index.js";
 
 const toPathPattern = (path: string): RegExp => {
   const source = path
@@ -19,9 +19,7 @@ const toPathPattern = (path: string): RegExp => {
 };
 
 const isHeldAction = (action: AnyAction): boolean =>
-  action.access !== "read" &&
-  action.scope === "project" &&
-  action.http.path.includes(DIRECTION_PATH);
+  isFirstVersionWrite(action) && "directionId" in action.input.fields;
 
 const toHeldPatterns = (): readonly RegExp[] => {
   const patterns: RegExp[] = [];

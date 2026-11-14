@@ -12,6 +12,7 @@ import { inspectStacking } from "./get.js";
 import { toStackingInput } from "./input.js";
 import type { StackingFieldsInput } from "./input.js";
 import { applyStacking, toStackingResult } from "./set.js";
+import type { StackingSetRequest } from "./set.js";
 import { toStackingFailure } from "./stacking-failure.js";
 
 interface GetStackingCommand extends DirectionIds {
@@ -19,11 +20,15 @@ interface GetStackingCommand extends DirectionIds {
   readonly source: SourceLoc;
 }
 
-interface SetStackingCommand extends DirectionIds {
+interface StackingLayerCommand {
   readonly fields: StackingFieldsInput;
   readonly selector: string | null;
   readonly source: SourceLoc;
   readonly tag: string | null;
+}
+
+interface SetStackingCommand extends DirectionIds, StackingLayerCommand {
+  readonly others: readonly StackingLayerCommand[];
 }
 
 type StackingChange = StackingSetResult;
@@ -43,6 +48,36 @@ const runStackingGet = (
       ),
     toStackingFailure
   );
+
+const toOtherRequest = (
+  layer: StackingLayerCommand,
+  breakpoint: string
+): StackingSetRequest | null => {
+  const input = toStackingInput({ ...layer.fields, breakpoint });
+
+  if (input === null) {
+    return null;
+  }
+
+  return {
+    input,
+    target: { selector: layer.selector, source: layer.source, tag: layer.tag },
+  };
+};
+
+const toOtherRequests = (
+  others: readonly StackingLayerCommand[],
+  breakpoint: string
+): StackingSetRequest[] =>
+  others.flatMap((layer) => {
+    const request = toOtherRequest(layer, breakpoint);
+
+    if (request === null) {
+      return [];
+    }
+
+    return [request];
+  });
 
 const runStackingSet = (
   command: SetStackingCommand
@@ -66,7 +101,8 @@ const runStackingSet = (
             source: command.source,
             tag: command.tag,
           },
-        }
+        },
+        toOtherRequests(command.others, input.breakpoint)
       );
 
       return toStackingResult(plan, version);
@@ -76,4 +112,9 @@ const runStackingSet = (
 
 export { runStackingGet, runStackingSet };
 
-export type { GetStackingCommand, SetStackingCommand, StackingChange };
+export type {
+  GetStackingCommand,
+  SetStackingCommand,
+  StackingChange,
+  StackingLayerCommand,
+};

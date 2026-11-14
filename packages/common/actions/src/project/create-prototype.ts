@@ -21,7 +21,7 @@ const createPrototypeProject = defineAction({
   },
   confirm: "none",
   description:
-    "Create an HTML prototype for a folder workspace or an attached app. The prototype is a new HTML project in the Design Studio projects folder, under prototypes and the folder name. It gets the folder's DESIGN.md, a folder-context.md file with its README and a short file list, and a tokens.css file when the folder has CSS variables or fonts. With routePath, it starts the app dev server, copies that route as the start page, and sets near values to the app tokens. When the route copy fails or is empty, fixtureOffer is set and no run starts. With intoProjectId, the copy goes into that earlier route copy of the same app as a new version, and the run prompt names the source route of a fixture. It never changes the source folder.",
+    "Create an HTML prototype for a folder workspace or an attached app, under prototypes in the projects folder. It gets the folder's DESIGN.md, a folder-context.md file with its README and a short file list, and a tokens.css file when the folder has CSS variables or fonts. With routePath, it starts the app dev server, copies that route as the start page and sets near values to the app tokens. When the route copy fails or is empty, fixtureOffer is set and no run starts. With intoProjectId, the copy goes into that earlier route copy as a new version. It never changes the source folder.",
   errors: [BadRequest, Conflict, NotFound],
   http: { method: "POST", path: "/api/projects/:projectId/prototypes" },
   id: "project.createPrototype",

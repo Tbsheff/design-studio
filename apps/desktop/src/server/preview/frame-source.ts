@@ -6,10 +6,10 @@ import type {
   PreviewService,
   VersionStore,
 } from "../../shared/server-ports.js";
-import { firstVersionState } from "../app/first-version.js";
 import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
 import { resolveSource } from "../project-source/index.js";
 import type { ExportSource, SourceDeps } from "../project-source/index.js";
+import { toFirstVersionState } from "../store/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
 
 const LIVE_VERSION_ID = "live";
@@ -170,7 +170,7 @@ const versionLabel = (src: ExportSource): string => {
   }
 
   if (src.version.id === LIVE_VERSION_ID) {
-    const state = firstVersionState(src.project.id);
+    const state = toFirstVersionState(src.project.id);
 
     if (state?.pending) {
       return `the live app (the first version is still being saved, about ${state.etaSeconds} s left)`;

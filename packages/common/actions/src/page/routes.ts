@@ -12,6 +12,12 @@ const routes = {
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/pages/source",
   },
+  inspectFlowPage: {
+    id: "page.inspectFlow",
+    invalidates: [],
+    method: "GET",
+    path: "/api/projects/:projectId/d/:directionId/pages/flow",
+  },
   inspectMatchesPage: {
     id: "page.inspectMatches",
     invalidates: [],

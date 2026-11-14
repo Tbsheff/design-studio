@@ -1,0 +1,1 @@
+- Flow: The header on plan.html differs from index.html (1 item changed). Copy the header of the first page (selector body > header) to plan.html with update_matches_page, or change both on purpose.

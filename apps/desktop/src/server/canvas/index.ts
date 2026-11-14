@@ -24,6 +24,8 @@ export { createRunPageFrames, PageFramesWriter } from "./page-frames/index.js";
 
 export { PageMatchStore, PageMatchWriter } from "./page-match/index.js";
 
+export { PageFlowStore } from "./page-flow/index.js";
+
 export { FrameImportWriter, toImportPrompt } from "./frame-import/index.js";
 
 export { FrameTidyWriter } from "./frame-tidy/index.js";

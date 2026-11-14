@@ -9,7 +9,12 @@ export { findFrame } from "../canvas/index.js";
 
 export { elementClassInfo } from "../direct-edit/commit/index.js";
 
-export { htmlVariantProps } from "../direct-edit/engine/index.js";
+export {
+  findJsxElement,
+  htmlVariantProps,
+  jsxAncestors,
+  parseSource,
+} from "../direct-edit/engine/index.js";
 
 export {
   parseDirectEditRequest,
@@ -34,6 +39,9 @@ export {
 export { DIRECT_STYLE_PROPERTIES } from "@design-studio/contracts";
 
 export {
+  fromGroupClass,
+  fromGroupVariant,
+  isGroupStateName,
   STATE_SELECTOR_MAX,
   STYLE_STATES,
 } from "@design-studio/contracts/state-styles";
@@ -57,6 +65,9 @@ export type {
 export type {
   ForcedFrameState,
   ForcedStateWire,
+  GroupAncestor,
+  GroupClass,
+  GroupPart,
   StateLayer,
   StateListResult,
   StateStyleInput,

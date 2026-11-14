@@ -21,6 +21,7 @@ import type {
   WrittenFile,
 } from "./deps.js";
 import { StateStyleError } from "./errors.js";
+import { toGroupNameFor } from "./group-state.js";
 
 interface StateTarget {
   readonly selector: string | null;
@@ -136,7 +137,8 @@ const planStateStyle = async (
 
   const part = toStatePart(
     styleInput.state,
-    await isSelectedItemAt(scope, request)
+    await isSelectedItemAt(scope, request),
+    await toGroupNameFor(scope, site, request.target.source, styleInput.state)
   );
 
   const statePrefix = resolved(

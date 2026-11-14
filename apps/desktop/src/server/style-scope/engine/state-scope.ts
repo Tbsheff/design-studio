@@ -8,7 +8,9 @@ import {
   parseVariant,
   STYLE_STATES,
   isDataStateStyle,
+  isGroupStateName,
   toDataStateVariant,
+  toGroupVariant,
   toStyleStateName,
 } from "./deps.js";
 import type {
@@ -26,7 +28,15 @@ interface StateScope {
   readonly state: StyleState;
 }
 
-const toStatePart = (state: StyleState, isSelectedItem: boolean): string => {
+const toStatePart = (
+  state: StyleState,
+  isSelectedItem: boolean,
+  group: string | null
+): string => {
+  if (isGroupStateName(state)) {
+    return toGroupVariant(state, group);
+  }
+
   if (state === "selected" && isSelectedItem) {
     return toDataStateVariant("selected-item");
   }
@@ -39,11 +49,15 @@ const toStatePart = (state: StyleState, isSelectedItem: boolean): string => {
 };
 
 const toStateParts = (state: StyleState): string[] => {
-  if (state === "selected") {
-    return [toStatePart(state, false), toStatePart(state, true)];
+  if (isGroupStateName(state)) {
+    return [];
   }
 
-  return [toStatePart(state, false)];
+  if (state === "selected") {
+    return [toStatePart(state, false, null), toStatePart(state, true, null)];
+  }
+
+  return [toStatePart(state, false, null)];
 };
 
 const SELECTED_ITEM = /(?:^|:)data-\[state=selected\]:/u;

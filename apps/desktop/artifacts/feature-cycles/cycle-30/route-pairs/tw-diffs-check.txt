@@ -1,0 +1,8 @@
+== tw real run 2 output, after the run
+score 65 masked 12
+firstShift shift -18 el=div.overflow-hidden "Name Ward" line-height 24px/normal (19px), height 328px/306px, width 832px/816px above=h1.mb-2 "Patients" margin-bottom 8px/24px, height 36px/38px, font-size 30px/32px, line-height 36px/normal (38px), width 832px/816px
+  top center 26 table.w-full "Name Ward" font-size 16px/15px, line-height 20px/normal (18px), height 326px/304px, width 830px/814px | main.mx-auto "Patients Name Ward" line-height 24px/normal (19px), height 468px/464px, width 896px/880px | thead "Name Ward" font-size 16px/15px, line-height 20px/normal (18px), width 830px/814px
+  top left 75 
+== tw, the listed diffs applied by hand (h1 mb-6 text-[32px], max-w-[880px], table text-[15px], leading-[normal])
+score 96 masked 12
+firstShift None

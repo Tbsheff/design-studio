@@ -1,0 +1,299 @@
+call-action port.inspect on http://127.0.0.1:7310. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 563 ms, git spawns: not counted (server side)
+{
+  "appPath": "/Volumes/DevProjects/code/ds-wt/route-pairs-data/data/port-check/W3kNv23RMi-yka62KoNne-_patients-1280-app.png",
+  "areas": [
+    {
+      "col": 1,
+      "elements": [
+        {
+          "diffs": [],
+          "selector": "main.patients-module__GMQEKW__page > h1.patients-module__GMQEKW__title",
+          "text": "Patients"
+        },
+        {
+          "diffs": [],
+          "selector": "main.patients-module__GMQEKW__page > div.patients-module__GMQEKW__card > table.patients-module__GMQEKW__table",
+          "text": "NAME WARD"
+        }
+      ],
+      "name": "top center",
+      "row": 0,
+      "score": 27
+    }
+  ],
+  "diffPath": "/Volumes/DevProjects/code/ds-wt/route-pairs-data/data/port-check/W3kNv23RMi-yka62KoNne-_patients-1280-diff.png",
+  "firstShift": {
+    "above": {
+      "diffs": [
+        {
+          "app": "4px",
+          "property": "margin-bottom",
+          "prototype": "24px"
+        }
+      ],
+      "selector": "main.patients-module__GMQEKW__page > h1.patients-module__GMQEKW__title",
+      "text": "Patients"
+    },
+    "element": {
+      "diffs": [],
+      "selector": "main.patients-module__GMQEKW__page > div.patients-module__GMQEKW__card",
+      "text": "Name Ward"
+    },
+    "shift": -20
+  },
+  "isLow": true,
+  "masked": [
+    {
+      "reason": "app-change",
+      "text": "Ward list for today."
+    },
+    {
+      "reason": "data-row",
+      "text": "Hid 1 extra data row on the app page."
+    },
+    {
+      "reason": "data-row",
+      "text": "Farah Okafor"
+    },
+    {
+      "reason": "data-row",
+      "text": "Cardiology"
+    },
+    {
+      "reason": "data-row",
+      "text": "Greg Lindqvist"
+    },
+    {
+      "reason": "data-row",
+      "text": "East"
+    },
+    {
+      "reason": "data-row",
+      "text": "Hana Morimoto"
+    },
+    {
+      "reason": "data-row",
+      "text": "Oncology"
+    },
+    {
+      "reason": "data-row",
+      "text": "Ivan Petrov"
+    },
+    {
+      "reason": "data-row",
+      "text": "West"
+    },
+    {
+      "reason": "data-row",
+      "text": "Julia Santos"
+    },
+    {
+      "reason": "data-row",
+      "text": "North"
+    }
+  ],
+  "prototypePath": "/Volumes/DevProjects/code/ds-wt/route-pairs-data/data/port-check/W3kNv23RMi-yka62KoNne-_patients-1280-prototype.png",
+  "score": 71
+}
+
+[mcp] ok, 565 ms, git spawns: not counted (server side)
+{
+  "appPath": "/Volumes/DevProjects/code/ds-wt/route-pairs-data/data/port-check/W3kNv23RMi-yka62KoNne-_patients-1280-app.png",
+  "areas": [
+    {
+      "col": 1,
+      "elements": [
+        {
+          "diffs": [],
+          "selector": "main.patients-module__GMQEKW__page > h1.patients-module__GMQEKW__title",
+          "text": "Patients"
+        },
+        {
+          "diffs": [],
+          "selector": "main.patients-module__GMQEKW__page > div.patients-module__GMQEKW__card > table.patients-module__GMQEKW__table",
+          "text": "NAME WARD"
+        }
+      ],
+      "name": "top center",
+      "row": 0,
+      "score": 27
+    }
+  ],
+  "diffPath": "/Volumes/DevProjects/code/ds-wt/route-pairs-data/data/port-check/W3kNv23RMi-yka62KoNne-_patients-1280-diff.png",
+  "firstShift": {
+    "above": {
+      "diffs": [
+        {
+          "app": "4px",
+          "property": "margin-bottom",
+          "prototype": "24px"
+        }
+      ],
+      "selector": "main.patients-module__GMQEKW__page > h1.patients-module__GMQEKW__title",
+      "text": "Patients"
+    },
+    "element": {
+      "diffs": [],
+      "selector": "main.patients-module__GMQEKW__page > div.patients-module__GMQEKW__card",
+      "text": "Name Ward"
+    },
+    "shift": -20
+  },
+  "isLow": true,
+  "masked": [
+    {
+      "reason": "app-change",
+      "text": "Ward list for today."
+    },
+    {
+      "reason": "data-row",
+      "text": "Hid 1 extra data row on the app page."
+    },
+    {
+      "reason": "data-row",
+      "text": "Farah Okafor"
+    },
+    {
+      "reason": "data-row",
+      "text": "Cardiology"
+    },
+    {
+      "reason": "data-row",
+      "text": "Greg Lindqvist"
+    },
+    {
+      "reason": "data-row",
+      "text": "East"
+    },
+    {
+      "reason": "data-row",
+      "text": "Hana Morimoto"
+    },
+    {
+      "reason": "data-row",
+      "text": "Oncology"
+    },
+    {
+      "reason": "data-row",
+      "text": "Ivan Petrov"
+    },
+    {
+      "reason": "data-row",
+      "text": "West"
+    },
+    {
+      "reason": "data-row",
+      "text": "Julia Santos"
+    },
+    {
+      "reason": "data-row",
+      "text": "North"
+    }
+  ],
+  "prototypePath": "/Volumes/DevProjects/code/ds-wt/route-pairs-data/data/port-check/W3kNv23RMi-yka62KoNne-_patients-1280-prototype.png",
+  "score": 71
+}
+
+[agent] ok, 550 ms, git spawns: not counted (server side)
+{
+  "appPath": "/Volumes/DevProjects/code/ds-wt/route-pairs-data/data/port-check/W3kNv23RMi-yka62KoNne-_patients-1280-app.png",
+  "areas": [
+    {
+      "col": 1,
+      "elements": [
+        {
+          "diffs": [],
+          "selector": "main.patients-module__GMQEKW__page > h1.patients-module__GMQEKW__title",
+          "text": "Patients"
+        },
+        {
+          "diffs": [],
+          "selector": "main.patients-module__GMQEKW__page > div.patients-module__GMQEKW__card > table.patients-module__GMQEKW__table",
+          "text": "NAME WARD"
+        }
+      ],
+      "name": "top center",
+      "row": 0,
+      "score": 27
+    }
+  ],
+  "diffPath": "/Volumes/DevProjects/code/ds-wt/route-pairs-data/data/port-check/W3kNv23RMi-yka62KoNne-_patients-1280-diff.png",
+  "firstShift": {
+    "above": {
+      "diffs": [
+        {
+          "app": "4px",
+          "property": "margin-bottom",
+          "prototype": "24px"
+        }
+      ],
+      "selector": "main.patients-module__GMQEKW__page > h1.patients-module__GMQEKW__title",
+      "text": "Patients"
+    },
+    "element": {
+      "diffs": [],
+      "selector": "main.patients-module__GMQEKW__page > div.patients-module__GMQEKW__card",
+      "text": "Name Ward"
+    },
+    "shift": -20
+  },
+  "isLow": true,
+  "masked": [
+    {
+      "reason": "app-change",
+      "text": "Ward list for today."
+    },
+    {
+      "reason": "data-row",
+      "text": "Hid 1 extra data row on the app page."
+    },
+    {
+      "reason": "data-row",
+      "text": "Farah Okafor"
+    },
+    {
+      "reason": "data-row",
+      "text": "Cardiology"
+    },
+    {
+      "reason": "data-row",
+      "text": "Greg Lindqvist"
+    },
+    {
+      "reason": "data-row",
+      "text": "East"
+    },
+    {
+      "reason": "data-row",
+      "text": "Hana Morimoto"
+    },
+    {
+      "reason": "data-row",
+      "text": "Oncology"
+    },
+    {
+      "reason": "data-row",
+      "text": "Ivan Petrov"
+    },
+    {
+      "reason": "data-row",
+      "text": "West"
+    },
+    {
+      "reason": "data-row",
+      "text": "Julia Santos"
+    },
+    {
+      "reason": "data-row",
+      "text": "North"
+    }
+  ],
+  "prototypePath": "/Volumes/DevProjects/code/ds-wt/route-pairs-data/data/port-check/W3kNv23RMi-yka62KoNne-_patients-1280-prototype.png",
+  "score": 71
+}
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

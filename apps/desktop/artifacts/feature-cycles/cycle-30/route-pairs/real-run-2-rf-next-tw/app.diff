@@ -1,0 +1,54 @@
+diff --git a/app/patients/page.jsx b/app/patients/page.jsx
+index 71ab1be..d9f9d06 100644
+--- a/app/patients/page.jsx
++++ b/app/patients/page.jsx
+@@ -6,9 +6,9 @@ export const dynamic = "force-dynamic";
+ export default async function PatientsPage() {
+   await prefetchPatients();
+   return (
+-    <main className="p-8">
+-      <h1 className="text-2xl font-bold mb-2">Patients</h1>
+-      <p className="text-gray-600 mb-4">Ward list for today.</p>
++    <main className="mx-auto max-w-4xl px-8 py-12">
++      <h1 className="mb-2 text-balance text-3xl font-bold tracking-tight">Patients</h1>
++      <p className="mb-6 text-gray-600">Ward list for today.</p>
+       <PatientList />
+     </main>
+   );
+diff --git a/app/patients/patient-list.jsx b/app/patients/patient-list.jsx
+index 319aec5..1ad467e 100644
+--- a/app/patients/patient-list.jsx
++++ b/app/patients/patient-list.jsx
+@@ -5,12 +5,25 @@ import { usePatients } from "../../lib/client";
+ export default function PatientList() {
+   const rows = usePatients();
+   return (
+-    <table className="text-sm">
+-      <tbody>
+-        {rows.map((row) => (
+-          <tr key={row.id}><td className="pr-4 py-1">{row.name}</td><td className="py-1">{row.ward}</td></tr>
+-        ))}
+-      </tbody>
+-    </table>
++    <div className="overflow-hidden rounded-xl border border-gray-300 bg-white">
++      <table className="w-full border-collapse text-left text-base leading-tight">
++        <thead>
++          <tr>
++            <th className="border-b border-gray-300 bg-gray-100 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-gray-600">Name</th>
++            <th className="border-b border-gray-300 bg-gray-100 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-gray-600">Ward</th>
++          </tr>
++        </thead>
++        <tbody>
++          {rows.map((row) => (
++            <tr key={row.id} className="border-b border-gray-200 last:border-b-0">
++              <td className="px-5 py-4">{row.name}</td>
++              <td className="px-5 py-4">
++                <span className="inline-block whitespace-nowrap rounded-full bg-blue-100 px-2.5 py-0.5 text-sm font-medium text-blue-700">{row.ward}</span>
++              </td>
++            </tr>
++          ))}
++        </tbody>
++      </table>
++    </div>
+   );
+ }

@@ -1,0 +1,29 @@
+<studio-continue>
+The studio checked the updated route /patients (http://p-63345175654b62575035.localhost:7311/patients) against the prototype after your last edit.
+- Render: route renders.
+- Port match against the prototype index.html: score 65 (top center 26, top left 75 under 80). The bar is 80.
+- First shift: content from main.mx-auto > div.overflow-hidden is 18px higher than the prototype. Its own values: line-height app 24px, prototype normal; height app 333px, prototype 306px; width app 832px, prototype 816px. Above it, main.mx-auto > h1.mb-2 "Patients": margin-bottom app 8px, prototype 24px; height app 36px, prototype 38px; font-size app 30px, prototype 32px; line-height app 36px, prototype normal; width app 832px, prototype 816px.
+- Kept app text, not scored: Ward list for today.. The studio hides it in the app shot, so give the elements around it the prototype spacing, as if it were not there.
+  Do not edit the kept app text or its margins.
+- Data row text, not scored (the app data differs from the prototype sample rows): Hid 1 extra data row on the app page. / Farah Okafor / Cardiology / Greg Lindqvist / East
+Low areas and the app elements in them:
+- top center 26: main.mx-auto > div.overflow-hidden > table.w-full "Name Ward" (line-height app 24px, prototype normal; height app 331px, prototype 304px; width app 830px, prototype 814px), main.mx-auto "Patients Name Ward" (line-height app 24px, prototype normal; height app 473px, prototype 464px; width app 896px, prototype 880px), div.overflow-hidden > table.w-full > thead "Name Ward" (line-height app 24px, prototype normal; width app 830px, prototype 814px)
+- top left 75: no named element; check the spacing and the background there.
+The attached sheet, when there is one, shows the prototype, the route, and the different pixels in red.
+Do one fix loop. Fix the render error first, then the low areas, with the app kit and tokens. Do not call inspect_port: the studio checks the route again after your reply. Reply in one or two sentences with what you changed.
+</studio-continue>
+-----
+<studio-continue>
+The studio checked the updated route /patients (http://p-63345175654b62575035.localhost:7311/patients) against the prototype after your last edit.
+- Render: route renders.
+- Port match against the prototype index.html: score 69 (top center 28 under 80). The bar is 80.
+- First shift: content from main.mx-auto > div.overflow-hidden is 18px higher than the prototype. Its own values: line-height app 24px, prototype normal; height app 328px, prototype 306px. Above it, main.mx-auto > h1.mb-2 "Patients": margin-bottom app 8px, prototype 24px; height app 36px, prototype 38px; font-size app 30px, prototype 32px; line-height app 36px, prototype normal.
+- Kept app text, not scored: Ward list for today.. The studio hides it in the app shot, so give the elements around it the prototype spacing, as if it were not there.
+  Do not edit the kept app text or its margins.
+- Data row text, not scored (the app data differs from the prototype sample rows): Hid 1 extra data row on the app page. / Farah Okafor / Cardiology / Greg Lindqvist / East
+Low areas and the app elements in them:
+- top center 28: main.mx-auto > div.overflow-hidden > table.w-full "Name Ward" (line-height app 22px, prototype normal; height app 326px, prototype 304px), main.mx-auto "Patients Name Ward" (padding-right app 40px, prototype 32px; padding-left app 40px, prototype 32px; line-height app 24px, prototype normal; height app 468px, prototype 464px; width app 896px, prototype 880px), div.overflow-hidden > table.w-full > thead "Name Ward" (line-height app 22px, prototype normal)
+The attached sheet, when there is one, shows the prototype, the route, and the different pixels in red.
+Do one fix loop. Fix the render error first, then the low areas, with the app kit and tokens. Do not call inspect_port: the studio checks the route again after your reply. Reply in one or two sentences with what you changed.
+</studio-continue>
+-----

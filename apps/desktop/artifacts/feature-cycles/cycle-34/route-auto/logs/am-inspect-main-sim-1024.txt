@@ -1,0 +1,329 @@
+call-action port.inspect on http://127.0.0.1:5370. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 759 ms, git spawns: not counted (server side)
+{
+  "appPath": "route-auto-data/data/port-check/MQnS64OoS1-400YdT43ZA-_visits-1024-app.png",
+  "areas": [
+    {
+      "col": 2,
+      "elements": [
+        {
+          "diffs": [],
+          "selector": "main.mx-auto > div.flex:nth-of-type(1) > button.ml-auto",
+          "text": "New visit"
+        }
+      ],
+      "name": "top right",
+      "row": 0,
+      "score": 8
+    },
+    {
+      "col": 0,
+      "elements": [
+        {
+          "diffs": [],
+          "selector": "main.mx-auto > div.flex:nth-of-type(1) > h1.text-2xl",
+          "text": "Visits"
+        }
+      ],
+      "name": "top left",
+      "row": 0,
+      "score": 15
+    },
+    {
+      "col": 1,
+      "elements": [
+        {
+          "diffs": [],
+          "selector": "main.mx-auto > div.mx-auto:nth-of-type(2) > p.text-sm",
+          "text": "No visits yet"
+        }
+      ],
+      "name": "top center",
+      "row": 0,
+      "score": 16
+    }
+  ],
+  "diffPath": "route-auto-data/data/port-check/MQnS64OoS1-400YdT43ZA-_visits-1024-diff.png",
+  "firstShift": {
+    "above": {
+      "diffs": [
+        {
+          "app": "976px",
+          "property": "width",
+          "prototype": "560px",
+          "write": null
+        }
+      ],
+      "selector": "main.mx-auto > div.flex:nth-of-type(1)",
+      "text": "Visits New visit"
+    },
+    "element": {
+      "diffs": [
+        {
+          "app": "0px",
+          "property": "margin-top",
+          "prototype": "48px",
+          "write": "mt-12"
+        },
+        {
+          "app": "0px",
+          "property": "padding-top",
+          "prototype": "32px",
+          "write": "pt-8"
+        },
+        {
+          "app": "0px",
+          "property": "padding-right",
+          "prototype": "32px",
+          "write": "pr-8"
+        },
+        {
+          "app": "0px",
+          "property": "padding-bottom",
+          "prototype": "32px",
+          "write": "pb-8"
+        },
+        {
+          "app": "0px",
+          "property": "padding-left",
+          "prototype": "32px",
+          "write": "pl-8"
+        },
+        {
+          "app": "14px",
+          "property": "font-size",
+          "prototype": "16px",
+          "write": "text-base, not text-sm"
+        }
+      ],
+      "selector": "main.mx-auto > div.mx-auto:nth-of-type(2) > p.text-sm",
+      "text": "No visits yet"
+    },
+    "shift": 33
+  },
+  "isLow": true,
+  "masked": [],
+  "prototypePath": "route-auto-data/data/port-check/MQnS64OoS1-400YdT43ZA-_visits-1024-prototype.png",
+  "score": 11
+}
+
+[mcp] ok, 394 ms, git spawns: not counted (server side)
+{
+  "appPath": "route-auto-data/data/port-check/MQnS64OoS1-400YdT43ZA-_visits-1024-app.png",
+  "areas": [
+    {
+      "col": 2,
+      "elements": [
+        {
+          "diffs": [],
+          "selector": "main.mx-auto > div.flex:nth-of-type(1) > button.ml-auto",
+          "text": "New visit"
+        }
+      ],
+      "name": "top right",
+      "row": 0,
+      "score": 8
+    },
+    {
+      "col": 0,
+      "elements": [
+        {
+          "diffs": [],
+          "selector": "main.mx-auto > div.flex:nth-of-type(1) > h1.text-2xl",
+          "text": "Visits"
+        }
+      ],
+      "name": "top left",
+      "row": 0,
+      "score": 15
+    },
+    {
+      "col": 1,
+      "elements": [
+        {
+          "diffs": [],
+          "selector": "main.mx-auto > div.mx-auto:nth-of-type(2) > p.text-sm",
+          "text": "No visits yet"
+        }
+      ],
+      "name": "top center",
+      "row": 0,
+      "score": 16
+    }
+  ],
+  "diffPath": "route-auto-data/data/port-check/MQnS64OoS1-400YdT43ZA-_visits-1024-diff.png",
+  "firstShift": {
+    "above": {
+      "diffs": [
+        {
+          "app": "976px",
+          "property": "width",
+          "prototype": "560px",
+          "write": null
+        }
+      ],
+      "selector": "main.mx-auto > div.flex:nth-of-type(1)",
+      "text": "Visits New visit"
+    },
+    "element": {
+      "diffs": [
+        {
+          "app": "0px",
+          "property": "margin-top",
+          "prototype": "48px",
+          "write": "mt-12"
+        },
+        {
+          "app": "0px",
+          "property": "padding-top",
+          "prototype": "32px",
+          "write": "pt-8"
+        },
+        {
+          "app": "0px",
+          "property": "padding-right",
+          "prototype": "32px",
+          "write": "pr-8"
+        },
+        {
+          "app": "0px",
+          "property": "padding-bottom",
+          "prototype": "32px",
+          "write": "pb-8"
+        },
+        {
+          "app": "0px",
+          "property": "padding-left",
+          "prototype": "32px",
+          "write": "pl-8"
+        },
+        {
+          "app": "14px",
+          "property": "font-size",
+          "prototype": "16px",
+          "write": "text-base, not text-sm"
+        }
+      ],
+      "selector": "main.mx-auto > div.mx-auto:nth-of-type(2) > p.text-sm",
+      "text": "No visits yet"
+    },
+    "shift": 33
+  },
+  "isLow": true,
+  "masked": [],
+  "prototypePath": "route-auto-data/data/port-check/MQnS64OoS1-400YdT43ZA-_visits-1024-prototype.png",
+  "score": 11
+}
+
+[agent] ok, 390 ms, git spawns: not counted (server side)
+{
+  "appPath": "route-auto-data/data/port-check/MQnS64OoS1-400YdT43ZA-_visits-1024-app.png",
+  "areas": [
+    {
+      "col": 2,
+      "elements": [
+        {
+          "diffs": [],
+          "selector": "main.mx-auto > div.flex:nth-of-type(1) > button.ml-auto",
+          "text": "New visit"
+        }
+      ],
+      "name": "top right",
+      "row": 0,
+      "score": 8
+    },
+    {
+      "col": 0,
+      "elements": [
+        {
+          "diffs": [],
+          "selector": "main.mx-auto > div.flex:nth-of-type(1) > h1.text-2xl",
+          "text": "Visits"
+        }
+      ],
+      "name": "top left",
+      "row": 0,
+      "score": 15
+    },
+    {
+      "col": 1,
+      "elements": [
+        {
+          "diffs": [],
+          "selector": "main.mx-auto > div.mx-auto:nth-of-type(2) > p.text-sm",
+          "text": "No visits yet"
+        }
+      ],
+      "name": "top center",
+      "row": 0,
+      "score": 16
+    }
+  ],
+  "diffPath": "route-auto-data/data/port-check/MQnS64OoS1-400YdT43ZA-_visits-1024-diff.png",
+  "firstShift": {
+    "above": {
+      "diffs": [
+        {
+          "app": "976px",
+          "property": "width",
+          "prototype": "560px",
+          "write": null
+        }
+      ],
+      "selector": "main.mx-auto > div.flex:nth-of-type(1)",
+      "text": "Visits New visit"
+    },
+    "element": {
+      "diffs": [
+        {
+          "app": "0px",
+          "property": "margin-top",
+          "prototype": "48px",
+          "write": "mt-12"
+        },
+        {
+          "app": "0px",
+          "property": "padding-top",
+          "prototype": "32px",
+          "write": "pt-8"
+        },
+        {
+          "app": "0px",
+          "property": "padding-right",
+          "prototype": "32px",
+          "write": "pr-8"
+        },
+        {
+          "app": "0px",
+          "property": "padding-bottom",
+          "prototype": "32px",
+          "write": "pb-8"
+        },
+        {
+          "app": "0px",
+          "property": "padding-left",
+          "prototype": "32px",
+          "write": "pl-8"
+        },
+        {
+          "app": "14px",
+          "property": "font-size",
+          "prototype": "16px",
+          "write": "text-base, not text-sm"
+        }
+      ],
+      "selector": "main.mx-auto > div.mx-auto:nth-of-type(2) > p.text-sm",
+      "text": "No visits yet"
+    },
+    "shift": 33
+  },
+  "isLow": true,
+  "masked": [],
+  "prototypePath": "route-auto-data/data/port-check/MQnS64OoS1-400YdT43ZA-_visits-1024-prototype.png",
+  "score": 11
+}
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

@@ -42,6 +42,18 @@ const COLLECT_BODY = String.raw`(args) => {
     const href = absolute(raw);
     return /^(https?:|mailto:|tel:)/i.test(href) ? href : "";
   };
+  let autoReads = 0;
+  const keepAutoMargins = (el, style) => {
+    const sides = ["margin-left","margin-right"].filter((name) => name in style && style[name] !== "0px");
+    if (sides.length === 0 || autoReads >= args.maxAutoReads || typeof el.computedStyleMap !== "function") return;
+    autoReads += 1;
+    const map = el.computedStyleMap();
+    let isAuto = false;
+    for (const name of sides) if (String(map.get(name)) === "auto") { style[name] = "auto"; isAuto = true; }
+    if (!isAuto || REPLACED.has(el.localName) || "width" in style) return;
+    const width = String(map.get("width"));
+    if (width !== "auto") style.width = width;
+  };
   const styleOf = (el, parentStyle, isRoot) => {
     const cs = getComputedStyle(el);
     const base = defaultsOf(el);
@@ -54,6 +66,7 @@ const COLLECT_BODY = String.raw`(args) => {
       if (value !== against) style[name] = value;
     }
     if (REPLACED.has(el.localName)) for (const name of SIZE) style[name] = cs.getPropertyValue(name);
+    keepAutoMargins(el, style);
     families.add(cs.getPropertyValue("font-family"));
     return { cs, style };
   };
@@ -124,11 +137,13 @@ const COLLECT_BODY = String.raw`(args) => {
   return out;
 }`;
 
+const MAX_AUTO_READS = 2000;
+
 const toCollectScript = (
   selector: string | null,
   maxNodes: number,
   maxFaces: number
 ): string =>
-  `(${COLLECT_BODY})(${JSON.stringify({ maxFaces, maxNodes, selector })})`;
+  `(${COLLECT_BODY})(${JSON.stringify({ maxAutoReads: MAX_AUTO_READS, maxFaces, maxNodes, selector })})`;
 
 export { toCollectScript as collectScript };

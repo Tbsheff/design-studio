@@ -729,7 +729,7 @@ export function mapTokens(
   }));
 }
 
-const PLAN_TEXT_MAX = 6000;
+const PLAN_TEXT_MAX = 7000;
 
 function list(label: string, values: string[]): string {
   return values.length > 0

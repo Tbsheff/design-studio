@@ -62,16 +62,26 @@ const toFontLines = (look: PortLook): string[] => {
   });
 };
 
-const toColorRule = (name: string, value: string, app: PortLookApp): string => {
-  const css = toCssName(app);
+const NEW_TOKEN = "no app token: add ";
 
+const toColorRule = (name: string, app: PortLookApp): string => {
   if (app.isTailwind) {
     const key = name.replace(/^--/u, "").replace(/^color-/u, "");
 
-    return `no app token: add --color-${key}: ${value} to the @theme block in ${css} and use text-${key}, bg-${key} or border-${key}`;
+    return `${NEW_TOKEN}--color-${key} in @theme; use text-${key}, bg-${key} or border-${key}`;
   }
 
-  return `no app token: add ${name}: ${value} to :root in ${css} and use var(${name})`;
+  return `${NEW_TOKEN}${name} on :root; use var(${name})`;
+};
+
+const toNewTokenRule = (app: PortLookApp): string => {
+  const css = toCssName(app);
+
+  if (app.isTailwind) {
+    return `Add each new --color-* entry with the prototype value to the @theme block in ${css}. Add each other new variable to :root there.`;
+  }
+
+  return `Add each new variable with the prototype value to :root in ${css}.`;
 };
 
 const toTokenTarget = (
@@ -100,30 +110,40 @@ const toTokenTarget = (
   }
 
   if (isColorValue(value)) {
-    return toColorRule(token.name, value, app);
+    return toColorRule(token.name, app);
   }
 
-  return `no app token: add ${token.name}: ${value} to :root in ${toCssName(app)} and use var(${token.name})`;
+  return `${NEW_TOKEN}${token.name} on :root; use var(${token.name})`;
+};
+
+const toTokenLine = (token: PortToken, look: PortLook | null): string => {
+  const value = token.value ?? look?.defs.get(token.name) ?? null;
+  let target = token.target ?? "no app token";
+
+  if (look !== null) {
+    target = toTokenTarget(token, value, look);
+  }
+
+  if (value === null) {
+    return `${token.name} -> ${target}`;
+  }
+
+  return `${token.name} = ${value} -> ${target}`;
 };
 
 const toTokenLines = (
   tokens: readonly PortToken[],
   look: PortLook | null
-): string[] =>
-  tokens.map((token) => {
-    const value = token.value ?? look?.defs.get(token.name) ?? null;
-    let target = token.target ?? "no app token";
+): string[] => {
+  const lines = tokens.map((token) => toTokenLine(token, look));
+  const app = look?.app ?? null;
 
-    if (look !== null) {
-      target = toTokenTarget(token, value, look);
-    }
+  if (app === null || !lines.some((line) => line.includes(NEW_TOKEN))) {
+    return lines;
+  }
 
-    if (value === null) {
-      return `${token.name} -> ${target}`;
-    }
-
-    return `${token.name} = ${value} -> ${target}`;
-  });
+  return [...lines, toNewTokenRule(app)];
+};
 
 const toLookFontLines = (look: PortLook | null): string[] => {
   if (look === null) {

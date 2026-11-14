@@ -1,4 +1,4 @@
-import { readFile, rm } from "node:fs/promises";
+import { readFile, rm, stat } from "node:fs/promises";
 import path from "node:path";
 
 import type { Direction, Project } from "@design-studio/contracts";
@@ -28,6 +28,36 @@ import type {
 import { toFixturePlan } from "./fixture-plan.js";
 
 const CLIENT = "ui";
+
+const LABEL_MAX = 40;
+
+const toBareRoute = (route: string): string =>
+  route.trim().split("/").filter(Boolean).join("/");
+
+type TextMap = Readonly<Record<string, string>>;
+
+const toSortedEntries = (map: TextMap): readonly (readonly string[])[] =>
+  Object.entries(map).toSorted(([left = ""], [right = ""]) =>
+    left.localeCompare(right)
+  );
+
+const toFixtureRequestKey = (command: CreateFixtureCommand): string =>
+  JSON.stringify({
+    params: toSortedEntries(command.params),
+    route: `/${toBareRoute(command.route)}`,
+    searchParams: toSortedEntries(command.searchParams),
+    shell: command.shell,
+  });
+
+const isFolderPresent = async (folder: string): Promise<boolean> => {
+  try {
+    const found = await stat(folder);
+
+    return found.isDirectory();
+  } catch {
+    return false;
+  }
+};
 
 const getCanvasText = async (
   project: Project,
@@ -206,10 +236,7 @@ const createPlannedFiles = async (
 const createFixturePage = async (
   run: DirectionRun,
   command: CreateFixtureCommand
-): Promise<{
-  readonly created: FixtureCreated;
-  readonly stored: StoredFixture;
-}> => {
+): Promise<FixturePage> => {
   const { direction, project, runtime } = run;
   assertCanEdit(runtime.editDeps, project, direction);
 
@@ -264,6 +291,8 @@ const createFixturePage = async (
   const { folder } = plan;
   const { sourceRoute } = plan;
 
+  const requestKey = toFixtureRequestKey(command);
+
   const stored: StoredFixture = {
     createdAt,
     directionId,
@@ -271,11 +300,87 @@ const createFixturePage = async (
     folder,
     frameId,
     id,
+    removed,
+    requestKey,
     route,
     sourceRoute,
+    unresolved,
   };
 
   return { created, stored };
+};
+
+interface FixturePage {
+  readonly created: FixtureCreated;
+  readonly stored: StoredFixture;
+}
+
+const toReusedCreated = (stored: StoredFixture): FixtureCreated => ({
+  file: stored.file,
+  fixtureId: stored.id,
+  frameId: stored.frameId,
+  removed: stored.removed,
+  route: stored.route,
+  unresolved: stored.unresolved,
+  versionId: null,
+});
+
+const hasFixtureFrame = async (
+  run: DirectionRun,
+  frameId: string
+): Promise<boolean> => {
+  const { canvas } = await run.runtime.canvas.read(run.project);
+
+  return (canvas?.frames ?? []).some((frame) => frame.id === frameId);
+};
+
+const setFixtureFrame = async (
+  run: DirectionRun,
+  stored: StoredFixture
+): Promise<StoredFixture> => {
+  if (await hasFixtureFrame(run, stored.frameId)) {
+    return stored;
+  }
+
+  const placed = await createFixtureFrame(
+    run,
+    toBareRoute(stored.route),
+    `Fixture ${stored.sourceRoute}`.slice(0, LABEL_MAX)
+  );
+
+  return { ...stored, frameId: placed.frameId };
+};
+
+const toReusedFixturePage = async (
+  run: DirectionRun,
+  stored: StoredFixture
+): Promise<FixturePage | null> => {
+  const { direction, project, runtime } = run;
+  assertCanEdit(runtime.editDeps, project, direction);
+
+  if (!(await isFolderPresent(path.join(direction.workTree, stored.folder)))) {
+    return null;
+  }
+
+  const shown = await setFixtureFrame(run, stored);
+
+  return { created: toReusedCreated(shown), stored: shown };
+};
+
+const createOrReuseFixturePage = async (
+  run: DirectionRun,
+  command: CreateFixtureCommand,
+  saved: StoredFixture | null
+): Promise<FixturePage> => {
+  if (saved !== null) {
+    const reused = await toReusedFixturePage(run, saved);
+
+    if (reused !== null) {
+      return reused;
+    }
+  }
+
+  return createFixturePage(run, command);
 };
 
 const deleteFixturePage = async (
@@ -308,4 +413,4 @@ const deleteFixturePage = async (
   };
 };
 
-export { createFixturePage, deleteFixturePage };
+export { createOrReuseFixturePage, deleteFixturePage, toFixtureRequestKey };

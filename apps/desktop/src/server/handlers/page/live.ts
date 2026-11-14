@@ -1,6 +1,7 @@
 import { Layer } from "effect";
 
 import { PageMatchStore, PageMatchWriter } from "../../canvas/index.js";
+import { FixtureStore } from "../../export/index.js";
 import {
   RouteSourceStore,
   RouteSourceWriter,
@@ -14,6 +15,7 @@ const RouteSourceLive = Layer.mergeAll(
 ).pipe(Layer.provide(ProjectStore.layer));
 
 const PageLive = Layer.mergeAll(
+  FixtureStore.layer,
   PageWriter.layer,
   PageMatchStore.layer,
   PageMatchWriter.layer,

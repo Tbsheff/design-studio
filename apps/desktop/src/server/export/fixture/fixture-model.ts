@@ -1,4 +1,14 @@
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
+
+const StoredTextListSchema = Schema.Array(Schema.String).pipe(
+  Schema.withDecodingDefaultKey(Effect.succeed([]))
+);
+
+const NullTextSchema = Schema.NullOr(Schema.String);
+
+const StoredKeySchema = NullTextSchema.pipe(
+  Schema.withDecodingDefaultKey(Effect.succeed(null))
+);
 
 const StoredFixtureSchema = Schema.Struct({
   createdAt: Schema.String,
@@ -7,8 +17,11 @@ const StoredFixtureSchema = Schema.Struct({
   folder: Schema.String,
   frameId: Schema.String,
   id: Schema.String,
+  removed: StoredTextListSchema,
+  requestKey: StoredKeySchema,
   route: Schema.String,
   sourceRoute: Schema.String,
+  unresolved: StoredTextListSchema,
 });
 
 const FixtureRegistrySchema = Schema.Struct({

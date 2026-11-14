@@ -5,24 +5,50 @@ import {
   runDirectionWrite,
   toDirectEditStatusFailure,
 } from "../../direct-edit/index.js";
-import { createFixturePage, deleteFixturePage } from "./fixture-commit.js";
+import {
+  createOrReuseFixturePage,
+  deleteFixturePage,
+  toFixtureRequestKey,
+} from "./fixture-commit.js";
 import type {
   CreateFixtureCommand,
   DeleteFixtureCommand,
+  StoredFixture,
 } from "./fixture-model.js";
 import { listSavedFixtures, setSavedFixtures } from "./fixture-saved.js";
+
+const toSameRequest = (
+  saved: readonly StoredFixture[],
+  command: CreateFixtureCommand
+): StoredFixture | null => {
+  const requestKey = toFixtureRequestKey(command);
+
+  return (
+    saved.findLast(
+      (item) =>
+        item.directionId === command.directionId &&
+        item.requestKey === requestKey
+    ) ?? null
+  );
+};
 
 const runFixtureCreate = Effect.fn("FixtureRun.create")(function* run(
   command: CreateFixtureCommand
 ) {
+  const before = yield* listSavedFixtures(command.projectId);
+  const same = toSameRequest(before, command);
+
   const done = yield* runDirectionWrite(
     command,
-    (scope) => createFixturePage(scope, command),
+    (scope) => createOrReuseFixturePage(scope, command, same),
     toDirectEditStatusFailure
   );
 
   const saved = yield* listSavedFixtures(command.projectId);
-  yield* setSavedFixtures(command.projectId, [...saved, done.stored]);
+  const replaced = new Set([done.stored.id, same?.id ?? done.stored.id]);
+  const rest = saved.filter((item) => !replaced.has(item.id));
+
+  yield* setSavedFixtures(command.projectId, [...rest, done.stored]);
 
   return done.created;
 });

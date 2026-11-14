@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
-import { TOKENS_FILE } from "@design-studio/contracts";
+import { PACK_FILE, TOKENS_FILE } from "@design-studio/contracts";
 import type {
   Direction,
   Project,
@@ -69,7 +69,25 @@ function describeChange(change: TokenChange): string {
 
 export interface TokenWrite {
   changes: TokenChange[];
+  packText: string | null;
   title: string | null;
+}
+
+function toWrittenFiles(write: TokenWrite): string[] {
+  if (write.packText === null) {
+    return DESIGN_FILES;
+  }
+
+  return [...DESIGN_FILES, PACK_FILE];
+}
+
+async function setPackText(
+  workTree: string,
+  packText: string | null
+): Promise<void> {
+  if (packText !== null) {
+    await writeFileAtomic(path.join(workTree, PACK_FILE), packText);
+  }
 }
 
 function updateMeta(write: TokenWrite): VersionMeta {
@@ -106,14 +124,17 @@ async function writeAndCommit(
 ): Promise<Version> {
   const { workTree } = direction;
 
+  const written = toWrittenFiles(write);
+
   const snapshots = await Promise.all(
-    DESIGN_FILES.map((relative) => readSnapshot(workTree, relative))
+    written.map((relative) => readSnapshot(workTree, relative))
   );
 
   try {
+    await setPackText(workTree, write.packText);
     await writeTokensText(workTree, text);
 
-    const paths = DESIGN_FILES.filter((relative) =>
+    const paths = written.filter((relative) =>
       existsSync(path.join(workTree, relative))
     );
 
@@ -195,7 +216,7 @@ export async function updateTokensTitled(
   deps: DirectEditDeps,
   project: Project,
   direction: Direction,
-  request: { raw: unknown; title: string | null }
+  request: { raw: unknown; packText: string | null; title: string | null }
 ): Promise<UpdateTokensResult> {
   const changes = parseTokenChanges(request.raw);
   assertCanEdit(deps, project, direction);
@@ -208,6 +229,7 @@ export async function updateTokensTitled(
 
   const version = await writeAndCommit(deps, project, direction, text, {
     changes,
+    packText: request.packText,
     title: request.title,
   });
 
@@ -222,5 +244,7 @@ export function updateTokens(
   direction: Direction,
   raw: unknown
 ): Promise<UpdateTokensResult> {
-  return updateTokensTitled(deps, project, direction, { raw, title: null });
+  const request = { packText: null, title: null };
+
+  return updateTokensTitled(deps, project, direction, { ...request, raw });
 }

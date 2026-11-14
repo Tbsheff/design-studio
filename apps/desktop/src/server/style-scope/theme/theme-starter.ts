@@ -387,6 +387,11 @@ const createStarterLook = Effect.fn("ThemeStarter.create")(function* run(
   return look;
 });
 
-export { createStarterLook, createStarterVersion, isStarterProject };
+export {
+  createStarterLook,
+  createStarterVersion,
+  isStarterProject,
+  toFamilyName,
+};
 
 export type { StarterLook, StarterLookCommand };

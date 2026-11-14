@@ -31,6 +31,7 @@ interface RunListInput {
 interface RunDetail {
   readonly events: StudioEvent[];
   readonly sent: RunSentRecord[];
+  readonly sentAfter: readonly number[];
   readonly summary: RunSummary | null;
 }
 
@@ -108,15 +109,20 @@ const toRunDetail = (
 ): RunDetail => {
   const lines = parseLines(eventsText ?? "");
 
-  const sent = lines.filter(
-    (line): line is RunSentRecord => line.type === "run.sent"
-  );
+  const sent: RunSentRecord[] = [];
+  const sentAfter: number[] = [];
+  const events: StudioEvent[] = [];
 
-  const events = lines.filter(
-    (line): line is StudioEvent => line.type !== "run.sent"
-  );
+  for (const line of lines) {
+    if (line.type === "run.sent") {
+      sent.push(line);
+      sentAfter.push(events.length);
+    } else {
+      events.push(line);
+    }
+  }
 
-  return { events, sent, summary: parseSummary(summaryText) };
+  return { events, sent, sentAfter, summary: parseSummary(summaryText) };
 };
 
 const getRunDetail = Effect.fn("RunLog.getRunDetail")(function* run(

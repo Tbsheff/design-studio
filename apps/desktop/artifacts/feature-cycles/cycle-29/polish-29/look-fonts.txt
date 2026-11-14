@@ -1,0 +1,17 @@
+== main (before fix), project Bakery, apply option 2: pack.json fonts stayed body Inter, display Fraunces (tokens: Libre Baskerville)
+== branch, Bakery Two, apply option 2
+200 80ms {"applied":13,"name":"Amber Libre Baskerville","themeId":"theme-0qky0yd","title":"Apply theme","tokenFile":"design-system/tokens.json","versionId":"f05741fbe5233d9c1a3a6ade3815463776ab1042"}
+== pack.json fonts
+{
+ "body": "Work Sans",
+ "display": "Libre Baskerville",
+ "mono": "ui-monospace",
+ "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Inter:wght@400;500;600;700&family=Libre+Baskerville:wght@400;700&family=Work+Sans:wght@400;500;600;700&family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap"
+}
+== design-system read (GET .../design-system) manifest.fonts
+{"body":"Work Sans","display":"Libre Baskerville","mono":"ui-monospace","googleFontsUrl":"https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Inter:wght@400;500;600;700&family=Libre+Baskerville:wght@400;700&family=Work+Sans:wght@400;500;600;700&family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap"}
+== edit history
+200 3ms {"canUndo":true,"canRedo":false,"undoLabel":"Apply theme","redoLabel":null,"undo":[{"label":"Apply theme","versionId":"f05741fbe5233d9c1a3a6ade3815463776ab1042","files":["design-system/tokens.json","design-system/tokens.css","design-system/pack.json"]}],"redo":[]}
+== one undo
+200 9ms {"label":"Apply theme","state":{"canUndo":false,"canRedo":true,"undoLabel":null,"redoLabel":"Apply theme"},"vers
+"body": "Inter" "display": "Fraunces"

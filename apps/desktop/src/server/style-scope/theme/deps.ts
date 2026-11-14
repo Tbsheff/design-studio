@@ -3,6 +3,7 @@ export {
   compileTokens,
   getThemeTokenBase,
   parseTokenFile,
+  readDesignSystemFiles,
   updateThemeTokens,
 } from "../../design-system/index.js";
 

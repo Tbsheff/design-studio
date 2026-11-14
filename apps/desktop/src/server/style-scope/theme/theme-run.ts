@@ -1,10 +1,12 @@
 import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
 import { NotFound } from "@design-studio/actions/_core/errors/not-found";
+import { TOKENS_FILE } from "@design-studio/contracts";
 import { Effect } from "effect";
 
 import {
   BadRequestError,
   getThemeTokenBase,
+  readDesignSystemFiles,
   runDirectionRead,
   runDirectionWrite,
   toDirectEditStatusFailure,
@@ -16,9 +18,9 @@ import type {
   ThemeTokenBase,
   TokenChange,
 } from "./deps.js";
-import { toThemes } from "./engine/index.js";
+import { toLinkedFamilies, toThemes } from "./engine/index.js";
 import type { ThemeChange } from "./engine/index.js";
-import { toThemeSource } from "./theme-base.js";
+import { toRadiusPath, toThemeSource } from "./theme-base.js";
 import { toItem } from "./theme-model.js";
 import type {
   StoredTheme,
@@ -82,6 +84,24 @@ const getThemeBase = (
     toDirectEditStatusFailure
   );
 
+const getLinkedFonts = (
+  ids: DirectionIds,
+  base: ThemeTokenBase
+): Effect.Effect<readonly string[], KnownFailure> =>
+  runDirectionRead(
+    ids,
+    async ({ direction }): Promise<readonly string[]> => {
+      if (base.file !== TOKENS_FILE) {
+        return [];
+      }
+
+      const files = await readDesignSystemFiles(direction.workTree);
+
+      return toLinkedFamilies(files?.manifest?.fonts.googleFontsUrl ?? null);
+    },
+    toDirectEditStatusFailure
+  );
+
 const isStarterNeeded = (
   ids: DirectionIds
 ): Effect.Effect<boolean, KnownFailure> =>
@@ -124,6 +144,7 @@ const runThemeCreate = Effect.fn("ThemeRun.create")(function* run(
   yield* createStarterBase(command);
   const base = yield* getThemeBase(command);
   const saved = yield* getSavedThemes(command);
+  const linked = yield* getLinkedFonts(command, base);
   const source = toThemeSource(base);
   const chosenSeed = command.seed ?? toSeedOf(saved.candidates);
 
@@ -132,6 +153,9 @@ const runThemeCreate = Effect.fn("ThemeRun.create")(function* run(
     brief: command.brief,
     count: command.count,
     fonts: source.fonts,
+    linkedFonts: linked,
+    radiusDefault: null,
+    radiusPath: toRadiusPath(base),
     seed: chosenSeed,
     tokens: source.tokens,
   });

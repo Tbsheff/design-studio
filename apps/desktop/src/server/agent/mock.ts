@@ -211,7 +211,7 @@ function landingPage(title: string): string {
     main { max-width: 1080px; margin: 0 auto; padding: 64px 24px; }
     h1 { font-family: var(--font-display, inherit); font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.1; margin: 0 0 16px; }
     .lede { font-size: 1.125rem; color: var(--muted); max-width: 40rem; margin: 0 0 32px; }
-    .cta { display: inline-block; padding: 12px 24px; border: 0; border-radius: 8px; background: var(--cta); color: var(--primary-fg, #fff); font-size: 1rem; cursor: pointer; }
+    .cta { display: inline-block; padding: 12px 24px; border: 0; border-radius: var(--radius-md, 8px); background: var(--cta); color: var(--primary-fg, #fff); font-size: 1rem; cursor: pointer; }
     .cta:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
     .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; margin-top: 64px; }
     .card { background: var(--surface, #fff); border: 1px solid var(--line); border-radius: var(--radius-md, 12px); padding: 24px; }

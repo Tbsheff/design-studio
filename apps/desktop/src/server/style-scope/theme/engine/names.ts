@@ -30,7 +30,10 @@ const MOOD_NAMES: Readonly<Record<ThemeMood, string>> = {
 const toHueName = (hue: number): string =>
   HUE_NAMES.find((entry) => hue < entry.upTo)?.name ?? "Rose";
 
-const toThemeName = (hue: number, mood: ThemeMood): string =>
-  `${toHueName(hue)} ${MOOD_NAMES[mood]}`;
+const toThemeName = (
+  hue: number,
+  mood: ThemeMood,
+  family: string | null
+): string => `${toHueName(hue)} ${family ?? MOOD_NAMES[mood]}`;
 
 export { toThemeName };

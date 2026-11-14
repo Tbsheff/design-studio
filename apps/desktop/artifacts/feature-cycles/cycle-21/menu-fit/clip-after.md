@@ -8,14 +8,13 @@ Rules: clipped = a visible box goes past the viewport, or past an ancestor with 
 | --- | --- |
 | clipped | 0 |
 | text-overflow | 4 |
-| overlap | 2 |
+| overlap | 0 |
 | sideways-scroll | 0 |
 | unreachable | 0 |
 
 ## Top 10
 
 1. text-overflow 3 px: `div.wide > div.ins-field.ins-align-row.ins-text-wrap > div.segmented[aria-label="Text wrap"] > button` in canvas menu preview right-click 900x700, 1440x900 dark (worst size and theme)
-2. overlap 2 px: `div.passive-frames > div.canvas-frame > div.frame-label.selected > button.frame-name[aria-label="Tablet frame"]` in canvas menu frame selection, 1000x800 dark (worst size and theme)
 
 ## clipped (0)
 
@@ -31,12 +30,7 @@ Rules: clipped = a visible box goes past the viewport, or past an ancestor with 
 - `div.wide > div.ins-field.ins-align-row.ins-text-wrap > div.segmented[aria-label="Text wrap"] > button` "No wrap": text runs 3 px past a 43 px wide box, no ellipsis. 1000x800 dark (+3 more states).
 - `div.wide > div.ins-field.ins-align-row.ins-text-wrap > div.segmented[aria-label="Text wrap"] > button` "No wrap": text runs 3 px past a 43 px wide box, no ellipsis. 1000x800 light (+3 more states).
 
-## overlap (2)
-
-### canvas menu frame selection
-
-- `div.passive-frames > div.canvas-frame > div.frame-label.selected > button.frame-name[aria-label="Tablet frame"]` "Tablet768 × 1024 \| 2 frames": overlaps button[data-testid="frame-select-count"] by 2 x 17 px. 1000x800 dark. [crop](crops/0004-overlap.png)
-- `div.passive-frames > div.canvas-frame > div.frame-label.selected > button.frame-name[aria-label="Tablet frame"]` "Tablet768 × 1024 \| 2 frames": overlaps button[data-testid="frame-select-count"] by 2 x 17 px. 1000x800 light. [crop](crops/0006-overlap.png)
+## overlap (0)
 
 ## sideways-scroll (0)
 

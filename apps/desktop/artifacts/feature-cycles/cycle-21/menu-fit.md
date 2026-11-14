@@ -15,17 +15,23 @@ Branch `feat/menu-fit`. No action changes (UI and server shutdown only), so no `
 ## Checks
 
 - **Before (`clip-before.md`).** This is the commit with the new states and no fix. It has 36 `clipped` findings. Examples: the "…" menu is 156 px past the stage, Arrange ▸ is 349 px past it, the frame selection menu is 299 px past it, and the preview menu scrolls sideways at 900x700.
-- **After (`clip-after.md`).** The canvas menu states give 0 `clipped` and 0 `sideways-scroll` findings. Two findings stay that come from outside the menus (see below).
-- **Commands.** `pnpm run typecheck`, `pnpm run lint:gate` and `pnpm run build:ui` pass.
+- **After (`clip-after.md`).** 0 `clipped`, 0 `sideways-scroll` and 0 `overlap` findings. One `text-overflow` finding stays, and it is not from this pick (see below).
+- **Commands that pass.** `pnpm run typecheck`, `pnpm run typecheck:tsrs`, `pnpm run lint:gate` and `pnpm run build:ui`.
+- **Commands that fail outside this pick.**
+  - `pnpm run check:scripts` fails in check-actions with E1 hits in `app-events-routes.ts`, `app-runs-routes.ts` and `app-session-routes.ts`, and E16 on `version.restoreHistory`.
+  - `scripts/check-bundle.ts` fails with 98 B1 chunk failures.
+  - This branch does not touch any of those files or chunks.
 - **Screenshots.**
   - `arrange-flipped-900-dark.png`, `arrange-flipped-900-light.png`: Arrange ▸ flipped at 900 px.
   - `arrange-inspector-900-dark.png`: the inspector is open.
-- **Spot checks.** A frame on the left still opens Arrange ▸ on the right. Zoom at 11% and 156% places the menu correctly.
+- **Spot checks.** A frame on the left still opens Arrange ▸ on the right. Zoom at 11% and 156% places the menu correctly. 200% was not checked.
 
 ## Left out or open
 
-- **Text overflow.** `check:clip` is not at 0. One finding stays in the existing "inspector" state: the "No wrap" text overflows by 3 px. It is also in the before run, and the menu code does not touch it.
-- **Selection count overlap.** The new frame selection state shows that the "2 frames" count overlaps the last frame label by 2 px (`frames.css`). This pick does not fix it.
+- **Text overflow.** `check:clip` still exits 1. One `text-overflow` finding stays: the "No wrap" segment in the inspector runs 3 px past its box.
+  - In the before run, it first shows in the existing `inspector` state at 1000x800. That state runs before any new state in that mode, on main's UI code.
+  - The fix belongs in the inspector, not in this pick.
+- **Selection count moved.** The new frame selection state showed the "2 frames" count over the last frame label by 2 px. The count now sits under the selection group (`frames.css`).
 - **Add-frame menu.** `add-frame-menu.tsx` is not mounted anywhere, so it has no state and no hook.
 - **Top bar menu.** `top-bar-menu.tsx` already uses `useFitPopover`.
 - **Popover reuse.** `toPopoverPosition` was not reused, because it places popovers from an anchor box and has no flip-to-the-other-side rule.

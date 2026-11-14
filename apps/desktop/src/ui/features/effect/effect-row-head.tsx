@@ -1,8 +1,10 @@
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
-import type { EffectKind } from "./deps.js";
+import type { EffectKind, ShadowSize } from "./deps.js";
+import type { ShadowSizePick } from "./effect-model.js";
 import { EffectStepButton } from "./effect-step-button.js";
+import { ShadowSizeSelect } from "./shadow-size-select.js";
 
 import styles from "./effect.module.css";
 
@@ -14,8 +16,11 @@ interface EffectRowHeadProps {
   readonly kind: EffectKind;
   readonly onDown: () => void;
   readonly onRemove: () => void;
+  readonly onSize: (pick: ShadowSizePick) => void;
   readonly onToggle: () => void;
   readonly onUp: () => void;
+  readonly size: ShadowSize | null;
+  readonly sizes: readonly ShadowSize[];
 }
 
 const EffectRowHead = ({
@@ -26,10 +31,13 @@ const EffectRowHead = ({
   kind,
   onDown,
   onRemove,
+  onSize,
   onToggle,
   onUp,
+  size,
+  sizes,
 }: EffectRowHeadProps): ReactElement => (
-  <div className={styles.head}>
+  <div className={styles.head} data-sized={sizes.length > 0}>
     <input
       aria-label={copy.toggle}
       checked={isEnabled}
@@ -40,6 +48,14 @@ const EffectRowHead = ({
       onChange={onToggle}
     />
     <span className={styles.kind}>{copy.kind[kind]}</span>
+    {sizes.length > 0 && (
+      <ShadowSizeSelect
+        disabled={disabled}
+        sizes={sizes}
+        value={size}
+        onPick={onSize}
+      />
+    )}
     <EffectStepButton
       disabled={disabled || isFirst}
       icon="arrowUp"

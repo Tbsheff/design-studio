@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 
+import type { ShadowSizes } from "./effect-model.js";
 import { EffectRow } from "./effect-row.js";
 import type { EffectItem } from "./effect-types.js";
 import type { EffectHandlers } from "./use-effect-handlers.js";
@@ -11,6 +12,7 @@ interface EffectListProps {
   readonly isOff: boolean;
   readonly items: readonly EffectItem[];
   readonly keys: readonly string[];
+  readonly sizes: ShadowSizes;
 }
 
 const EffectList = ({
@@ -18,6 +20,7 @@ const EffectList = ({
   isOff,
   items,
   keys,
+  sizes,
 }: EffectListProps): ReactElement | null => {
   if (items.length === 0) {
     return null;
@@ -36,6 +39,7 @@ const EffectList = ({
           onChange={handlers.handleChange}
           onMove={handlers.handleMove}
           onRemove={handlers.handleRemove}
+          sizes={sizes}
         />
       ))}
     </ul>

@@ -44,6 +44,10 @@
   gap: var(--s-1);
 }
 
+.head[data-sized="true"] {
+  grid-template-columns: auto minmax(0, 1fr) 76px 28px 28px 28px;
+}
+
 .toggle {
   margin: 0 var(--s-1);
   accent-color: var(--accent);

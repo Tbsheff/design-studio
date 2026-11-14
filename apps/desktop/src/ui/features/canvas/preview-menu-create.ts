@@ -1,6 +1,8 @@
 import type { ProjectKind, SelectionContext } from "@design-studio/contracts";
 
 import { commandBlocker, runCommand } from "../../canvas-preview-slots.js";
+import { STACKING_KEY_EVENT } from "../../domain/stacking-key-events.js";
+import type { StackingAppKey } from "../../domain/stacking-key-events.js";
 import { copy } from "./copy.js";
 import type { PreviewMenuItem } from "./preview-menu.js";
 
@@ -79,7 +81,38 @@ const toCommandItem = (
   ...disabledBy(commandBlocker(command)),
 });
 
+const toStackingItem = (
+  item: Omit<PreviewMenuItem, "run">,
+  id: StackingAppKey
+): PreviewMenuItem => ({
+  ...item,
+  run: (): void => {
+    globalThis.dispatchEvent(
+      new CustomEvent(STACKING_KEY_EVENT, { detail: { id } })
+    );
+  },
+});
+
 const toTransformMenuItems = (): PreviewMenuItem[] => [
+  toStackingItem(
+    {
+      divider: true,
+      icon: "layers",
+      id: "bring-forward",
+      keyId: "bring-forward",
+      label: copy.layerMenuForward,
+    },
+    "layer-forward"
+  ),
+  toStackingItem(
+    {
+      icon: "layers",
+      id: "send-backward",
+      keyId: "send-backward",
+      label: copy.layerMenuBackward,
+    },
+    "layer-backward"
+  ),
   toCommandItem(
     {
       divider: true,

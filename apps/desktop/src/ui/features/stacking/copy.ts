@@ -40,6 +40,19 @@ const copy = {
   title: "Scroll and stacking",
   unset: "Not set",
   zIndex: "Z-index",
+  zStop: {
+    back: "Already at the back",
+    front: "Already in front",
+    "no-overlap-backward":
+      "No layer overlaps this one. Use Alt+↓ to move it in the list.",
+    "no-overlap-forward":
+      "No layer overlaps this one. Use Alt+↑ to move it in the list.",
+    "no-read":
+      "Design Studio cannot read the layers around this one. Try again.",
+    "no-source":
+      "Design Studio cannot find the overlapping layer in the code, so it cannot change the order.",
+    wait: "Wait for the last edit to finish",
+  },
   zTip: "Snaps to the scale 0, 10, 20, 30, 40, 50 or auto. A project token like --z-header stays as it is",
 } as const;
 

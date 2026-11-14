@@ -13,6 +13,7 @@ import { PREVIEW_PAINTED_EVENT } from "../inspector/use-edit-history.js";
 import { parseLayerTree } from "../versions-layers-tokens/layers-tree.js";
 import type { LayerTree } from "../versions-layers-tokens/layers-tree.js";
 import {
+  runPreviewStackingKey,
   runPreviewStyleKey,
   runPreviewToolKey,
   toPreviewCommandId,
@@ -60,7 +61,11 @@ const toRegionStep = (id: AppKey): 1 | -1 => {
 };
 
 const forwardAppKeyToShell = (id: AppKey): void => {
-  if (runPreviewToolKey(id) || runPreviewStyleKey(id)) {
+  if (
+    runPreviewToolKey(id) ||
+    runPreviewStyleKey(id) ||
+    runPreviewStackingKey(id)
+  ) {
     return;
   }
 

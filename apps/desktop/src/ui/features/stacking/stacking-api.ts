@@ -81,9 +81,11 @@ const readStacking = (
     projectId: ids.projectId,
   });
 
+type StackingTarget = Pick<SelectionContext, "selector" | "source" | "tag">;
+
 const writeStacking = (
   ids: StackingIds,
-  target: SelectionContext,
+  target: StackingTarget,
   breakpoint: string,
   edit: StackingEdit
 ): Promise<StackingSetResult> => {
@@ -104,4 +106,4 @@ const writeStacking = (
 
 export { readStacking, writeStacking };
 
-export type { StackingIds };
+export type { StackingIds, StackingTarget };

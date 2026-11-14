@@ -17,7 +17,25 @@ export {
   Z_SCALE,
 } from "@design-studio/contracts/stacking";
 
-export type { SelectionContext, SourceLoc } from "@design-studio/contracts";
+export { STACKING_KEY_EVENT } from "../../domain/stacking-key-events.js";
+
+export type { StackingKeyDetail } from "../../domain/stacking-key-events.js";
+
+export { isTypingTarget } from "../../platform/typing-target.js";
+
+export { isMacPlatform } from "../../platform/mac.js";
+
+export { matchesKey } from "../../../shared/keymap.js";
+
+export type { PreviewPort } from "../../platform/bridge.js";
+
+export type {
+  AnchorQuery,
+  SelectionContext,
+  SelectionStack,
+  SourceLoc,
+  StackPeer,
+} from "@design-studio/contracts";
 
 export type {
   StackingInfo,

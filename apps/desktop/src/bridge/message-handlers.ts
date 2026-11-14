@@ -5,11 +5,7 @@ import { anchorQueries, resolveAnchorElement } from "./anchor-tracker.js";
 import { AUTHORED_MAX_BYTES, authoredRules } from "./authored.js";
 import type { BridgeContext, MessageHandlers } from "./bridge-types.js";
 import { holdTextSelection, isObject, isString } from "./dom-input.js";
-import {
-  SELECT_SETTLE_MS,
-  queryElement,
-  selectionFor,
-} from "./element-info.js";
+import { SELECT_SETTLE_MS, queryElement } from "./element-info.js";
 import { FORCED_STATES } from "./force-state.js";
 import type { ForcedState } from "./force-state.js";
 import { runTextUndo } from "./history-key.js";
@@ -20,6 +16,7 @@ import { createLayersAtPointHandler } from "./layers-at-point.js";
 import { setPlayVars } from "./play-vars.js";
 import { linkQueries } from "./play.js";
 import { neighborRects } from "./rect-tracker.js";
+import { toAnchorContext } from "./stack-peers.js";
 
 const isParentMessage = (
   data: unknown,
@@ -355,7 +352,9 @@ const createTrackingHandlers = (
       const contexts = anchorQueries(message.anchors).map((query) => {
         const found = resolveAnchorElement(query);
 
-        return found && selectionFor(found.element);
+        return (
+          found && toAnchorContext(found.element, message.hasStack === true)
+        );
       });
 
       post({ contexts, requestId: message.requestId, type: "anchor-contexts" });

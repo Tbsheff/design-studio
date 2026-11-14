@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react";
 import type { ReactElement, RefObject } from "react";
 
-import { IS_MAC, tipWithKey } from "../commands/keys.js";
+import { tipWithKey } from "../../platform/key-tip.js";
+import { IS_MAC } from "../commands/keys.js";
 import { useCommands } from "../commands/registry.js";
 import type { Command } from "../commands/registry.js";
 import { copy } from "./copy.js";

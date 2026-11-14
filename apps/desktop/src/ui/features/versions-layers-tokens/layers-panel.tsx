@@ -1,10 +1,11 @@
 import type { ReorderMove, StructureKey } from "@design-studio/contracts";
 import type { ReactNode } from "react";
 
+import { tipWithKey } from "../../platform/key-tip.js";
 import { PreviewMenu } from "../canvas/preview-menu.js";
 import type { PreviewMenuItem } from "../canvas/preview-menu.js";
 import { focusStageQuietly } from "../canvas/use-inline-text-edit.js";
-import { IS_MAC, tipWithKey } from "../commands/index.js";
+import { IS_MAC } from "../commands/index.js";
 import type { LayerDrop } from "../inspector/index.js";
 import { COPY } from "./copy.js";
 import { LayerSearchField } from "./layer-search-field.js";

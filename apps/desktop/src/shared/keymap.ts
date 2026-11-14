@@ -347,11 +347,15 @@ export const KEYMAP = [
 
 export type KeyId = (typeof KEYMAP)[number]["id"];
 
-const BY_ID = new Map<string, KeyBinding>(
-  KEYMAP.map((entry) => [entry.id, entry])
-);
+const BY_ID = new Map<string, KeyBinding>();
 
 export function binding(id: KeyId): KeyBinding {
+  if (BY_ID.size === 0) {
+    for (const entry of KEYMAP) {
+      BY_ID.set(entry.id, entry);
+    }
+  }
+
   return BY_ID.get(id) as KeyBinding;
 }
 

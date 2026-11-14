@@ -1,8 +1,8 @@
 import { Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
 
-import { tipWithKey } from "../../features/commands";
 import { setRailToggled, useRail } from "../../features/home/index.js";
+import { tipWithKey } from "../../platform/key-tip.js";
 import { copy } from "./copy";
 
 const ProjectListToggle = (): ReactElement => {

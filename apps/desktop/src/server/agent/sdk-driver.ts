@@ -12,6 +12,7 @@ import type {
   query,
 } from "@anthropic-ai/claude-agent-sdk";
 import type { RunUsage, AppReviewRecord } from "@design-studio/contracts";
+import type { PortReviewRecord } from "@design-studio/contracts/port";
 
 import type { ReferenceRecord } from "../../shared/reference.js";
 import {
@@ -85,6 +86,11 @@ import {
   type LoopDecision,
   type StopReason,
 } from "./polish-loop.js";
+import {
+  runPortReview,
+  toPortReviewGaps,
+  toPortChecked,
+} from "./port-review.js";
 import { buildSystemPrompt } from "./prompt.js";
 import { toReviewGaps, toReviewNote } from "./prototype-review.js";
 import { lockReadOnly } from "./read-only-lock.js";
@@ -414,17 +420,25 @@ export function addCriticCost(
   outcome.criticCostUsd = criticCostUsd;
 }
 
+interface StudioRecords {
+  appReview: AppReviewRecord | null;
+  port: PortReviewRecord | null;
+  reference: ReferenceRecord | null;
+}
+
 async function attachFinalCheck(
   outcome: DriverOutcome,
   input: Parameters<typeof runFinalCheck>[0],
-  appReview: AppReviewRecord | null,
-  reference: ReferenceRecord | null
+  { appReview, port, reference }: StudioRecords
 ): Promise<void> {
   if (outcome.status === "failed") return;
   const finalCheck = await runFinalCheck(input);
-  const checked = withReference(
-    finalCheck && appReview ? { ...finalCheck, appReview } : finalCheck,
-    reference
+  const checked = toPortChecked(
+    withReference(
+      finalCheck && appReview ? { ...finalCheck, appReview } : finalCheck,
+      reference
+    ),
+    port
   );
   if (checked) outcome.finalCheck = checked;
 }
@@ -1328,18 +1342,26 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
       gaps
     );
     const text = appReviewPrompt(review, gaps, pass);
+    const next =
+      text && pass < APP_REVIEW_PASSES
+        ? await resumeTurn(input, segment, total, [text, review.images, pass])
+        : null;
+    if (!next) return { outcome: total, record: review.record };
+    return { outcome: next, record: { ...review.record, fixLoop: true } };
+  }
+
+  async function resumeTurn(
+    input: DriverInput,
+    segment: AttemptSegment,
+    total: DriverOutcome,
+    [text, images, pass]: [string, UserMessageParts["images"], number]
+  ): Promise<DriverOutcome | null> {
     const sessionId = segment.sessionId;
-    if (
-      !text ||
-      !sessionId ||
-      pass >= APP_REVIEW_PASSES ||
-      !roomForFixLoop(total) ||
-      input.signal.aborted
-    )
-      return { outcome: total, record: review.record };
+    if (!sessionId || !roomForFixLoop(total) || input.signal.aborted)
+      return null;
     input.sink.sent({
       text,
-      imageCount: review.images.length,
+      imageCount: images.length,
       updatedInstructions: false,
       recommendedSkills: [],
       promptHash: segment.promptHash,
@@ -1355,16 +1377,37 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
       costUsd: total.sessionTotals?.costUsd ?? 0,
       apiMs: total.sessionTotals?.apiMs ?? null,
     };
-    const next = await runSegment(
-      input,
-      segment,
-      { text, images: review.images },
-      prior
-    );
-    return {
-      outcome: mergeOutcomes(total, next.outcome),
-      record: { ...review.record, fixLoop: true },
-    };
+    const next = await runSegment(input, segment, { text, images }, prior);
+    return mergeOutcomes(total, next.outcome);
+  }
+
+  async function continuePort(
+    input: DriverInput,
+    segment: AttemptSegment,
+    total: DriverOutcome
+  ): Promise<{ outcome: DriverOutcome; record: PortReviewRecord | null }> {
+    const gaps = skipsReview(input, total)
+      ? null
+      : toPortReviewGaps(input.ctx, segment.setup.run.log?.toolOrder ?? []);
+    if (!gaps || !options.runtime || total.status !== "completed")
+      return { outcome: total, record: null };
+    let merged = total;
+    const review = await runPortReview({
+      continueWith: async (text, images) => {
+        const next = await resumeTurn(input, segment, total, [
+          text,
+          [...images],
+          1,
+        ]);
+        merged = next ?? merged;
+        return next !== null;
+      },
+      gaps,
+      preview: options.preview,
+      runtime: options.runtime,
+    });
+    segment.notes.push(review.note);
+    return { outcome: merged, record: review.record };
   }
 
   async function continueAppReview(
@@ -1416,40 +1459,13 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
       unseen
     );
     const text = screenReviewPrompt(review);
-    const sessionId = segment.sessionId;
-    if (!text || !sessionId || !roomForFixLoop(total) || input.signal.aborted) {
-      segment.notes.push(screenReviewNote(review, false));
-      return total;
-    }
-    input.sink.sent({
-      text,
-      imageCount: review.images.length,
-      updatedInstructions: false,
-      recommendedSkills: [],
-      promptHash: segment.promptHash,
-      resume: sessionId,
-      continuation: (total.loop?.continuations ?? 0) + 1,
-    });
-    segment.sdkOptions = {
-      ...(await buildSdkOptions(options, input, sessionId, segment.setup)),
-      resume: sessionId,
-    };
-    const prior: PriorSession = {
-      sessionId,
-      costUsd: total.sessionTotals?.costUsd ?? 0,
-      apiMs: total.sessionTotals?.apiMs ?? null,
-    };
     const editsBefore = toEditCount(run);
-    const next = await runSegment(
-      input,
-      segment,
-      { text, images: review.images },
-      prior
-    );
-    segment.notes.push(
-      screenReviewNote(review, toEditCount(run) > editsBefore)
-    );
-    return mergeOutcomes(total, next.outcome);
+    const next = text
+      ? await resumeTurn(input, segment, total, [text, review.images, 1])
+      : null;
+    const isEdited = next !== null && toEditCount(run) > editsBefore;
+    segment.notes.push(screenReviewNote(review, isEdited));
+    return next ?? total;
   }
 
   async function continueReference(
@@ -1464,32 +1480,9 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
       text: string,
       images: UserMessageParts["images"]
     ): Promise<boolean> => {
-      const sessionId = segment.sessionId;
-      if (!sessionId || !roomForFixLoop(total) || input.signal.aborted)
-        return false;
-      input.sink.sent({
-        text,
-        imageCount: images.length,
-        updatedInstructions: false,
-        recommendedSkills: [],
-        promptHash: segment.promptHash,
-        resume: sessionId,
-        continuation: (total.loop?.continuations ?? 0) + 1,
-      });
-      segment.sdkOptions = {
-        ...(await buildSdkOptions(options, input, sessionId, segment.setup)),
-        resume: sessionId,
-      };
-      const prior: PriorSession = {
-        sessionId,
-        costUsd: total.sessionTotals?.costUsd ?? 0,
-        apiMs: total.sessionTotals?.apiMs ?? null,
-      };
-      merged = mergeOutcomes(
-        total,
-        (await runSegment(input, segment, { text, images }, prior)).outcome
-      );
-      return true;
+      const next = await resumeTurn(input, segment, total, [text, images, 1]);
+      merged = next ?? merged;
+      return next !== null;
     };
     const record = await runReferencePass({
       preview: options.preview,
@@ -1560,10 +1553,11 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
           )
         : checked
     );
+    const ported = await continuePort(input, segment, reviewed.outcome);
     const referenced = await continueReference(
       input,
       segment,
-      await continueScreenReview(input, segment, reviewed.outcome)
+      await continueScreenReview(input, segment, ported.outcome)
     );
     const outcome = toNotedOutcome(referenced.outcome, segment.notes);
     addCriticCost(outcome, setup.run.criticCostUsd);
@@ -1578,8 +1572,11 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
           runsDir: input.runsDir,
           runId: input.runId,
         },
-        reviewed.record,
-        referenced.record
+        {
+          appReview: reviewed.record,
+          port: ported.record,
+          reference: referenced.record,
+        }
       );
     return { sawInit: first.state.sawInit, outcome };
   }

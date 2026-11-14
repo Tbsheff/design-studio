@@ -8,6 +8,7 @@ import type {
   LinkRectReport,
   LinksFile,
 } from "@design-studio/contracts/links";
+import type { PortReviewRecord } from "@design-studio/contracts/port";
 import type { ForcedStatePart } from "@design-studio/contracts/state-styles";
 import type { StatesRequest } from "@design-studio/contracts/states";
 import type {
@@ -556,11 +557,8 @@ export interface AnchorReport {
   sourceLoc?: string | null;
 }
 
-export interface LoopStep {
+export interface LoopStep extends Pick<FinalCheck, "high" | "medium" | "low"> {
   loop: number;
-  high: number;
-  medium: number;
-  low: number;
 }
 
 export interface LoopSummary {
@@ -594,6 +592,7 @@ export interface FinalCheck {
   medium: number;
   low: number;
   appReview?: AppReviewRecord;
+  port?: PortReviewRecord;
 }
 
 export type RunStatus =

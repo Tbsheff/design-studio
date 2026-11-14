@@ -7,6 +7,7 @@ import type {
   QualityFinding,
   RenderCheckResult,
 } from "@design-studio/contracts";
+import { PORT_TASK } from "@design-studio/contracts/port";
 
 import {
   baselineFindingsFile,
@@ -227,6 +228,7 @@ export function appReviewGaps(
     ctx.request.mode !== "edit"
   )
     return null;
+  if (ctx.request.task === PORT_TASK) return null;
   const lastEdit = toolOrder.findLastIndex((name) => EDIT_TOOLS.has(name));
   if (lastEdit === -1) return null;
   const mobile = !(run.log?.shots ?? []).some(
@@ -547,13 +549,9 @@ const EMPTY_CHECK: FinalCheck = {
 export function withReference(
   check: FinalCheck | null | undefined,
   reference: ReferenceRecord | null
-): FinalCheck | undefined {
+): FinalCheckWithReference | undefined {
   if (!reference) return check ?? undefined;
-  const merged: FinalCheckWithReference = {
-    ...(check ?? EMPTY_CHECK),
-    reference,
-  };
-  return merged;
+  return { ...(check ?? EMPTY_CHECK), reference };
 }
 
 export function referenceNote(record: ReferenceRecord | null): string {

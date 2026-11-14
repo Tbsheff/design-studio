@@ -14,11 +14,13 @@ interface AgentSdkClientApi {
 type MockDriverOptions = Parameters<typeof createMockDriver>[0];
 
 const toMockOptions = (options: SdkDriverOptions): MockDriverOptions => {
+  const runtime = options.runtime ?? null;
+
   if (options.canvas) {
-    return { canvas: options.canvas, preview: options.preview };
+    return { canvas: options.canvas, preview: options.preview, runtime };
   }
 
-  return { preview: options.preview };
+  return { preview: options.preview, runtime };
 };
 
 class AgentSdkClient extends Context.Service<

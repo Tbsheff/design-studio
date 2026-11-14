@@ -79,3 +79,17 @@
   font-size: var(--t-xs);
   line-height: var(--lh-xs);
 }
+
+.offer {
+  display: grid;
+  gap: var(--s-1);
+  padding: var(--s-2-5) var(--s-4);
+  box-shadow: inset 0 1px 0 var(--line);
+}
+
+.offerTitle {
+  margin: 0;
+  font-size: var(--t-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--w-medium);
+}

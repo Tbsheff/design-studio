@@ -14,12 +14,14 @@ import {
   projectRoutes,
   prototypeRoute,
 } from "./deps.js";
+import type { FixtureOffer } from "./fixture-offer-model.js";
 
 interface PrototypeCreate {
   readonly failure: string | null;
   readonly handlePrompt: (event: ChangeEvent<HTMLTextAreaElement>) => void;
   readonly handleSubmit: (event: FormEvent<HTMLFormElement>) => void;
   readonly isPending: boolean;
+  readonly offer: FixtureOffer | null;
   readonly prompt: string;
   readonly routePath: string | null;
 }
@@ -33,6 +35,7 @@ const usePrototypeCreate = (
   const [prompt, setPrompt] = useState("");
   const route = useMemo(() => toInitialRoute(), []);
   const [failure, setFailure] = useState<string | null>(null);
+  const [offer, setOffer] = useState<FixtureOffer | null>(null);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => clearPrototypeRoute, []);
@@ -65,7 +68,16 @@ const usePrototypeCreate = (
             viewport: null,
           });
 
-          onCreated(created.project.id);
+          if (created.fixtureOffer === null) {
+            onCreated(created.project.id);
+
+            return;
+          }
+
+          setOffer({
+            ...created.fixtureOffer,
+            copyProjectId: created.project.id,
+          });
         } catch (error: unknown) {
           setFailure(errorText(error));
         }
@@ -79,6 +91,7 @@ const usePrototypeCreate = (
     handlePrompt,
     handleSubmit,
     isPending,
+    offer,
     prompt,
     routePath: route,
   };

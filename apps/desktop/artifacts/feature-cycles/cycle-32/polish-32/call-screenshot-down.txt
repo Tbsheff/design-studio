@@ -1,0 +1,49 @@
+call-action workspace.getScreenshot on http://127.0.0.1:5390. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] error, 365 ms, git spawns: not counted (server side)
+{
+  "_tag": "Conflict",
+  "code": null,
+  "error": "Conflict",
+  "message": "The dev server answered 502 for /, so the page shows an error, not the design: The app dev server is not answering http://127.0.0.1:12992: connect ECONNREFUSED 127.0.0.1:12992. Press the app button at the bottom left of the canvas for the log and the fix. Call app_doctor to read the dev server status and logs, fix the cause, then call get_screenshot again."
+}
+
+[mcp] error, 400 ms, git spawns: not counted (server side)
+"The dev server answered 502 for /, so the page shows an error, not the design: The app dev server is not answering http://127.0.0.1:12992: connect ECONNREFUSED 127.0.0.1:12992. Press the app button at the bottom left of the canvas for the log and the fix. Call app_doctor to read the dev server status and logs, fix the cause, then call get_screenshot again."
+
+[agent] error, 458 ms, git spawns: not counted (server side)
+"The dev server answered 502 for /, so the page shows an error, not the design: The app dev server is not answering http://127.0.0.1:12992: connect ECONNREFUSED 127.0.0.1:12992. Press the app button at the bottom left of the canvas for the log and the fix. Call app_doctor to read the dev server status and logs, fix the cause, then call get_screenshot again."
+
+diff http -> mcp:
+- {
++ "The dev server answered 502 for /, so the page shows an error, not the design: The app dev server is not answering http://127.0.0.1:12992: connect ECONNREFUSED 127.0.0.1:12992. Press the app button at the bottom left of the canvas for the log and the fix. Call app_doctor to read the dev server status and logs, fix the cause, then call get_screenshot again."
+-   "_tag": "Conflict",
++ 
+-   "code": null,
++ 
+-   "error": "Conflict",
++ 
+-   "message": "The dev server answered 502 for /, so the page shows an error, not the design: The app dev server is not answering http://127.0.0.1:12992: connect ECONNREFUSED 127.0.0.1:12992. Press the app button at the bottom left of the canvas for the log and the fix. Call app_doctor to read the dev server status and logs, fix the cause, then call get_screenshot again."
++ 
+- }
++ 
+
+diff http -> agent:
+- {
++ "The dev server answered 502 for /, so the page shows an error, not the design: The app dev server is not answering http://127.0.0.1:12992: connect ECONNREFUSED 127.0.0.1:12992. Press the app button at the bottom left of the canvas for the log and the fix. Call app_doctor to read the dev server status and logs, fix the cause, then call get_screenshot again."
+-   "_tag": "Conflict",
++ 
+-   "code": null,
++ 
+-   "error": "Conflict",
++ 
+-   "message": "The dev server answered 502 for /, so the page shows an error, not the design: The app dev server is not answering http://127.0.0.1:12992: connect ECONNREFUSED 127.0.0.1:12992. Press the app button at the bottom left of the canvas for the log and the fix. Call app_doctor to read the dev server status and logs, fix the cause, then call get_screenshot again."
++ 
+- }
++ 
+
+answered approval cards: none
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 3 error results
+
+fix: compare the outputs above, then run call-action again with the id workspace.getScreenshot and the same input

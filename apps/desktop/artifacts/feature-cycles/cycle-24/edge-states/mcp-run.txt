@@ -1,14 +1,14 @@
 ## set_state_style last border-width 0 on the mapped li (src/App.tsx:9)
-{"jsonrpc":"2.0","id":2,"result":{"content":[{"text":"{\"breakpoint\":\"base\",\"classes\":{\"add\":[\"last:border-0\"],\"remove\":[]},\"files\":[\"src/App.tsx\"],\"mode\":\"classes\",\"prefix\":\"last:\",\"property\":\"border-width\",\"state\":\"last\",\"title\":\"State last: border-width 0px\",\"value\":\"0px\",\"versionId\":\"pending-dd21aeab56f80615\"}","type":"text"}],"isError":false}}
+{"jsonrpc":"2.0","id":2,"result":{"content":[{"text":"{\"breakpoint\":\"base\",\"classes\":{\"add\":[\"last:border-0\"],\"remove\":[]},\"files\":[\"src/App.tsx\"],\"mode\":\"classes\",\"prefix\":\"last:\",\"property\":\"border-width\",\"state\":\"last\",\"title\":\"State last: border-width 0px\",\"value\":\"0px\",\"versionId\":\"pending-e2fe4858718b849e\"}","type":"text"}],"isError":false}}
 
 ## set_state_style last border-width 0 on the third hand-written li (src/App.tsx:17)
-{"jsonrpc":"2.0","id":2,"result":{"content":[{"text":"{\"breakpoint\":\"base\",\"classes\":{\"add\":[\"last:border-0\"],\"remove\":[]},\"files\":[\"src/App.tsx\"],\"mode\":\"classes\",\"prefix\":\"last:\",\"property\":\"border-width\",\"state\":\"last\",\"title\":\"State last: border-width 0px\",\"value\":\"0px\",\"versionId\":\"pending-077dc69996c056d5\"}","type":"text"}],"isError":false}}
-
-## list_state_styles on the mapped li
-{"jsonrpc":"2.0","id":2,"result":{"content":[{"text":"{\"edge\":\"list\",\"forced\":[{\"frameId\":\"f1\",\"selector\":\"#root > main > ul:nth-of-type(1) > li:nth-of-type(1)\",\"state\":\"hover\"}],\"group\":null,\"layer\":{\"file\":\"src/App.tsx\",\"mode\":\"classes\",\"overrides\":[{\"breakpoint\":\"base\",\"prefix\":\"last:\",\"props\":[\"border-top-width\",\"border-right-width\",\"border-bottom-width\",\"border-left-width\",\"border-width\"],\"set\":[\"last:border-0\"],\"state\":\"last\"}],\"reason\":null},\"states\":[\"hover\",\"focus-visible\",\"active\",\"disabled\",\"dark\",\"open\",\"checked\",\"selected\",\"group-hover\",\"group-open\",\"group-checked\",\"first\",\"last\",\"odd\",\"even\"]}","type":"text"}],"isError":false}}
+{"jsonrpc":"2.0","id":2,"result":{"content":[{"text":"{\"breakpoint\":\"base\",\"classes\":{\"add\":[\"last:border-0\"],\"remove\":[]},\"files\":[\"src/App.tsx\"],\"mode\":\"classes\",\"prefix\":\"last:\",\"property\":\"border-width\",\"state\":\"last\",\"title\":\"State last: border-width 0px\",\"value\":\"0px\",\"versionId\":\"pending-d57e370ae4390651\"}","type":"text"}],"isError":false}}
 
 ## set_forced_state last
 {"jsonrpc":"2.0","id":2,"result":{"content":[{"text":"{\"frameId\":\"f1\",\"isStructural\":true,\"selector\":\"main > ul:nth-of-type(1) > li:nth-child(1)\",\"state\":\"last\"}","type":"text"}],"isError":false}}
+
+## list_state_styles on the mapped li
+{"jsonrpc":"2.0","id":2,"result":{"content":[{"text":"{\"edge\":\"list\",\"forced\":[],\"group\":null,\"layer\":{\"file\":\"src/App.tsx\",\"mode\":\"classes\",\"overrides\":[{\"breakpoint\":\"base\",\"prefix\":\"last:\",\"props\":[\"border-top-width\",\"border-right-width\",\"border-bottom-width\",\"border-left-width\",\"border-width\"],\"set\":[\"last:border-0\"],\"state\":\"last\"}],\"reason\":null},\"states\":[\"hover\",\"focus-visible\",\"active\",\"disabled\",\"dark\",\"open\",\"checked\",\"selected\",\"group-hover\",\"group-open\",\"group-checked\",\"first\",\"last\",\"odd\",\"even\"]}","type":"text"}],"isError":false}}
 
 ## source after
 9:          <li key={row} className="border-b border-slate-300 py-2 last:border-0">

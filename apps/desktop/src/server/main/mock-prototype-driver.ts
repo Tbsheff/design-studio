@@ -1,3 +1,5 @@
+import { PORT_TASK } from "@design-studio/contracts/port";
+
 import { buildUserText } from "../agent/index.js";
 import type { RunDriver } from "../agent/index.js";
 import { runAgentTool } from "../mcp/index.js";
@@ -29,6 +31,7 @@ const MOCK_USAGE = {
 const isMockPrototype = (input: DriverInput): boolean =>
   Boolean(input.ctx.project.app) &&
   input.ctx.request.mode === "edit" &&
+  input.ctx.request.task !== PORT_TASK &&
   PROTOTYPE_REQUEST.test(input.ctx.request.prompt);
 
 const toResultText = (result: ToolResult): string => {

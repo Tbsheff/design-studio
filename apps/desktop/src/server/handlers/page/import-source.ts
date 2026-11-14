@@ -59,6 +59,7 @@ const handle = Effect.fn("page.importSource")(function* run(
   const pages = yield* PageWriter;
 
   const imported = yield* pages.import({
+    appRoute: entry.routePath,
     directionId: input.directionId,
     name: toCopyName(input.file),
     projectId: input.projectId,

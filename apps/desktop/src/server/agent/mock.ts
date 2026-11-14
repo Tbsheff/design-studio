@@ -20,7 +20,6 @@ import {
   enforceDesignSystemCheck,
   wantsDesignSystemCheck,
 } from "./design-system-run.js";
-import { referenceNote, withReference } from "./final-check.js";
 import type {
   DriverInput,
   DriverOutcome,
@@ -49,6 +48,9 @@ import {
   toOpenTagEnd,
   wantsMockDirect,
 } from "./mock-direct.js";
+import { applyMockPort, isMockPort, runMockPort } from "./mock-port.js";
+import type { MockPortDeps } from "./mock-port.js";
+import { applyMockReference } from "./mock-reference.js";
 import {
   evaluateToolUse,
   toBashWriteProblem,
@@ -56,7 +58,6 @@ import {
   toLockedProblem,
 } from "./permissions.js";
 import type { ToolPolicy } from "./permissions.js";
-import { runReferencePass } from "./reference-check.js";
 import { buildUserMessageParts, toMockSelectionReply } from "./user-message.js";
 
 const MOCK_USAGE = {
@@ -1152,6 +1153,10 @@ function runMockEdit(
     return startMockReadOnly(session, input);
   }
 
+  if (isMockPort(ctx)) {
+    return runMockPort(session, input);
+  }
+
   if (ctx.request.plan) {
     return runPlan(session, workTree, text);
   }
@@ -1195,59 +1200,11 @@ function runMockEdit(
   return runReactEdit(session, workTree, text);
 }
 
-async function withMockReference(
-  input: DriverInput,
-  session: MockSession,
-  preview: PreviewService | undefined,
-  outcome: DriverOutcome
-): Promise<DriverOutcome> {
-  if (!preview || outcome.status !== "completed") {
-    return outcome;
-  }
-
-  const continueWith = async (
-    text: string,
-    images: unknown[]
-  ): Promise<boolean> => {
-    input.sink.sent({
-      continuation: 1,
-      imageCount: images.length,
-      promptHash: "mock",
-      recommendedSkills: [],
-      resume: input.ctx.direction.sessionId,
-      text,
-      updatedInstructions: false,
-    });
-    await session.say(
-      "Mock fix loop: compared the frame with the reference picture again."
-    );
-
-    return true;
-  };
-
-  const reference = await runReferencePass({
-    continueWith,
-    ctx: input.ctx,
-    preview,
-    runId: input.runId,
-    runsDir: input.runsDir,
-  });
-
-  const finalCheck = withReference(outcome.finalCheck, reference);
-
-  return reference && finalCheck
-    ? {
-        ...outcome,
-        finalCheck,
-        finalText: `${outcome.finalText}\n\n${referenceNote(reference)}`,
-      }
-    : outcome;
-}
-
 async function runMock(
   input: DriverInput,
   canvas: CanvasService | undefined,
-  preview: PreviewService | undefined
+  preview: PreviewService | undefined,
+  runtime: MockPortDeps["runtime"]
 ): Promise<DriverOutcome> {
   const startedAt = Date.now();
   const { prompt } = input.ctx.request;
@@ -1374,7 +1331,18 @@ async function runMock(
   };
 
   if (!wantsDesignSystemCheck(input.ctx)) {
-    return withMockReference(input, session, preview, outcome);
+    const referenced = await applyMockReference(
+      input,
+      session,
+      preview,
+      outcome
+    );
+    return applyMockPort(
+      input,
+      session,
+      { preview: preview ?? null, runtime },
+      referenced
+    );
   }
 
   return enforceDesignSystemCheck({
@@ -1405,12 +1373,21 @@ async function runMock(
 
 export const MOCK_SLOW_STOP_MS = 2000;
 
-export function createMockDriver(
-  options: { canvas?: CanvasService; preview?: PreviewService } = {}
-): RunDriver {
+interface MockDriverOptions {
+  canvas?: CanvasService;
+  preview?: PreviewService;
+  runtime?: MockPortDeps["runtime"];
+}
+
+export function createMockDriver(options: MockDriverOptions = {}): RunDriver {
   return async (input) => {
     try {
-      return await runMock(input, options.canvas, options.preview);
+      return await runMock(
+        input,
+        options.canvas,
+        options.preview,
+        options.runtime ?? null
+      );
     } catch (error) {
       if (
         input.signal.aborted &&

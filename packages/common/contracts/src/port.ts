@@ -2,6 +2,12 @@ export const PORT_TASK = "port";
 
 export type PortTask = typeof PORT_TASK;
 
+export interface PortReviewRecord {
+  readonly score: number | null;
+  readonly rendered: boolean;
+  readonly fixLoop: boolean;
+}
+
 export const PORT_LEVEL_LABEL = "Port to app";
 export const PORT_OPEN_EVENT = "studio:port-to-app";
 

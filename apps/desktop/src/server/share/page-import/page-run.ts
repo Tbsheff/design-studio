@@ -8,7 +8,9 @@ import type { PageImportRequest, PageImportResult } from "./deps.js";
 import { importPageCopy } from "./import-page.js";
 import { toPageFailure } from "./page-failure.js";
 
-interface ImportPageCommand extends DirectionIds, PageImportRequest {}
+interface ImportPageCommand extends DirectionIds, PageImportRequest {
+  readonly appRoute: string | null;
+}
 
 const CLIENT = "ui";
 
@@ -30,6 +32,7 @@ const runPageImport = (
       const done = await importPageCopy(
         { canvas: runtime.canvas, direction, project },
         {
+          appRoute: command.appRoute,
           name: command.name,
           selector: command.selector,
           url: command.url,

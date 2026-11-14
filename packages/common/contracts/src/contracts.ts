@@ -1523,6 +1523,7 @@ export interface FreeMoveDrag {
   alt: boolean;
   free: boolean;
   insert: FreeMoveInsert | null;
+  lock: "x" | "y" | null;
   note?: string;
 }
 

@@ -65,6 +65,14 @@ const isSnapSkipped = (session: FreeMoveSession, drag: FreeMoveDrag): boolean =>
   drag.free ||
   (session.candidates.length === 0 && session.lines.length === 0);
 
+const toMoveKind = (drag: FreeMoveDrag, axis: "x" | "y"): "move" | null => {
+  if (drag.lock !== null && drag.lock !== axis) {
+    return null;
+  }
+
+  return "move";
+};
+
 const place = (
   session: FreeMoveSession,
   drag: FreeMoveDrag,
@@ -79,8 +87,8 @@ const place = (
       candidates: session.candidates,
       lines: session.lines,
       rect: moved,
-      x: "move",
-      y: "move",
+      x: toMoveKind(drag, "x"),
+      y: toMoveKind(drag, "y"),
       zoom,
     });
   }

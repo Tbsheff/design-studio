@@ -273,7 +273,7 @@ const listAppEntries = async (
       target.project
     );
 
-    return context.entries;
+    return context?.entries ?? [];
   } catch {
     return [];
   }

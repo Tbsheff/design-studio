@@ -41,6 +41,7 @@ describe(parseTextCommit, () => {
     expect(parseTextCommit(BAD_TEXT_MESSAGE)).toBeNull();
     expect(
       parseTextCommit({
+        isRangeMode: false,
         ns: "studio",
         selector: "h1",
         state: "start",

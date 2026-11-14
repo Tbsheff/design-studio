@@ -1,0 +1,13 @@
+diff --git a/app/page.tsx b/app/page.tsx
+index 672fb80..0468e81 100644
+--- a/app/page.tsx
++++ b/app/page.tsx
+@@ -2,7 +2,7 @@ export default function Page() {
+   return (
+     <main className="mx-auto max-w-2xl p-10">
+       <h1 className="text-3xl font-semibold text-ink">Classes</h1>
+-      <p className="mt-4 text-xl text-muted">Book your first class today and save 20 percent</p>
++      <p className="mt-4 text-xl text-muted">Book your first class today and <span className="underline">save</span> 20 percent</p>
+     </main>
+   );
+ }

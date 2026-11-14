@@ -1,11 +1,20 @@
 import type { BridgeToParent } from "@design-studio/contracts";
 
+import {
+  createEditGuard,
+  isMixedLayer,
+  restoreSnapshot,
+  selectTextRange,
+  toSnapshot,
+} from "./text-edit-range-mode.js";
+import type { NodeSnapshot } from "./text-edit-range-mode.js";
 import { createTextRange } from "./text-range.js";
 import type { TextRangeBody } from "./text-range.js";
 
 type TextEditBody =
   | Omit<Extract<BridgeToParent, { type: "text-edit" }>, "ns" | "token">
   | Omit<Extract<BridgeToParent, { type: "text-commit" }>, "ns" | "token">
+  | Omit<Extract<BridgeToParent, { type: "text-edit-blocked" }>, "ns" | "token">
   | TextRangeBody
   | { type: "hover"; rect: null };
 
@@ -23,6 +32,7 @@ export interface TextEditor {
   allow(on: boolean): void;
   canEdit(element: Element | null): element is HTMLElement;
   start(element: HTMLElement, at?: { x: number; y: number }): void;
+  resume(element: HTMLElement, start: number, end: number, text: string): void;
   commit(): void;
   cancel(): void;
   onKeyDown(event: KeyboardEvent): boolean;
@@ -57,11 +67,12 @@ const NON_TEXT_TAGS = new Set([
 interface Session {
   element: HTMLElement;
   selector: string;
-  nodes: Node[];
-  data: Map<Node, string>;
+  snapshot: NodeSnapshot;
   original: string;
   hadEditable: string | null;
   isHeld: boolean;
+  isRangeMode: boolean;
+  release: () => void;
 }
 
 function ensureStyle(): void {
@@ -140,18 +151,19 @@ function insertPlain(event: ClipboardEvent): void {
 export function createTextEditor(deps: TextEditDeps): TextEditor {
   let allowed = false;
   let session: Session | null = null;
-  const range = createTextRange({ post: deps.post, textOf: plainText });
+  const range = createTextRange({
+    post: deps.post,
+    selectorFor: deps.selectorFor,
+    textOf: plainText,
+  });
 
   const restore = (current: Session): void => {
-    current.element.replaceChildren(...current.nodes);
-
-    for (const [node, data] of current.data) {
-      (node as CharacterData).data = data;
-    }
+    restoreSnapshot(current.snapshot);
   };
 
   const finish = (current: Session): void => {
     session = null;
+    current.release();
     range.unwatch();
     const { element } = current;
     element.removeEventListener("blur", onBlur);
@@ -184,6 +196,7 @@ export function createTextEditor(deps: TextEditDeps): TextEditor {
       type: "text-edit",
       selector: current.selector,
       state: "cancel",
+      isRangeMode: current.isRangeMode,
     });
   };
 
@@ -191,6 +204,12 @@ export function createTextEditor(deps: TextEditDeps): TextEditor {
     const current = session;
 
     if (!current) {
+      return;
+    }
+
+    if (current.isRangeMode) {
+      cancel();
+
       return;
     }
 
@@ -203,6 +222,7 @@ export function createTextEditor(deps: TextEditDeps): TextEditor {
         type: "text-edit",
         selector: current.selector,
         state: "cancel",
+        isRangeMode: false,
       });
 
       return;
@@ -226,7 +246,7 @@ export function createTextEditor(deps: TextEditDeps): TextEditor {
     allowed &&
     element instanceof HTMLElement &&
     element.isConnected &&
-    element.children.length === 0 &&
+    (element.children.length === 0 || isMixedLayer(element)) &&
     !NON_TEXT_TAGS.has(element.tagName.toLowerCase()) &&
     !element.isContentEditable &&
     (element.textContent ?? "").length <= MAX_EDIT_TEXT;
@@ -242,23 +262,27 @@ export function createTextEditor(deps: TextEditDeps): TextEditor {
       return;
     }
 
-    const nodes = Array.from(element.childNodes);
-    const data = new Map<Node, string>();
+    const snapshot = toSnapshot(element);
+    const selector = deps.selectorFor(element);
+    const isRangeMode = element.children.length > 0;
 
-    for (const node of nodes) {
-      if (node instanceof CharacterData) {
-        data.set(node, node.data);
-      }
-    }
+    const release = createEditGuard({
+      element,
+      isRangeMode,
+      onBlocked: () => deps.post({ type: "text-edit-blocked", selector }),
+      onOuterChange: () => rebase(element),
+      snapshot,
+    });
 
     session = {
       element,
-      selector: deps.selectorFor(element),
-      nodes,
-      data,
+      selector,
+      snapshot,
       original: element.textContent ?? "",
       hadEditable: element.getAttribute("contenteditable"),
       isHeld: false,
+      isRangeMode,
+      release,
     };
     deps.onStart(element);
     ensureStyle();
@@ -282,7 +306,47 @@ export function createTextEditor(deps: TextEditDeps): TextEditor {
       type: "text-edit",
       selector: session.selector,
       state: "start",
+      isRangeMode,
     });
+  };
+
+  function rebase(element: HTMLElement): void {
+    const current = session;
+
+    if (current?.element !== element) {
+      return;
+    }
+
+    const last = range.lastRange();
+    finish(current);
+    deps.post({
+      type: "text-edit",
+      selector: current.selector,
+      state: "cancel",
+      isRangeMode: current.isRangeMode,
+    });
+    start(element);
+
+    if (last !== null && session?.element === element) {
+      selectTextRange(element, last.start, last.end);
+    }
+  }
+
+  const resume = (
+    element: HTMLElement,
+    from: number,
+    to: number,
+    text: string
+  ): void => {
+    if (plainText(element) !== text) {
+      return;
+    }
+
+    start(element);
+
+    if (session?.element === element) {
+      selectTextRange(element, from, to);
+    }
   };
 
   const onKeyDown = (event: KeyboardEvent): boolean => {
@@ -350,6 +414,7 @@ export function createTextEditor(deps: TextEditDeps): TextEditor {
     },
     canEdit,
     start,
+    resume,
     commit,
     cancel,
     onKeyDown,

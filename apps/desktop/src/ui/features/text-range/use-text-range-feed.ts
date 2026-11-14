@@ -67,6 +67,12 @@ const useTextRangeFeed = (setup: TextRangeFeedSetup): TextRangeFeed => {
     }
 
     return listen((message) => {
+      if (message.type === "ready") {
+        setReading(null);
+
+        return;
+      }
+
       if (message.type === "text-range") {
         const next = toReading(message);
         setReading(next);

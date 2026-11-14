@@ -2,6 +2,8 @@ import type { BridgeToParent } from "@design-studio/contracts";
 
 import { toTextKeyId } from "../shared/text-keys.js";
 import { IS_MAC } from "./dom-input.js";
+import { toRangeTarget } from "./text-range-target.js";
+import type { RangeTarget } from "./text-range-target.js";
 
 type TextRangeMessage = Extract<BridgeToParent, { type: "text-range" }>;
 
@@ -17,6 +19,7 @@ type TextRangeShot = Omit<TextRangeMessage, "ns" | "token">;
 
 interface TextRangeDeps {
   readonly post: (body: TextRangeBody) => void;
+  readonly selectorFor: (element: Element) => string;
   readonly textOf: (element: HTMLElement) => string;
 }
 
@@ -26,7 +29,13 @@ interface TextRangeWatch {
   readonly selector: string;
 }
 
+interface TextRangeSpan {
+  readonly end: number;
+  readonly start: number;
+}
+
 interface TextRangeReporter {
+  readonly lastRange: () => TextRangeSpan | null;
   readonly onKey: (event: KeyboardEvent) => boolean;
   readonly unwatch: () => void;
   readonly watch: (target: TextRangeWatch) => void;
@@ -34,8 +43,11 @@ interface TextRangeReporter {
 
 interface RangeReading {
   readonly end: number;
+  readonly layerEnd: number;
+  readonly layerStart: number;
   readonly rect: TextRangeMessage["rect"];
   readonly start: number;
+  readonly target: RangeTarget;
 }
 
 const toOffsetOf = (
@@ -64,11 +76,15 @@ const toReading = (element: HTMLElement): RangeReading | null => {
   }
 
   const box = range.getBoundingClientRect();
+  const target = toRangeTarget(element, range);
 
   return {
-    end: toOffsetOf(element, range.endContainer, range.endOffset),
+    end: toOffsetOf(target.element, range.endContainer, range.endOffset),
+    layerEnd: toOffsetOf(element, range.endContainer, range.endOffset),
+    layerStart: toOffsetOf(element, range.startContainer, range.startOffset),
     rect: { height: box.height, width: box.width, x: box.x, y: box.y },
-    start: toOffsetOf(element, range.startContainer, range.startOffset),
+    start: toOffsetOf(target.element, range.startContainer, range.startOffset),
+    target,
   };
 };
 
@@ -121,28 +137,95 @@ const toCommandOf = (event: KeyboardEvent): TextRangeCommand | null => {
 };
 
 const toShot = (
-  target: TextRangeWatch,
-  reading: RangeReading | null,
-  rendered: string
+  deps: TextRangeDeps,
+  watched: TextRangeWatch,
+  reading: RangeReading | null
 ): TextRangeShot => {
+  const rendered = deps.textOf(watched.element);
+
   const base = {
-    isDirty: rendered !== target.original,
-    selector: target.selector,
-    tag: target.element.tagName.toLowerCase(),
+    isDirty: rendered !== watched.original,
+    selector: watched.selector,
+    tag: watched.element.tagName.toLowerCase(),
     text: rendered,
     type: "text-range",
   } as const;
 
   if (reading === null) {
-    return { ...base, end: 0, isDirty: false, rect: null, start: 0, text: "" };
+    return {
+      ...base,
+      end: 0,
+      isDirty: false,
+      layer: { end: 0, selector: watched.selector, start: 0, text: "" },
+      rect: null,
+      source: null,
+      start: 0,
+      text: "",
+    };
   }
 
-  return { ...base, ...reading };
+  const layer = {
+    end: reading.layerEnd,
+    selector: watched.selector,
+    start: reading.layerStart,
+    text: rendered,
+  };
+
+  if (reading.target.source === null) {
+    return {
+      ...base,
+      end: reading.end,
+      layer,
+      rect: reading.rect,
+      source: null,
+      start: reading.start,
+    };
+  }
+
+  const child = reading.target.element;
+
+  return {
+    ...base,
+    end: reading.end,
+    layer,
+    rect: reading.rect,
+    selector: deps.selectorFor(child),
+    source: reading.target.source,
+    start: reading.start,
+    tag: child.tagName.toLowerCase(),
+    text: deps.textOf(child),
+  };
+};
+
+const toKeyBody = (
+  shot: TextRangeShot,
+  reading: RangeReading,
+  keyCommand: TextRangeCommand
+): Omit<TextRangeKeyMessage, "ns" | "token"> => ({
+  className: reading.target.element.getAttribute("class") ?? "",
+  command: keyCommand,
+  end: shot.end,
+  layer: shot.layer,
+  selector: shot.selector,
+  source: shot.source,
+  start: shot.start,
+  tag: shot.tag,
+  text: shot.text,
+  type: "text-range-key",
+});
+
+const toReadingKey = (reading: RangeReading | null): string => {
+  if (reading === null) {
+    return "null";
+  }
+
+  return JSON.stringify({ ...reading, target: reading.target.source });
 };
 
 const createTextRange = (deps: TextRangeDeps): TextRangeReporter => {
   let current: TextRangeWatch | null = null;
   let lastKey = "";
+  let lastSpan: TextRangeSpan | null = null;
 
   const report = (): void => {
     if (!current) {
@@ -150,21 +233,26 @@ const createTextRange = (deps: TextRangeDeps): TextRangeReporter => {
     }
 
     const reading = toReading(current.element);
-    const key = JSON.stringify(reading);
+    const key = toReadingKey(reading);
 
     if (key === lastKey) {
       return;
     }
 
     lastKey = key;
-    deps.post(toShot(current, reading, deps.textOf(current.element)));
+
+    if (reading !== null) {
+      lastSpan = { end: reading.layerEnd, start: reading.layerStart };
+    }
+
+    deps.post(toShot(deps, current, reading));
   };
 
   const unwatch = (): void => {
     document.removeEventListener("selectionchange", report);
 
     if (current && lastKey !== "null" && lastKey !== "") {
-      deps.post(toShot(current, null, ""));
+      deps.post(toShot(deps, current, null));
     }
 
     current = null;
@@ -174,6 +262,7 @@ const createTextRange = (deps: TextRangeDeps): TextRangeReporter => {
   const watch = (target: TextRangeWatch): void => {
     current = target;
     lastKey = "";
+    lastSpan = null;
     document.addEventListener("selectionchange", report);
   };
 
@@ -191,27 +280,18 @@ const createTextRange = (deps: TextRangeDeps): TextRangeReporter => {
       return true;
     }
 
-    const shot = toShot(current, reading, deps.textOf(current.element));
+    const shot = toShot(deps, current, reading);
 
     if (!shot.isDirty) {
-      const className = current.element.getAttribute("class") ?? "";
-
-      deps.post({
-        className,
-        command,
-        end: shot.end,
-        selector: shot.selector,
-        start: shot.start,
-        tag: shot.tag,
-        text: shot.text,
-        type: "text-range-key",
-      });
+      deps.post(toKeyBody(shot, reading, command));
     }
 
     return true;
   };
 
-  return { onKey, unwatch, watch };
+  const lastRange = (): TextRangeSpan | null => lastSpan;
+
+  return { lastRange, onKey, unwatch, watch };
 };
 
 export { createTextRange };

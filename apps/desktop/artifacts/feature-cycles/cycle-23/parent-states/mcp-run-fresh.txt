@@ -1,0 +1,13 @@
+## list_state_styles {"projectId":"OEenzM7-if","directionId":"main","file":"index.html","line":13,"col":99}
+{"forced":[],"group":{"hasDataState":false,"name":"card"},"layer":{"file":"index.html","mode":"classes","overrides":[],"reason":null},"states":["hover","focus-visible","active","disabled","dark","open","checked","selected","group-hover","group-open","group-checked"]}
+## set_forced_state {"projectId":"OEenzM7-if","directionId":"main","state":"group-hover","layer":"#fresh"}
+{"frameId":"f1","selector":"#fresh","state":"group-hover"}
+## get_screenshot {"projectId":"OEenzM7-if","directionId":"main","frameId":"f1"}
+(image saved /Volumes/DevProjects/code/ds-wt/parent-states/apps/desktop/artifacts/feature-cycles/cycle-23/parent-states/mcp-forced-fresh-named.png)
+1440 × 900 px of the work tree at version 09a8ac812f1e9e50ec50b0435a6bc1c850abeb1f.
+## set_forced_state {"projectId":"OEenzM7-if","directionId":"main","state":null}
+{"frameId":"f1","selector":null,"state":null}
+opacity fields: 1 <input id="ins-opacity" class="ins-input num  inherited" aria-label="Opacity" spellcheck="false" autocomplete="off" placeholder="—" aria-invalid="false" data-tip="" value="1">
+src: id="fresh">
+named opacity forced: 1 group force: null sel force: null chips: Default | Hover | Focus | Pressed | Disabled | Dark | Parent hover(on)
+named opacity default: 1

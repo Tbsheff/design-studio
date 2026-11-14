@@ -3,6 +3,7 @@ import { PORT_LEVEL_LABEL, PORT_TASK } from "@design-studio/contracts/port";
 
 import type { ResolvedRunConfig } from "../../shared/run-levels.js";
 import { PORT_RULES } from "./prompt.js";
+import { toDraftLoadOrder } from "./skill-match.js";
 import type { UserMessageParts } from "./user-message.js";
 
 const TWEAKS_STEP = `Tweaks: call \`mcp__studio__define_tweaks\` with 3 to 8 controls for the most useful knobs of this design (spacing scale, accent hue, corner radius, density, base font size, a layout toggle). Each cssVar must be declared once in a top-level \`:root\` rule with its default value (design-system tokens are already declared in tokens.css) and used with var() by the rules it changes; add the declarations and var() uses with Edit first. Keep controls that already exist unless they no longer fit.`;
@@ -30,11 +31,20 @@ REQUIRED steps, in this order:
 export interface RunLevelContext {
   app?: boolean;
   appTokens?: boolean;
+  isNewPage?: boolean;
 }
 
 const PLAN_STEP = `Call \`TodoWrite\` first with your plan: 3 to 6 short todos (brief, build each screen, checks, fixes). The user sees this list. Call TodoWrite again to mark todos completed as you go: at least once after the build, once after the checks and once before your final reply, when every todo must be completed or removed. The studio also marks a todo done when the file or screen it names is written and its render_check passes, so name the file or screen in each build todo.`;
 
 const BRIEF_STEP = `Brief: before your first edit, write a short design brief in the chat, four lines: audience, primary action, content (the sections or screens and the real facts in them) and density (airy, balanced or dense). In an app, add the target file and the section. When the message has "Answers to your questions:", use them. Ask before you build only when the request can be read two ways that give clearly different designs and nothing in the message settles it: then reply with at most 3 short questions, make no edit and stop. Otherwise state the reading you chose in the brief and build.`;
+
+const DRAFT_BRIEF_STEP = `Brief: write a design brief in the chat, two lines: audience and primary action. Content and density go in your plan. When the message has "Answers to your questions:", use them. Ask before you build only when the request can be read two ways that give clearly different designs and nothing in the message settles it: then reply with at most 3 short questions, make no edit and stop. Otherwise state the reading you chose in the brief and build.`;
+
+const DRAFT_WRITE_STEP = `First draft: right after the brief, write the full first page in ONE Write call, with real content, the design-system tokens and the final layout. Do not call TodoWrite, ToolSearch or the Skill tool before this Write.`;
+
+const DRAFT_PLAN_STEP = `Then call \`TodoWrite\` with your plan: one completed todo for the first draft (name the file), then 2 to 5 short todos for what is left (content and density, each other screen, checks, fixes). Call TodoWrite again to mark todos completed as you go: at least once after the checks and once before your final reply, when every todo must be completed or removed. The studio also marks a todo done when the file or screen it names is written and its render_check passes, so name the file or screen in each build todo.`;
+
+const DRAFT_SKILL_STEP = `Call the Skill tool for each fitting skill in the <recommended-skills> block, after your first draft and before the fix round. Apply what they say in the fix round.`;
 
 const FLOW_STEP = `Flows: when the request has 2 or more screens or steps (a booking flow, onboarding, checkout), make one page per step, never one long file that switches views with script. In HTML that is one self-contained file per step (\`index.html\` for the first step, then for example \`detail.html\`, \`checkout.html\`, \`done.html\`); in React or an app, one route per step. Link the steps with real links or buttons so each page works alone. Then call \`mcp__studio__canvas_list\` and \`mcp__studio__canvas_place\` to give each step its own labelled frame in flow order (each one rightOf the step before it), so the canvas shows every step.`;
 
@@ -56,6 +66,47 @@ function appLine(context: RunLevelContext): string {
   return isApp(context) ? `\n- ${APP_STEP}` : "";
 }
 
+function isDraftFirst(context: RunLevelContext): boolean {
+  return context.isNewPage === true && !isApp(context);
+}
+
+function toNumberedSteps(steps: readonly string[]): string {
+  return steps.map((step, index) => `${index}. ${step}`).join("\n");
+}
+
+function toDraftSteps(): readonly string[] {
+  return [
+    DRAFT_BRIEF_STEP,
+    `${DRAFT_WRITE_STEP} ${FLOW_STEP}`,
+    DRAFT_PLAN_STEP,
+    DRAFT_SKILL_STEP,
+  ];
+}
+
+function toPrototypeStart(context: RunLevelContext): readonly string[] {
+  if (isDraftFirst(context)) {
+    return toDraftSteps();
+  }
+
+  return [
+    PLAN_STEP,
+    "Call the Skill tool for each fitting skill in the <recommended-skills> block, before you write any file.",
+    BRIEF_STEP,
+    `Write the design. ${FLOW_STEP}`,
+  ];
+}
+
+function toPolishStart(context: RunLevelContext): readonly string[] {
+  if (isDraftFirst(context)) {
+    return toDraftSteps();
+  }
+
+  return [
+    PLAN_STEP,
+    "Call the Skill tool for each fitting skill in the <recommended-skills> block, before your first edit.",
+  ];
+}
+
 function wireframeEdit(context: RunLevelContext): string {
   return `Level: WIREFRAME. Goal: fast, cheap structure the user can judge and iterate on.
 - Plan: call \`TodoWrite\` first with 2 to 4 todos, and mark each one completed when it is done.
@@ -71,16 +122,15 @@ function wireframeEdit(context: RunLevelContext): string {
 function prototypeEdit(context: RunLevelContext): string {
   return `Level: PROTOTYPE. Goal: a believable, styled design, checked once. Use the design-system tokens when the project has them and the <taste> rules.${appLine(context)}
 REQUIRED steps, in this order. Do not skip one:
-0. ${PLAN_STEP}
-1. Call the Skill tool for each fitting skill in the <recommended-skills> block, before you write any file.
-2. ${BRIEF_STEP}
-3. Write the design. ${FLOW_STEP}
-4. Call \`mcp__studio__render_check\`. It returns errors, layout findings and \`quality\` findings (a11y, tap-target, placeholder, tokens, nav-mobile, visual-diff), each with a severity, for every screen it lists.
-5. Call \`mcp__studio__screenshot\` mobile from=0, then desktop from=0. Look at every image against the checklist. ${FLOW_CHECK}
-6. Call \`mcp__studio__design_review\` once: a quick critic that has not seen your work reviews every screen.
-7. Fix all errors and every HIGH finding from the check, the critic and what you saw, with Edit. Do 1 fix loop.
-8. ${finishStep(context)}
-9. After your LAST edit, run render_check once more. This final check is mandatory.`;
+${toNumberedSteps([
+  ...toPrototypeStart(context),
+  "Call `mcp__studio__render_check`. It returns errors, layout findings and `quality` findings (a11y, tap-target, placeholder, tokens, nav-mobile, visual-diff), each with a severity, for every screen it lists.",
+  `Call \`mcp__studio__screenshot\` mobile from=0, then desktop from=0. Look at every image against the checklist. ${FLOW_CHECK}`,
+  "Call `mcp__studio__design_review` once: a quick critic that has not seen your work reviews every screen.",
+  "Fix all errors and every HIGH finding from the check, the critic and what you saw, with Edit. Do 1 fix loop.",
+  finishStep(context),
+  "After your LAST edit, run render_check once more. This final check is mandatory.",
+])}`;
 }
 
 function polishEdit(context: RunLevelContext): string {
@@ -89,15 +139,16 @@ function polishEdit(context: RunLevelContext): string {
 - States: every interactive element needs hover and focus-visible styles. Add empty, error and loading states where the design has data, forms or async actions.
 - Layout: when render_check reports \`generic-layout\` or the critic files a generic-layout issue, make exactly ONE concrete layout change that fits this content and the <taste> rules (for a pricing page, for example: a plan selector with one detailed plan column, or the comparison table first with plan headers and prices in it). Do it with Edit calls. Merge rule: move the content into the new structure and DELETE the old blocks it replaces. Every fact (price, plan name, feature, call to action) appears once per viewport, and none is dropped. A repeat is allowed only when it is functional (for example a sticky header CTA): mark it with data-studio-repeat and say why in your reply. Only one layout change per run, never a rewrite of every section.${appLine(context)}
 REQUIRED steps, in this order. Do not skip one:
-0. ${PLAN_STEP}
-1. Call the Skill tool for each fitting skill in the <recommended-skills> block, before your first edit.
-2. Call \`mcp__studio__render_check\`. It runs at 390, 768 and 1440 px and returns errors, layout findings and \`quality\` findings (a11y, tap-target, placeholder, tokens, nav-mobile, visual-diff, generic-layout) with severities.
-3. Call \`mcp__studio__screenshot\` mobile from=0, tablet from=0 and desktop from=0. Look at every image. ${FLOW_CHECK}
-4. Call \`mcp__studio__design_review\` (a separate critic that has not seen your work; it reviews every screen). Call it at most twice per run. A second call also compares desktop with the first and files regressions; when you stop, the studio runs that desktop comparison itself if you did not.
-5. Fix round: fix every HIGH and MEDIUM finding from the checks and the critic with Edit (a \`duplicate-content\` finding means a fact shows twice: merge it), plus the one layout change if the layout is generic.
-6. After each fix round: run render_check AND take screenshots from=0 at mobile, tablet and desktop again. Then start the next fix round.
-7. Stop only when render_check has no high and no medium findings, or after 3 fix rounds. If you stop early, the studio continues the run and lists what is left.
-8. Before the last render_check: ${finishStep(context)}
+${toNumberedSteps([
+  ...toPolishStart(context),
+  "Call `mcp__studio__render_check`. It runs at 390, 768 and 1440 px and returns errors, layout findings and `quality` findings (a11y, tap-target, placeholder, tokens, nav-mobile, visual-diff, generic-layout) with severities.",
+  `Call \`mcp__studio__screenshot\` mobile from=0, tablet from=0 and desktop from=0. Look at every image. ${FLOW_CHECK}`,
+  "Call `mcp__studio__design_review` (a separate critic that has not seen your work; it reviews every screen). Call it at most twice per run. A second call also compares desktop with the first and files regressions; when you stop, the studio runs that desktop comparison itself if you did not.",
+  "Fix round: fix every HIGH and MEDIUM finding from the checks and the critic with Edit (a `duplicate-content` finding means a fact shows twice: merge it), plus the one layout change if the layout is generic.",
+  "After each fix round: run render_check AND take screenshots from=0 at mobile, tablet and desktop again. Then start the next fix round.",
+  "Stop only when render_check has no high and no medium findings, or after 3 fix rounds. If you stop early, the studio continues the run and lists what is left.",
+  `Before the last render_check: ${finishStep(context)}`,
+])}
 - Final reply: the fix loops you ran, the findings per loop (high / medium / low), the layout change you made, and what is left.`;
 }
 
@@ -176,6 +227,24 @@ function toLevelBody(
   return taskBody(config) ?? editBody(config.level, context);
 }
 
+function toSkillText(
+  text: string,
+  config: ResolvedRunConfig,
+  mode: RunMode,
+  context: RunLevelContext
+): string {
+  if (
+    mode !== "edit" ||
+    taskBody(config) !== null ||
+    config.level === "wireframe" ||
+    !isDraftFirst(context)
+  ) {
+    return text;
+  }
+
+  return toDraftLoadOrder(text);
+}
+
 export function buildRunLevelBlock(
   config: ResolvedRunConfig,
   mode: RunMode,
@@ -192,8 +261,10 @@ export function withRunLevel(
   mode: RunMode,
   context: RunLevelContext = {}
 ): UserMessageParts {
+  const level = { ...context, isNewPage: parts.isNewPage === true };
+
   return {
     ...parts,
-    text: `${buildRunLevelBlock(config, mode, context)}\n\n${parts.text}`,
+    text: `${buildRunLevelBlock(config, mode, level)}\n\n${toSkillText(parts.text, config, mode, level)}`,
   };
 }

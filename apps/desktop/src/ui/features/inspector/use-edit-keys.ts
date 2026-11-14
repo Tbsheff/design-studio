@@ -11,6 +11,7 @@ import { useCommands } from "./deps.js";
 import type { DirectEdit } from "./deps.js";
 import {
   SEQUENCE_MS,
+  isEveryOnTypeScale,
   toNextDigits,
   toOpacityValue,
   toTypeValue,
@@ -141,12 +142,12 @@ const toTypePatch = (
   prop: TypeProp,
   step: number
 ): Partial<Record<TypeProp, string>> | null => {
-  const next = toTypeValue(
-    prop,
-    target.edit.values,
-    step,
-    target.isTailwind || target.edit.tailwind?.mode === "classes"
-  );
+  const isScale =
+    target.isTailwind ||
+    target.edit.tailwind?.mode === "classes" ||
+    isEveryOnTypeScale(prop, target.edit.each);
+
+  const next = toTypeValue(prop, target.edit.values, step, isScale);
 
   if (next === null) {
     return null;

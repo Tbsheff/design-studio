@@ -1,6 +1,39 @@
 {
   "B1": {
-    "bytes": 294891,
-    "chunks": ["index", "react"]
+    "bytes": 294622,
+    "chunks": [
+      "main",
+      "preload-helper",
+      "react",
+      "desktop",
+      "use-latest",
+      "focus",
+      "find-element",
+      "live-store",
+      "telemetry",
+      "api-telemetry",
+      "api-core",
+      "http",
+      "json-guard",
+      "query",
+      "stream",
+      "pick",
+      "storage",
+      "ui-select-model",
+      "router",
+      "index",
+      "global-commands",
+      "command-disabled",
+      "copy",
+      "keymap",
+      "app-events",
+      "project-nav",
+      "screen-preload",
+      "registry",
+      "keys",
+      "api-error",
+      "prototype-dialog",
+      "typing-target"
+    ]
   }
 }

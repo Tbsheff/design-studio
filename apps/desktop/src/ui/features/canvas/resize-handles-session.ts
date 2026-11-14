@@ -221,6 +221,7 @@ const createDrag = (
     detach: () => null,
     edge: resizeEdge,
     guides: [],
+    lines: [],
     pointerId: event.pointerId,
     size: startSize,
     startX: event.clientX,
@@ -246,6 +247,7 @@ const beginResize = (
   const handle = event.currentTarget;
   handle.setPointerCapture(event.pointerId);
   const drag = createDrag(target, edge, event);
+  drag.lines = context.live.current.readLines(drag.zoom);
   context.drag.current = drag;
   document.body.classList.add("element-resizing");
   context.live.current.holdSwap?.(true, false);

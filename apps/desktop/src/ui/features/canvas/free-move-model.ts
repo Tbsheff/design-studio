@@ -7,9 +7,10 @@ import type {
   SelectionContext,
   StructureEditRequest,
 } from "@design-studio/contracts";
+import type { CanvasGuide } from "@design-studio/contracts/canvas-file";
 
 import type { ParentMessageBody } from "../../platform/bridge.js";
-import { snapRect } from "./snap-model.js";
+import { snapLayerRect } from "./layer-snap-lines-model.js";
 import type {
   Rect,
   SnapGuide,
@@ -32,6 +33,7 @@ interface FreeMoveOptions {
   readonly enabled: boolean;
   readonly busy: boolean;
   readonly zoom: number;
+  readonly readLines: (zoom: number) => readonly CanvasGuide[];
   readonly post: (body: ParentMessageBody) => void;
   readonly listen: (handler: (message: BridgeToParent) => void) => () => void;
   readonly holdSwap?: (held: boolean, settle: boolean) => void;
@@ -47,6 +49,7 @@ interface FreeMoveSession {
   readonly start: FreeMoveStart;
   readonly target: SelectionContext;
   readonly candidates: Rect[];
+  readonly lines: readonly CanvasGuide[];
 }
 
 interface Placed {
@@ -60,7 +63,7 @@ type AbsoluteStyle = Partial<Record<DirectStyleProperty, string>>;
 const isSnapSkipped = (session: FreeMoveSession, drag: FreeMoveDrag): boolean =>
   session.start.mode !== "absolute" ||
   drag.free ||
-  session.candidates.length === 0;
+  (session.candidates.length === 0 && session.lines.length === 0);
 
 const place = (
   session: FreeMoveSession,
@@ -72,8 +75,9 @@ const place = (
   let snapped: SnapResult = { guides: [], rect: moved, spacing: [] };
 
   if (!isSnapSkipped(session, drag)) {
-    snapped = snapRect({
+    snapped = snapLayerRect({
       candidates: session.candidates,
+      lines: session.lines,
       rect: moved,
       x: "move",
       y: "move",

@@ -14,6 +14,7 @@ import type { useCanvasStage } from "./use-canvas-stage.js";
 import { useCanvasVectorTools } from "./use-canvas-vector-tools.js";
 import { useFreeMove } from "./use-free-move.js";
 import { useHeldTextNotice } from "./use-held-text-notice.js";
+import { useLayerSnapLines } from "./use-layer-snap-lines.js";
 import { useResizeHandles } from "./use-resize-handles.js";
 
 type CanvasStageState = ReturnType<typeof useCanvasStage>;
@@ -107,6 +108,7 @@ const useEditHandles = (
   const enabled = handlesOn;
   const { applyStructure, busy } = layerEdits;
   const { zoom } = text.pz;
+  const readLines = useLayerSnapLines(text.active);
 
   const resize = useResizeHandles({
     directionId,
@@ -116,6 +118,7 @@ const useEditHandles = (
     onError,
     post,
     projectId,
+    readLines,
     refreshRects,
     selection,
     setSelection,
@@ -156,6 +159,7 @@ const useEditHandles = (
     onError,
     post,
     projectId,
+    readLines,
     refreshRects,
     selection,
     setSelection,

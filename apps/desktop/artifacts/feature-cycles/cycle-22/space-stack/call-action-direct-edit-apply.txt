@@ -1,0 +1,51 @@
+call-action direct-edit.apply on http://127.0.0.1:48610. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 7 ms, git spawns: not counted (server side)
+{
+  "applied": {
+    "style": [
+      "row-gap"
+    ],
+    "text": false
+  },
+  "file": "index.html",
+  "tailwind": {
+    "classes": [
+      "w-80",
+      "space-y-6"
+    ],
+    "delta": {
+      "add": [
+        "space-y-6"
+      ],
+      "remove": [
+        "space-y-8"
+      ]
+    },
+    "dynamic": false,
+    "mode": "classes",
+    "note": null
+  },
+  "version": {
+    "changedFiles": [
+      "index.html"
+    ],
+    "createdAt": 1794622427925,
+    "directionId": "main",
+    "id": "pending-12706874e4935dd5",
+    "meta": {
+      "kind": "manual",
+      "prompt": "Direct edit of index.html:1:183: row-gap: 24px"
+    },
+    "parentId": "e3033d2f20b8b0c503578ccaaaa00cabacfe16e1",
+    "title": "Edit div: row-gap"
+  }
+}
+
+[mcp] skipped: mcp binding is off (legacy-mcp)
+
+[agent] skipped: agent binding is off (legacy-agent)
+
+answered approval cards: none
+
+call-action: pass, 1 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

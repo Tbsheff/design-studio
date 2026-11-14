@@ -1,6 +1,11 @@
 import type { SelectionContext } from "@design-studio/contracts";
 
 import { rotateHandleCopy } from "./copy.js";
+import {
+  toShiftedTranslate,
+  toTranslateBase,
+} from "./rotate-translate-model.js";
+import type { TranslateBase } from "./rotate-translate-model.js";
 import { SCALE_CORNERS } from "./scale-drag-model.js";
 import type { ScaleCorner } from "./scale-drag-model.js";
 
@@ -29,7 +34,7 @@ interface RotateLayer {
   readonly snapX: number;
   readonly snapY: number;
   readonly top: number;
-  readonly translate: RotatePoint;
+  readonly translate: TranslateBase;
 }
 
 interface RotateLayout {
@@ -312,28 +317,6 @@ const toGroupCenter = (
   };
 };
 
-const NO_SHIFT: RotatePoint = { x: 0, y: 0 };
-
-const TRANSLATE_PARTS_MAX = 3;
-
-const toTranslateBase = (value: string | undefined): RotatePoint => {
-  const parts = (value?.trim() ?? "").split(/\s+/u);
-  const [first = "", second = "0px", third = "0px"] = parts;
-
-  if (parts.length > TRANSLATE_PARTS_MAX || toPx(third) !== 0) {
-    return NO_SHIFT;
-  }
-
-  const x = toPx(first);
-  const y = toPx(second);
-
-  if (x === null || y === null) {
-    return NO_SHIFT;
-  }
-
-  return { x, y };
-};
-
 const toRotateLayer = (input: RotateLayerInput): RotateLayer => {
   const { classes, target } = input;
   const left = toPx(target.styles.left);
@@ -347,7 +330,7 @@ const toRotateLayer = (input: RotateLayerInput): RotateLayer => {
     snapX: toSnapStep(classes, "left"),
     snapY: toSnapStep(classes, "top"),
     top: top ?? 0,
-    translate: toTranslateBase(target.styles.translate),
+    translate: toTranslateBase(target.styles.translate ?? null),
   };
 };
 
@@ -436,10 +419,7 @@ const toMoveStyle = (
     return {};
   }
 
-  const toX = toSnapped(layer.translate.x + moveX, 1);
-  const toY = toSnapped(layer.translate.y + moveY, 1);
-
-  return { translate: `${toX}${PX_UNIT} ${toY}${PX_UNIT}` };
+  return { translate: toShiftedTranslate(layer.translate, moveX, moveY) };
 };
 
 export {

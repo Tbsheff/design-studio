@@ -106,7 +106,7 @@ const toCopyItem = (
       projectId: scope.projectId,
     });
 
-    notify(copy.copied);
+    notify(copy.copied(target.tag));
   };
 
   return {

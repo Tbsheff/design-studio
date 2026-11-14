@@ -22,7 +22,7 @@ const runStarterRead = async (): Promise<void> => {
   }
 };
 
-const useStarters = (): Starter[] => {
+const useStarterList = (): readonly Starter[] | null => {
   const list = useLive(starterStore);
 
   useEffect(() => {
@@ -43,7 +43,13 @@ const useStarters = (): Starter[] => {
     };
   }, []);
 
+  return list;
+};
+
+const useStarters = (): Starter[] => {
+  const list = useStarterList();
+
   return useMemo(() => (list ?? []).slice(0, MAX_STARTERS), [list]);
 };
 
-export { useStarters };
+export { useStarterList, useStarters };

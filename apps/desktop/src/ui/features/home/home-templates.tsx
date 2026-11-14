@@ -1,12 +1,11 @@
 import type { Starter } from "@design-studio/contracts";
-import { useEffect, useRef } from "react";
 import type { ReactElement } from "react";
 
-import { api } from "../../api.js";
 import { copy } from "./copy.js";
 import { HOME_TEMPLATES } from "./home-template-model.js";
 import type { HomeTemplate } from "./home-template-model.js";
 import { TemplateTile } from "./template-tile.js";
+import { useStarterList } from "./use-starters.js";
 
 const HomeTemplateGrid = ({
   selected,
@@ -17,18 +16,7 @@ const HomeTemplateGrid = ({
   readonly isDisabled: boolean;
   readonly onPick: (template: HomeTemplate, starter: Starter | null) => void;
 }): ReactElement => {
-  const startersRef = useRef<Starter[]>([]);
-  useEffect(() => {
-    const load = async (): Promise<void> => {
-      try {
-        startersRef.current = await api.starters();
-      } catch {
-        startersRef.current = [];
-      }
-    };
-
-    load();
-  }, []);
+  const starters = useStarterList();
 
   return (
     <div
@@ -42,7 +30,7 @@ const HomeTemplateGrid = ({
           template={template}
           isSelected={selected === template.id}
           isDisabled={isDisabled}
-          startersRef={startersRef}
+          starters={starters}
           onPick={onPick}
         />
       ))}

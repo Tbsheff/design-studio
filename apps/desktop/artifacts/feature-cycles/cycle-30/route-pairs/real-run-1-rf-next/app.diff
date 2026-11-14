@@ -1,0 +1,77 @@
+diff --git a/app/globals.css b/app/globals.css
+index 8469de8..1923771 100644
+--- a/app/globals.css
++++ b/app/globals.css
+@@ -1,5 +1,12 @@
++*,
++*::before,
++*::after {
++  box-sizing: border-box;
++}
++
+ body {
+   margin: 0;
++  background: #f6f7f9;
+   font-family: system-ui, sans-serif;
+   color: #1f2937;
+ }
+diff --git a/app/patients/page.jsx b/app/patients/page.jsx
+index d61535a..0167ac6 100644
+--- a/app/patients/page.jsx
++++ b/app/patients/page.jsx
+@@ -1,14 +1,15 @@
+ import { prefetchPatients } from "../../lib/server";
+ import PatientList from "./patient-list";
++import styles from "./patients.module.css";
+ 
+ export const dynamic = "force-dynamic";
+ 
+ export default async function PatientsPage() {
+   await prefetchPatients();
+   return (
+-    <main style={{ padding: 32 }}>
+-      <h1>Patients</h1>
+-      <p>Ward list for today.</p>
++    <main className={styles.page}>
++      <h1 className={styles.title}>Patients</h1>
++      <p className={styles.lead}>Ward list for today.</p>
+       <PatientList />
+     </main>
+   );
+diff --git a/app/patients/patient-list.jsx b/app/patients/patient-list.jsx
+index 5ac0370..b00fb9e 100644
+--- a/app/patients/patient-list.jsx
++++ b/app/patients/patient-list.jsx
+@@ -1,16 +1,25 @@
+ "use client";
+ 
+ import { usePatients } from "../../lib/client";
++import styles from "./patients.module.css";
+ 
+ export default function PatientList() {
+   const rows = usePatients();
+   return (
+-    <table>
+-      <tbody>
+-        {rows.map((row) => (
+-          <tr key={row.id}><td>{row.name}</td><td>{row.ward}</td></tr>
+-        ))}
+-      </tbody>
+-    </table>
++    <div className={styles.card}>
++      <table className={styles.list}>
++        <thead>
++          <tr><th>Name</th><th>Ward</th></tr>
++        </thead>
++        <tbody>
++          {rows.map((row) => (
++            <tr key={row.id}>
++              <td>{row.name}</td>
++              <td><span className={styles.ward}>{row.ward}</span></td>
++            </tr>
++          ))}
++        </tbody>
++      </table>
++    </div>
+   );
+ }

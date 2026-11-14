@@ -1,0 +1,18 @@
+== branch run2
+score 71 masked 12
+firstShift shift -20 el=div.patients-module__GMQEKW__card "Name Ward"  above=h1.patients-module__GMQEKW__title "Patients" margin-bottom 4px/24px
+  top center 27 h1.patients-module__GMQEKW__title "Patients"  | table.patients-module__GMQEKW__table "NAME WARD" 
+== branch correct
+score 99 masked 12
+firstShift None
+== branch fault
+score 50 masked 12
+firstShift shift -15 el=div.patients-module__GMQEKW__card "Name Ward" border-width 0px/1px above=h1.patients-module__GMQEKW__title "Patients" height 23px/38px, font-size 20px/32px, line-height normal (24px)/normal (38px)
+  top center 35 h1.patients-module__GMQEKW__title "Patients"  | table.patients-module__GMQEKW__table "NAME WARD" 
+  top left 55 
+== main run2
+"score":71}
+== main correct
+"score":99}
+== main fault
+"score":50}

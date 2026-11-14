@@ -1,0 +1,64 @@
+.page {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 48px 32px;
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 0 24px;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+.lead {
+  margin: 0 0 24px;
+  color: #4b5563;
+  text-wrap: pretty;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #d9dde3;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.list {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.list th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #4b5563;
+  background: #f1f3f6;
+  padding: 12px 20px;
+  border-bottom: 1px solid #d9dde3;
+}
+
+.list td {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.list tr:last-child td {
+  border-bottom: 0;
+}
+
+.ward {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #e8f0fe;
+  color: #1d4ed8;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}

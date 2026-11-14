@@ -27,6 +27,7 @@ import { toFrameContextText } from "./guide-text.js";
 import { toImageListLines } from "./image-list.js";
 import { layoutLines } from "./layout-region.js";
 import { isNewPageRun } from "./new-page.js";
+import { isPhotoSearchOn } from "./photo-search.js";
 import type { RunTarget, TargetFrame } from "./run-target.js";
 import { toSelectedElementsEnd, toStylesText } from "./selected-elements.js";
 import { toParentLines } from "./selection-parent.js";
@@ -50,6 +51,7 @@ export interface UserMessageParts {
   text: string;
   images: ImagePart[];
   isNewPage?: boolean;
+  isImageSearchOn?: boolean;
 }
 
 function trim(value: string, max: number): string {
@@ -463,6 +465,7 @@ export async function buildUserMessageParts(
   const imageList = await toImageListLines(ctx.attachments);
   return {
     images: await loadImages(ctx.attachments),
+    isImageSearchOn: isPhotoSearchOn(ctx.project),
     isNewPage: await isNewPageRun(ctx),
     text: [buildUserText(ctx), ...imageList].join("\n\n"),
   };

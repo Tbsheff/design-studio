@@ -1565,7 +1565,7 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
       segment,
       await continueScreenReview(input, segment, reviewed.outcome)
     );
-    const outcome = toNotedOutcome(referenced.outcome, segment.notes);
+    const outcome = await toNotedOutcome(referenced.outcome, segment, input);
     addCriticCost(outcome, setup.run.criticCostUsd);
     if (!signal.aborted)
       await attachFinalCheck(

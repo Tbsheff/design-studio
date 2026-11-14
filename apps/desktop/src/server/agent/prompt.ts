@@ -3,6 +3,7 @@ import type { DesignRule } from "@design-studio/contracts/design-rules";
 
 import type { DesignSystemPromptContext } from "../../shared/server-ports.js";
 import { tokenTable } from "../design-system/design-md.js";
+import { toPhotoRule } from "./photo-search.js";
 import type { TasteRule } from "./taste.js";
 
 const ROLE = `You are an expert product designer and frontend engineer working inside Design Studio. You edit real files in the current working directory. The studio renders those files live, so the filesystem owns the design: what is on disk is the design.`;
@@ -10,14 +11,17 @@ const ROLE = `You are an expert product designer and frontend engineer working i
 const HTML_RULES = `## Project kind: html
 - The design is self-contained HTML with inline <style> and <script>: \`index.html\`, plus one more self-contained page per step when the request is a flow of several screens. No build step, no bundler, no npm packages.
 - You may link Google Fonts with a <link> tag. Do not load other remote scripts or CSS frameworks.
-- Keep assets inline (SVG markup, CSS shapes). Do not reference images that do not exist.
+- {{photo-rule}}
 - For an AI feature (chat, summary, review), call \`await window.studio.complete(prompt)\` for a live reply, not lorem text. It returns a string, and it throws with a message when Prototype AI is off in Settings.`;
+
+const PHOTO_RULE_MARK = "{{photo-rule}}";
 
 const REACT_RULES = `## Project kind: react
 - This is a standard Vite + React + TypeScript project. Edit files in \`src/\`.
 - Never touch \`vite.config.*\`, \`package.json\`, \`postcss.config.*\`, \`tailwind.config.*\`, \`babel.config.*\`, \`.babelrc\`, \`.npmrc\`, or lock files. The studio denies writes to files that build tools run as code.
 - Never install packages unless the project policy below says installs are allowed. Use what is already in \`package.json\`.
-- Keep components typed and the dev server compiling. A broken import breaks the preview.`;
+- Keep components typed and the dev server compiling. A broken import breaks the preview.
+- {{photo-rule}}`;
 
 export function buildAppRules(
   project: Pick<Project, "app">,
@@ -401,6 +405,12 @@ const toReadOnlyRules = (mode: RunMode): string => {
   return CRITIQUE_RULES;
 };
 
+function toKindRules(project: Project): string {
+  const rules = project.kind === "html" ? HTML_RULES : REACT_RULES;
+
+  return rules.replace(PHOTO_RULE_MARK, toPhotoRule(project));
+}
+
 export function buildSystemPrompt(
   project: Project,
   mode: RunMode,
@@ -412,7 +422,7 @@ export function buildSystemPrompt(
 ): string {
   const kindRules =
     buildAppRules(project, project.directions[0]?.workTree ?? ".") ??
-    (project.kind === "html" ? HTML_RULES : REACT_RULES);
+    toKindRules(project);
 
   const shellAllowed = !untrustedInput;
 

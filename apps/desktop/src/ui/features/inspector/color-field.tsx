@@ -1,12 +1,13 @@
-import { memo, useMemo } from "react";
+import { memo } from "react";
 import type { ReactElement } from "react";
 
+import { toVarAlphaColor } from "./color-popup-model.js";
+import { ColorSwatch } from "./color-swatch.js";
 import { copy } from "./copy.js";
 import { toDisplayColor, isValidColor } from "./css-value-model.js";
 import { TokenControl } from "./deps.js";
 import { EyedropperButton } from "./eyedropper-button.js";
 import {
-  toColorHex,
   toModifiedClass,
   toPlaceholder,
   toResolvedColor,
@@ -17,25 +18,17 @@ import { isSameField } from "./use-same-field.js";
 import type { FieldProps } from "./use-same-field.js";
 import { useTokenUi } from "./use-token-snap.js";
 
-const NEUTRAL_SWATCH = "#ffffff";
-
 const ColorFieldView = ({
   prop,
   label,
   short,
   edit,
 }: FieldProps): ReactElement => {
-  const field = useColorField({ edit, prop });
   const ui = useTokenUi();
   const value = edit.values[prop];
-  const resolved = toResolvedColor(value, ui);
-  const hex = toColorHex(resolved);
+  const resolved = toVarAlphaColor(value, (raw) => toResolvedColor(raw, ui));
+  const field = useColorField({ edit, prop, shown: resolved });
   const isInheritedField = isInherited(useVariantScope(), prop);
-
-  const swatchStyle = useMemo(
-    () => ({ ["--swatch" as string]: resolved || "transparent" }),
-    [resolved]
-  );
 
   const id = `ins-${prop}-${label.replaceAll(/\W+/gu, "-").toLowerCase()}`;
 
@@ -63,18 +56,12 @@ const ColorFieldView = ({
         onKeyDown={field.handleKeyDown}
         onBlur={field.handleSettle}
       />
-      <span
-        className={toModifiedClass("ins-swatch", "empty", !hex)}
-        style={swatchStyle}
-      >
-        <input
-          type="color"
-          aria-label={`${label}${copy.swatchSuffix}`}
-          value={hex ?? NEUTRAL_SWATCH}
-          onInput={field.handleSwatchInput}
-          onChange={field.handleSwatchChange}
-        />
-      </span>
+      <ColorSwatch
+        label={label}
+        shown={resolved}
+        isDisabled={false}
+        target={field.target}
+      />
       <EyedropperButton prop={prop} edit={edit} />
       <TokenControl prop={prop} label={label} edit={edit} />
     </div>

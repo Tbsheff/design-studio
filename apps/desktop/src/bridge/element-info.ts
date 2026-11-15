@@ -62,6 +62,7 @@ const STYLE_KEYS = [
   "right",
   "bottom",
   "left",
+  "z-index",
   "min-width",
   "max-width",
   "min-height",

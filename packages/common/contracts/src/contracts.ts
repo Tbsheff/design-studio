@@ -3,12 +3,14 @@ import { BORDER_STYLE_PROPERTIES } from "@design-studio/contracts/border-side-pr
 import type { CanvasFile } from "@design-studio/contracts/canvas-file";
 import type { ElementScope } from "@design-studio/contracts/element-variants";
 import type { FrameStatesView } from "@design-studio/contracts/frame-state";
+import { LAYOUT_STYLE_PROPERTIES } from "@design-studio/contracts/layout-style-properties";
 import type {
   LinkQuery,
   LinkRectReport,
   LinksFile,
 } from "@design-studio/contracts/links";
 import type { PortReviewRecord } from "@design-studio/contracts/port";
+import { DEFAULT_SETTINGS } from "@design-studio/contracts/settings-defaults";
 import type { ForcedStatePart } from "@design-studio/contracts/state-styles";
 import type { StatesRequest } from "@design-studio/contracts/states";
 import { STUDIO_TOKEN_HEADER } from "@design-studio/contracts/studio-token";
@@ -19,6 +21,14 @@ import type {
 import { TEXT_FORMAT_PROPERTIES } from "@design-studio/contracts/text-format-properties";
 import { TRANSFORM_STYLE_PROPERTIES } from "@design-studio/contracts/transform-style-properties";
 import type { EditScope } from "@design-studio/contracts/usage-scope";
+import {
+  VARIATION_BRIEF_MAX,
+  VARIATION_DEFAULT,
+  VARIATION_MAX,
+  VARIATION_MAX_REACT,
+  VARIATION_MIN,
+  VARIATION_RUN_MIN,
+} from "@design-studio/contracts/variation-limits";
 
 export type LegacyBinding<T> = T;
 
@@ -84,13 +94,6 @@ export interface Direction {
   createdAt: number;
   variation?: DirectionVariation | null;
 }
-
-export const VARIATION_MIN = 2;
-export const VARIATION_RUN_MIN = 1;
-export const VARIATION_MAX = 4;
-export const VARIATION_MAX_REACT = 3;
-export const VARIATION_DEFAULT = 3;
-export const VARIATION_BRIEF_MAX = 280;
 
 export interface VariationBrief {
   label: string;
@@ -2136,11 +2139,7 @@ export const DIRECT_STYLE_PROPERTIES = [
   "overflow",
   "text-shadow",
   ...TRANSFORM_STYLE_PROPERTIES,
-  "position",
-  "top",
-  "right",
-  "bottom",
-  "left",
+  ...LAYOUT_STYLE_PROPERTIES,
   "min-width",
   "max-width",
   "min-height",
@@ -2331,16 +2330,6 @@ export const DEFAULT_PREVIEW_PORT = 4171;
 export const DEFAULT_VITE_PORT_BASE = 5200;
 
 export const SETTINGS_VERSION = 2;
-
-export const DEFAULT_SETTINGS: ProjectSettings = {
-  allowBash: true,
-  allowInstall: true,
-  autoApprove: true,
-  defaultLevel: "prototype",
-  disabledSkills: [],
-  maxTurns: 40,
-  model: "claude-sonnet-5-5",
-};
 
 export const DESIGN_SYSTEM_DIR = "design-system";
 export const TOKENS_FILE = "design-system/tokens.json";
@@ -2757,4 +2746,13 @@ export interface VersionChanges {
   thumbs?: VersionThumbs;
 }
 
-export { STUDIO_TOKEN_HEADER };
+export {
+  DEFAULT_SETTINGS,
+  STUDIO_TOKEN_HEADER,
+  VARIATION_BRIEF_MAX,
+  VARIATION_DEFAULT,
+  VARIATION_MAX,
+  VARIATION_MAX_REACT,
+  VARIATION_MIN,
+  VARIATION_RUN_MIN,
+};

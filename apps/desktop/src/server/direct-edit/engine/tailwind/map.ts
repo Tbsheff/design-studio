@@ -1,3 +1,4 @@
+import { ADDED_PROPS, toAddedToken } from "./added-groups.js";
 import {
   isBorderWidthProperty,
   toBorderClassProps,
@@ -18,12 +19,10 @@ import type { ParsedColor } from "./color.js";
 import { toFilterToken } from "./filter-token.js";
 import { toFlexToken } from "./flex-token.js";
 import { toKeywordClass } from "./keyword-classes.js";
-import { OUTLINE_PROPS, toOutlineToken } from "./outline.js";
 import {
   ROTATE_SCALE_PROPS,
   toPropGroup,
   toRotateScaleEdits as toTurnEdits,
-  toRotateScaleToken as toTurnToken,
 } from "./rotate-scale.js";
 import type { TailwindTheme, ThemeNamespace } from "./theme-model.js";
 import { emValue, lengthToPx, percent, plainNumber } from "./units.js";
@@ -107,7 +106,7 @@ export const SINGLE_PROPS: Record<string, SingleGroup> = {
   "background-size": "bg-size",
   "background-position": "bg-position",
   "background-repeat": "bg-repeat",
-  ...OUTLINE_PROPS,
+  ...ADDED_PROPS,
 };
 
 const BOX_PROPS: Record<string, [SidedGroup, Side]> = {
@@ -721,8 +720,7 @@ function singleToken(
     return image(value);
   }
 
-  const outline =
-    toOutlineToken(prop, value, theme) ?? toTurnToken(prop, value, theme);
+  const outline = toAddedToken(prop, value, theme);
 
   if (outline) {
     return outline;

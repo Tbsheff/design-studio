@@ -32,6 +32,7 @@
     "./insert": "./src/insert.ts",
     "./layer-effect": "./src/layer-effect.ts",
     "./layout-grid": "./src/layout-grid.ts",
+    "./layout-style-properties": "./src/layout-style-properties.ts",
     "./link-interaction": "./src/link-interaction.ts",
     "./link-labels": "./src/link-labels.ts",
     "./link-variable": "./src/link-variable.ts",
@@ -43,6 +44,7 @@
     "./port": "./src/port.ts",
     "./props": "./src/props.ts",
     "./review": "./src/review.ts",
+    "./settings-defaults": "./src/settings-defaults.ts",
     "./share": "./src/share.ts",
     "./share-play": "./src/share-play.ts",
     "./ship": "./src/ship.ts",
@@ -57,6 +59,7 @@
     "./text-search": "./src/text-search.ts",
     "./text-styles": "./src/text-styles.ts",
     "./transform-style-properties": "./src/transform-style-properties.ts",
-    "./usage-scope": "./src/usage-scope.ts"
+    "./usage-scope": "./src/usage-scope.ts",
+    "./variation-limits": "./src/variation-limits.ts"
   }
 }

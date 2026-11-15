@@ -25,6 +25,8 @@ Slug check: `/visits/[id]` -> `visits`, `/orgs/[org]/visits/[id]` -> `orgs-visit
 - Typed `/visits/1`: refusal text, Start off (`dialog-typed-dark.png`, `dialog-typed-light.png`).
 - Mock move from the dialog: writes `app/visits/[id]/page.tsx`; assets in `public/visits/` (`11cfa40b47b4.png`, `tokens.css`); run prompt line `assets/index/11cfa40b47b4.png -> /visits/11cfa40b47b4.png`. No `app/visits/1/`, no `public/id/`.
 - Static copy `/visits` and move: `app/visits/page.tsx`, assets in `public/visits/`, same as main.
+- MCP `start_port` with `route: "/visits/[id]"` (mock run): writes `app/visits/[id]/page.tsx`, assets in `public/visits/`. `toAssetTarget` is the only place that names the asset folder.
+- Plan for typed `/visits/new`: `routeExists: false`, `routeFile: app/visits/new/page.tsx`, so a new sibling route is not refused.
 - `call-action.ts port.inspect` on dyn-next (`routePath: "/visits/[id]"`): pass, 3 surfaces, 0 diffs, score 82.
 - `pnpm run typecheck`: pass. `pnpm run lint:gate`: pass (59575, baseline 89733). `pnpm run build:ui`: pass. `check-bundle`: B1 274,673 B (delta 0), same Home chunk list. `check-actions --probes`: 278 hits, same as main (no new hit).
 - No action, input, output or description change. No snapshot diff.

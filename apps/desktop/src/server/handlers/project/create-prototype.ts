@@ -129,7 +129,8 @@ const importRouteCopy = Effect.fn("project.createPrototype.importRouteCopy")(
   function* run(
     target: { readonly directionId: string; readonly projectId: string },
     routeUrl: string,
-    viewport: number | null
+    viewport: number | null,
+    isNewTarget: boolean
   ) {
     const pages = yield* PageWriter;
     const canvas = yield* CanvasWriter;
@@ -144,7 +145,7 @@ const importRouteCopy = Effect.fn("project.createPrototype.importRouteCopy")(
       width: toImportWidth(viewport),
     });
 
-    if (imported.frameId !== ENTRY_FRAME) {
+    if (isNewTarget && imported.frameId !== ENTRY_FRAME) {
       yield* canvas
         .deleteFrame({ frame: ENTRY_FRAME, projectId: target.projectId })
         .pipe(Effect.orElseSucceed(() => null));
@@ -166,9 +167,10 @@ const toCopyOutcome = Effect.fn("project.createPrototype.toCopyOutcome")(
   function* run(
     target: { readonly directionId: string; readonly projectId: string },
     routeUrl: string,
-    viewport: number | null
+    viewport: number | null,
+    isNewTarget: boolean
   ) {
-    return yield* importRouteCopy(target, routeUrl, viewport).pipe(
+    return yield* importRouteCopy(target, routeUrl, viewport, isNewTarget).pipe(
       Effect.map((copy): CopyOutcome => ({ copy, failure: "" })),
       Effect.catchTag("BadRequest", (error) => {
         if (!DATA_FAILURE.test(error.message)) {
@@ -366,7 +368,14 @@ const createRoutePrototype = Effect.fn("project.createPrototype.route")(
     };
 
     const url = toAppRouteUrl(upstream, routePath);
-    const outcome = yield* toCopyOutcome(target, url, input.viewport);
+    const isNewTarget = input.intoProjectId === null;
+
+    const outcome = yield* toCopyOutcome(
+      target,
+      url,
+      input.viewport,
+      isNewTarget
+    );
 
     if (outcome.copy === null) {
       return {

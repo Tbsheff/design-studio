@@ -18,6 +18,7 @@ import type {
   ResolvedSource,
 } from "../../events/index.js";
 import { runFileLockGuard } from "../../platform/path-lock/index.js";
+import { hasClassChange } from "../engine/classes.js";
 import { DirectEditError } from "../engine/errors.js";
 import { knownTokenVars } from "../engine/tokens.js";
 import { parseDirectEditBatch } from "../engine/validate.js";
@@ -273,7 +274,23 @@ function patchGroups(
   }
 }
 
-function batchTitle(applied: AppliedEdit[], tags: string[]): string {
+const isNameOnly = (request: DirectEditRequest): boolean =>
+  request.name !== undefined &&
+  Object.keys(request.style ?? {}).length === 0 &&
+  request.text === undefined &&
+  !hasClassChange(request.classes);
+
+const toRenameTitle = (count: number): string => {
+  if (count === 1) return "Rename 1 layer";
+  return `Rename ${count} layers`;
+};
+
+function batchTitle(
+  applied: AppliedEdit[],
+  tags: string[],
+  edits: DirectEditRequest[]
+): string {
+  if (edits.every(isNameOnly)) return toRenameTitle(edits.length);
   const style = [...new Set(applied.flatMap((entry) => entry.style))];
   const classes = applied.some((entry) => entry.classes);
   const parts = [
@@ -404,7 +421,7 @@ export async function applyDirectEditBatch(
         project,
         direction,
         changed,
-        batchTitle(applied, tags),
+        batchTitle(applied, tags, edits),
         meta
       )
   );

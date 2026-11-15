@@ -39,7 +39,7 @@ Branch `feat/polish-43`, cut from `cd8f2558c`. Dev run: `STUDIO_AGENT=mock`, `ST
 - `pnpm run lint:gate`: pass, 59,577 diagnostics (baseline 89,733).
 - `pnpm run build:ui`: pass.
 - `check-bundle`: pass. B1 is 274,673 B, delta 0 B. Home chunks: main, preload-helper, react, desktop, use-latest, focus, find-element, live-store, telemetry, api-telemetry, api-core, http, json-guard, query, pick, storage, ui-select-model, pick, router, index, global-commands, command-disabled, copy, app-events, project-nav, screen-preload, registry, keys, api-error, prototype-dialog, typing-target.
-- `check-actions --probes`: 557 hits on the branch and 557 on main (both fail at baseline 407, the items left for Tyler). Probes pass.
+- `check-actions --probes`: 557 hits on the branch and 557 on main (both fail at baseline 407, the items left for Tyler). Probes pass. The main run was read-only: `git status` in the main checkout still shows only `?? artifacts/`.
 - No new action, no generated file change, no snapshot change. Tool names, inputs and descriptions did not change.
 
 ## Differences from the spec
@@ -65,6 +65,6 @@ Roadmap not in worktree. New files for Appendix A: `src/server/direct-edit/engin
 
 ## Left out
 
-- The "1 Cmd+Z after the drag restores `--overlay` only" check was not run in the UI. The version holds only `--overlay`, so an undo can change only that token.
+- The "1 Cmd+Z after the drag restores `--overlay` only" check and the "Save gives a second version with `--accent`" check were not run in the UI. The drag version holds only `--overlay`, so an undo can change only that token. Save still calls the old `commit`, which sends every pending token.
 - The F2 rename was proved over HTTP (`rename_layer` route), not with F2 in the UI.
 - The spec's `p43-share` frame count (4 `frameUrls`) does not apply: the fixture page has no frames, so `frameUrls` is `[]` on all 3 legs.

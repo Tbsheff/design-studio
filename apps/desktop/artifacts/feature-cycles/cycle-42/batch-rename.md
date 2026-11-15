@@ -5,8 +5,8 @@ Branch `feat/batch-rename`. Server on port 7520, `STUDIO_AGENT=mock`, data at `d
 ## What works
 
 - **Action `layer.rename`**, tool `rename_layer` (derived name, not in a snapshot). Input: `projectId`, `directionId`, `path` (default `""`), `layers` (1 to 50 `{ selector, name }`, name 0 to 80 chars or null). Output: `{ renamed, skipped, versionId }`.
-- **Selectors.** A layer id from `get_layers`, a CSS selector, or a source location `file:line:col`. A layer id or CSS selector goes through the page probe. A source location reads the tag from the source and needs no probe, so it works on any page. The UI sends the source location of each layer.
-- **Skips.** A layer with no match, no source, or the same source as an earlier layer in the call goes into `skipped` with a reason. When no layer is left, the call fails with NotFound.
+- **Selectors.** A layer id from `get_layers`, a CSS selector, or a source location `file:line:col`. A layer id or CSS selector goes through the page probe. A source location reads the tag from the source and needs no probe, so it works on any page. The UI sends the source location of each layer. It takes the location from the selection (the source that the single rename uses) and falls back to the tree `loc`. A Next app tree has no `loc`.
+- **Skips.** A layer goes into `skipped` with a reason when it has no match, has no source, or has the same source as an earlier layer in the call. A source location outside the project (absolute or `..`) is skipped too. When no layer is left, the call fails with NotFound. One HTTP call checked this with `../br-next/app/page.tsx:9:7`, `/etc/hosts:1:1` and `div[` plus 1 good layer: 1 rename, 3 skips, no write outside the project.
 - **Write.** 1 `applyDirectEditBatch` call: 1 version, 1 history entry, 1 Cmd+Z.
 - **Batch rule.** `validate.ts` lets a batch entry change `name` when the entry changes nothing else. `move` and `insert` are still refused with the same text.
 - **UI.** With 2 or more layers selected, F2 or "Rename layers…" in the layer context menu opens a popup at the top of the Layers panel. It has "Rename to", "Find" and "Replace" fields, and shows a preview of the first 5 names plus "and N more". The tokens are `$&`, `$n`, `$nn` and `$N`. Numbers follow the panel order. When Find has text, "Rename to" is off. Enter applies the names; Escape closes with no write. Over 50 layers, the popup shows "Select 50 layers or fewer to rename them." F2 on 1 layer still opens the inline rename.
@@ -15,7 +15,8 @@ Branch `feat/batch-rename`. Server on port 7520, `STUDIO_AGENT=mock`, data at `d
 ## Checked
 
 - `call-action.ts layer.rename` on `br-seed`, with 3 layers (a CSS selector, a source location, and a null name): http, mcp and agent passed, 0 diffs, 1 undo each (`batch-rename/call-html.txt`).
-- `call-action.ts layer.rename` on `br-next`, with 4 JSX source locations: passed, 0 diffs (`batch-rename/call-next.txt`). A direct HTTP call wrote `data-name="Alpha card"` and the 3 other names in `app/page.tsx` as 1 version.
+- `call-action.ts layer.rename` on `br-next`, with 4 JSX source locations: passed, 0 diffs (`batch-rename/call-next.txt`).
+- UI on `br-next` (the Next dev server runs in the studio): 4 sections, F2, "Panel $n", Enter. 1 POST with `app/page.tsx:9:7` to `:12:7`, 1 version, and `data-name="Panel 1"` to `"Panel 4"` in the JSX. The first try sent `layers: []`, because the Next tree has no `loc`. The fix takes the source from the selection.
 - UI on `br-seed`:
   - 12 cards, F2, "Card $nn": the preview shows "Card 01" to "Card 05, and 7 more". Enter sends 1 POST, makes 1 version, and the panel shows "Card 01" to "Card 12".
   - 1 Cmd+Z restored all 12 names.
@@ -32,7 +33,6 @@ Branch `feat/batch-rename`. Server on port 7520, `STUDIO_AGENT=mock`, data at `d
 ## Open
 
 - **Version title.** A name-only batch is titled "Edit text of 12 elements", because `batchTitle` in `direct-edit/commit/batch.ts` belongs to pick 1. A fix there would say "Rename 12 layers".
-- **Next app in the UI.** I did not click through on `br-next` (no Next dev server was started). That path was checked over HTTP, MCP and the agent.
 - **`$&` on an unnamed layer.** An unnamed layer gives an empty `$&` (the class fallback such as `.card` is not a name), so the preview row is blank until you type a pattern.
 - **Selection after the write.** The studio does not reselect the layers after the write, unlike the single rename.
 

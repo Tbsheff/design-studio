@@ -10,6 +10,8 @@ export { toInteractionHits } from "./interaction.js";
 
 export { toAlignHits } from "./align.js";
 
+export { toNearValueHits } from "./near-values.js";
+
 export type {
   CritiqueDraft,
   CritiqueDraftIssue,
@@ -24,6 +26,13 @@ export type { PromptInput, PromptLayer } from "./critique-prompt.js";
 export type { InteractionHit, InteractionProbeResult } from "./interaction.js";
 
 export type { AlignFix, AlignHit, AlignProbeResult } from "./align.js";
+
+export type {
+  NearFamily,
+  NearValueHit,
+  NearValueInput,
+  NearValueUse,
+} from "./near-values.js";
 
 export type {
   TypeFix,

@@ -271,3 +271,8 @@ figure.stop {
   border-radius: 2px;
   background: color-mix(in srgb, var(--accent) 12%, transparent);
 }
+
+.fixOff {
+  opacity: 0.45;
+  cursor: default;
+}

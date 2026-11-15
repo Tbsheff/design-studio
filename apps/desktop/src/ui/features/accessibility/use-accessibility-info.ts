@@ -18,7 +18,7 @@ const keyOf = (
   query: InspectQuery,
   round: string
 ): string =>
-  `${ids.projectId}/${ids.directionId}/${query.frame ?? ""}/${query.selector ?? ""}/${String(query.passing)}#${round}`;
+  `${ids.projectId}/${ids.directionId}/${query.frame ?? ""}/${query.selector ?? ""}/${String(query.passing)}/${query.colorScheme ?? ""}#${round}`;
 
 const useAccessibilityInfo = (
   ids: AccessibilityIds,

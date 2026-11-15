@@ -112,7 +112,12 @@ const useTabOrder = (options: TabOrderOptions): TabOrder => {
   );
 
   const query = useMemo(
-    () => ({ frame: frameId, passing: false, selector: null }),
+    () => ({
+      colorScheme: null,
+      frame: frameId,
+      passing: false,
+      selector: null,
+    }),
     [frameId]
   );
 

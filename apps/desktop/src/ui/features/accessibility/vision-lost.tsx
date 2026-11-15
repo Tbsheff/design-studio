@@ -26,6 +26,7 @@ const VisionLost = ({ cell, onFix }: VisionLostProps): ReactElement | null => {
       {cell.lostPairs.map((lost) => (
         <ContrastRow
           disabled
+          isDark={false}
           key={`${lost.layerId}|${lost.text}`}
           pair={toContrastPair(lost)}
           onFix={onFix}

@@ -11,12 +11,14 @@ import styles from "./accessibility.module.css";
 
 interface ContrastRowProps {
   readonly disabled: boolean;
+  readonly isDark: boolean;
   readonly pair: ContrastPair | null;
   readonly onFix: (fix: ContrastFix) => void;
 }
 
 const ContrastRow = ({
   disabled,
+  isDark,
   pair,
   onFix,
 }: ContrastRowProps): ReactElement => {
@@ -45,6 +47,7 @@ const ContrastRow = ({
       <ContrastFixButton
         disabled={disabled || pair.passes}
         fix={pair.fix}
+        isDark={isDark}
         onFix={onFix}
       />
     </div>

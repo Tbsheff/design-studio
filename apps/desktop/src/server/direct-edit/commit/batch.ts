@@ -274,23 +274,34 @@ function patchGroups(
   }
 }
 
+const hasOtherChange = (request: DirectEditRequest): boolean =>
+  Object.keys(request.style ?? {}).length > 0 ||
+  (request.text ?? null) !== null ||
+  hasClassChange(request.classes);
+
 const isNameOnly = (request: DirectEditRequest): boolean =>
-  request.name !== undefined &&
-  Object.keys(request.style ?? {}).length === 0 &&
-  request.text === undefined &&
-  !hasClassChange(request.classes);
+  Object.hasOwn(request, "name") && !hasOtherChange(request);
 
 const toRenameTitle = (count: number): string => {
-  if (count === 1) return "Rename 1 layer";
+  if (count === 1) {
+    return "Rename 1 layer";
+  }
+
   return `Rename ${count} layers`;
 };
+
+const isRenameBatch = (edits: DirectEditRequest[]): boolean =>
+  edits.every((request) => isNameOnly(request));
 
 function batchTitle(
   applied: AppliedEdit[],
   tags: string[],
   edits: DirectEditRequest[]
 ): string {
-  if (edits.every(isNameOnly)) return toRenameTitle(edits.length);
+  if (isRenameBatch(edits)) {
+    return toRenameTitle(edits.length);
+  }
+
   const style = [...new Set(applied.flatMap((entry) => entry.style))];
   const classes = applied.some((entry) => entry.classes);
   const parts = [

@@ -13,6 +13,7 @@ const handle = Effect.fn("accessibility.inspect")(function* run(
   const store = yield* AccessibilityStore;
 
   return yield* store.inspect({
+    colorScheme: input.colorScheme,
     directionId: input.directionId,
     frame: input.frame,
     isPassingIncluded: input.includePassing,

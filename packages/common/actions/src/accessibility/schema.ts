@@ -38,7 +38,14 @@ const AccessibilityLimitSchema = Schema.Int.check(
   Schema.isBetween({ maximum: ACCESSIBILITY_LIST_MAX, minimum: 1 })
 ).pipe(Schema.withDecodingDefaultKey(Effect.succeed(ACCESSIBILITY_LIST_MAX)));
 
+const AccessibilityColorSchemeSchema = Schema.Literals(["light", "dark"]);
+
+const AccessibilityColorSchemeFieldSchema = Schema.NullOr(
+  AccessibilityColorSchemeSchema
+).pipe(Schema.withDecodingDefaultKey(Effect.succeed(null)));
+
 const AccessibilityInspectFields = {
+  colorScheme: AccessibilityColorSchemeFieldSchema,
   frame: AccessibilityFrameSchema,
   includePassing: AccessibilityPassingSchema,
   limit: AccessibilityLimitSchema,

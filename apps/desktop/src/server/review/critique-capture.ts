@@ -2,6 +2,8 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
+import { CANVAS_MAX_SIDE } from "@design-studio/contracts/canvas-file";
+
 import { scanLayers, toProbeTarget } from "../page-probe/index.js";
 import type { Layer } from "../page-probe/index.js";
 import type { PreviewService } from "../preview/index.js";
@@ -38,7 +40,7 @@ const createShots = async (
       from: 0,
       maxTiles: MAX_TILES,
       outPrefix: path.join(folder, "tile"),
-      tileHeight: target.height,
+      tileHeight: Math.min(target.height, CANVAS_MAX_SIDE),
       viewport: { height: target.height, width: target.width },
     });
 

@@ -24,7 +24,7 @@ const InspectorTabBody = ({ props, session, tab }: Props): ReactElement => (
   >
     {tab === "simple" && <SimpleSlot props={props} />}
     {tab === "pro" && <ProSlot props={props} />}
-    {tab === "prototype" && <PrototypeTab />}
+    {tab === "prototype" && <PrototypeTab props={props} />}
     {tab === "components" && <ComponentsTab components={props.components} />}
     {tab === "code" && (
       <InspectorCode

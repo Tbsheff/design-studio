@@ -1300,3 +1300,33 @@ dialog.code-edit {
 .edit-pane .ins-text-list .segmented button {
   flex-basis: auto;
 }
+
+.edit-prototype > .ins-section {
+  justify-self: stretch;
+  margin: calc(-1 * var(--s-3)) calc(-1 * var(--s-3)) 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.ins-section.ins-scroll-pin {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.ins-scroll-pin-seg {
+  display: flex;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.ins-scroll-pin-seg button {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0 var(--s-2);
+}
+
+.ins-scroll-pin-note {
+  margin: 0;
+  color: var(--text-3);
+  font-size: var(--t-xs);
+  text-wrap: pretty;
+}

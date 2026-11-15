@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { useMemo, useState } from "react";
 
+import { ColorPickerPopup } from "./color-picker-popup.js";
 import { InspectorEditPane } from "./inspector-edit-pane.js";
 import type { InspectorProps, InspectorTab } from "./inspector-model.js";
 import { InspectorAppContext } from "./use-inspector-app.js";
@@ -32,6 +33,6 @@ const Inspector = (raw: InspectorProps): ReactElement => {
   );
 };
 
-export { Inspector };
+export { ColorPickerPopup, Inspector };
 
 export type { InspectorTab } from "./inspector-model.js";

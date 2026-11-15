@@ -3,7 +3,7 @@ import type { LazyExoticComponent } from "react";
 
 import type { CodeEditDialog as CodeEditDialogView } from "./code-edit-dialog.js";
 import type { CodeEditHost as CodeEditHostView } from "./code-edit-host.js";
-import type { ColorPickerPopup as ColorPickerPopupView } from "./color-picker-popup.js";
+import type { ColorPickerPopup as ColorPickerPopupView } from "./inspector.js";
 import type { TweaksPanel as TweaksPanelView } from "./tweaks-panel.js";
 
 const Inspector = lazy(async () => {
@@ -23,7 +23,7 @@ const TweaksPanel: LazyExoticComponent<typeof TweaksPanelView> = lazy(
 
 const ColorPickerPopup: LazyExoticComponent<typeof ColorPickerPopupView> = lazy(
   async () => {
-    const loaded = await import("./color-picker-popup.js");
+    const loaded = await import("./inspector.js");
 
     return { default: loaded.ColorPickerPopup };
   }

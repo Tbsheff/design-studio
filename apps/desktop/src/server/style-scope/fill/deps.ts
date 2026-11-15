@@ -16,6 +16,7 @@ export {
 export {
   classify,
   classProps,
+  cssClass,
   parseClass,
 } from "../../direct-edit/engine/index.js";
 

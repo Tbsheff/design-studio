@@ -13,8 +13,9 @@ import { patchHtml } from "../engine/html.js";
 import { patchJsx } from "../engine/jsx.js";
 import { tailwindThemeFor } from "../tailwind/theme.js";
 import type { TailwindTheme } from "../tailwind/theme.js";
+import { isCssRuleEdit, toCssRulePatch } from "./css-rule-patch.js";
 
-const EDITABLE_EXTENSIONS = new Set([".html", ".htm", ".jsx", ".tsx"]);
+const EDITABLE_EXTENSIONS = new Set([".html", ".htm", ".jsx", ".tsx", ".css"]);
 
 const BLOCKED_SEGMENTS = new Set([
   "node_modules",
@@ -35,7 +36,7 @@ function assertEditablePath(file: string): void {
 
   if (!EDITABLE_EXTENSIONS.has(path.extname(file).toLowerCase())) {
     throw invalidSource(
-      "Only .html, .htm, .jsx and .tsx files can be edited directly"
+      "Only .html, .htm, .jsx, .tsx and .css files can be edited directly"
     );
   }
 }
@@ -101,6 +102,10 @@ export function patchSource(
   request: DirectEditRequest,
   tailwind: TailwindTheme | null = null
 ): PatchResult {
+  if (isCssRuleEdit(relative, request)) {
+    return toCssRulePatch(relative, source, request);
+  }
+
   const extension = path.extname(relative).toLowerCase();
 
   const edit = {

@@ -21,6 +21,7 @@ import {
 import type { FillDraft, PreviewStyle } from "./fill-model.js";
 import { useFillInfo } from "./use-fill-info.js";
 import type { FillIds } from "./use-fill-info.js";
+import type { PaintLive } from "./use-paint-edit.js";
 
 interface FillNote {
   readonly kind: "error" | "ok";
@@ -29,6 +30,8 @@ interface FillNote {
 
 interface FillView {
   readonly dirty: boolean;
+  readonly isColorOnly: boolean;
+  readonly live: PaintLive;
   readonly handleEnter: () => void;
   readonly draft: FillDraft;
   readonly loading: boolean;
@@ -93,6 +96,11 @@ const postStyle = (
   });
 };
 
+const isColorOnlyDraft = (draft: FillDraft, base: FillDraft): boolean =>
+  draft.type === "solid" &&
+  base.type === "solid" &&
+  sameDraft({ ...draft, color: base.color }, base);
+
 const useClearOnLeave = (
   dirty: boolean,
   port: PortRef,
@@ -114,20 +122,70 @@ const useClearOnLeave = (
   );
 };
 
+interface FillApply {
+  readonly own: FillNote | null;
+  readonly pending: boolean;
+  readonly round: number;
+  readonly applyDraft: (next: FillDraft) => void;
+  readonly setOwn: (note: FillNote | null) => void;
+}
+
+const useFillApply = (
+  ids: FillIds,
+  target: SelectionContext,
+  variant: string
+): FillApply => {
+  const [round, setRound] = useState(0);
+  const [own, setOwn] = useState<FillNote | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  const applyDraft = useCallback(
+    (next: FillDraft): void => {
+      const loc = target.source;
+
+      if (!loc) {
+        return;
+      }
+
+      startTransition(async () => {
+        try {
+          await api.setFill(ids.projectId, ids.directionId, {
+            fill: bodyOf(next),
+            target: { selector: target.selector, source: loc, tag: target.tag },
+            variant,
+          });
+          setOwn({ kind: "ok", text: copy.applied });
+          setRound((count) => count + 1);
+        } catch (error) {
+          setOwn({ kind: "error", text: insertError(error) });
+        }
+      });
+    },
+    [ids, target, variant]
+  );
+
+  return { applyDraft, own, pending, round, setOwn };
+};
+
 const useFill = (ids: FillIds, scope: FillScope): FillView => {
   const { fallback, port, target } = scope;
   const { selector } = target;
-  const [round, setRound] = useState(0);
   const variant = useEditVariant();
+
+  const { applyDraft, own, pending, round, setOwn } = useFillApply(
+    ids,
+    target,
+    variant
+  );
+
   const loaded = useFillInfo(ids, target.source, round, variant);
   const [edited, setEdited] = useState<Edited | null>(null);
-  const [own, setOwn] = useState<FillNote | null>(null);
-  const [pending, startTransition] = useTransition();
   const { info } = loaded;
 
   const base = useMemo(() => draftOf(info, fallback), [fallback, info]);
   const draft = draftNow(edited, info, base);
   const dirty = !sameDraft(draft, base);
+  const isColorOnly = isColorOnlyDraft(draft, base);
 
   useClearOnLeave(dirty, port, selector);
 
@@ -137,42 +195,34 @@ const useFill = (ids: FillIds, scope: FillScope): FillView => {
       setOwn(null);
       postStyle(port, selector, { ...CLEAR_STYLE, ...previewStyle(next) });
     },
-    [info, port, selector]
+    [info, port, selector, setOwn]
   );
 
   const onReset = useCallback((): void => {
     setEdited(null);
     setOwn(null);
     postStyle(port, selector, CLEAR_STYLE);
-  }, [port, selector]);
+  }, [port, selector, setOwn]);
 
   const onApply = useCallback((): void => {
-    const loc = target.source;
+    applyDraft(draft);
+  }, [applyDraft, draft]);
 
-    if (!loc) {
-      return;
-    }
-
-    startTransition(async () => {
-      try {
-        await api.setFill(ids.projectId, ids.directionId, {
-          fill: bodyOf(draft),
-          target: { selector: target.selector, source: loc, tag: target.tag },
-          variant,
-        });
-        setOwn({ kind: "ok", text: copy.applied });
-        setRound((count) => count + 1);
-      } catch (error) {
-        setOwn({ kind: "error", text: insertError(error) });
-      }
-    });
-  }, [draft, ids, target, variant]);
+  const live = useMemo(
+    (): PaintLive => ({
+      onCommit: (color: string): void => {
+        applyDraft({ ...draft, color });
+      },
+      onRevert: onReset,
+    }),
+    [applyDraft, draft, onReset]
+  );
 
   const handleEnter = useCallback((): void => {
-    if (dirty && !pending) {
+    if (dirty && !pending && !isColorOnly) {
       onApply();
     }
-  }, [dirty, onApply, pending]);
+  }, [dirty, isColorOnly, onApply, pending]);
 
   const { loading } = loaded;
   const note = noteOf(own, loaded.error);
@@ -181,6 +231,8 @@ const useFill = (ids: FillIds, scope: FillScope): FillView => {
     dirty,
     draft,
     handleEnter,
+    isColorOnly,
+    live,
     loading,
     note,
     onApply,

@@ -194,3 +194,15 @@
   color: var(--text-3);
   font-size: var(--t-xs);
 }
+
+.share-frame-links {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.share-frame-link .truncate {
+  font-size: var(--t-xs);
+  color: var(--text-2);
+}

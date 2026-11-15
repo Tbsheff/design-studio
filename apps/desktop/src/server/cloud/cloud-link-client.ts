@@ -1,14 +1,14 @@
-import { Context, Effect, Layer } from "effect";
-import type { Schema } from "effect";
-
 import type { Unauthenticated } from "@design-studio/actions/_core/errors/unauthenticated";
 import type { Unavailable } from "@design-studio/actions/_core/errors/unavailable";
 import { fromCloudId } from "@design-studio/actions/publish/schema";
 import type { PublishInput } from "@design-studio/actions/publish/schema";
 import type {
-  ShareCreated,
+  ShareMade,
   ShareRevoked,
 } from "@design-studio/actions/share/schema";
+import { Context, Effect, Layer } from "effect";
+import type { Schema } from "effect";
+
 import type { Publication } from "../../shared/publish.js";
 import { getJsonResponse } from "./cloud-fetch.js";
 import {
@@ -36,7 +36,7 @@ interface CloudLinkClientApi {
   readonly createShare: (
     orgId: string,
     input: CloudShareInput
-  ) => Effect.Effect<ShareCreated, CloudFailure>;
+  ) => Effect.Effect<ShareMade, CloudFailure>;
   readonly publish: (
     orgId: string,
     input: PublishInput

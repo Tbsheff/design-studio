@@ -1,6 +1,8 @@
+import { toShareFrameIndex } from "@design-studio/contracts/share";
 import type { SharePlayData } from "@design-studio/contracts/share-play";
 import { useCallback, useMemo, useState } from "react";
 
+import { readShareFrameKey } from "../../platform/share-play.js";
 import {
   isPhoneViewer,
   toFrameUrl,
@@ -39,12 +41,18 @@ const toPlayStart = (
   fallback: string
 ): string => frames[selected]?.id ?? fallback;
 
+const toLinkedFrame = (frames: readonly ViewerFrame[]): number =>
+  toShareFrameIndex(
+    frames.map((frame) => frame.id),
+    readShareFrameKey()
+  );
+
 const useShareViewer = (data: SharePlayData): ShareViewerState => {
   const frames = useMemo(() => toViewerFrames(data), [data]);
   const file = useMemo(() => toLinksFile(data), [data]);
   const startId = useMemo(() => toStartId(file, frames), [file, frames]);
   const [mode, setMode] = useState<ViewMode>(toInitialMode);
-  const [selected, setSelected] = useState(-1);
+  const [selected, setSelected] = useState(() => toLinkedFrame(frames));
   const [draft, setDraft] = useState<PinSpot | null>(null);
   const [isCommentsOpen, setIsCommentsOpen] = useState(() => !isPhoneViewer());
 

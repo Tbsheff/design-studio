@@ -4,13 +4,13 @@ import type {
 } from "@design-studio/contracts/share";
 import type { ReactElement } from "react";
 
+import { sessionTokens } from "../../platform/share-tokens.js";
 import { STATUS_ROLE } from "./aria-roles.js";
 import { copy } from "./copy.js";
 import { pick } from "./pick.js";
 import { ShareCursorSwitch } from "./share-cursor-switch.js";
 import { ShareLinkHead } from "./share-link-head.js";
 import { ShareLinkUrls } from "./share-link-urls.js";
-import { sessionTokens } from "./share-tokens.js";
 
 interface ShareLinkRowProps {
   readonly link: ShareLink;
@@ -50,6 +50,7 @@ const ShareLinkRow = ({
       {link.active && token && (
         <ShareLinkUrls
           token={token}
+          frames={link.frames}
           server={server}
           isBusy={isBusy}
           onLan={onLan}

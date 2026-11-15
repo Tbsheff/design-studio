@@ -39,11 +39,22 @@ const ShareListSchema = Schema.Struct({
   server: ShareServerStateSchema,
 });
 
-const ShareCreatedSchema = Schema.Struct({
+const ShareMadeSchema = Schema.Struct({
   link: ShareLinkSchema,
   server: ShareServerStateSchema,
   token: Schema.String,
   url: Schema.NullOr(Schema.String),
+});
+
+const ShareFrameUrlSchema = Schema.Struct({
+  frameKey: Schema.String,
+  name: Schema.String,
+  url: Schema.NullOr(Schema.String),
+});
+
+const ShareCreatedSchema = Schema.Struct({
+  ...ShareMadeSchema.fields,
+  frameUrls: Schema.Array(ShareFrameUrlSchema),
 });
 
 const ShareRevokedSchema = Schema.Struct({
@@ -67,6 +78,10 @@ const ShareIdSchema = Schema.String.check(
 
 type ShareCreated = typeof ShareCreatedSchema.Type;
 
+type ShareMade = typeof ShareMadeSchema.Type;
+
+type ShareFrameUrl = typeof ShareFrameUrlSchema.Type;
+
 type ShareRevoked = typeof ShareRevokedSchema.Type;
 
 type ShareLinkResult = typeof ShareLinkResultSchema.Type;
@@ -84,7 +99,9 @@ type ShareServerState = typeof ShareServerStateSchema.Type;
 export {
   ShareCreatedSchema,
   ShareFrameSchema,
+  ShareFrameUrlSchema,
   ShareIdSchema,
+  ShareMadeSchema,
   ShareLinkResultSchema,
   ShareRevokedSchema,
   ShareServerResultSchema,
@@ -96,7 +113,9 @@ export {
 export type {
   ShareCreated,
   ShareFrame,
+  ShareFrameUrl,
   ShareLinkResult,
+  ShareMade,
   ShareRevoked,
   ShareLink,
   ShareList,

@@ -9,10 +9,10 @@ import type {
 import { useCallback, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 
+import { sessionTokens } from "../../platform/share-tokens.js";
 import { canvasFrameChoices } from "./export-api.js";
 import type { FrameChoice } from "./export-api.js";
 import { shareApi } from "./share-api.js";
-import { sessionTokens } from "./share-tokens.js";
 import type { ShareCopied, ShareState } from "./share-types.js";
 
 interface ShareTargetInput {

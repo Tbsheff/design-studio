@@ -46,7 +46,7 @@ const FRAME_MENU_GROUPS: readonly FrameMenuGroupSpec[] = [
   },
   {
     group: { icon: "copy", id: "copy", label: copy.frameMenuCopy },
-    items: ["duplicate-screen", "copy-png"],
+    items: ["duplicate-screen", "copy-png", "copy-share-link"],
   },
   {
     group: { icon: "frame", id: "arrange", label: copy.frameMenuArrange },

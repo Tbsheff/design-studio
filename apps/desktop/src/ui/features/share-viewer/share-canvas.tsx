@@ -1,5 +1,5 @@
 import type { ShareViewerComment } from "@design-studio/contracts/share-play";
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import type { ReactElement } from "react";
 
 import { toWorldStyle } from "./canvas-view-model.js";
@@ -17,6 +17,19 @@ interface ShareCanvasProps {
   readonly onPick: (spot: PinSpot) => void;
 }
 
+const toFocusFrames = (
+  frames: readonly ViewerFrame[],
+  selected: number
+): readonly ViewerFrame[] => {
+  const picked = frames[selected];
+
+  if (picked) {
+    return [picked];
+  }
+
+  return frames;
+};
+
 const ShareCanvas = ({
   comments,
   draft,
@@ -25,7 +38,13 @@ const ShareCanvas = ({
   selected,
 }: ShareCanvasProps): ReactElement => {
   const stage = useRef<HTMLDivElement>(null);
-  const canvas = useCanvasView(stage, frames);
+
+  const focus = useMemo(
+    () => toFocusFrames(frames, selected),
+    [frames, selected]
+  );
+
+  const canvas = useCanvasView(stage, frames, focus);
   const { onFit, onPointerDown, onPointerMove, onPointerUp } = canvas;
   const { onZoomIn, onZoomOut, view, wasDragged } = canvas;
 

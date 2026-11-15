@@ -14,11 +14,16 @@ import { LayersList } from "./layers-list.js";
 import { toRunTool } from "./layers-open-state-model.js";
 import { LayersRows } from "./layers-rows.js";
 import type { LayerTree } from "./layers-tree.js";
+import { RenameManyPopup } from "./rename-many-popup.js";
 import { usePanelState } from "./use-layers-panel-state.js";
+import type { RenameMany, RenameManyApi } from "./use-rename-many.js";
 import type { RowMenuApi } from "./use-row-menu.js";
+
+import styles from "./rename-many.module.css";
 
 interface LayerEditActions {
   onRename: (id: number, name: string | null) => void;
+  onRenameMany?: RenameMany;
   onToggleHidden: (id: number, hidden: boolean) => void;
   onMove: (id: number, move: ReorderMove) => void;
   onMoveSelected: (move: ReorderMove) => void;
@@ -42,9 +47,31 @@ interface LayersPanelProps {
   readonly isEmpty: boolean;
 }
 
+const toMenuItems = (
+  edits: LayerEditActions,
+  many: RenameManyApi
+): PreviewMenuItem[] => {
+  const items = edits.menuItems?.() ?? [];
+
+  if (!many.canOpen) {
+    return items;
+  }
+
+  return [
+    {
+      icon: "pencil",
+      id: "rename-layers",
+      label: COPY.renameManyMenu,
+      run: many.open,
+    },
+    ...items,
+  ];
+};
+
 const toMenu = (
   rowMenu: RowMenuApi,
-  edits: LayerEditActions | null
+  edits: LayerEditActions | null,
+  many: RenameManyApi
 ): ReactNode => {
   const { at, close: handleClose } = rowMenu;
 
@@ -56,7 +83,7 @@ const toMenu = (
     <PreviewMenu
       at={at}
       label={COPY.labelLayerActions}
-      items={edits.menuItems()}
+      items={toMenuItems(edits, many)}
       onClose={handleClose}
     />
   );
@@ -105,6 +132,9 @@ const LayersPanel = ({
         toTip={tipWithKey}
       />
       <LayerSearchField search={state.search} />
+      <div className={styles.anchor}>
+        {rename.many.isOpen && <RenameManyPopup many={rename.many} />}
+      </div>
       <LayersList
         ref={listRef}
         isBusy={busy}
@@ -138,7 +168,7 @@ const LayersPanel = ({
           selectedNodes={state.selectedNodes}
         />
       </LayersList>
-      {toMenu(rowMenu, edits)}
+      {toMenu(rowMenu, edits, rename.many)}
     </aside>
   );
 };

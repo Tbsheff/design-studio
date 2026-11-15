@@ -69,6 +69,7 @@ interface LayerEdits {
   clearNotice: () => void;
   notify: (message: string) => void;
   renameNode: (id: number, name: string | null) => void;
+  renameNodes: (ids: number[], names: (string | null)[]) => void;
   setNodeHidden: (id: number, hidden: boolean) => void;
   setNodeLocked: (id: number, locked: boolean) => void;
   moveNode: (id: number, move: ReorderMove) => void;

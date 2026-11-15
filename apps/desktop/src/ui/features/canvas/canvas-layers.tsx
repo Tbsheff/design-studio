@@ -70,6 +70,7 @@ const CanvasLayersPanel = ({
     onMove: (id: number, move: ReorderMove) => void;
     onMoveSelected: (move: ReorderMove) => void;
     onRename: (id: number, name: string | null) => void;
+    onRenameMany: (ids: number[], names: (string | null)[]) => void;
     onStructureKey: (key: StructureKey) => void;
     onToggleHidden: (id: number, hidden: boolean) => void;
   } | null = null;
@@ -82,6 +83,7 @@ const CanvasLayersPanel = ({
       onMove: edits.moveNode,
       onMoveSelected: edits.moveSelected,
       onRename: edits.renameNode,
+      onRenameMany: edits.renameNodes,
       onStructureKey: edits.structureKey,
       onToggleHidden: edits.setNodeHidden,
     };

@@ -1,0 +1,121 @@
+call-action share.create on http://127.0.0.1:4610. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 470 ms, git spawns: not counted (server side)
+{
+  "frameUrls": [],
+  "link": {
+    "active": true,
+    "comments": 0,
+    "createdAt": 1794711556478,
+    "directionId": "main",
+    "expiresAt": 1794797956014,
+    "frames": [],
+    "id": "9IWXohBybN5w",
+    "live": false,
+    "projectId": "2Kwk5clCaq",
+    "rev": 0,
+    "revokedAt": null,
+    "studioCursor": false,
+    "title": "p43-share",
+    "versionId": "0d3e0d8230077474bb3d7800dd9a2e7e8fd9e12b",
+    "viewers": 0
+  },
+  "server": {
+    "lan": false,
+    "lanUrl": null,
+    "localUrl": "http://127.0.0.1:4615",
+    "running": true
+  },
+  "token": "(revoked)",
+  "url": "http://127.0.0.1:4615/s/(revoked)"
+}
+
+[mcp] ok, 50 ms, git spawns: not counted (server side)
+{
+  "frameUrls": [],
+  "link": {
+    "active": true,
+    "comments": 0,
+    "createdAt": 1794711556529,
+    "directionId": "main",
+    "expiresAt": 1794797956488,
+    "frames": [],
+    "id": "ygvvDL0N0W17",
+    "live": false,
+    "projectId": "2Kwk5clCaq",
+    "rev": 0,
+    "revokedAt": null,
+    "studioCursor": false,
+    "title": "p43-share",
+    "versionId": "0d3e0d8230077474bb3d7800dd9a2e7e8fd9e12b",
+    "viewers": 0
+  },
+  "server": {
+    "lan": false,
+    "lanUrl": null,
+    "localUrl": "http://127.0.0.1:4615",
+    "running": true
+  },
+  "token": "(revoked)",
+  "url": "http://127.0.0.1:4615/s/(revoked)"
+}
+
+[agent] ok, 50 ms, git spawns: not counted (server side)
+{
+  "frameUrls": [],
+  "link": {
+    "active": true,
+    "comments": 0,
+    "createdAt": 1794711556579,
+    "directionId": "main",
+    "expiresAt": 1794797956533,
+    "frames": [],
+    "id": "5l0eopwQ4VAM",
+    "live": false,
+    "projectId": "2Kwk5clCaq",
+    "rev": 0,
+    "revokedAt": null,
+    "studioCursor": false,
+    "title": "p43-share",
+    "versionId": "0d3e0d8230077474bb3d7800dd9a2e7e8fd9e12b",
+    "viewers": 0
+  },
+  "server": {
+    "lan": false,
+    "lanUrl": null,
+    "localUrl": "http://127.0.0.1:4615",
+    "running": true
+  },
+  "token": "(revoked)",
+  "url": "http://127.0.0.1:4615/s/(revoked)"
+}
+
+diff http -> mcp:
+-     "createdAt": 1794711556478,
++     "createdAt": 1794711556529,
+-     "expiresAt": 1794797956014,
++     "expiresAt": 1794797956488,
+-     "id": "9IWXohBybN5w",
++     "id": "ygvvDL0N0W17",
+-   "token": "(revoked)",
++   "token": "(revoked)",
+-   "url": "http://127.0.0.1:4615/s/(revoked)"
++   "url": "http://127.0.0.1:4615/s/(revoked)"
+
+diff http -> agent:
+-     "createdAt": 1794711556478,
++     "createdAt": 1794711556579,
+-     "expiresAt": 1794797956014,
++     "expiresAt": 1794797956533,
+-     "id": "9IWXohBybN5w",
++     "id": "5l0eopwQ4VAM",
+-   "token": "(revoked)",
++   "token": "(revoked)",
+-   "url": "http://127.0.0.1:4615/s/(revoked)"
++   "url": "http://127.0.0.1:4615/s/(revoked)"
+
+answered approval cards: C7YSvBbce9MF, 8lNpvfUel_1W, Uy6jSfUO_xN9
+
+call-action: fail, 3 surfaces ran, 2 diffs, 0 failed surfaces, 0 error results
+
+fix: compare the outputs above, then run call-action again with the id share.create and the same input

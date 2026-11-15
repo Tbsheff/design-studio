@@ -240,7 +240,7 @@ const copy = {
   scaled: "Scaled ",
   scrollPinAbsoluteTip:
     "Absolute layers move with their parent. Turn off absolute first.",
-  scrollPinHint: "Scroll in Present with a device to see it.",
+  scrollPinHint: "Play the frame in Present and scroll to see it.",
   scrollPinTitle: "Scroll behavior",
   searchFreeStockPhotosAnd: "Search free stock photos and place one here",
   select: "select",

@@ -4,13 +4,13 @@ import type { InspectorProps } from "./inspector-model.js";
 import {
   toFixedPatch,
   toFixedSide,
+  toFixedSideValue,
   toLockedPin,
   toOffsetSide,
   toScrollPin,
   toScrollPinCurrent,
   toScrollPinPatch,
   toScrollPinValue,
-  toSideValue,
 } from "./scroll-pin-model.js";
 import type { FixedSide, ScrollPin } from "./scroll-pin-model.js";
 import type { DirectEdit } from "./use-direct-edit.js";
@@ -19,7 +19,7 @@ import { setEdit } from "./use-layout-keys.js";
 
 interface ScrollPinState {
   readonly blocked: string | null;
-  readonly choice: ScrollPin;
+  readonly choice: ScrollPin | null;
   readonly edit: DirectEdit;
   readonly handlePick: (value: string) => void;
   readonly handleSide: (value: string) => void;
@@ -41,7 +41,13 @@ const useScrollPin = (props: InspectorProps): ScrollPinState => {
   });
 
   const { position } = edit.values;
-  const current = useMemo(() => toScrollPinCurrent(edit.values), [edit.values]);
+  const styles = props.selection[0]?.styles ?? null;
+
+  const current = useMemo(
+    () => toScrollPinCurrent(edit.values, styles ?? {}),
+    [edit.values, styles]
+  );
+
   const choice = toScrollPin(position);
   const side = toFixedSide(current);
 
@@ -58,7 +64,7 @@ const useScrollPin = (props: InspectorProps): ScrollPinState => {
 
   const handleSide = useCallback(
     (value: string): void => {
-      const next = toSideValue(value);
+      const next = toFixedSideValue(value);
 
       if (next !== null && next !== side) {
         setEdit(edit, toFixedPatch(next, { ...current, bottom: "", top: "" }));

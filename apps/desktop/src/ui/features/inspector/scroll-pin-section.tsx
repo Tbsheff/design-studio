@@ -26,7 +26,7 @@ const ScrollPinSection = ({
         locked={pin.locked}
         lockedTip={copy.scrollPinAbsoluteTip}
         options={SCROLL_PIN_OPTIONS}
-        value={pin.choice}
+        value={pin.choice ?? ""}
         onPick={pin.handlePick}
       />
       {pin.choice === "fixed" && (

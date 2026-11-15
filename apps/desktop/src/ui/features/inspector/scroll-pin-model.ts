@@ -44,9 +44,13 @@ const ZERO = "0px";
 
 const isSet = (value: string): boolean => value !== "" && value !== "auto";
 
-const toScrollPin = (position: string): ScrollPin => {
+const toScrollPin = (position: string): ScrollPin | null => {
   if (position === "sticky" || position === "fixed") {
     return position;
+  }
+
+  if (position === "") {
+    return null;
   }
 
   return "flow";
@@ -63,10 +67,13 @@ const toLockedPin = (position: string): ScrollPin | null => {
 const toScrollPinValue = (value: string): ScrollPin | null =>
   SCROLL_PIN_OPTIONS.find((option) => option.value === value)?.value ?? null;
 
-const toSideValue = (value: string): FixedSide | null =>
+const toFixedSideValue = (value: string): FixedSide | null =>
   FIXED_SIDE_OPTIONS.find((option) => option.value === value)?.value ?? null;
 
-const toOffsetSide = (choice: ScrollPin, side: FixedSide): FixedSide | null => {
+const toOffsetSide = (
+  choice: ScrollPin | null,
+  side: FixedSide
+): FixedSide | null => {
   if (choice === "sticky") {
     return "top";
   }
@@ -137,11 +144,20 @@ const toScrollPinPatch = (
   return { bottom: "", position: "sticky", top: toKept(current.top) };
 };
 
-const toScrollPinCurrent = (values: StyleValues): ScrollPinCurrent => ({
-  bottom: values.bottom,
-  left: values.left,
-  right: values.right,
-  top: values.top,
+const toSideValue = (
+  side: keyof ScrollPinCurrent,
+  values: StyleValues,
+  styles: Readonly<Record<string, string>>
+): string => styles[`authored-${side}`] ?? values[side];
+
+const toScrollPinCurrent = (
+  values: StyleValues,
+  styles: Readonly<Record<string, string>>
+): ScrollPinCurrent => ({
+  bottom: toSideValue("bottom", values, styles),
+  left: toSideValue("left", values, styles),
+  right: toSideValue("right", values, styles),
+  top: toSideValue("top", values, styles),
 });
 
 export {
@@ -155,8 +171,8 @@ export {
   toScrollPin,
   toScrollPinCurrent,
   toScrollPinPatch,
+  toFixedSideValue,
   toScrollPinValue,
-  toSideValue,
 };
 
 export type { FixedSide, ScrollPin, ScrollPinCurrent, ScrollPinPatch };

@@ -32,6 +32,7 @@ import {
 } from "./edit-source.js";
 import { editSummary } from "./edit-title.js";
 import { toFontLinkedCode } from "./google-font-link.js";
+import { toNextFontFiles, toNextFontPlan } from "./next-font-plan.js";
 import {
   announceWhile,
   assertCanEdit,
@@ -386,8 +387,14 @@ export async function applyDirectEditBatch(
   direction: Direction,
   raw: unknown
 ): Promise<DirectEditBatchResult> {
-  const { edits } = parseDirectEditBatch(raw);
+  const parsed = parseDirectEditBatch(raw);
   const headVersionId = assertCanEdit(deps, project, direction);
+  const plan = await toNextFontPlan(
+    direction.workTree,
+    parsed.edits,
+    await knownTokenVars(direction.workTree)
+  );
+  const edits = plan.requests;
   const previewOrigin = deps.previewOrigin
     ? () =>
         (deps.previewOrigin as NonNullable<DirectEditDeps["previewOrigin"]>)(
@@ -395,16 +402,14 @@ export async function applyDirectEditBatch(
           direction
         )
     : undefined;
-  const groups = await groupByFile(
-    direction.workTree,
-    edits,
-    await knownTokenVars(direction.workTree),
-    { projectKind: project.kind, ...(previewOrigin ? { previewOrigin } : {}) }
-  );
+  const groups = await groupByFile(direction.workTree, edits, plan.known, {
+    projectKind: project.kind,
+    ...(previewOrigin ? { previewOrigin } : {}),
+  });
   const applied: AppliedEdit[] = new Array<AppliedEdit>(edits.length);
   const tags: string[] = new Array<string>(edits.length);
   patchGroups(groups, applied, tags);
-  const changed = groups.filter((group) => group.code !== group.original);
+  const changed: WrittenFile[] = toNextFontFiles(plan, groups);
   if (changed.length === 0)
     return {
       files: [],

@@ -6,6 +6,8 @@ import { parseLoc } from "./checks.js";
 import type { Draft } from "./checks.js";
 import { toNearValueHits } from "./engine/index.js";
 import type { NearFamily, NearValueHit, NearValueUse } from "./engine/index.js";
+import { toRuleFix, toRuleOrigins } from "./near-value-rule-fix.js";
+import type { RuleOrigin } from "./near-value-rule-fix.js";
 import type { ProbeElement, ProbeResult, TokenHit } from "./probe.js";
 
 interface NearValueDraftInput {
@@ -24,8 +26,6 @@ const FAMILY = new Map<string, NearFamily>([
   ["border-radius", "border-radius"],
   ["color", "color"],
 ]);
-
-const STYLE_PROPS = new Set<string>(DIRECT_STYLE_PROPERTIES);
 
 const toFamily = (hit: TokenHit): NearFamily | null =>
   FAMILY.get(hit.prop) ?? null;
@@ -102,20 +102,34 @@ const toLabel = (el: ProbeElement): string => {
   return el.tag;
 };
 
-const toFix = (
-  hit: TokenHit,
-  el: ProbeElement,
-  target: string
-): Draft["fix"] => {
+const toStyleFamily = (hit: TokenHit): DirectStyleProperty | null => {
   const family = toFamily(hit);
-  const loc = parseLoc(el.loc);
-  const isOwnProp = family !== null && hit.prop === family;
 
-  if (hit.via !== "inline" || loc === null || !isOwnProp) {
+  if (family === null || hit.prop !== family) {
     return null;
   }
 
-  if (!STYLE_PROPS.has(family)) {
+  return DIRECT_STYLE_PROPERTIES.find((prop) => prop === family) ?? null;
+};
+
+const toFix = (
+  hit: TokenHit,
+  el: ProbeElement,
+  target: string,
+  origins: ReadonlyMap<string, RuleOrigin>
+): Draft["fix"] => {
+  const family = toStyleFamily(hit);
+  const loc = parseLoc(el.loc);
+
+  if (family === null) {
+    return null;
+  }
+
+  if (hit.via === "rule") {
+    return toRuleFix({ el, family, hit, origins, target });
+  }
+
+  if (hit.via !== "inline" || loc === null) {
     return null;
   }
 
@@ -143,14 +157,23 @@ const toHint = (hit: TokenHit, near: NearValueHit): string => {
   return `${change} in the inline style.`;
 };
 
+const toGuardLiteral = (hit: TokenHit): string => {
+  if (hit.via === "rule") {
+    return "";
+  }
+
+  return hit.value;
+};
+
 const toDraft = (
   hit: TokenHit,
   el: ProbeElement,
-  near: NearValueHit
+  near: NearValueHit,
+  origins: ReadonlyMap<string, RuleOrigin>
 ): Draft => {
   const draft: Draft = {
     element: toLabel(el),
-    fix: toFix(hit, el, near.target),
+    fix: toFix(hit, el, near.target, origins),
     hint: toHint(hit, near),
     key: `${hit.selector}|${hit.via}|${hit.prop}|${hit.value}|${hit.rule ?? ""}`,
     kind: "near-value",
@@ -163,7 +186,7 @@ const toDraft = (
   if (draft.fix !== null) {
     draft.guard = {
       classes: el.classes,
-      literal: hit.value,
+      literal: toGuardLiteral(hit),
       noArbitrary: false,
     };
   }
@@ -185,7 +208,10 @@ const toNearValueDrafts = async (
       isInProject(input.probe.tokenElements[hit.selector] ?? null)
   );
 
-  const counts = await toRuleCounts(page, hits);
+  const [counts, origins] = await Promise.all([
+    toRuleCounts(page, hits),
+    toRuleOrigins(page, hits),
+  ]);
 
   const near = toNearValueHits({
     radiusWindow: RADIUS_WINDOW,
@@ -200,7 +226,7 @@ const toNearValueDrafts = async (
       return [];
     }
 
-    return [toDraft(hit, el, found)];
+    return [toDraft(hit, el, found, origins)];
   });
 };
 

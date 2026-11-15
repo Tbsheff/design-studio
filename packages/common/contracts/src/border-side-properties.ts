@@ -1,5 +1,6 @@
 const BORDER_STYLE_PROPERTIES = [
   "border-radius",
+  "corner-shape",
   "border-width",
   "border-top-width",
   "border-right-width",

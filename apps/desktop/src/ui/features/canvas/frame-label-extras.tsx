@@ -12,6 +12,7 @@ import type { FrameMenuItem } from "./frame-more-menu.js";
 import { FramePinMark } from "./frame-pin-mark.js";
 import { RouteSourceChip } from "./route-source-chip.js";
 import { useFramePin } from "./use-frame-pin.js";
+import { useFrameShareLink } from "./use-frame-share-link.js";
 import { useStateBoard } from "./use-state-board.js";
 import { VariationControls } from "./variation-controls.js";
 import type { FrameVariation } from "./variation-controls.js";
@@ -29,6 +30,14 @@ interface FrameLabelExtrasProps {
   readonly projectId: string;
 }
 
+const toMenuItems = (
+  items: readonly FrameMenuItem[],
+  extras: readonly (FrameMenuItem | null)[]
+): FrameMenuItem[] => [
+  ...items,
+  ...extras.filter((item): item is FrameMenuItem => item !== null),
+];
+
 const FrameLabelExtras = ({
   frame,
   did,
@@ -44,10 +53,11 @@ const FrameLabelExtras = ({
   const frameId = frame.id;
   const pin = useFramePin(projectId, frameId);
   const board = useStateBoard(projectId, frameId);
+  const shareLink = useFrameShareLink(projectId, frameId);
 
   const menuItems = useMemo(
-    (): FrameMenuItem[] => [...items, board, pin.item],
-    [items, board, pin.item]
+    () => toMenuItems(items, [board, pin.item, shareLink]),
+    [items, board, pin.item, shareLink]
   );
 
   const liveVariation = useMemo(() => {

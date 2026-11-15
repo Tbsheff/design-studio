@@ -1,3 +1,7 @@
+import {
+  toShareFrameKey,
+  toShareFrameUrl,
+} from "@design-studio/contracts/share";
 import { usePopover } from "@design-studio/ui";
 import { useCallback, useMemo, useRef, useState } from "react";
 import type {
@@ -235,6 +239,69 @@ const useRedesignEntry = (path: string | null): RedesignEntry | null => {
   }, [appProjectId, run]);
 };
 
+interface FrameShareLink {
+  readonly active: boolean;
+  readonly frames: readonly { readonly id?: string }[];
+  readonly id: string;
+}
+
+interface FrameShareLookup {
+  readonly frameId: string;
+  readonly links: readonly FrameShareLink[];
+  readonly localUrl: string | null;
+  readonly tokens: ReadonlyMap<string, string>;
+}
+
+const toLinkFrameUrl = (
+  link: FrameShareLink,
+  lookup: FrameShareLookup,
+  base: string
+): string | null => {
+  const index = link.frames.findIndex((frame) => frame.id === lookup.frameId);
+  const token = lookup.tokens.get(link.id) ?? null;
+  const frame = link.frames[index];
+
+  if (!link.active || !frame || token === null) {
+    return null;
+  }
+
+  return toShareFrameUrl(base, token, toShareFrameKey(frame, index));
+};
+
+const toFrameShareUrl = (lookup: FrameShareLookup): string | null => {
+  const base = lookup.localUrl;
+
+  if (base === null) {
+    return null;
+  }
+
+  for (const link of lookup.links) {
+    const url = toLinkFrameUrl(link, lookup, base);
+
+    if (url !== null) {
+      return url;
+    }
+  }
+
+  return null;
+};
+
+const toShareLinkEntry = (
+  url: string | null,
+  run: () => void
+): ScreenEntry | null => {
+  if (url === null) {
+    return null;
+  }
+
+  return {
+    icon: "copy",
+    id: "copy-share-link",
+    label: copy.copyShareLinkToThisFrame,
+    run,
+  };
+};
+
 const openScreenCreate = (): void => {
   globalThis.dispatchEvent(new CustomEvent(SCREEN_CREATE_EVENT));
 };
@@ -242,7 +309,9 @@ const openScreenCreate = (): void => {
 export {
   menuKeys,
   openScreenCreate,
+  toFrameShareUrl,
   toRootMenuItems,
+  toShareLinkEntry,
   useCopyPngEntry,
   useFitEntry,
   useMenu,
@@ -251,4 +320,10 @@ export {
   useTidyEntry,
 };
 
-export type { RedesignEntry, ScreenEntry, TidyEntry };
+export type {
+  FrameShareLink,
+  FrameShareLookup,
+  RedesignEntry,
+  ScreenEntry,
+  TidyEntry,
+};

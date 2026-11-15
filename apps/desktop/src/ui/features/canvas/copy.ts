@@ -44,6 +44,7 @@ const copy = {
   connectAiTip: "Connect Claude Code, Cursor, Codex or another MCP client",
   copyAppAgain: "Copy app again",
   copyAsPng: "Copy as PNG",
+  copyShareLinkToThisFrame: "Copy share link to this frame",
   copyingApp: "Copying app",
   crumbSep: "›",
   custom: "Custom",

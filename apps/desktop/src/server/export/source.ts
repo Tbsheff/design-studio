@@ -19,6 +19,7 @@ export {
   parseFrames,
   parseScale,
   resolveSource,
+  toPngFrames,
   withPagePath,
 } from "../project-source/index.js";
 

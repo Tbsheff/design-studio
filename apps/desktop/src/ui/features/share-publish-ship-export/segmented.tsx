@@ -37,6 +37,7 @@ const Segmented = <Value extends string | number>({
         label={option.label}
         icon={option.icon}
         isOn={value === option.id}
+        offTip={null}
         onChange={onChange}
       />
     ))}

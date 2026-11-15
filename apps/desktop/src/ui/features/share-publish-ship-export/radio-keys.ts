@@ -21,7 +21,9 @@ const moveRadioFocus = (event: KeyboardEvent<HTMLDivElement>): void => {
 
   const radios = [...event.currentTarget.children].filter(
     (child): child is HTMLButtonElement =>
-      child instanceof HTMLButtonElement && !child.disabled
+      child instanceof HTMLButtonElement &&
+      !child.disabled &&
+      child.getAttribute("aria-disabled") !== "true"
   );
 
   const index = radios.indexOf(document.activeElement as HTMLButtonElement);

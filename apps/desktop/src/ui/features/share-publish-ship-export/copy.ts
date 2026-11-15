@@ -257,6 +257,8 @@ const copy = {
     "Save a version first. Publish takes a saved version.",
   scale: "Scale",
   scaleLabel: "Scale",
+  scaleTooTall:
+    "This frame is too tall for this scale. A PNG can be 16,000 px tall at most. Use a lower scale.",
   scanToOpenOnPhone: "Scan to open on your phone",
   searchEngines: "Search engines",
   searchEnginesMayList: "Search engines may list it",

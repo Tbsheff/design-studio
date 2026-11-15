@@ -38,7 +38,7 @@
   transition-timing-function: var(--ease);
 }
 
-.segmented button:hover:not(:disabled):not(.on),
+.segmented button:hover:not(:disabled, .on, [aria-disabled="true"]),
 .segmented .seg-radio:hover:not(.disabled):not(.on) {
   color: var(--text);
 }
@@ -53,6 +53,7 @@
 }
 
 .segmented button:disabled,
+.segmented button[aria-disabled="true"],
 .segmented .seg-radio.disabled {
   color: var(--text-faint);
   cursor: default;

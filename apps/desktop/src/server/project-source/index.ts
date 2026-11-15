@@ -3,6 +3,7 @@ export {
   parseFrames,
   parseScale,
   resolveSource,
+  toPngFrames,
   withPagePath,
 } from "./source.js";
 

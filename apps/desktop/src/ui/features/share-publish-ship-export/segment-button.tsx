@@ -12,6 +12,7 @@ interface SegmentButtonProps<Value extends string | number> {
   readonly label: string;
   readonly icon: IconName | null;
   readonly isOn: boolean;
+  readonly offTip: string | null;
   readonly onChange: (value: Value) => void;
 }
 
@@ -20,17 +21,24 @@ const SegmentButton = <Value extends string | number>({
   id,
   isOn,
   label,
+  offTip,
   onChange,
 }: SegmentButtonProps<Value>): ReactElement => {
+  const isOff = offTip !== null;
+
   const selectOption = useCallback(() => {
-    onChange(id);
-  }, [id, onChange]);
+    if (!isOff) {
+      onChange(id);
+    }
+  }, [id, isOff, onChange]);
 
   return (
     <button
       type="button"
       role={RADIO_ROLE}
       aria-checked={isOn}
+      aria-disabled={isOff}
+      data-tip={offTip}
       tabIndex={pick(isOn, 0, -1)}
       className={pick(isOn, "on", "")}
       onClick={selectOption}

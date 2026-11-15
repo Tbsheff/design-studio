@@ -13,6 +13,7 @@ import {
 } from "./export-api.js";
 import type { ExportPrefs, ExportTarget, FrameChoice } from "./export-api.js";
 import type { DialogFormat } from "./export-formats.js";
+import { toAllowedScale } from "./export-scale-model.js";
 import { useExportFlow } from "./use-export-flow.js";
 import type { ExportFlow } from "./use-export-flow.js";
 
@@ -96,7 +97,7 @@ const useExportOptions = (target: ExportTarget): ExportOptions => {
     toInitialFormat(target, initial)
   );
 
-  const [scale, setScale] = useState<ExportScale>(initial.scale);
+  const [savedScale, setSavedScale] = useState<ExportScale>(initial.scale);
   const [scope, setScope] = useState<ExportScope>(initial.scope);
   const { projectId } = target;
 
@@ -116,7 +117,7 @@ const useExportOptions = (target: ExportTarget): ExportOptions => {
 
   const prefs: ExportPrefs = {
     format: toSavedFormat(format, initial.format),
-    scale,
+    scale: savedScale,
     scope,
   };
 
@@ -126,7 +127,7 @@ const useExportOptions = (target: ExportTarget): ExportOptions => {
   };
 
   const onChooseScale = (next: ExportScale): void => {
-    setScale(next);
+    setSavedScale(next);
     saveExportPrefs({ ...prefs, scale: next });
   };
 
@@ -140,6 +141,12 @@ const useExportOptions = (target: ExportTarget): ExportOptions => {
   }, []);
 
   const chosen = toChosenFrames(frames, picked);
+  let scale = toAllowedScale(savedScale, chosen);
+
+  if (isSelectionOnly) {
+    scale = savedScale;
+  }
+
   const needsFrames = format !== "zip" && format !== "flow" && !isSelectionOnly;
 
   return {

@@ -1,4 +1,5 @@
 import type { McpActivity, McpApprovalRecord } from "@design-studio/contracts";
+import { CANVAS_MAX_HEIGHT } from "@design-studio/contracts/canvas-file";
 
 export type ExportFormat =
   | "png"
@@ -26,6 +27,8 @@ export type EditorId = "cursor" | "vscode" | "zed";
 export const EXPORT_SCALES: readonly ExportScale[] = [1, 2, 3];
 export const EXPORT_MAX_FRAMES = 12;
 export const EXPORT_FRAME_MAX_SIDE = 4000;
+export const EXPORT_FRAME_MAX_HEIGHT = CANVAS_MAX_HEIGHT;
+export const EXPORT_PNG_MAX_PIXELS = 16_000;
 export const EXPORT_PATH_MAX = 200;
 
 export interface ExportFrame {
@@ -110,6 +113,10 @@ export function cleanExportPath(raw: string): string | null {
   }
 
   return value;
+}
+
+export function isPngScaleAllowed(height: number, scale: number): boolean {
+  return height * scale <= EXPORT_PNG_MAX_PIXELS;
 }
 
 export function exportFileStem(name: string): string {

@@ -5,12 +5,21 @@ Branch `feat/scroll-pin`. The Prototype tab has a "Scroll behavior" section with
 ## What works
 
 - **Sticky.** Writes `position: sticky` and `top: 0px`. If the layer already has a `top`, the section keeps it. A "Top (Y)" field sets the offset.
-- **Fixed.** Writes `position: fixed` with a top pin. When the layer has no left or right value, it also writes `left: 0` and `right: 0`. A "Top / Bottom" control moves the pin.
+- **Fixed.** Writes `position: fixed` with a top pin. A "Top / Bottom" control moves the pin.
 - **Scroll with parent.** Writes the `IN_FLOW` patch: it removes `position`, `top`, `right`, `bottom` and `left`.
 - **Read.** The section reads the computed `position`. For a fixed layer, it reads the side from the `authored-*` values, because the computed `top` and `bottom` are both set.
 - **Absolute layer.** "Scroll with parent" shows as disabled (`aria-disabled`), with the tip "Absolute layers move with their parent. Turn off absolute first."
 - **Many layers.** When a selection has mixed values, no choice shows as on. 1 choice writes 1 version for all layers (proved for header + nav). 1 Cmd+Z undoes it.
 - **Write path.** Writes go through `useDirectEdits`, then `preview` and `commit`, as `setEdit` does. This is the path that `absolute-toggle` uses. It works for both Tailwind and plain CSS.
+
+## Changed from spec
+
+- **Fixed adds `left: 0; right: 0`.** The code adds them when the layer has no left or right value.
+  - **Reason.** Without them, a fixed `width: auto` bar shrinks to fit its content.
+  - **Cost.** A narrow fixed layer with a set width, such as a floating button on the right, moves to the left edge.
+  - **Side effect.** Fixed, then Sticky, keeps `left: 0; right: 0`.
+  - **Decide.** Tyler decides whether to keep this.
+- **`aria-label` text is outside `copy.ts`.** "Position" and "Pin to" are in `scroll-pin-model.ts`. Moving them to `copy.ts` would go past the 5-line budget. Lint passes, but U19 is also a reviewer rule.
 
 ## Proof (mock agent, data `ds-wt/scroll-pin-data`, port 7950)
 
@@ -45,6 +54,7 @@ Screenshots are in `cycle-43/scroll-pin/`:
 ## Left out
 
 - **`z-index: 10` on Fixed.** `z-index` is not in `DIRECT_STYLE_PROPERTIES` (`contracts.ts`). `edit_element` drops it, and no pick may edit `contracts.ts`. `set_stacking` can write `z-10`, but its `others` field takes no `top` or `bottom`, so one version for many layers is not possible on that path. A fixed layer already paints over in-flow content.
+- **Breakpoint variants.** `MultiOptions` (`use-direct-edits-core.ts`) has no `variant` field. When a breakpoint is active, a Prototype-tab write goes to the base styles, but the Design tab writes to the breakpoint. A fix needs a single-layer `useDirectEdit` branch, so it is a later item.
 - **Fixed pin.** Fixed starts with the top pin unless the layer already has an authored bottom. The tab bar needs 2 clicks: Fixed, then Bottom.
 
 ## Files

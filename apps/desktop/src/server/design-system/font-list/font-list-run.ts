@@ -180,6 +180,15 @@ const toStateParts = async (
   return { families, texts, tokens };
 };
 
+const isAppProject = (run: DirectionRun): boolean =>
+  (run.project.app ?? null) !== null || run.project.folder?.kind === "app";
+
+const isHtmlPrototype = (
+  run: DirectionRun,
+  next: readonly NamedFamily[]
+): boolean =>
+  run.project.kind === "html" && !isAppProject(run) && next.length === 0;
+
 const toRows = async (
   run: DirectionRun,
   files: readonly FoundFile[]
@@ -202,6 +211,7 @@ const toRows = async (
 
   return toFontRows({
     families: [...next, ...state.families],
+    isHtmlPrototype: isHtmlPrototype(run, next),
     texts: [...read.flat(), ...state.texts],
     tokens: state.tokens,
   });

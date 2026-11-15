@@ -1,0 +1,1 @@
+{"jsonrpc":"2.0","id":2,"result":{"content":[{"type":"text","text":"{\n  \"at\": \"index.html:11:5\",\n  \"editedAt\": \"element\",\n  \"file\": \"index.html\",\n  \"applied\": {\n    \"style\": [\n      \"font-family\"\n    ],\n    \"text\": false\n  },\n  \"title\": \"Edit h1: font-family\",\n  \"versionId\": \"pending-92d25560eac56d15\"\n}"}]}}

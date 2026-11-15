@@ -1,0 +1,1106 @@
+call-action font.list on http://127.0.0.1:6580. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 5 ms, git spawns: not counted (server side)
+{
+  "items": [
+    {
+      "className": null,
+      "family": "Inter",
+      "preview": "'Inter', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Inter', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Roboto",
+      "preview": "'Roboto', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Roboto', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Open Sans",
+      "preview": "'Open Sans', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Open Sans', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Lato",
+      "preview": "'Lato', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Lato', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Montserrat",
+      "preview": "'Montserrat', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Montserrat', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Poppins",
+      "preview": "'Poppins', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Poppins', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Nunito",
+      "preview": "'Nunito', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Nunito', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Raleway",
+      "preview": "'Raleway', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Raleway', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Work Sans",
+      "preview": "'Work Sans', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Work Sans', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "DM Sans",
+      "preview": "'DM Sans', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'DM Sans', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Manrope",
+      "preview": "'Manrope', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Manrope', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Plus Jakarta Sans",
+      "preview": "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Outfit",
+      "preview": "'Outfit', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Outfit', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Figtree",
+      "preview": "'Figtree', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Figtree', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Space Grotesk",
+      "preview": "'Space Grotesk', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Space Grotesk', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "IBM Plex Sans",
+      "preview": "'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Source Sans 3",
+      "preview": "'Source Sans 3', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Source Sans 3', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Rubik",
+      "preview": "'Rubik', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Rubik', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Karla",
+      "preview": "'Karla', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Karla', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Lexend",
+      "preview": "'Lexend', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Lexend', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Fraunces",
+      "preview": "'Fraunces', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'Fraunces', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Playfair Display",
+      "preview": "'Playfair Display', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'Playfair Display', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Lora",
+      "preview": "'Lora', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'Lora', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Merriweather",
+      "preview": "'Merriweather', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'Merriweather', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "EB Garamond",
+      "preview": "'EB Garamond', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'EB Garamond', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Libre Baskerville",
+      "preview": "'Libre Baskerville', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'Libre Baskerville', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Crimson Pro",
+      "preview": "'Crimson Pro', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'Crimson Pro', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Source Serif 4",
+      "preview": "'Source Serif 4', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'Source Serif 4', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "DM Serif Display",
+      "preview": "'DM Serif Display', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'DM Serif Display', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Cormorant Garamond",
+      "preview": "'Cormorant Garamond', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'Cormorant Garamond', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Instrument Serif",
+      "preview": "'Instrument Serif', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'Instrument Serif', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "JetBrains Mono",
+      "preview": "'JetBrains Mono', ui-monospace, monospace",
+      "source": "catalog",
+      "stack": "'JetBrains Mono', ui-monospace, monospace",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "IBM Plex Mono",
+      "preview": "'IBM Plex Mono', ui-monospace, monospace",
+      "source": "catalog",
+      "stack": "'IBM Plex Mono', ui-monospace, monospace",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Fira Code",
+      "preview": "'Fira Code', ui-monospace, monospace",
+      "source": "catalog",
+      "stack": "'Fira Code', ui-monospace, monospace",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Space Mono",
+      "preview": "'Space Mono', ui-monospace, monospace",
+      "source": "catalog",
+      "stack": "'Space Mono', ui-monospace, monospace",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Roboto Mono",
+      "preview": "'Roboto Mono', ui-monospace, monospace",
+      "source": "catalog",
+      "stack": "'Roboto Mono', ui-monospace, monospace",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Source Code Pro",
+      "preview": "'Source Code Pro', ui-monospace, monospace",
+      "source": "catalog",
+      "stack": "'Source Code Pro', ui-monospace, monospace",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Bebas Neue",
+      "preview": "'Bebas Neue', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Bebas Neue', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Oswald",
+      "preview": "'Oswald', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Oswald', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Archivo Black",
+      "preview": "'Archivo Black', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Archivo Black', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "system-ui",
+      "preview": "system-ui, sans-serif",
+      "source": "system",
+      "stack": "system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "ui-serif",
+      "preview": "ui-serif, Georgia, serif",
+      "source": "system",
+      "stack": "ui-serif, Georgia, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "ui-monospace",
+      "preview": "ui-monospace, monospace",
+      "source": "system",
+      "stack": "ui-monospace, monospace",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Georgia",
+      "preview": "Georgia, serif",
+      "source": "system",
+      "stack": "Georgia, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Arial",
+      "preview": "Arial, sans-serif",
+      "source": "system",
+      "stack": "Arial, sans-serif",
+      "token": null
+    }
+  ],
+  "next": null
+}
+
+[mcp] ok, 8 ms, git spawns: not counted (server side)
+{
+  "items": [
+    {
+      "className": null,
+      "family": "Inter",
+      "preview": "'Inter', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Inter', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Roboto",
+      "preview": "'Roboto', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Roboto', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Open Sans",
+      "preview": "'Open Sans', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Open Sans', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Lato",
+      "preview": "'Lato', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Lato', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Montserrat",
+      "preview": "'Montserrat', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Montserrat', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Poppins",
+      "preview": "'Poppins', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Poppins', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Nunito",
+      "preview": "'Nunito', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Nunito', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Raleway",
+      "preview": "'Raleway', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Raleway', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Work Sans",
+      "preview": "'Work Sans', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Work Sans', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "DM Sans",
+      "preview": "'DM Sans', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'DM Sans', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Manrope",
+      "preview": "'Manrope', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Manrope', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Plus Jakarta Sans",
+      "preview": "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Outfit",
+      "preview": "'Outfit', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Outfit', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Figtree",
+      "preview": "'Figtree', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Figtree', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Space Grotesk",
+      "preview": "'Space Grotesk', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Space Grotesk', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "IBM Plex Sans",
+      "preview": "'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Source Sans 3",
+      "preview": "'Source Sans 3', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Source Sans 3', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Rubik",
+      "preview": "'Rubik', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Rubik', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Karla",
+      "preview": "'Karla', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Karla', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Lexend",
+      "preview": "'Lexend', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Lexend', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Fraunces",
+      "preview": "'Fraunces', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'Fraunces', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Playfair Display",
+      "preview": "'Playfair Display', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'Playfair Display', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Lora",
+      "preview": "'Lora', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'Lora', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Merriweather",
+      "preview": "'Merriweather', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'Merriweather', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "EB Garamond",
+      "preview": "'EB Garamond', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'EB Garamond', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Libre Baskerville",
+      "preview": "'Libre Baskerville', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'Libre Baskerville', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Crimson Pro",
+      "preview": "'Crimson Pro', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'Crimson Pro', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Source Serif 4",
+      "preview": "'Source Serif 4', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'Source Serif 4', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "DM Serif Display",
+      "preview": "'DM Serif Display', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'DM Serif Display', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Cormorant Garamond",
+      "preview": "'Cormorant Garamond', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'Cormorant Garamond', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Instrument Serif",
+      "preview": "'Instrument Serif', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'Instrument Serif', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "JetBrains Mono",
+      "preview": "'JetBrains Mono', ui-monospace, monospace",
+      "source": "catalog",
+      "stack": "'JetBrains Mono', ui-monospace, monospace",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "IBM Plex Mono",
+      "preview": "'IBM Plex Mono', ui-monospace, monospace",
+      "source": "catalog",
+      "stack": "'IBM Plex Mono', ui-monospace, monospace",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Fira Code",
+      "preview": "'Fira Code', ui-monospace, monospace",
+      "source": "catalog",
+      "stack": "'Fira Code', ui-monospace, monospace",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Space Mono",
+      "preview": "'Space Mono', ui-monospace, monospace",
+      "source": "catalog",
+      "stack": "'Space Mono', ui-monospace, monospace",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Roboto Mono",
+      "preview": "'Roboto Mono', ui-monospace, monospace",
+      "source": "catalog",
+      "stack": "'Roboto Mono', ui-monospace, monospace",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Source Code Pro",
+      "preview": "'Source Code Pro', ui-monospace, monospace",
+      "source": "catalog",
+      "stack": "'Source Code Pro', ui-monospace, monospace",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Bebas Neue",
+      "preview": "'Bebas Neue', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Bebas Neue', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Oswald",
+      "preview": "'Oswald', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Oswald', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Archivo Black",
+      "preview": "'Archivo Black', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Archivo Black', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "system-ui",
+      "preview": "system-ui, sans-serif",
+      "source": "system",
+      "stack": "system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "ui-serif",
+      "preview": "ui-serif, Georgia, serif",
+      "source": "system",
+      "stack": "ui-serif, Georgia, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "ui-monospace",
+      "preview": "ui-monospace, monospace",
+      "source": "system",
+      "stack": "ui-monospace, monospace",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Georgia",
+      "preview": "Georgia, serif",
+      "source": "system",
+      "stack": "Georgia, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Arial",
+      "preview": "Arial, sans-serif",
+      "source": "system",
+      "stack": "Arial, sans-serif",
+      "token": null
+    }
+  ],
+  "next": null
+}
+
+[agent] ok, 3 ms, git spawns: not counted (server side)
+{
+  "items": [
+    {
+      "className": null,
+      "family": "Inter",
+      "preview": "'Inter', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Inter', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Roboto",
+      "preview": "'Roboto', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Roboto', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Open Sans",
+      "preview": "'Open Sans', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Open Sans', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Lato",
+      "preview": "'Lato', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Lato', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Montserrat",
+      "preview": "'Montserrat', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Montserrat', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Poppins",
+      "preview": "'Poppins', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Poppins', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Nunito",
+      "preview": "'Nunito', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Nunito', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Raleway",
+      "preview": "'Raleway', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Raleway', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Work Sans",
+      "preview": "'Work Sans', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Work Sans', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "DM Sans",
+      "preview": "'DM Sans', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'DM Sans', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Manrope",
+      "preview": "'Manrope', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Manrope', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Plus Jakarta Sans",
+      "preview": "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Outfit",
+      "preview": "'Outfit', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Outfit', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Figtree",
+      "preview": "'Figtree', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Figtree', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Space Grotesk",
+      "preview": "'Space Grotesk', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Space Grotesk', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "IBM Plex Sans",
+      "preview": "'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Source Sans 3",
+      "preview": "'Source Sans 3', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Source Sans 3', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Rubik",
+      "preview": "'Rubik', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Rubik', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Karla",
+      "preview": "'Karla', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Karla', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Lexend",
+      "preview": "'Lexend', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Lexend', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Fraunces",
+      "preview": "'Fraunces', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'Fraunces', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Playfair Display",
+      "preview": "'Playfair Display', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'Playfair Display', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Lora",
+      "preview": "'Lora', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'Lora', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Merriweather",
+      "preview": "'Merriweather', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'Merriweather', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "EB Garamond",
+      "preview": "'EB Garamond', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'EB Garamond', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Libre Baskerville",
+      "preview": "'Libre Baskerville', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'Libre Baskerville', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Crimson Pro",
+      "preview": "'Crimson Pro', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'Crimson Pro', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Source Serif 4",
+      "preview": "'Source Serif 4', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'Source Serif 4', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "DM Serif Display",
+      "preview": "'DM Serif Display', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'DM Serif Display', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Cormorant Garamond",
+      "preview": "'Cormorant Garamond', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'Cormorant Garamond', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Instrument Serif",
+      "preview": "'Instrument Serif', ui-serif, serif",
+      "source": "catalog",
+      "stack": "'Instrument Serif', ui-serif, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "JetBrains Mono",
+      "preview": "'JetBrains Mono', ui-monospace, monospace",
+      "source": "catalog",
+      "stack": "'JetBrains Mono', ui-monospace, monospace",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "IBM Plex Mono",
+      "preview": "'IBM Plex Mono', ui-monospace, monospace",
+      "source": "catalog",
+      "stack": "'IBM Plex Mono', ui-monospace, monospace",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Fira Code",
+      "preview": "'Fira Code', ui-monospace, monospace",
+      "source": "catalog",
+      "stack": "'Fira Code', ui-monospace, monospace",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Space Mono",
+      "preview": "'Space Mono', ui-monospace, monospace",
+      "source": "catalog",
+      "stack": "'Space Mono', ui-monospace, monospace",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Roboto Mono",
+      "preview": "'Roboto Mono', ui-monospace, monospace",
+      "source": "catalog",
+      "stack": "'Roboto Mono', ui-monospace, monospace",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Source Code Pro",
+      "preview": "'Source Code Pro', ui-monospace, monospace",
+      "source": "catalog",
+      "stack": "'Source Code Pro', ui-monospace, monospace",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Bebas Neue",
+      "preview": "'Bebas Neue', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Bebas Neue', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Oswald",
+      "preview": "'Oswald', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Oswald', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Archivo Black",
+      "preview": "'Archivo Black', ui-sans-serif, system-ui, sans-serif",
+      "source": "catalog",
+      "stack": "'Archivo Black', ui-sans-serif, system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "system-ui",
+      "preview": "system-ui, sans-serif",
+      "source": "system",
+      "stack": "system-ui, sans-serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "ui-serif",
+      "preview": "ui-serif, Georgia, serif",
+      "source": "system",
+      "stack": "ui-serif, Georgia, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "ui-monospace",
+      "preview": "ui-monospace, monospace",
+      "source": "system",
+      "stack": "ui-monospace, monospace",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Georgia",
+      "preview": "Georgia, serif",
+      "source": "system",
+      "stack": "Georgia, serif",
+      "token": null
+    },
+    {
+      "className": null,
+      "family": "Arial",
+      "preview": "Arial, sans-serif",
+      "source": "system",
+      "stack": "Arial, sans-serif",
+      "token": null
+    }
+  ],
+  "next": null
+}
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

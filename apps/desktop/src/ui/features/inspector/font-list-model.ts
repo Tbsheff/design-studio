@@ -1,6 +1,7 @@
 import { copy } from "./copy.js";
 
 type FontSource =
+  | "catalog"
   | "font-face"
   | "google-link"
   | "next-font"
@@ -49,6 +50,7 @@ const GENERIC_FAMILIES: ReadonlySet<string> = new Set([
 ]);
 
 const SOURCE_LABEL: Readonly<Record<FontSource, string>> = {
+  catalog: copy.fontSourceCatalog,
   "font-face": copy.fontSourceFontFace,
   "google-link": copy.fontSourceGoogleLink,
   "next-font": copy.fontSourceNextFont,
@@ -92,20 +94,31 @@ const toFilteredRows = (
 };
 
 const toFontGroups = (rows: readonly FontRow[]): readonly FontGroup[] => {
-  const project = rows.filter((row) => row.source !== "system");
-  const system = rows.filter((row) => row.source === "system");
-  const groups: FontGroup[] = [];
-
-  if (project.length > 0) {
-    groups.push({ label: copy.fontGroupProject, rows: project, start: 0 });
-  }
-
-  if (system.length > 0) {
-    groups.push({
+  const parts = [
+    {
+      label: copy.fontGroupProject,
+      rows: rows.filter(
+        (row) => row.source !== "system" && row.source !== "catalog"
+      ),
+    },
+    {
+      label: copy.fontGroupCatalog,
+      rows: rows.filter((row) => row.source === "catalog"),
+    },
+    {
       label: copy.fontGroupSystem,
-      rows: system,
-      start: project.length,
-    });
+      rows: rows.filter((row) => row.source === "system"),
+    },
+  ];
+
+  const groups: FontGroup[] = [];
+  let start = 0;
+
+  for (const part of parts) {
+    if (part.rows.length > 0) {
+      groups.push({ ...part, start });
+      start += part.rows.length;
+    }
   }
 
   return groups;
@@ -146,6 +159,11 @@ const toNextActive = (active: number, key: FontKey, length: number): number => {
   return Math.max(active - 1, 0);
 };
 
+const isRowFont = (row: FontRow, family: string, value: string): boolean =>
+  toPlainFamily(row.family) === family ||
+  row.preview === value ||
+  (row.token !== null && value.includes(row.token));
+
 const isLoadedFont = (value: string, rows: readonly FontRow[]): boolean => {
   const family = toPlainFamily(value);
 
@@ -154,10 +172,7 @@ const isLoadedFont = (value: string, rows: readonly FontRow[]): boolean => {
   }
 
   return rows.some(
-    (row) =>
-      toPlainFamily(row.family) === family ||
-      row.preview === value ||
-      (row.token !== null && value.includes(row.token))
+    (row) => row.source !== "catalog" && isRowFont(row, family, value)
   );
 };
 

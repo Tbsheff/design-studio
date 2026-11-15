@@ -58,6 +58,7 @@ interface DirectEdit {
   readonly drain: () => Promise<void>;
   readonly each: readonly StyleValues[] | null;
   readonly mixed: typeof NO_MIXED;
+  readonly port: MutableRefObject<PreviewPort | null>;
   readonly preview: (patch: Partial<StyleValues>) => void;
   readonly previewForced: (patch: Partial<StyleValues>) => void;
   readonly previewText: (text: string) => void;

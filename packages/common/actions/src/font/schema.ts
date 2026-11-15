@@ -7,11 +7,12 @@ const FONT_SOURCES = [
   "google-link",
   "pack",
   "system",
+  "catalog",
 ] as const;
 
 const FontSourceSchema = Schema.Literals(FONT_SOURCES).annotate({
   description:
-    "Where the family comes from: next-font, font-face, token, google-link, pack or system.",
+    "Where the family comes from: next-font, font-face, token, google-link, pack, system, or catalog (a Google Fonts family that an HTML prototype does not load yet).",
 });
 
 const FontSchema = Schema.Struct({

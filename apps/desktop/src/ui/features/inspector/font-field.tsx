@@ -1,11 +1,18 @@
+import { Suspense, lazy } from "react";
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { TokenControl } from "./deps.js";
 import type { DirectEdit } from "./deps.js";
-import { FontListPopup } from "./font-list-popup.js";
 import { useFontField } from "./use-font-field.js";
 import type { TokenUi } from "./use-token-snap.js";
+
+const FontListPopup = lazy(async () => {
+  await import("../../styles/inspector-props.css");
+  const loaded = await import("./font-list-popup.js");
+
+  return { default: loaded.FontListPopup };
+});
 
 const toPlaceholder = (isMixed: boolean): string => {
   if (isMixed) {
@@ -45,11 +52,14 @@ const FontField = ({
       />
       <TokenControl prop="font-family" label={copy.fontFamily} edit={edit} />
       {field.isOpen && (
-        <FontListPopup
-          active={field.active}
-          rows={field.rows}
-          onPick={field.handlePick}
-        />
+        <Suspense fallback={null}>
+          <FontListPopup
+            active={field.active}
+            failed={field.failed}
+            rows={field.rows}
+            onPick={field.handlePick}
+          />
+        </Suspense>
       )}
     </div>
   );

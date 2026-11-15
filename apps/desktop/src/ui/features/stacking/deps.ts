@@ -11,6 +11,7 @@ export { InspectorSection } from "../inspector/inspector-fields.js";
 export { parseVariant } from "../../../shared/variants.js";
 
 export {
+  STACKING_OTHERS_MAX,
   STACKING_OVERFLOWS,
   STACKING_POSITIONS,
   STACKING_SIDES,

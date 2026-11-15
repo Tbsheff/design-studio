@@ -58,6 +58,10 @@ const copy = {
     wait: "Wait for the last edit to finish",
   },
   zTip: "Snaps to the scale 0, 10, 20, 30, 40, 50 or auto. A project token like --z-header stays as it is",
+  zTooMany: {
+    back: "Select 20 layers or fewer to send them to back.",
+    front: "Select 20 layers or fewer to bring them to front.",
+  },
 } as const;
 
 export { copy };

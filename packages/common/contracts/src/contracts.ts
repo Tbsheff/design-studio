@@ -1411,6 +1411,13 @@ export type BridgeToParent =
   | {
       ns: "studio";
       token: string;
+      type: "font-status";
+      family: string;
+      isLoaded: boolean;
+    }
+  | {
+      ns: "studio";
+      token: string;
       type: "element-at";
       requestId: string;
       selection: SelectionContext | null;
@@ -1981,6 +1988,7 @@ export type ParentToBridge =
       requestId: string;
       selector: string;
     }
+  | { ns: "studio"; token: string; type: "font-preview"; family: string | null }
   | {
       ns: "studio";
       token: string;

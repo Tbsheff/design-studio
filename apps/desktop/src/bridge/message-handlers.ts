@@ -6,6 +6,7 @@ import { AUTHORED_MAX_BYTES, authoredRules } from "./authored.js";
 import type { BridgeContext, MessageHandlers } from "./bridge-types.js";
 import { holdTextSelection, isObject, isString } from "./dom-input.js";
 import { SELECT_SETTLE_MS, queryElement } from "./element-info.js";
+import { createFontPreview } from "./font-preview.js";
 import { FORCED_STATES } from "./force-state.js";
 import type { ForcedState } from "./force-state.js";
 import { runTextUndo } from "./history-key.js";
@@ -405,6 +406,7 @@ const installMessageHandlers = (
     ...createSelectionHandlers(context),
     ...createKeyboardHandlers(context, postNudge),
     ...createLayersAtPointHandler(context),
+    "font-preview": createFontPreview(context.post),
     "force-state": createForceStateHandler(context),
   };
 

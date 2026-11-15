@@ -1,0 +1,11 @@
+sq-seed (HTML), UI driven with playwright-core:
+card3 after MCP edit_element corner-shape superellipse(1.5): field 30%
+card1 iOS: POST style {"corner-shape":"squircle"} -> source style="corner-shape: squircle;", field 60%, iOS pressed, computed superellipse(2), +1 version
+card1 type 100: {"corner-shape":"superellipse(2.67)"}, field 100%
+card1 type 0: {"corner-shape":null}, property removed, field 0%
+card2 iOS then Cmd+Z: POST edit-history/undo, source back to no style
+card2 scrub: mid-scrub computed superellipse(1.33), 1 POST on pointer up
+#flat (radius 0): no .ins-smoothing
+card1+card3 multi iOS: 1 POST with 2 edits, version "Edit 2 elements: corner-shape"
+card2+card3 mixed: field empty (Mixed placeholder); type 40 -> both superellipse(1.67) in 1 batch
+sq-next (Tailwind app): iOS -> style={{ cornerShape: 'squircle' }}, 100 -> 'superellipse(2.67)', 0 -> removed; computed superellipse(2)

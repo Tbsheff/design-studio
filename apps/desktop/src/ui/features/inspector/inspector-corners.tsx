@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { CornerField } from "./corner-field.js";
+import { CornerSmoothingField } from "./corner-smoothing-field.js";
 import {
   ALL_CORNERS,
   CORNERS,
@@ -65,6 +66,7 @@ const RadiusField = ({ edit, short }: RadiusFieldProps): ReactElement => {
             side={corner.side}
           />
         ))}
+        <CornerSmoothingField edit={edit} />
       </div>
       <RadiusToggle isSplit={isSplit} onToggle={handleToggle} />
     </div>

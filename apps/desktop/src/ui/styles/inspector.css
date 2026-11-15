@@ -665,6 +665,18 @@ body.ins-scrubbing * {
   min-width: 0;
 }
 
+.ins-smoothing {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: var(--s-1);
+  min-width: 0;
+}
+
+.ins-smoothing > .ins-field {
+  flex: 1;
+}
+
 .ins-shadows {
   display: grid;
   gap: var(--s-3);

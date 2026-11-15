@@ -19,6 +19,7 @@ const STYLE_KEYS = [
   "padding",
   "margin",
   "border-radius",
+  "corner-shape",
   "display",
   "gap",
   "width",

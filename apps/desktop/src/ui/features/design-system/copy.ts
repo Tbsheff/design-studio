@@ -143,6 +143,7 @@ const COPY = {
   textMapToAppTokens: "map to app tokens; ",
   textMarkdown: "Markdown",
   textMono: "mono",
+  textMoveItTo: ". Move it to ",
   textMoveToAppNeedsNext:
     "Move to app needs a Next.js app folder. This folder is not one.",
   textMoveToAppWorks:
@@ -172,6 +173,7 @@ const COPY = {
   textOpenDesignMd: "Open DESIGN.md",
   textOpenInEditor: "Open in editor",
   textOpeningDraft: "Opening draft…",
+  textOrTypeANewRoute: ", or type a new route.",
   textPagesInThisFlow: "Pages in this flow · ",
   textPasteAnExistingDesign:
     "Paste an existing DESIGN.md. It becomes the system's guide.",
@@ -215,6 +217,7 @@ const COPY = {
     "Claude looks at the images. Tokens files (Figma variables, DTCG, Tokens Studio) and DESIGN.md are read at once.",
   textTheApp: "the app",
   textTheQuickBrownFox: "The quick brown fox",
+  textThisPageIsACopyOf: "This page is a copy of ",
   textToSave: "to save",
   textTokens: "Tokens",
   textTokensFile: "Tokens file",

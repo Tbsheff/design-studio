@@ -1,10 +1,9 @@
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { portPageSlug } from "@design-studio/contracts/port";
-
 import { toAssetScan, toStyleBody } from "./port-asset-scan.js";
 import type { AssetPage, AssetSkip, AssetSource } from "./port-asset-scan.js";
+import { toAssetSlug } from "./port-asset-slug.js";
 
 interface AssetCopyInput {
   readonly appDir: string;
@@ -172,9 +171,7 @@ const toAssetLines = (
 };
 
 const toAssetTarget = (input: AssetCopyInput): AssetTarget => {
-  const routeSlug = portPageSlug(
-    input.route.split("/").findLast((part) => part !== "") ?? ""
-  );
+  const routeSlug = toAssetSlug(input.route);
 
   return {
     folder: path.join(input.targetWorkTree, input.appDir, "public", routeSlug),

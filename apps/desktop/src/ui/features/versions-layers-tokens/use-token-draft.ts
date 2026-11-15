@@ -110,11 +110,7 @@ const useTokenDraft = (options: Options): TokenDraft => {
     stop,
   });
 
-  const {
-    commit,
-    commitOne,
-    isCommitting: committing,
-  } = useTokenCommit({
+  const tokenCommit = useTokenCommit({
     clearDraft,
     holdCss,
     mergeErrors,
@@ -135,10 +131,8 @@ const useTokenDraft = (options: Options): TokenDraft => {
   );
 
   return {
-    commit,
+    ...tokenCommit,
     commitError,
-    commitOne,
-    committing,
     confirmLeave,
     count,
     discard,

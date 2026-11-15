@@ -31,7 +31,7 @@ interface TokenCommitInput {
 interface TokenCommit {
   readonly commit: () => void;
   readonly commitOne: (path: string) => void;
-  readonly isCommitting: boolean;
+  readonly committing: boolean;
 }
 
 const useTokenCommitOne = (
@@ -146,7 +146,7 @@ const useTokenCommit = (input: TokenCommitInput): TokenCommit => {
 
   const commitOne = useTokenCommitOne(input, startTransition);
 
-  return { commit, commitOne, isCommitting };
+  return { commit, commitOne, committing: isCommitting };
 };
 
 export { useTokenCommit };

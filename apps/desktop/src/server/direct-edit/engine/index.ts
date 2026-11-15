@@ -52,7 +52,7 @@ export type { Classified } from "./tailwind/classes.js";
 
 export { tailwindClassesFor } from "./tailwind/copy.js";
 
-export { classProps } from "./tailwind/map.js";
+export { classProps, cssClass } from "./tailwind/map.js";
 
 export type { TailwindTheme } from "./tailwind/theme-model.js";
 

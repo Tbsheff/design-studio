@@ -76,6 +76,7 @@ const FillRow = ({
           color={draft.color}
           edit={edit}
           label={copy.colorLabel}
+          live={fill.live}
           short={copy.color}
           onColor={handleColor}
           onEnter={fill.handleEnter}
@@ -91,7 +92,7 @@ const FillRow = ({
         />
       )}
       <BlendSelect disabled={disabled} draft={draft} onDraft={onDraft} />
-      {fill.dirty && (
+      {fill.dirty && !fill.isColorOnly && (
         <FillActions
           pending={fill.pending}
           onApply={handleApply}

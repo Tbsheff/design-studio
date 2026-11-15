@@ -46,6 +46,7 @@ const GradientFields = ({
           color={stop.color}
           edit={edit}
           label={`${copy.stopColorLabel} ${index + 1}`}
+          live={null}
           short={`${copy.stopColor} ${index + 1}`}
           onColor={handleColor}
           onEnter={onEnter}

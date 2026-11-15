@@ -1,5 +1,11 @@
 import { gradientCss } from "./css.js";
-import { classify, classProps, normalizeVariant, parseClass } from "./deps.js";
+import {
+  classify,
+  classProps,
+  cssClass,
+  normalizeVariant,
+  parseClass,
+} from "./deps.js";
 import type {
   FillBlend,
   FillPaint,
@@ -32,6 +38,8 @@ const GRADIENT_CLASS = /^-?bg-(?:linear|radial|conic|gradient)(?:-|$)/u;
 
 const STOP_CLASS = /^(?:from|via|to)-/u;
 
+const BG_PREFIX = "bg-";
+
 const BG_PROPS = new Set(["background-color", "background-image"]);
 
 const BLEND_PREFIX = {
@@ -49,6 +57,12 @@ const toColorClass = (
 ): string => {
   if (paint.token && theme.colorNames.has(paint.token)) {
     return `${prefix}-${paint.token}`;
+  }
+
+  const named = cssClass("background-color", paint.color, theme);
+
+  if (named?.startsWith(BG_PREFIX)) {
+    return `${prefix}-${named.slice(BG_PREFIX.length)}`;
   }
 
   return `${prefix}-[${toArbitrary(paint.color)}]`;

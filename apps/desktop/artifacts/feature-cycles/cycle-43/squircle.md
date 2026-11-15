@@ -28,7 +28,7 @@ Branch `feat/squircle`. Server on port 7930, `STUDIO_AGENT=mock`, data at `ds-wt
 
 ## Snapshots
 
-I did not edit a snapshot. `artifacts/mcp-snapshots/direct-edit-element.json` will differ: the `style` object of `edit_element` and `batch_edit` gets a `corner-shape` key. Other tools that use the `edit-kit` `style` schema (`breakpoints-tools`, `layer-state-tools`) and the agent `breakpoints-tool` property enum get the key too.
+I did not edit a snapshot. `artifacts/mcp-snapshots/direct-edit-element.json` will differ: the `style` object of `edit_element` and `batch_edit` gets a `corner-shape` key. The agent `direct-tools` style schema and the agent `breakpoints-tool` property enum get the key too.
 
 ## Files outside the pick list (no other pick owns them)
 

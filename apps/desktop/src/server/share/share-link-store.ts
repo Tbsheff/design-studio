@@ -1,5 +1,5 @@
 import type {
-  ShareCreated,
+  ShareMade,
   ShareLinkResult,
   ShareRevoked,
 } from "@design-studio/actions/share/schema";
@@ -18,7 +18,7 @@ import type { CreateRequest, CursorRequest } from "./share-links.js";
 interface ShareLinkStoreApi {
   readonly create: (
     input: CreateRequest
-  ) => Effect.Effect<ShareCreated, ShareError>;
+  ) => Effect.Effect<ShareMade, ShareError>;
   readonly revoke: (
     projectId: string,
     shareId: string

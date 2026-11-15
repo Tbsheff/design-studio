@@ -1,10 +1,10 @@
-import { Schema } from "effect";
-
 import { toCloudId } from "@design-studio/actions/publish/schema";
 import type {
-  ShareCreated,
+  ShareMade,
   ShareRevoked,
 } from "@design-studio/actions/share/schema";
+import { Schema } from "effect";
+
 import type { Publication } from "../../shared/publish.js";
 
 const CloudPublicationSchema = Schema.Struct({
@@ -82,7 +82,7 @@ const toPublication = (row: CloudPublication): Publication => ({
   workerName: null,
 });
 
-const toCreatedShare = (row: CloudShare): ShareCreated => ({
+const toCreatedShare = (row: CloudShare): ShareMade => ({
   link: {
     active: true,
     comments: 0,

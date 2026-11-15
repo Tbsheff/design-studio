@@ -1,16 +1,20 @@
 import type { ExportFrame } from "@design-studio/contracts/export";
 
-export const SHARE_EXPIRY_HOURS = [1, 24, 168] as const;
+const HOUR_DAY = 24;
 
-export type ShareExpiryHours = (typeof SHARE_EXPIRY_HOURS)[number];
+const HOUR_WEEK = 168;
 
-export const SHARE_DEFAULT_EXPIRY_HOURS: ShareExpiryHours = 24;
-export const SHARE_MAX_FRAMES = 12;
-export const SHARE_NAME_MAX = 60;
-export const SHARE_COMMENT_MAX = 1000;
-export const SHARE_LIVE_VIEWERS_MAX = 10;
+const SHARE_EXPIRY_HOURS = [1, HOUR_DAY, HOUR_WEEK] as const;
 
-export interface ShareFrame {
+type ShareExpiryHours = (typeof SHARE_EXPIRY_HOURS)[number];
+
+const SHARE_DEFAULT_EXPIRY_HOURS: ShareExpiryHours = 24;
+const SHARE_MAX_FRAMES = 12;
+const SHARE_NAME_MAX = 60;
+const SHARE_COMMENT_MAX = 1000;
+const SHARE_LIVE_VIEWERS_MAX = 10;
+
+interface ShareFrame {
   name: string;
   width: number;
   height: number;
@@ -19,7 +23,7 @@ export interface ShareFrame {
   id?: string;
 }
 
-export interface ShareLink {
+interface ShareLink {
   id: string;
   projectId: string;
   directionId: string;
@@ -37,19 +41,19 @@ export interface ShareLink {
   viewers: number;
 }
 
-export interface ShareServerState {
+interface ShareServerState {
   running: boolean;
   lan: boolean;
   localUrl: string | null;
   lanUrl: string | null;
 }
 
-export interface ShareList {
+interface ShareList {
   links: ShareLink[];
   server: ShareServerState;
 }
 
-export interface ShareCreateInput {
+interface ShareCreateInput {
   directionId?: string;
   versionId?: string;
   frames?: ExportFrame[];
@@ -59,7 +63,7 @@ export interface ShareCreateInput {
   frameIds?: (string | null)[];
 }
 
-export interface SharePresenceCursor {
+interface SharePresenceCursor {
   linkId: string;
   viewer: string;
   name: string;
@@ -69,7 +73,7 @@ export interface SharePresenceCursor {
   y: number;
 }
 
-export type SharePresenceEvent =
+type SharePresenceEvent =
   | {
       type: "state";
       cursors: SharePresenceCursor[];
@@ -80,18 +84,85 @@ export type SharePresenceEvent =
   | { type: "leave"; linkId: string; viewer: string }
   | { type: "idle" };
 
-export interface StudioCursorInput {
+interface StudioCursorInput {
   frameId: string | null;
   x: number;
   y: number;
 }
 
-export interface ShareCreated {
+interface ShareCreated {
   link: ShareLink;
   token: string;
   server: ShareServerState;
 }
 
-export function shareUrl(base: string, token: string): string {
-  return `${base}/s/${token}`;
-}
+const shareUrl = (base: string, token: string): string => `${base}/s/${token}`;
+
+const SHARE_FRAME_HASH_KEY = "frame";
+
+const FRAME_NUMBER = /^[1-9][0-9]{0,3}$/u;
+
+const toShareFrameKey = (
+  frame: Pick<ShareFrame, "id">,
+  index: number
+): string => frame.id ?? String(index + 1);
+
+const toShareFrameHashUrl = (url: string, frameKey: string): string =>
+  `${url}#${SHARE_FRAME_HASH_KEY}=${encodeURIComponent(frameKey)}`;
+
+const toShareFrameUrl = (
+  base: string,
+  token: string,
+  frameKey: string
+): string => toShareFrameHashUrl(shareUrl(base, token), frameKey);
+
+const toShareFrameIndex = (
+  frameIds: readonly string[],
+  frameKey: string | null
+): number => {
+  if (frameKey === null) {
+    return -1;
+  }
+
+  const byId = frameIds.indexOf(frameKey);
+
+  if (byId !== -1 || !FRAME_NUMBER.test(frameKey)) {
+    return byId;
+  }
+
+  const index = Number(frameKey) - 1;
+
+  if (index < frameIds.length) {
+    return index;
+  }
+
+  return -1;
+};
+
+export {
+  SHARE_COMMENT_MAX,
+  SHARE_DEFAULT_EXPIRY_HOURS,
+  SHARE_EXPIRY_HOURS,
+  SHARE_FRAME_HASH_KEY,
+  SHARE_LIVE_VIEWERS_MAX,
+  SHARE_MAX_FRAMES,
+  SHARE_NAME_MAX,
+  shareUrl,
+  toShareFrameHashUrl,
+  toShareFrameIndex,
+  toShareFrameKey,
+  toShareFrameUrl,
+};
+
+export type {
+  ShareCreated,
+  ShareCreateInput,
+  ShareExpiryHours,
+  ShareFrame,
+  ShareLink,
+  ShareList,
+  SharePresenceCursor,
+  SharePresenceEvent,
+  ShareServerState,
+  StudioCursorInput,
+};

@@ -1,6 +1,6 @@
 import { isCloudId } from "@design-studio/actions/publish/schema";
 import type {
-  ShareCreated,
+  ShareMade,
   ShareRevoked,
 } from "@design-studio/actions/share/schema";
 import { Context, Effect, Layer } from "effect";
@@ -19,7 +19,7 @@ const DEFAULT_SHARE_HOURS = 72;
 interface LinkedShareWriterApi {
   readonly create: (
     input: CreateRequest
-  ) => Effect.Effect<ShareCreated, CloudFailure | ShareError>;
+  ) => Effect.Effect<ShareMade, CloudFailure | ShareError>;
   readonly delete: (
     projectId: string,
     shareId: string

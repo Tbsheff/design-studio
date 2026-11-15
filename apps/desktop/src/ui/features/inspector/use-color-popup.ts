@@ -1,9 +1,9 @@
-import { useAnchoredPopover } from "@design-studio/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CSSProperties, RefObject } from "react";
 
 import { toColorText, toHsvaOf } from "./color-popup-model.js";
 import type { Hsva, PageColor } from "./color-popup-model.js";
+import { useColorAnchor } from "./use-color-dismiss.js";
 import { useColorPage } from "./use-color-page.js";
 import { useDragEscape, usePreviewFrame } from "./use-color-preview.js";
 
@@ -89,7 +89,7 @@ const useColorDragState = (
 };
 
 const useColorPopup = (target: ColorTarget): ColorPopupState => {
-  const pop = useAnchoredPopover<View, HTMLElement>(toFieldAnchor);
+  const pop = useColorAnchor<View>(toFieldAnchor);
   const { close, open, panel, trigger, style: popStyle } = pop;
   const isOpen = pop.view !== null;
   const [hsva, setHsva] = useState<Hsva>(() => toHsvaOf(target.value));

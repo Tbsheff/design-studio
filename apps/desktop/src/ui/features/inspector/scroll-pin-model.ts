@@ -22,6 +22,7 @@ interface ScrollPinCurrent {
   readonly left: string;
   readonly right: string;
   readonly top: string;
+  readonly zIndex: string;
 }
 
 const SCROLL_PIN_OPTIONS: readonly ScrollPinOption[] = [
@@ -41,6 +42,8 @@ const SCROLL_PIN_TEXT = {
 } as const;
 
 const ZERO = "0px";
+
+const PIN_LAYER = "10";
 
 const isSet = (value: string): boolean => value !== "" && value !== "auto";
 
@@ -120,12 +123,29 @@ const toStretchPatch = (current: ScrollPinCurrent): ScrollPinPatch => {
   return { left: ZERO, right: ZERO };
 };
 
+const toLayerPatch = (current: ScrollPinCurrent): ScrollPinPatch => {
+  if (isSet(current.zIndex)) {
+    return {};
+  }
+
+  return { "z-index": PIN_LAYER };
+};
+
+const toFlowPatch = (current: ScrollPinCurrent): ScrollPinPatch => {
+  if (current.zIndex === PIN_LAYER) {
+    return { ...IN_FLOW, "z-index": "" };
+  }
+
+  return IN_FLOW;
+};
+
 const toFixedPatch = (
   side: FixedSide,
   current: ScrollPinCurrent
 ): ScrollPinPatch => ({
   ...toStretchPatch(current),
   ...toSidePatch(side, current),
+  ...toLayerPatch(current),
   position: "fixed",
 });
 
@@ -134,14 +154,19 @@ const toScrollPinPatch = (
   current: ScrollPinCurrent
 ): ScrollPinPatch => {
   if (choice === "flow") {
-    return IN_FLOW;
+    return toFlowPatch(current);
   }
 
   if (choice === "fixed") {
     return toFixedPatch(toFixedSide(current), current);
   }
 
-  return { bottom: "", position: "sticky", top: toKept(current.top) };
+  return {
+    ...toLayerPatch(current),
+    bottom: "",
+    position: "sticky",
+    top: toKept(current.top),
+  };
 };
 
 const toSideValue = (
@@ -158,6 +183,7 @@ const toScrollPinCurrent = (
   left: toSideValue("left", values, styles),
   right: toSideValue("right", values, styles),
   top: toSideValue("top", values, styles),
+  zIndex: values["z-index"],
 });
 
 export {

@@ -1,5 +1,9 @@
 import { routes } from "@design-studio/actions/layer/routes";
-import type { ReorderMove, SelectionContext } from "@design-studio/contracts";
+import type {
+  ReorderMove,
+  SelectionContext,
+  SourceLoc,
+} from "@design-studio/contracts";
 import { useCallback } from "react";
 
 import { errorText } from "../../api.js";
@@ -32,16 +36,35 @@ interface RenameLayer {
   readonly selector: string;
 }
 
+const toSourceText = (source: SourceLoc): string =>
+  `${source.file}:${source.line}:${source.col}`;
+
+const toSelectedSources = (context: EditContext): Map<number, string> => {
+  const { frames, selection } = context.liveRef.current;
+  const sources = new Map<number, string>();
+
+  for (const entry of selection) {
+    const id = frames.selectedNodes.get(entry.selector) ?? null;
+
+    if (id !== null && entry.source) {
+      sources.set(id, toSourceText(entry.source));
+    }
+  }
+
+  return sources;
+};
+
 const toRenameLayers = (
   context: EditContext,
   ids: readonly number[],
   names: readonly (string | null)[]
 ): RenameLayer[] => {
   const nodes = context.liveRef.current.frames.tree?.nodes ?? [];
-  const byId = new Map(nodes.map((node) => [node.id, node]));
+  const byId = new Map(nodes.map((node) => [node.id, node.loc ?? ""]));
+  const selected = toSelectedSources(context);
 
   return ids.flatMap((id, index) => {
-    const loc = byId.get(id)?.loc ?? "";
+    const loc = selected.get(id) ?? byId.get(id) ?? "";
 
     if (loc === "") {
       return [];
@@ -65,6 +88,13 @@ const runRenameMany = async (
   }
 
   const layers = toRenameLayers(context, ids, names);
+
+  if (layers.length === 0) {
+    notify(`${ids.length}${COPY.renameManySkipped}`);
+
+    return;
+  }
+
   busy.claimBusy();
 
   try {
@@ -78,7 +108,7 @@ const runRenameMany = async (
     const missed = ids.length - result.renamed;
 
     if (missed > 0) {
-      notify(`${missed}${COPY.renameManyNoSource}`);
+      notify(`${missed}${COPY.renameManySkipped}`);
     }
   } catch (error) {
     notify(errorText(error));

@@ -18,6 +18,7 @@ interface LayerFrames {
   elements: MutableRefObject<Record<string, HTMLIFrameElement | null>>;
   tree: LayerTree | null;
   selectedNode: number | null;
+  readonly selectedNodes: ReadonlyMap<string, number>;
   post: (body: ParentMessageBody) => void;
   selectNode: (id: number, additive: boolean) => void;
 }

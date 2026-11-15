@@ -96,6 +96,11 @@ const toOffset = (code: string, loc: SourceLoc): number => {
   return offset + Math.max(0, loc.col - 1);
 };
 
+const isInsideTree = (workTree: string, file: string): boolean =>
+  !path.isAbsolute(file) &&
+  !file.split(/[\\/]/u).includes("..") &&
+  path.resolve(workTree, file).startsWith(workTree + path.sep);
+
 const toTagAt = async (
   workTree: string,
   loc: SourceLoc
@@ -122,6 +127,10 @@ const toLocatedSource = async (
       key,
       entry.selector
     );
+
+    if (!isInsideTree(scope.direction.workTree, loc.file)) {
+      return toMiss(entry, `${loc.file} is not a file in the project.`);
+    }
 
     const tag = await toTagAt(scope.direction.workTree, loc);
 

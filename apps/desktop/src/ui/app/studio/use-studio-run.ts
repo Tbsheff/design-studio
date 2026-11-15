@@ -178,6 +178,7 @@ const useStudioTweaks = (
 
   const openTweaks = (): void => {
     ui.setInspectorTab("tweaks");
+    ui.setIsInspectorPinned(true);
     void panes.showInspector();
   };
 

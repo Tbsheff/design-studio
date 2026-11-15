@@ -53,9 +53,11 @@ interface StudioLayout {
   editorColumn: EditorColumn;
   isCommentsShown: boolean;
   isInspectorHidden: boolean;
+  isInspectorPinned: boolean;
   pagesHost: HTMLDivElement | null;
   setIsCommentsShown: Setter<boolean>;
   setIsInspectorHidden: Setter<boolean>;
+  setIsInspectorPinned: Setter<boolean>;
   setPagesHost: Setter<HTMLDivElement | null>;
   setToolsHost: Setter<HTMLDivElement | null>;
   setTopEnd: Setter<HTMLDivElement | null>;

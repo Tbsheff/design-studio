@@ -1,10 +1,15 @@
 import { Icon } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
-import { useCallback, useMemo } from "react";
-import type { ChangeEvent, FormEvent, ReactNode } from "react";
+import { useCallback } from "react";
+import type { ChangeEvent, ReactNode } from "react";
 
 import { colorHex } from "../../../shared/token-match.js";
-import { toHexColor } from "../inspector/index.js";
+import {
+  isSwatchEmpty,
+  toHexColor,
+  toSwatchColor,
+} from "../inspector/index.js";
+import { TokenColorSwatch } from "./token-color-swatch.js";
 import { TokenShortInput } from "./token-short-input.js";
 import { useDraftText } from "./use-draft-text.js";
 
@@ -17,7 +22,6 @@ interface ColorValueProps {
   readonly value: string;
 }
 
-const NEUTRAL_SWATCH = "#ffffff";
 const TRAIL_ICON_SIZE = 12;
 
 const ColorValue = ({
@@ -30,31 +34,6 @@ const ColorValue = ({
 }: ColorValueProps): ReactNode => {
   const draft = useDraftText(value, onChange);
   const { change } = draft;
-  const hex = toHexColor(swatch) ?? colorHex(swatch);
-  let emptyClass = "empty";
-
-  if (hex) {
-    emptyClass = "";
-  }
-
-  const swatchStyle = useMemo(
-    () => ({ ["--swatch" as string]: swatch || "transparent" }),
-    [swatch]
-  );
-
-  const handleColorInput = useCallback(
-    (event: FormEvent<HTMLInputElement>): void => {
-      onChange(event.currentTarget.value);
-    },
-    [onChange]
-  );
-
-  const handlePick = useCallback(
-    (event: ChangeEvent<HTMLInputElement>): void => {
-      onChange(event.currentTarget.value);
-    },
-    [onChange]
-  );
 
   const handleEdit = useCallback(
     (event: ChangeEvent<HTMLInputElement>): void => {
@@ -65,15 +44,15 @@ const ColorValue = ({
 
   return (
     <div className="ins-field color tkp-field" data-tip={value}>
-      <span className={`ins-swatch ${emptyClass}`} style={swatchStyle}>
-        <input
-          type="color"
-          aria-label={`${label} picker`}
-          value={hex ?? NEUTRAL_SWATCH}
-          onInput={handleColorInput}
-          onChange={handlePick}
-        />
-      </span>
+      <TokenColorSwatch
+        fill={toSwatchColor(swatch)}
+        hex={toHexColor(swatch) ?? colorHex(swatch)}
+        isEmpty={isSwatchEmpty(swatch)}
+        label={label}
+        swatch={swatch}
+        value={value}
+        onChange={onChange}
+      />
       <TokenShortInput
         inputClass="ins-input"
         draft={draft}

@@ -1,0 +1,11 @@
+6b80656a9 fix(check-actions): lower 2 baseline notes, decode with toDecoder, shorten 3 tool texts
+7ffed28d0 feat(state-styles): read, write and force closed, on, active-item, invalid and data-[disabled] states
+9a4f03c9d feat(state-styles): find list and sibling edges, answer structural for edge forced states, name the edge states in tool text
+cd718a551 feat(state-styles): add first, last, odd and even states and their CSS pseudo-classes
+661642047 feat(state-styles): write and list parent group states from the nearest group ancestor
+8e7c8b127 feat(state-styles): add group-hover, group-open and group-checked states and parse group variants
+0679a706c docs(state-style): name the open, checked and selected states in the tool descriptions
+74959ecd9 feat(state-styles): read and write the open, checked and selected data-state prefixes
+
+snapshot direct-edit-element.json set_forced_state enum: [hover,focus-visible,active,disabled,dark] (5)
+live tools/list set_forced_state enum: 19 values (STYLE_STATES)

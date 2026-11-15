@@ -1,0 +1,30 @@
+{
+  "status": 200,
+  "ms": 638,
+  "frame": {
+    "id": "f2",
+    "label": "Desktop",
+    "width": 1440,
+    "height": 1100
+  },
+  "hits": [
+    {
+      "selector": "body > div:nth-of-type(1) > div:nth-of-type(3)",
+      "message": "This card is 2 px lower than the 3 cards beside it.",
+      "fix": "Set margin-top to 0px",
+      "severity": "medium"
+    },
+    {
+      "selector": "body > ul:nth-of-type(1)",
+      "message": "The gaps in this list are 24, 24, 21 and 24 px. Use one gap.",
+      "fix": "Set margin-bottom to 24px",
+      "severity": "medium"
+    },
+    {
+      "selector": "body > form > label:nth-of-type(2)",
+      "message": "The left edge of this label is 1 px further right than the left edges of the 5 elements in this column.",
+      "fix": null,
+      "severity": "medium"
+    }
+  ]
+}

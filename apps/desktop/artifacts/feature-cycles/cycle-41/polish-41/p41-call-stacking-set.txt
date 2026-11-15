@@ -1,0 +1,59 @@
+call-action stacking.set on http://127.0.0.1:6410. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 5 ms, git spawns: not counted (server side)
+{
+  "breakpoint": "base",
+  "classes": null,
+  "files": [
+    "index.html"
+  ],
+  "mode": "css",
+  "prefix": "",
+  "style": {
+    "z-index": "5"
+  },
+  "title": "Stacking: z-index 5 on 4 layers",
+  "versionId": "pending-73b6687cf92cdeac"
+}
+
+[mcp] ok, 48 ms, git spawns: not counted (server side)
+{
+  "breakpoint": "base",
+  "classes": null,
+  "files": [
+    "index.html"
+  ],
+  "mode": "css",
+  "prefix": "",
+  "style": {
+    "z-index": "5"
+  },
+  "title": "Stacking: z-index 5 on 4 layers",
+  "versionId": "pending-af44507bb03bb0f5"
+}
+
+[agent] ok, 4 ms, git spawns: not counted (server side)
+{
+  "breakpoint": "base",
+  "classes": null,
+  "files": [
+    "index.html"
+  ],
+  "mode": "css",
+  "prefix": "",
+  "style": {
+    "z-index": "5"
+  },
+  "title": "Stacking: z-index 5 on 4 layers",
+  "versionId": "pending-d42dbce65aa4d39e"
+}
+
+[http] reset: 1 undo
+
+[mcp] reset: 1 undo
+
+[agent] reset: 1 undo
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

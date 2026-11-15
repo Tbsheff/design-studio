@@ -3,8 +3,8 @@ import type {
   ShareServerState,
 } from "@design-studio/contracts/share";
 
+import { sessionTokens } from "../../platform/share-tokens.js";
 import { copy } from "./copy.js";
-import { sessionTokens } from "./share-tokens.js";
 
 const toOffNote = (
   links: readonly ShareLink[],

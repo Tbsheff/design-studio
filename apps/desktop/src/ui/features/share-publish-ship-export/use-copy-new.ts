@@ -6,9 +6,9 @@ import type {
 import { copyText } from "@design-studio/ui";
 import { useEffect, useRef, useState } from "react";
 
+import { sessionTokens } from "../../platform/share-tokens.js";
 import { pick } from "./pick.js";
 import { settleValue } from "./settle.js";
-import { sessionTokens } from "./share-tokens.js";
 import type { ShareCopied } from "./share-types.js";
 
 const toReadyToken = (
@@ -24,7 +24,7 @@ const toReadyToken = (
     return null;
   }
 
-  return sessionTokens.get(pending) ?? null;
+  return sessionTokens.get(pending);
 };
 
 const useCopyNew = (

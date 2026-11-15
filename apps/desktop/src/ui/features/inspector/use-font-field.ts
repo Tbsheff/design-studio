@@ -13,12 +13,15 @@ import {
 import type { FontKey, FontRow } from "./font-list-model.js";
 import { useFontMenu } from "./use-font-list.js";
 import type { FontMenu } from "./use-font-list.js";
+import { useFontPreview } from "./use-font-preview.js";
+import type { FontPreview } from "./use-font-preview.js";
 import type { TokenUi } from "./use-token-snap.js";
 
 const PROP = "font-family";
 
 interface FontFieldState {
   readonly active: number;
+  readonly failed: ReadonlySet<string>;
   readonly handleBlur: () => void;
   readonly handleChange: (event: ChangeEvent<HTMLInputElement>) => void;
   readonly handleClick: (event: MouseEvent<HTMLInputElement>) => void;
@@ -71,9 +74,11 @@ const toTip = (value: string, rows: readonly FontRow[]): string => {
 const useFontActions = (
   edit: DirectEdit,
   menu: FontMenu,
+  fontPreview: FontPreview,
   setText: (text: string | null) => void
 ): FontActions => {
   const { active, close, rows, setActive } = menu;
+  const { show } = fontPreview;
 
   const settle = useCallback((): void => {
     setText(null);
@@ -84,15 +89,17 @@ const useFontActions = (
   const cancel = useCallback((): void => {
     setText(null);
     close();
+    show(null);
     edit.revert([PROP]);
-  }, [close, edit, setText]);
+  }, [close, edit, setText, show]);
 
   const pick = useCallback(
     (row: FontRow): void => {
+      show(row);
       edit.preview({ [PROP]: row.stack });
       settle();
     },
-    [edit, settle]
+    [edit, settle, show]
   );
 
   const step = useCallback(
@@ -104,10 +111,11 @@ const useFontActions = (
 
       if (row !== null) {
         setText(row.family);
+        show(row);
         edit.preview({ [PROP]: row.preview });
       }
     },
-    [active, edit, rows, setActive, setText]
+    [active, edit, rows, setActive, setText, show]
   );
 
   return { cancel, pick, settle, step };
@@ -151,7 +159,8 @@ const useFontKeys = (
 const useFontField = (ui: TokenUi | null, edit: DirectEdit): FontFieldState => {
   const [text, setText] = useState<string | null>(null);
   const menu = useFontMenu(edit);
-  const actions = useFontActions(edit, menu, setText);
+  const fontPreview = useFontPreview(edit, menu.isOpen);
+  const actions = useFontActions(edit, menu, fontPreview, setText);
   const handleKeyDown = useFontKeys(menu, actions);
   const { active, all, open, rows, setActive, setQuery } = menu;
   const { cancel, settle } = actions;
@@ -201,8 +210,11 @@ const useFontField = (ui: TokenUi | null, edit: DirectEdit): FontFieldState => {
   const shownText = toShownFont(text, value, ui);
   const tip = toTip(value, all);
 
+  const { failed } = fontPreview;
+
   return {
     active,
+    failed,
     handleBlur,
     handleChange,
     handleClick,

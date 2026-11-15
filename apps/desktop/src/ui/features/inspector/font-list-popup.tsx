@@ -9,12 +9,14 @@ import { useMenuInView } from "./use-menu-in-view.js";
 
 interface FontListPopupProps {
   readonly active: number;
+  readonly failed: ReadonlySet<string>;
   readonly onPick: (row: FontRow) => void;
   readonly rows: readonly FontRow[];
 }
 
 const FontListPopup = ({
   active,
+  failed,
   onPick,
   rows,
 }: FontListPopupProps): ReactElement => {
@@ -41,6 +43,7 @@ const FontListPopup = ({
             <FontListRow
               key={`${row.source}:${row.family}`}
               isActive={group.start + index === active}
+              isFailed={failed.has(row.family)}
               row={row}
               onPick={onPick}
             />

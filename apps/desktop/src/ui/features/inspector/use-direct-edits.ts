@@ -217,6 +217,7 @@ const useDirectEdits = (
   const { absorb, commit, commitSoon, drain, preview, previewForced } = actions;
 
   const { reset, revert, shift } = actions;
+  const { port } = options;
   const each = bases;
   const previewText = runNoop;
   const reselect = runNoop;
@@ -233,6 +234,7 @@ const useDirectEdits = (
     drain,
     each,
     mixed,
+    port,
     preview,
     previewForced,
     previewText,

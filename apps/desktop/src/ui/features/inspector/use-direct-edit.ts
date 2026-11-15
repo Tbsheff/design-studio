@@ -188,6 +188,7 @@ const useDirectEdit = (options: Options): DirectEdit => {
     drain: commits.drain,
     each: null,
     mixed: NO_MIXED,
+    port: options.port,
     reset: commits.reset,
     scope,
     status,

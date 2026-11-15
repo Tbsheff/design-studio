@@ -67,6 +67,8 @@ const MAX_BYTES = 524_288;
 
 const FONT_TOKEN = /^--font-/u;
 
+const NEXT_LAYOUT = /(?:^|\/)(?:src\/)?app\/layout\.[jt]sx?$/u;
+
 const listEntries = async (folder: string): Promise<Dirent[]> => {
   try {
     return await readdir(folder, { withFileTypes: true });
@@ -189,6 +191,20 @@ const isHtmlPrototype = (
 ): boolean =>
   run.project.kind === "html" && !isAppProject(run) && next.length === 0;
 
+const hasNextLayout = (root: string, files: readonly FoundFile[]): boolean =>
+  files.some((file) =>
+    NEXT_LAYOUT.test(
+      path.relative(root, file.absolute).split(path.sep).join("/")
+    )
+  );
+
+const isCatalogShown = (
+  run: DirectionRun,
+  next: readonly NamedFamily[],
+  files: readonly FoundFile[]
+): boolean =>
+  isHtmlPrototype(run, next) || hasNextLayout(run.direction.workTree, files);
+
 const toRows = async (
   run: DirectionRun,
   files: readonly FoundFile[]
@@ -211,7 +227,7 @@ const toRows = async (
 
   return toFontRows({
     families: [...next, ...state.families],
-    isHtmlPrototype: isHtmlPrototype(run, next),
+    isHtmlPrototype: isCatalogShown(run, next, files),
     texts: [...read.flat(), ...state.texts],
     tokens: state.tokens,
   });

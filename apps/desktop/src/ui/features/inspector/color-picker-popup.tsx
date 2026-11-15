@@ -12,6 +12,7 @@ import type { ColorPopupState, ColorTarget } from "./use-color-popup.js";
 import styles from "./color-popup.module.css";
 
 const ColorPickerPopup = ({
+  header,
   label,
   swatch,
   value,
@@ -71,7 +72,7 @@ const ColorPickerPopup = ({
         aria-expanded={isOpen}
         onClick={handleToggle}
       />
-      {isOpen && <ColorPopup popup={shown} />}
+      {isOpen && <ColorPopup header={header} popup={shown} />}
     </span>
   );
 };

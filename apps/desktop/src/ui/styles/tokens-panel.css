@@ -250,6 +250,14 @@
   background: var(--surface);
 }
 
+.tkp-alias-row {
+  margin: 0;
+  padding: var(--s-2) var(--s-3) 0;
+  color: var(--text-2);
+  font-size: var(--t-xs);
+  line-height: 16px;
+}
+
 .tkp-trail {
   flex: none;
   margin-left: calc(-1 * var(--s-2));

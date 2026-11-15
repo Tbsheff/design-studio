@@ -1,0 +1,100 @@
+== string
+import type { Metadata } from "next";
+
+import "./globals.css";
+import { Fraunces } from "next/font/google";
+
+const fraunces = Fraunces({ subsets: ["latin"], weight: ["400", "700"], variable: "--font-fraunces" });
+
+export const metadata: Metadata = { title: "Crew" };
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body className={`${fraunces.variable} bg-background text-foreground antialiased`}>{children}</body>
+    </html>
+  );
+}
+
+== cn
+FAIL class_in_code
+== noclass
+import type { Metadata } from "next";
+
+import "./globals.css";
+import { Fraunces } from "next/font/google";
+
+const fraunces = Fraunces({ subsets: ["latin"], weight: ["400", "700"], variable: "--font-fraunces" });
+
+export const metadata: Metadata = { title: "Crew" };
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body className={fraunces.variable}>{children}</body>
+    </html>
+  );
+}
+
+== again
+import type { Metadata } from "next";
+
+import "./globals.css";
+import { Fraunces } from "next/font/google";
+
+const fraunces = Fraunces({ subsets: ["latin"], weight: ["400", "700"], variable: "--font-fraunces" });
+
+export const metadata: Metadata = { title: "Crew" };
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body className={`${fraunces.variable} bg-background text-foreground antialiased`}>{children}</body>
+    </html>
+  );
+}
+
+== second family
+import type { Metadata } from "next";
+
+import "./globals.css";
+import { Fraunces, Playfair_Display } from "next/font/google";
+
+const playfairDisplay = Playfair_Display({ subsets: ["latin"], weight: ["400", "700"], variable: "--font-playfair-display" });
+
+const fraunces = Fraunces({ subsets: ["latin"], weight: ["400", "700"], variable: "--font-fraunces" });
+
+export const metadata: Metadata = { title: "Crew" };
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body className={`${playfairDisplay.variable} ${fraunces.variable} bg-background text-foreground antialiased`}>{children}</body>
+    </html>
+  );
+}
+
+== bebas
+import type { Metadata } from "next";
+
+import "./globals.css";
+import { Bebas_Neue } from "next/font/google";
+
+const bebasNeue = Bebas_Neue({ subsets: ["latin"], weight: "400", variable: "--font-bebas-neue" });
+
+export const metadata: Metadata = { title: "Crew" };
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body className={`${bebasNeue.variable} bg-background text-foreground antialiased`}>{children}</body>
+    </html>
+  );
+}
+
+== bonaparte diff
++ import { Inter, Fraunces } from "next/font/google";
++ const fraunces = Fraunces({ subsets: ["latin"], weight: ["400", "700"], variable: "--font-fraunces" });
++       <body className={`${fraunces.variable} ${inter.className} size-full h-screen overflow-hidden`}>
+- import { Inter } from "next/font/google";
+-       <body className={`${inter.className} size-full h-screen overflow-hidden`}>

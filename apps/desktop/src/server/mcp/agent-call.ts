@@ -83,7 +83,8 @@ const toScopeProjectId = (
 const toAgentCaller = (
   runtime: AgentRuntime,
   action: AnyAction,
-  args: AgentCallArgs
+  args: AgentCallArgs,
+  ask: ActionAsk | null
 ): CallById | null => {
   const projectId = toScopeProjectId(action, args);
 
@@ -92,6 +93,7 @@ const toAgentCaller = (
   }
 
   return runActionCaller({
+    actionAsk: ask,
     ctx: {
       direction: { id: toDirectionId(args) },
       project: { id: projectId },
@@ -100,10 +102,11 @@ const toAgentCaller = (
   });
 };
 
-const runAgentTool = (
+const runAskedAgentTool = (
   runtime: AgentRuntime,
   name: string,
-  body: AgentCallArgs
+  body: AgentCallArgs,
+  ask: ActionAsk | null
 ): Promise<TextResult> => {
   const action = AGENT_ACTIONS.get(name) ?? null;
 
@@ -116,7 +119,7 @@ const runAgentTool = (
   }
 
   const { args } = body;
-  const caller = toAgentCaller(runtime, action, args);
+  const caller = toAgentCaller(runtime, action, args, ask);
 
   if (caller === null) {
     return Promise.resolve(toRefusal(RUNTIME_OFF));
@@ -124,6 +127,19 @@ const runAgentTool = (
 
   return caller(action, args);
 };
+
+const runAgentTool = (
+  runtime: AgentRuntime,
+  name: string,
+  body: AgentCallArgs
+): Promise<TextResult> => runAskedAgentTool(runtime, name, body, null);
+
+const runGatedAgentTool = (
+  runtime: AgentRuntime,
+  name: string,
+  body: AgentCallArgs,
+  ask: ActionAsk
+): Promise<TextResult> => runAskedAgentTool(runtime, name, body, ask);
 
 const runConfirmedAgentTool = (
   runtime: AgentRuntime,
@@ -157,6 +173,6 @@ const runConfirmedAgentTool = (
   return runAsAgent(scope, () => caller(action, args));
 };
 
-export { runAgentTool, runConfirmedAgentTool };
+export { runAgentTool, runConfirmedAgentTool, runGatedAgentTool };
 
 export type { ConfirmedScope };

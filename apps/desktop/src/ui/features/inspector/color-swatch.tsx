@@ -44,7 +44,7 @@ const ColorSwatch = ({
         disabled={isDisabled}
         onClick={handleToggle}
       />
-      {isOpen && <ColorPopup popup={popup} />}
+      {isOpen && <ColorPopup header={null} popup={popup} />}
     </span>
   );
 };

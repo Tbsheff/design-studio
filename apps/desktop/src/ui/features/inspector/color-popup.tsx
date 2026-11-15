@@ -13,8 +13,10 @@ import styles from "./color-popup.module.css";
 const toPortalHost = (): HTMLElement => document.body;
 
 const ColorPopup = ({
+  header,
   popup,
 }: {
+  readonly header: ReactNode | null;
   readonly popup: ColorPopupState;
 }): ReactNode => {
   const controls = useColorControls(popup);
@@ -30,6 +32,7 @@ const ColorPopup = ({
           aria-label={copy.colorPicker}
           data-esc-owner=""
         >
+          {header}
           <ColorPad popup={popup} control={controls.pad} />
           <ColorSliders popup={popup} controls={controls} />
           <ColorPageSwatches popup={popup} />

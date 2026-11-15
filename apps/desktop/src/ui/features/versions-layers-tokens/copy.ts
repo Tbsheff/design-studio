@@ -3,6 +3,8 @@ const COPY = {
   actionComparing: "Comparing",
   actionOpen: "Open",
   actionRestore: "Restore",
+  aliasDetachedPrefix: "Detached from ",
+  aliasLinkedPrefix: "Linked to ",
   andMoreFiles: " more",
   andPrefix: "and ",
   authorAgent: "Studio agent",

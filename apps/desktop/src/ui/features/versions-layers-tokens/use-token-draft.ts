@@ -30,6 +30,7 @@ interface Options {
 interface TokenDraft {
   readonly commit: () => void;
   readonly commitError: string | null;
+  readonly commitOne: (path: string) => void;
   readonly committing: boolean;
   readonly confirmLeave: () => boolean;
   readonly count: number;
@@ -109,11 +110,12 @@ const useTokenDraft = (options: Options): TokenDraft => {
     stop,
   });
 
-  const { commit, isCommitting: committing } = useTokenCommit({
+  const tokenCommit = useTokenCommit({
     clearDraft,
     holdCss,
     mergeErrors,
     pendingRef,
+    revert,
     scopeRef,
     setCommitError,
     stopPreview: stop,
@@ -129,9 +131,8 @@ const useTokenDraft = (options: Options): TokenDraft => {
   );
 
   return {
-    commit,
+    ...tokenCommit,
     commitError,
-    committing,
     confirmLeave,
     count,
     discard,

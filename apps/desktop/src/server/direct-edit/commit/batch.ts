@@ -18,6 +18,7 @@ import type {
   ResolvedSource,
 } from "../../events/index.js";
 import { runFileLockGuard } from "../../platform/path-lock/index.js";
+import { hasClassChange } from "../engine/classes.js";
 import { DirectEditError } from "../engine/errors.js";
 import { knownTokenVars } from "../engine/tokens.js";
 import { parseDirectEditBatch } from "../engine/validate.js";
@@ -31,6 +32,7 @@ import {
 } from "./edit-source.js";
 import { editSummary } from "./edit-title.js";
 import { toFontLinkedCode } from "./google-font-link.js";
+import { toNextFontFiles, toNextFontPlan } from "./next-font-plan.js";
 import {
   announceWhile,
   assertCanEdit,
@@ -273,7 +275,34 @@ function patchGroups(
   }
 }
 
-function batchTitle(applied: AppliedEdit[], tags: string[]): string {
+const hasOtherChange = (request: DirectEditRequest): boolean =>
+  Object.keys(request.style ?? {}).length > 0 ||
+  (request.text ?? null) !== null ||
+  hasClassChange(request.classes);
+
+const isNameOnly = (request: DirectEditRequest): boolean =>
+  Object.hasOwn(request, "name") && !hasOtherChange(request);
+
+const toRenameTitle = (count: number): string => {
+  if (count === 1) {
+    return "Rename 1 layer";
+  }
+
+  return `Rename ${count} layers`;
+};
+
+const isRenameBatch = (edits: DirectEditRequest[]): boolean =>
+  edits.every((request) => isNameOnly(request));
+
+function batchTitle(
+  applied: AppliedEdit[],
+  tags: string[],
+  edits: DirectEditRequest[]
+): string {
+  if (isRenameBatch(edits)) {
+    return toRenameTitle(edits.length);
+  }
+
   const style = [...new Set(applied.flatMap((entry) => entry.style))];
   const classes = applied.some((entry) => entry.classes);
   const parts = [
@@ -358,8 +387,14 @@ export async function applyDirectEditBatch(
   direction: Direction,
   raw: unknown
 ): Promise<DirectEditBatchResult> {
-  const { edits } = parseDirectEditBatch(raw);
+  const parsed = parseDirectEditBatch(raw);
   const headVersionId = assertCanEdit(deps, project, direction);
+  const plan = await toNextFontPlan(
+    direction.workTree,
+    parsed.edits,
+    await knownTokenVars(direction.workTree)
+  );
+  const edits = plan.requests;
   const previewOrigin = deps.previewOrigin
     ? () =>
         (deps.previewOrigin as NonNullable<DirectEditDeps["previewOrigin"]>)(
@@ -367,16 +402,14 @@ export async function applyDirectEditBatch(
           direction
         )
     : undefined;
-  const groups = await groupByFile(
-    direction.workTree,
-    edits,
-    await knownTokenVars(direction.workTree),
-    { projectKind: project.kind, ...(previewOrigin ? { previewOrigin } : {}) }
-  );
+  const groups = await groupByFile(direction.workTree, edits, plan.known, {
+    projectKind: project.kind,
+    ...(previewOrigin ? { previewOrigin } : {}),
+  });
   const applied: AppliedEdit[] = new Array<AppliedEdit>(edits.length);
   const tags: string[] = new Array<string>(edits.length);
   patchGroups(groups, applied, tags);
-  const changed = groups.filter((group) => group.code !== group.original);
+  const changed: WrittenFile[] = toNextFontFiles(plan, groups);
   if (changed.length === 0)
     return {
       files: [],
@@ -404,7 +437,7 @@ export async function applyDirectEditBatch(
         project,
         direction,
         changed,
-        batchTitle(applied, tags),
+        batchTitle(applied, tags, edits),
         meta
       )
   );

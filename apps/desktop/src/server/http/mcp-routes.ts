@@ -17,9 +17,10 @@ import {
   createApprovalQueue,
   createCloudIntrospect,
   createMcpService,
-  runAgentTool,
+  runGatedAgentTool,
+  toQueueAsk,
 } from "../mcp/index.js";
-import type { TrustedFolders } from "../mcp/index.js";
+import type { ApprovalQueue, TrustedFolders } from "../mcp/index.js";
 import { toRunningUpstream, warmUpstream } from "../preview/warm-upstream.js";
 import type { LayerLockStore } from "../store/layer-locks.js";
 import type { KeepVariant } from "../variations/routes.js";
@@ -76,14 +77,22 @@ function warmAfterEdits(deps: McpRouteDeps): void {
   });
 }
 
-const startAgentToolRoute = (app: Hono, deps: McpRouteDeps): void => {
+const startAgentToolRoute = (
+  app: Hono,
+  deps: McpRouteDeps,
+  approvals: ApprovalQueue
+): void => {
   const { runtime } = deps;
 
   if (!runtime || !deps.isAgentToolOpen) {
     return;
   }
 
-  createAgentToolRoute(app, (name, body) => runAgentTool(runtime, name, body));
+  const ask = toQueueAsk(approvals);
+
+  createAgentToolRoute(app, (name, body) =>
+    runGatedAgentTool(runtime, name, body, ask)
+  );
 };
 
 export interface ApprovalFeed {
@@ -167,7 +176,7 @@ export function registerMcpRoutes(
     onSettingsChanged: settingsChanged,
   });
 
-  startAgentToolRoute(app, deps);
+  startAgentToolRoute(app, deps, approvals);
 
   return { activity, approvalFeed };
 }

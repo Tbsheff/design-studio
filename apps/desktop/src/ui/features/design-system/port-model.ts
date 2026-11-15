@@ -154,6 +154,30 @@ const isSameRoute = (left: string, right: string | null): boolean => {
   return clean !== null && clean !== "" && clean === toCleanRoute(right);
 };
 
+const toFixturePattern = (
+  routeText: string,
+  picked: PortFlowPage[]
+): string | null => {
+  const page = picked[0] ?? null;
+
+  if (page === null || picked.length !== 1 || !page.routeExists) {
+    return null;
+  }
+
+  if (isSameRoute(routeText, page.route)) {
+    return null;
+  }
+
+  if (!isPatternOf(page.route, toCleanRoute(routeText))) {
+    return null;
+  }
+
+  return page.route;
+};
+
+const toFixtureText = (pattern: string): string =>
+  `${COPY.textThisPageIsACopyOf}${pattern}${COPY.textMoveItTo}${pattern}${COPY.textOrTypeANewRoute}`;
+
 const toRouteUpdate = (
   source: PortCopySource | null,
   appId: string,
@@ -164,6 +188,10 @@ const toRouteUpdate = (
   const sourceRoute = toSourceRoute(source, appId, null);
 
   if (source === null || page === null || picked.length !== 1) {
+    return null;
+  }
+
+  if (toFixturePattern(routeText, picked) !== null) {
     return null;
   }
 
@@ -187,6 +215,12 @@ const toRouteProblem = (
   picked: PortFlowPage[],
   update: PortRouteUpdate | null
 ): string | null => {
+  const pattern = toFixturePattern(shown, picked);
+
+  if (pattern !== null) {
+    return toFixtureText(pattern);
+  }
+
   if ((typed === null && !shown) || update !== null) {
     return null;
   }

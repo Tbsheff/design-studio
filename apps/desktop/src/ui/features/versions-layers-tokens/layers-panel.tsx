@@ -19,8 +19,6 @@ import { usePanelState } from "./use-layers-panel-state.js";
 import type { RenameMany, RenameManyApi } from "./use-rename-many.js";
 import type { RowMenuApi } from "./use-row-menu.js";
 
-import styles from "./rename-many.module.css";
-
 interface LayerEditActions {
   onRename: (id: number, name: string | null) => void;
   onRenameMany?: RenameMany;
@@ -132,7 +130,7 @@ const LayersPanel = ({
         toTip={tipWithKey}
       />
       <LayerSearchField search={state.search} />
-      <div className={styles.anchor}>
+      <div className="layers-rename-anchor">
         {rename.many.isOpen && <RenameManyPopup many={rename.many} />}
       </div>
       <LayersList

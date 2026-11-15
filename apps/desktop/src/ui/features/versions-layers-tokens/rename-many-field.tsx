@@ -1,7 +1,5 @@
 import type { ChangeEvent, KeyboardEvent, ReactNode, RefObject } from "react";
 
-import styles from "./rename-many.module.css";
-
 interface RenameManyFieldProps {
   readonly inputRef: RefObject<HTMLInputElement | null> | null;
   readonly isDisabled: boolean;
@@ -21,12 +19,12 @@ const RenameManyField = ({
   onValueChange,
   value,
 }: RenameManyFieldProps): ReactNode => (
-  <label className={styles.field}>
+  <label className="layers-rename-field">
     {label}
     <input
       ref={inputRef}
       name={name}
-      className={styles.input}
+      className="layers-rename-input"
       value={value}
       spellCheck={false}
       autoComplete="off"

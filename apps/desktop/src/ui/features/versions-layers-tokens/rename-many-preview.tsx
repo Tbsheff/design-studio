@@ -3,8 +3,6 @@ import type { ReactNode } from "react";
 import { COPY } from "./copy.js";
 import type { PatternPreview } from "./rename-pattern-model.js";
 
-import styles from "./rename-many.module.css";
-
 interface RenameManyPreviewProps {
   readonly preview: PatternPreview;
 }
@@ -21,13 +19,13 @@ const RenameManyPreview = ({ preview }: RenameManyPreviewProps): ReactNode => {
   const moreText = toMoreText(preview.more);
 
   return (
-    <ul className={styles.list} data-testid="rename-many-preview">
+    <ul className="layers-rename-list" data-testid="rename-many-preview">
       {preview.rows.map((row) => (
-        <li key={row.id} className={styles.name}>
+        <li key={row.id} className="layers-rename-name">
           {row.name}
         </li>
       ))}
-      {moreText !== "" && <li className={styles.more}>{moreText}</li>}
+      {moreText !== "" && <li className="layers-rename-more">{moreText}</li>}
     </ul>
   );
 };

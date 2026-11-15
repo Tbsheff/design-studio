@@ -4,14 +4,12 @@ import { COPY } from "./copy.js";
 import { RenameManyField } from "./rename-many-field.js";
 import type { RenameManyApi } from "./use-rename-many.js";
 
-import styles from "./rename-many.module.css";
-
 interface RenameManyPairProps {
   readonly many: RenameManyApi;
 }
 
 const RenameManyPair = ({ many }: RenameManyPairProps): ReactNode => (
-  <div className={styles.pair}>
+  <div className="layers-rename-pair">
     <RenameManyField
       inputRef={null}
       isDisabled={false}

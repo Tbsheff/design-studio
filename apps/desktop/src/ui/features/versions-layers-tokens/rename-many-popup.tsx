@@ -7,8 +7,6 @@ import { RenameManyPair } from "./rename-many-pair.js";
 import { RenameManyPreview } from "./rename-many-preview.js";
 import type { RenameManyApi } from "./use-rename-many.js";
 
-import styles from "./rename-many.module.css";
-
 interface RenameManyPopupProps {
   readonly many: RenameManyApi;
 }
@@ -23,7 +21,7 @@ const RenameManyPopup = ({ many }: RenameManyPopupProps): ReactNode => {
 
   return (
     <form
-      className={`ui-menu ${styles.popup}`}
+      className="ui-menu layers-rename-popup"
       aria-label={COPY.renameManyLabel}
       onSubmit={many.handleSubmit}
     >
@@ -37,16 +35,16 @@ const RenameManyPopup = ({ many }: RenameManyPopupProps): ReactNode => {
         onFieldKeyDown={many.handleKeyDown}
       />
       <RenameManyPair many={many} />
-      <p className={styles.hint}>{COPY.renameManyHint}</p>
+      <p className="layers-rename-hint">{COPY.renameManyHint}</p>
       {many.isTooMany && (
-        <p className={styles.error} role="alert">
+        <p className="layers-rename-error" role="alert">
           {COPY.renameManyTooMany}
         </p>
       )}
       <RenameManyPreview preview={many.preview} />
       <button
         type="submit"
-        className={`btn small primary ${styles.apply}`}
+        className="btn small primary layers-rename-apply"
         disabled={many.isTooMany}
       >
         {COPY.renameManyApply}

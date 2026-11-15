@@ -1,6 +1,16 @@
 import { createElement, lazy } from "react";
 import type { ComponentType, ReactElement } from "react";
 
+import type {
+  loadDesignSystems,
+  loadNewDesignSystem,
+} from "../features/design-system";
+
+interface DesignSystemModule {
+  readonly loadDesignSystems: typeof loadDesignSystems;
+  readonly loadNewDesignSystem: typeof loadNewDesignSystem;
+}
+
 interface Prefetchable {
   fetch: () => Promise<object>;
 }
@@ -51,14 +61,17 @@ const studio = preloadable(async () => {
   return loaded.Studio;
 });
 
+const toDesignSystemModule = async (): Promise<DesignSystemModule> =>
+  await import("../features/design-system");
+
 const designSystems = preloadable(async () => {
-  const loaded = await import("../features/design-system");
+  const loaded = await toDesignSystemModule();
 
   return loaded.loadDesignSystems();
 });
 
 const newDesignSystem = preloadable(async () => {
-  const loaded = await import("../features/design-system");
+  const loaded = await toDesignSystemModule();
 
   return loaded.loadNewDesignSystem();
 });

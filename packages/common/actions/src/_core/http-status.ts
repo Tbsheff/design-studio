@@ -29,6 +29,7 @@ import { ImpactStatus } from "../impact/errors/status.js";
 import { IntegrationStatus } from "../integration/errors/status.js";
 import { KitDriftStatus } from "../kit-drift/errors/status.js";
 import { LayerStyleStatus } from "../layer-style/errors/status.js";
+import { LayerStatus } from "../layer/errors/status.js";
 import { MarkupStatus } from "../markup/errors/status.js";
 import { MockupStatus } from "../mockup/errors/status.js";
 import { MotionStatus } from "../motion/errors/status.js";
@@ -89,6 +90,7 @@ const HTTP_STATUS = {
   ...ImpactStatus,
   ...IntegrationStatus,
   ...KitDriftStatus,
+  ...LayerStatus,
   ...LayerStyleStatus,
   ...MarkupStatus,
   ...MockupStatus,

@@ -51,3 +51,7 @@ export {
 export { updateFileIn } from "./direct-edit-file-ops.js";
 
 export type { FileSaved, FileUpdate } from "./direct-edit-file-ops.js";
+
+export { renameLayersIn } from "./direct-edit-rename-ops.js";
+
+export type { RenameBody, RenameOutcome } from "./direct-edit-rename-ops.js";

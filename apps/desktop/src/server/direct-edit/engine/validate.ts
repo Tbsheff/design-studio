@@ -138,6 +138,12 @@ export function isDirectEditBatch(raw: unknown): boolean {
   return typeof raw === "object" && raw !== null && "edits" in raw;
 }
 
+const isMixedName = (request: DirectEditRequest): boolean =>
+  request.name !== undefined &&
+  (request.text !== undefined ||
+    hasClasses(request.classes) ||
+    Object.keys(request.style ?? {}).length > 0);
+
 const toBatchEntry = (entry: unknown, index: number): DirectEditRequest => {
   const label = `Edit ${index + 1}`;
   let request: DirectEditRequest;
@@ -155,7 +161,7 @@ const toBatchEntry = (entry: unknown, index: number): DirectEditRequest => {
     throw error;
   }
 
-  if (hasAny([request.name, request.move, request.insert])) {
+  if (hasAny([request.move, request.insert]) || isMixedName(request)) {
     throw new DirectEditError(
       "invalid_request",
       `${label}: a batch can only change style, text and classes`

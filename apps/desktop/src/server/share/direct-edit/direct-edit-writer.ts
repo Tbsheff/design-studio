@@ -23,12 +23,15 @@ import {
   runReviewIn,
   runRulesTestIn,
   setRulesIn,
+  renameLayersIn,
 } from "./ops/index.js";
 import type {
   DirectionRef,
   EditBody,
   FileSaved,
   FileUpdate,
+  RenameBody,
+  RenameOutcome,
 } from "./ops/index.js";
 
 interface DirectEditWriterApi {
@@ -59,6 +62,10 @@ interface DirectEditWriterApi {
     Awaited<ReturnType<typeof createTokenIn>>,
     DirectWriteFailure
   >;
+  readonly rename: (
+    ref: DirectionRef,
+    body: RenameBody
+  ) => Effect.Effect<RenameOutcome, DirectWriteFailure>;
   readonly updateFile: (
     ref: DirectionRef,
     body: FileUpdate
@@ -264,6 +271,14 @@ class DirectEditWriter extends Context.Service<
       ) {
         return yield* runDirectWrite((runtime) =>
           insertJsxIn(runtime, ref, body)
+        );
+      }),
+      rename: Effect.fn("DirectEditWriter.rename")(function* run(
+        ref: DirectionRef,
+        body: RenameBody
+      ) {
+        return yield* runDirectWrite((runtime) =>
+          renameLayersIn(runtime, ref, body)
         );
       }),
       runReview: Effect.fn("DirectEditWriter.runReview")(function* run(

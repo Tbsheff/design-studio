@@ -29,6 +29,7 @@ import type { ImpactError } from "../../impact/errors/index.js";
 import type { IntegrationError } from "../../integration/errors/index.js";
 import type { KitDriftError } from "../../kit-drift/errors/index.js";
 import type { LayerStyleError } from "../../layer-style/errors/index.js";
+import type { LayerError } from "../../layer/errors/index.js";
 import type { MarkupError } from "../../markup/errors/index.js";
 import type { MockupError } from "../../mockup/errors/index.js";
 import type { MotionError } from "../../motion/errors/index.js";
@@ -87,6 +88,7 @@ type StudioError =
   | ImpactError
   | IntegrationError
   | KitDriftError
+  | LayerError
   | LayerStyleError
   | MarkupError
   | MockupError

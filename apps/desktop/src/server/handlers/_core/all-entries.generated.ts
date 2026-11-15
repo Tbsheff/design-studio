@@ -35,6 +35,7 @@ import { ImpactEntries } from "../impact/handlers.js";
 import { IntegrationEntries } from "../integration/handlers.js";
 import { KitDriftEntries } from "../kit-drift/handlers.js";
 import { LayerStyleEntries } from "../layer-style/handlers.js";
+import { LayerEntries } from "../layer/handlers.js";
 import { MarkupEntries } from "../markup/handlers.js";
 import { MockupEntries } from "../mockup/handlers.js";
 import { MotionEntries } from "../motion/handlers.js";
@@ -106,6 +107,7 @@ const ALL_ENTRIES = {
   impact: ImpactEntries,
   integration: IntegrationEntries,
   kitDrift: KitDriftEntries,
+  layer: LayerEntries,
   layerStyle: LayerStyleEntries,
   markup: MarkupEntries,
   mockup: MockupEntries,

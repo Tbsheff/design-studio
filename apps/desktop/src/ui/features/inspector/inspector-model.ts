@@ -53,9 +53,18 @@ interface InspectorProps {
 
 const TABS: { readonly id: InspectorTab; readonly label: string }[] = [
   { id: "simple", label: copy.tabDesign },
+  { id: "tweaks", label: copy.tabTweaks },
   { id: "prototype", label: copy.tabPrototype },
   { id: "code", label: copy.tabCode },
 ];
+
+const toInspectorTabs = (isAppProject: boolean): typeof TABS => {
+  if (isAppProject) {
+    return TABS.filter((entry) => entry.id !== "tweaks");
+  }
+
+  return TABS;
+};
 
 const EMPTY_HINT = copy.emptyHint;
 
@@ -92,6 +101,7 @@ export {
   EMPTY_HINT,
   TABS,
   toInspectorEmptyReason,
+  toInspectorTabs,
   isDirectEditable,
   isVectorShown,
 };

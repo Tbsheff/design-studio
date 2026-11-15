@@ -57,6 +57,7 @@ interface PromptBoxProps {
   components?: ComponentInfo[] | null;
   mentionRequest?: MentionRequest | null;
   waitReason?: string | null;
+  onTweaks?: ((ask: string) => void) | null;
 }
 
 export type { PromptBoxProps, PromptSend };

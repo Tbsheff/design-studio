@@ -2,7 +2,7 @@ import { useCallback, useRef } from "react";
 import type { KeyboardEvent, ReactElement } from "react";
 
 import { copy } from "./copy.js";
-import { TABS } from "./inspector-model.js";
+import { toInspectorTabs } from "./inspector-model.js";
 import type { InspectorTab } from "./inspector-model.js";
 import { TabButton } from "./tab-button.js";
 import { toTabKeyTarget } from "./tab-keys-model.js";
@@ -10,10 +10,14 @@ import { toTabKeyTarget } from "./tab-keys-model.js";
 const TabBar = ({
   tab,
   onTab,
+  isAppProject,
 }: {
   readonly tab: InspectorTab;
   readonly onTab: (tab: InspectorTab) => void;
+  readonly isAppProject: boolean;
 }): ReactElement => {
+  const tabs = toInspectorTabs(isAppProject);
+
   const refs = useRef<Partial<Record<InspectorTab, HTMLButtonElement | null>>>(
     {}
   );
@@ -27,24 +31,24 @@ const TabBar = ({
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent): void => {
-      const at = TABS.findIndex((token) => token.id === tab);
-      const target = toTabKeyTarget(event.key, at, TABS.length);
+      const at = tabs.findIndex((token) => token.id === tab);
+      const target = toTabKeyTarget(event.key, at, tabs.length);
 
       if (target === null) {
         return;
       }
 
       event.preventDefault();
-      const next = TABS[(target + TABS.length) % TABS.length]?.id ?? "simple";
+      const next = tabs[(target + tabs.length) % tabs.length]?.id ?? "simple";
       onTab(next);
       refs.current[next]?.focus();
     },
-    [onTab, tab]
+    [onTab, tab, tabs]
   );
 
   return (
     <div className="edit-tabs" role="tablist" aria-label={copy.editMode}>
-      {TABS.map((tokenValue) => (
+      {tabs.map((tokenValue) => (
         <TabButton
           key={tokenValue.id}
           id={tokenValue.id}

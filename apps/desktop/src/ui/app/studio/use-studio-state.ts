@@ -87,6 +87,7 @@ const useStudioLayout = (): StudioLayout => {
   const [topEnd, setTopEnd] = useState<HTMLDivElement | null>(null);
   const [pagesHost, setPagesHost] = useState<HTMLDivElement | null>(null);
   const [isInspectorHidden, setIsInspectorHidden] = useState(false);
+  const [isInspectorPinned, setIsInspectorPinned] = useState(false);
   const [isCommentsShown, setIsCommentsShown] = useState(false);
   const { editorColumn } = useUi();
 
@@ -94,9 +95,11 @@ const useStudioLayout = (): StudioLayout => {
     editorColumn,
     isCommentsShown,
     isInspectorHidden,
+    isInspectorPinned,
     pagesHost,
     setIsCommentsShown,
     setIsInspectorHidden,
+    setIsInspectorPinned,
     setPagesHost,
     setToolsHost,
     setTopEnd,

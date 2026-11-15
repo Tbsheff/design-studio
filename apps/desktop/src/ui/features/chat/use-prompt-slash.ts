@@ -64,6 +64,7 @@ const usePromptSlash = (
     exclude: skillIds,
     onCommand: runCommand,
     onSkill: (id) => setSkillIds((previous) => addSkillId(previous, id)),
+    onTweaks: props.onTweaks ?? null,
   });
 
   const groups = [

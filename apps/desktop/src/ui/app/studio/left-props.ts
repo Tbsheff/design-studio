@@ -7,7 +7,7 @@ import { shownPending } from "../../features/chat/run-state-model";
 import { toFixPrompt } from "../../features/review/index";
 import type { LeftPane } from "../shell/left-pane";
 import type { StudioPaneHeader } from "../shell/studio-pane-header";
-import { kindLabel, nameOf } from "./project-model";
+import { appDirOf, kindLabel, nameOf } from "./project-model";
 import { runById } from "./run-model";
 import type { StudioCtx } from "./studio-context";
 import { toSuggestionSlot } from "./suggestion-slot";
@@ -83,6 +83,16 @@ const errorsProps = (ctx: StudioCtx): LeftProps["errors"] => ({
     ctx.ui.draft.set(toFixPrompt(error)),
 });
 
+const toTweaksSlash = (ctx: StudioCtx): ((ask: string) => void) | null => {
+  if (appDirOf(ctx.project) !== null) {
+    return null;
+  }
+
+  return (ask: string): void => {
+    void ctx.run.runTweaks(ask);
+  };
+};
+
 const promptProps = (
   ctx: StudioCtx,
   frameFocus: FrameFocusFiles
@@ -102,6 +112,7 @@ const promptProps = (
       ),
     onSend: run.send,
     onSettingsSaved: core.data.setProject,
+    onTweaks: toTweaksSlash(ctx),
     prefill: ui.prefill,
     projectId: ctx.projectId,
     queued: core.comments.queued.length > 0,

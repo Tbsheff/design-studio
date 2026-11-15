@@ -38,7 +38,7 @@ const InspectorEditPane = ({
 
   return (
     <section className="edit-pane" aria-label={copy.editTitle}>
-      <TabBar tab={tab} onTab={onTab} />
+      <TabBar tab={tab} onTab={onTab} isAppProject={Boolean(props.appDir)} />
       {isSessionShown(session) && (
         <SessionHeader session={session} onDone={handleDone} />
       )}

@@ -49,6 +49,10 @@ const useSelectionReveal = (ui: StudioUi): void => {
   if (seen !== selection) {
     setSeen(selection);
 
+    if (selection.length > 0 && ui.isInspectorPinned) {
+      ui.setIsInspectorPinned(false);
+    }
+
     if (selection.length > 0 && isInspectorHidden) {
       setIsInspectorHidden(false);
     }
@@ -89,8 +93,10 @@ const useStudioPanes = (ui: StudioUi): StudioPanes => {
 
   useSelectionReveal(ui);
 
+  const hasSubject = selection.length > 0 || ui.isInspectorPinned;
+
   const isInspectorOpen =
-    selection.length > 0 && !ui.isInspectorHidden && !ui.isCommentsShown;
+    hasSubject && !ui.isInspectorHidden && !ui.isCommentsShown;
 
   const showInspector = (): Promise<boolean> => {
     setIsInspectorHidden(false);
@@ -106,12 +112,16 @@ const useStudioPanes = (ui: StudioUi): StudioPanes => {
   };
 
   const toggleInspector = (): void => {
-    if (selection.length === 0) {
+    if (!hasSubject) {
       return;
     }
 
     setIsCommentsShown(false);
     setIsInspectorHidden(isInspectorOpen);
+
+    if (isInspectorOpen && selection.length === 0) {
+      ui.setIsInspectorPinned(false);
+    }
   };
 
   const showPane = (tab: PanelTab): Promise<boolean> => {

@@ -2,17 +2,24 @@ type TypeSeverity = "high" | "low" | "medium";
 
 interface TypeText {
   readonly chars: number;
+  readonly extraPx: number;
   readonly family: string;
   readonly isBlock: boolean;
   readonly isHeading: boolean;
   readonly isLabel: boolean;
+  readonly lastLineWords: number;
+  readonly lastWord: string;
   readonly level: number;
   readonly lineHeight: number;
   readonly lines: number;
+  readonly roomPx: number;
   readonly selector: string;
   readonly size: number;
   readonly tag: string;
   readonly text: string;
+  readonly textWrap: string;
+  readonly whiteSpace: string;
+  readonly words: number;
 }
 
 interface TypeSpace {

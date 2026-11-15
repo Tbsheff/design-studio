@@ -19,6 +19,7 @@ import {
   toSizeHits,
   toSmallHits,
 } from "./type-scale.js";
+import { toWrapHits } from "./type-wrap.js";
 
 interface TypeRhythmInput {
   readonly facts: TypeProbeResult;
@@ -92,6 +93,7 @@ const toTypeHits = (input: TypeRhythmInput): TypeHit[] => {
     ...toLevelHits(texts),
     ...toSpaceHits(boxes, input.spaceSteps),
     ...toFamilyHits(texts),
+    ...toWrapHits(texts),
   ];
 
   return toMerged(hits)

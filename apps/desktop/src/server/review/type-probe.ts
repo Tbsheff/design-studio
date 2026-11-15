@@ -39,6 +39,52 @@ const TYPE_PROBE_SOURCE = String.raw`(cap) => {
     range.detach();
     return Math.max(1, tops.length);
   };
+  const wordsOf = (el) => {
+    const out = [];
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const value = node.textContent || '';
+      for (const match of value.matchAll(/\S+/g)) out.push({ node, start: match.index, end: match.index + match[0].length, word: match[0] });
+    }
+    return out;
+  };
+  const topOf = (word) => {
+    const range = document.createRange();
+    range.setStart(word.node, word.start);
+    range.setEnd(word.node, word.end);
+    const rect = range.getClientRects()[0];
+    range.detach();
+    return rect ? { top: rect.top, width: rect.width } : null;
+  };
+  const lastLineOf = (el, size) => {
+    const words = wordsOf(el);
+    const last = words.length > 0 ? topOf(words[words.length - 1]) : null;
+    if (!last) return { count: 0, word: '', extraPx: 0 };
+    let count = 0;
+    for (let index = words.length - 1; index >= 0 && count < 8; index -= 1) {
+      const box = topOf(words[index]);
+      if (!box || Math.abs(box.top - last.top) >= size * 0.5) break;
+      count += 1;
+    }
+    const firstTop = topOf(words[0]);
+    let extraPx = 0;
+    for (const word of words.slice(0, 40)) {
+      const box = topOf(word);
+      if (box && firstTop && Math.abs(box.top - firstTop.top) >= size * 0.5) extraPx += box.width + size * 0.3;
+    }
+    return { count, word: words[words.length - 1].word.replace(/[.,;:!?]+$/, '').slice(0, 30), extraPx: Math.round(extraPx) };
+  };
+  const roomOf = (el) => {
+    const box = el.closest('button, a, label, [role="button"]') || el;
+    const parent = box.parentElement;
+    if (!parent) return 0;
+    const ps = getComputedStyle(parent);
+    if (!/flex/.test(ps.display) || ps.flexDirection.startsWith('column') || ps.flexWrap === 'wrap') return 0;
+    const inner = parent.clientWidth - (parseFloat(ps.paddingLeft) || 0) - (parseFloat(ps.paddingRight) || 0);
+    const kids = [...parent.children].filter((kid) => getComputedStyle(kid).position !== 'absolute');
+    const used = kids.reduce((sum, kid) => sum + kid.getBoundingClientRect().width, 0) + (parseFloat(ps.columnGap) || 0) * Math.max(0, kids.length - 1);
+    return Math.max(0, Math.round(inner - used));
+  };
   const familyOf = (value) => (value.split(',')[0] || '').trim().replace(/^['"]|['"]$/g, '').trim().toLowerCase();
   const levelOf = (el) => {
     const tag = el.tagName.toLowerCase();
@@ -88,6 +134,8 @@ const TYPE_PROBE_SOURCE = String.raw`(cap) => {
     const lines = lineCount(el, size);
     const lineHeight = cs.lineHeight === 'normal' ? size * 1.2 : parseFloat(cs.lineHeight) || size * 1.2;
     const level = levelOf(el);
+    const isLabel = level === 0 && labelLike(el, cs, whole);
+    const wrap = lines >= 2 ? lastLineOf(el, size) : { count: 0, word: '', extraPx: 0 };
     const entry = {
       selector: selectorOf(el),
       tag,
@@ -99,7 +147,14 @@ const TYPE_PROBE_SOURCE = String.raw`(cap) => {
       chars: Math.round(whole.length / lines),
       level,
       isHeading: level > 0,
-      isLabel: level === 0 && labelLike(el, cs, whole),
+      isLabel,
+      lastLineWords: wrap.count,
+      lastWord: wrap.word,
+      extraPx: wrap.extraPx,
+      roomPx: isLabel && lines >= 2 ? roomOf(el) : 0,
+      textWrap: cs.textWrapStyle || cs.textWrap || '',
+      whiteSpace: cs.textWrapMode === 'nowrap' ? 'nowrap' : cs.whiteSpace,
+      words: whole.split(' ').filter(Boolean).length,
       isBlock: level === 0 && (BLOCK_TAGS.has(tag) || cs.display === 'block' || cs.display === 'list-item') && whole.length >= 40,
     };
     owners.set(el, entry);

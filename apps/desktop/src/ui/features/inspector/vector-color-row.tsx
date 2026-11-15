@@ -1,9 +1,8 @@
-import { useMemo } from "react";
 import type { ReactElement } from "react";
 
-import { copy } from "./copy.js";
+import { ColorSwatch } from "./color-swatch.js";
 import { useVectorColor } from "./use-vector-color.js";
-import { toSwatchClass, toSwatchStyle } from "./vector-model.js";
+import { toPaintSwatch } from "./vector-model.js";
 
 const VectorColorRow = ({
   label,
@@ -18,7 +17,6 @@ const VectorColorRow = ({
 }): ReactElement => {
   const color = useVectorColor(value, onSave);
   const id = `vector-${label.toLowerCase()}`;
-  const swatchStyle = useMemo(() => toSwatchStyle(value), [value]);
 
   return (
     <div className="ins-field color">
@@ -38,15 +36,12 @@ const VectorColorRow = ({
         onKeyDown={color.handleKeyDown}
         onBlur={color.handleBlur}
       />
-      <span className={toSwatchClass(value)} style={swatchStyle}>
-        <input
-          type="color"
-          aria-label={`${label}${copy.swatchSuffix}`}
-          value={color.hex}
-          disabled={isDisabled}
-          onChange={color.handleSwatch}
-        />
-      </span>
+      <ColorSwatch
+        label={label}
+        shown={toPaintSwatch(value)}
+        isDisabled={isDisabled}
+        target={color.target}
+      />
     </div>
   );
 };

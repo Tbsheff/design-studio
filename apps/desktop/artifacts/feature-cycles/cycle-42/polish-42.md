@@ -52,6 +52,7 @@ Server on port 6440, `STUDIO_AGENT=mock`, data at `ds-wt/polish-42-data`. Fixtur
 | Check | Result |
 |---|---|
 | Fill popup alpha drag, 3 drags in a row (playwright, dark and light) | Passes. 1 `POST /fill` per drag. The class goes `bg-black/50` to `bg-black/38` to `bg-black/62` to `bg-black/38`. The popup stays open after each write. The Fill row shows no Apply |
+| Text color popup alpha drag, 3 drags in a row (the spec's popup proof) | Passes. 1 `POST /direct-edit` per drag (`text-foreground/38`, `/62`, `/38`). The popup stays open after each write and each reselect. Undo 3 times restores the line |
 | Undo 3 times | Passes. Back to `bg-black/50`, 1 "Fill: solid" step per drag |
 | Gradient | Passes. Linear adds Apply and makes no write |
 | `set_fill` over HTTP | Passes. `rgb(0 0 0 / 0.4)` gives `bg-black/40`, `rgb(15 23 42 / 0.37)` gives `bg-slate-900/37`, `#123457` gives `bg-[#123457]`. Exactly 1 `bg-*` class stays after each write |
@@ -63,6 +64,8 @@ Server on port 6440, `STUDIO_AGENT=mock`, data at `ds-wt/polish-42-data`. Fixtur
 
 Screenshots in `cycle-42/polish-42/`: `fill-popup-{dark,light}.png`, `review-rule-fix-{dark,light}.png`.
 
+Undo ran through `POST edit-history/undo`. Cmd+Z uses the same stack. I did not press the key.
+
 Main proofs: I did not rerun the popup and rule items on main. On main, `useDismiss` closes on any capture scroll (`use-anchored-popover.ts` line 81). The cycle-41 report lists rule hits as Ask Claude only.
 
 ## Gates
@@ -72,6 +75,14 @@ Main proofs: I did not rerun the popup and rule items on main. On main, `useDism
 - `pnpm run build:ui`: passes.
 - `check-bundle`: passes. B1 is 274,551 B, delta -152 B, and there are no new chunk names.
 - `check-actions.ts --probes`: 557 hits, the same as main at `5e544ae40` (557). Probes pass, 11 of 11.
+
+## Behavior change in `edit-source.ts`
+
+The widening applies to every direct-edit caller, not only to Review:
+- `edit_element` and `batch_edit` (over MCP too) now accept a `.css` source, or `tag: "style"` on an HTML file, as a rule edit: "set these declarations in the rule with this selector".
+- No tool description says this. I left the descriptions unchanged so that no snapshot changes.
+- Other callers of `resolveSource` (structure, replace, image, class info, content, variations, viewport fix, Figma import) now accept a `.css` path. They then fail with a parse error, not with "Only .html, .htm, .jsx and .tsx files...".
+- No snapshot or doc holds the old message.
 
 ## Snapshots
 

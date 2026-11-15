@@ -327,3 +327,19 @@ None. No pick changes a prompt or the run loop. tweak-entry uses the mock tweaks
 10. Frame mentions in the chat: `@Pricing` for another frame (`RunMention` has `file`, `token` and `component` only, `contracts.ts` line 433; a page file mention covers most of it today).
 
 Dropped from the list: bring forward and back keys, copy and paste style keys, wrap in auto layout, layout grids, image adjustments, AI image edit, noise, glass and shader effects, list styles, number styles, text transform, overflow, next-prompt chips, variations, run modes, prompt history (the code exists, see Findings).
+
+## Results
+
+Merged into main in this order: polish-43, dyn-route, tweak-entry, scroll-pin, squircle. There were no conflicts. `inspector/copy.ts` has 494 lines, under the limit of 500.
+
+- **polish-43:** Next apps get the `next/font` write, and 1 version holds both files. A className made with `cn()` is refused. The Google Fonts group shows in Next apps. A token drag now saves only the token you drag. An alias token shows "Linked" and "Detached" rows and stays an alias. A name-only batch is titled "Rename N layers". On the agent route, `create_share_link` now shows an approval card. LAN stayed off, and all test links were revoked.
+- **dyn-route:** Move to app puts the images of a dynamic route in `public/visits/`, not `public/id/`. The dialog refuses a fixture route such as `/visits/1`. `[[...slug]]` routes are not covered.
+- **tweak-entry:** Tweaks is back as an inspector tab. After a run, a chip says "Add live tweaks" or "Open tweaks". `/tweaks <ask>` starts a tweaks run. App projects do not show Tweaks.
+- **scroll-pin:** The Prototype tab has "Scroll behavior": Scroll with parent, Fixed (Top or Bottom) and Sticky (Top). Each choice gives 1 version. Fixed writes `left: 0; right: 0` and no `z-10`. A write made in a breakpoint goes to the base styles.
+- **squircle:** An "S" corner smoothing field (0 to 100 %) and an "iOS" chip write `corner-shape`. A Tailwind app gets an inline style, not a class. Expect a snapshot diff: `direct-edit-element.json` (`edit_element`, `batch_edit`).
+
+Main fix `a7aee86b4`: `ui/platform/http.ts` imported `STUDIO_TOKEN_HEADER` from the contracts barrel. That import pulled `contracts.ts` and the style property lists (about 4.5 KB) into Home. The header now lives in `packages/common/contracts/src/studio-token.ts`. After squircle, B1 was 15 B over the baseline. Now B1 is 271,703 B, which is 2,970 B less. I lowered the baseline to 271,703 B.
+
+Open (Tyler decides): the `check:scripts` S11, E1, O12 and E16 items, the MCP snapshot diffs (now also `direct-edit-element.json`), the snapshot-check wiring, and Cmd+Z by OS keyboard. Also: should Fixed span the full width (`left: 0; right: 0`)?
+
+Checks: gen, tsc, lint and lint:gate pass (59,576 diagnostics, baseline 89,733). ui passes, clip finds 0, pack and the reinstall pass, and :4570 gives 200. Idle CPU is 0.02 CPU-s over 60 s. check-bundle passes. Nothing was pushed.

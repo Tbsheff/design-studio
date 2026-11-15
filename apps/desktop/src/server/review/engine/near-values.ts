@@ -18,6 +18,7 @@ interface NearValueHit {
   readonly id: number;
   readonly message: string;
   readonly target: string;
+  readonly value: string;
 }
 
 interface NearValueInput {
@@ -226,7 +227,12 @@ const toGroupHits = (
 
   const message = toMessage(group, target);
 
-  return group.ids.map((id) => ({ id, message, target: toShown(target) }));
+  return group.ids.map((id) => ({
+    id,
+    message,
+    target: toShown(target),
+    value: toShown(group),
+  }));
 };
 
 const toNearValueHits = (input: NearValueInput): NearValueHit[] => {

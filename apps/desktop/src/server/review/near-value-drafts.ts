@@ -129,16 +129,18 @@ const toFix = (
   };
 };
 
-const toHint = (hit: TokenHit, target: string): string => {
+const toHint = (hit: TokenHit, near: NearValueHit): string => {
+  const change = `Change ${hit.prop}: ${near.value} to ${near.target}`;
+
   if (hit.via === "rule" && hit.rule?.includes(",")) {
-    return `Change ${hit.prop}: ${hit.value} to ${target} in the CSS rule ${hit.rule}. Other selectors share this rule, so check each of them first.`;
+    return `${change} in the CSS rule ${hit.rule}. Other selectors share this rule, so check each of them first.`;
   }
 
   if (hit.via === "rule") {
-    return `Change ${hit.prop}: ${hit.value} to ${target} in the CSS rule ${hit.rule ?? ""}.`;
+    return `${change} in the CSS rule ${hit.rule ?? ""}.`;
   }
 
-  return `Change ${hit.prop}: ${hit.value} to ${target} in the inline style.`;
+  return `${change} in the inline style.`;
 };
 
 const toDraft = (
@@ -149,7 +151,7 @@ const toDraft = (
   const draft: Draft = {
     element: toLabel(el),
     fix: toFix(hit, el, near.target),
-    hint: toHint(hit, near.target),
+    hint: toHint(hit, near),
     key: `${hit.selector}|${hit.via}|${hit.prop}|${hit.value}|${hit.rule ?? ""}`,
     kind: "near-value",
     message: near.message,

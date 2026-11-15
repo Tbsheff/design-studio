@@ -1,6 +1,9 @@
 import { createElement } from "react";
 import type { ReactElement } from "react";
 
+import { ColorPickerSlot } from "../../domain/color-picker-slot.js";
+import type { ColorPickerSlotProps } from "../../domain/color-picker-slot.js";
+import { ColorPickerPopup } from "../../features/inspector/index.js";
 import {
   TokensPanel,
   VersionsPanel,
@@ -13,11 +16,18 @@ import { componentsProps, versionsProps } from "./left-props-panels";
 import type { StudioCtx } from "./studio-context";
 import { StudioSystem } from "./studio-system";
 
+const toColorPicker = (props: ColorPickerSlotProps): ReactElement =>
+  createElement(ColorPickerPopup, props);
+
 const toTokensBody = (ctx: StudioCtx): ReactElement => {
   const { panel } = ctx.core.studioTokens;
 
   if (panel) {
-    return createElement(TokensPanel, panel);
+    return (
+      <ColorPickerSlot.Provider value={toColorPicker}>
+        {createElement(TokensPanel, panel)}
+      </ColorPickerSlot.Provider>
+    );
   }
 
   return <p className="column-note">{COLUMN_COPY.tokensEmpty}</p>;
@@ -71,4 +81,4 @@ const toColumnBody = (ctx: StudioCtx, tab: ColumnTab): ReactElement => {
   }
 };
 
-export { toColumnBody };
+export { toColorPicker, toColumnBody };

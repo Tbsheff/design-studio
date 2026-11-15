@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { COPY } from "./copy.js";
 import type { RawToken } from "./token-draft.js";
 import { TokenSection } from "./token-section.js";
+import { TokenCommitSlot } from "./use-color-picker-slot.js";
 import type { TokenDraft } from "./use-token-draft.js";
 
 interface Section {
@@ -24,27 +25,29 @@ interface TokensSectionsProps {
 }
 
 const TokensSections = (props: TokensSectionsProps): ReactNode => (
-  <div className="ins-scroll tkp-scroll">
-    {props.sections.length === 0 && (
-      <p className="ins-empty tkp-empty">
-        {props.emptyText ??
-          `${COPY.panelNoMatchPrefix}${props.query}${COPY.panelNoMatchSuffix}`}
-      </p>
-    )}
-    {props.sections.map((section) => (
-      <TokenSection
-        key={section.id}
-        baseOf={props.baseOf}
-        draft={props.draft}
-        entries={section.entries}
-        id={section.id}
-        label={section.label}
-        shownOf={props.shownOf}
-        showDark={props.showDark}
-        swatchFor={props.swatchFor}
-      />
-    ))}
-  </div>
+  <TokenCommitSlot.Provider value={props.draft.commit}>
+    <div className="ins-scroll tkp-scroll">
+      {props.sections.length === 0 && (
+        <p className="ins-empty tkp-empty">
+          {props.emptyText ??
+            `${COPY.panelNoMatchPrefix}${props.query}${COPY.panelNoMatchSuffix}`}
+        </p>
+      )}
+      {props.sections.map((section) => (
+        <TokenSection
+          key={section.id}
+          baseOf={props.baseOf}
+          draft={props.draft}
+          entries={section.entries}
+          id={section.id}
+          label={section.label}
+          shownOf={props.shownOf}
+          showDark={props.showDark}
+          swatchFor={props.swatchFor}
+        />
+      ))}
+    </div>
+  </TokenCommitSlot.Provider>
 );
 
 export { TokensSections };

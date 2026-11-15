@@ -3,6 +3,7 @@ import type { LazyExoticComponent } from "react";
 
 import type { CodeEditDialog as CodeEditDialogView } from "./code-edit-dialog.js";
 import type { CodeEditHost as CodeEditHostView } from "./code-edit-host.js";
+import type { ColorPickerPopup as ColorPickerPopupView } from "./inspector.js";
 import type { TweaksPanel as TweaksPanelView } from "./tweaks-panel.js";
 
 const Inspector = lazy(async () => {
@@ -17,6 +18,14 @@ const TweaksPanel: LazyExoticComponent<typeof TweaksPanelView> = lazy(
     const loaded = await import("./tweaks-panel.js");
 
     return { default: loaded.TweaksPanel };
+  }
+);
+
+const ColorPickerPopup: LazyExoticComponent<typeof ColorPickerPopupView> = lazy(
+  async () => {
+    const loaded = await import("./inspector.js");
+
+    return { default: loaded.ColorPickerPopup };
   }
 );
 
@@ -41,6 +50,7 @@ const CodeEditHost = lazy(async () => ({
 export {
   CodeEditDialog,
   CodeEditHost,
+  ColorPickerPopup,
   Inspector,
   TweaksPanel,
   importCodeEditHost,
@@ -63,6 +73,7 @@ export { toJoinedCorners } from "./corners-model.js";
 export {
   SIDES,
   hasChildElements,
+  isSwatchEmpty,
   isValidColor,
   toBoxSides,
   toChangedProps,
@@ -75,6 +86,7 @@ export {
   toShiftedValue,
   toSteppedValue,
   toStyleValues,
+  toSwatchColor,
   toTextEditability,
 } from "./css-value-model.js";
 

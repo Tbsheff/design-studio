@@ -26,9 +26,11 @@ type StudioSendArgs = [
 interface StudioRun {
   approvePlan: (run: RunView) => Promise<void>;
   makeStates: (frame?: CanvasFrame) => Promise<void>;
+  openTweaks: () => void;
   polish: () => Promise<void>;
   retryRun: (run: RunView) => Promise<void>;
   runControls: StudioRunControls;
+  runTweaks: (ask: string) => Promise<void>;
   send: (...args: StudioSendArgs) => Promise<void>;
   startRun: (request: RunRequest, optimistic?: boolean) => Promise<void>;
   suggestTweaks: (prompt?: string) => Promise<void>;

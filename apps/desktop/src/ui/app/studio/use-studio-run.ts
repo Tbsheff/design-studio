@@ -14,6 +14,7 @@ import { TWEAKS_REQUEST } from "../../features/inspector/use-tweaks";
 import { resetSelectionPicture } from "../../platform/selection-picture";
 import { randomToken } from "../../platform/session";
 import { uiStore } from "../../platform/storage";
+import { appDirOf } from "./project-model";
 import {
   buildPlanRequest,
   composeRequest,
@@ -150,12 +151,55 @@ const suggestRequestOf = (prompt?: string): RunRequest => {
   return TWEAKS_REQUEST;
 };
 
+const TWEAKS_SLASH = "/tweaks";
+
+const toTweaksAsk = (text: string): string | null => {
+  const trimmed = text.trim();
+  const rest = trimmed.slice(TWEAKS_SLASH.length);
+
+  if (!trimmed.startsWith(TWEAKS_SLASH) || /^\S/u.test(rest)) {
+    return null;
+  }
+
+  return rest.trim();
+};
+
+interface StudioTweaks {
+  readonly openTweaks: () => void;
+  readonly runTweaks: (ask: string) => Promise<void>;
+  readonly suggestTweaks: (prompt?: string) => Promise<void>;
+}
+
+const useStudioTweaks = (
+  input: StudioRunInput,
+  startRun: StudioStart["startRun"]
+): StudioTweaks => {
+  const { ui, panes } = input;
+
+  const openTweaks = (): void => {
+    ui.setInspectorTab("tweaks");
+    void panes.showInspector();
+  };
+
+  const suggestTweaks = (prompt?: string): Promise<void> =>
+    ui.act((): Promise<void> => startRun(suggestRequestOf(prompt)));
+
+  const runTweaks = (ask: string): Promise<void> => {
+    openTweaks();
+
+    return suggestTweaks(ask);
+  };
+
+  return { openTweaks, runTweaks, suggestTweaks };
+};
+
 const useStudioQuick = (
   input: StudioRunInput,
   startRun: StudioStart["startRun"]
 ): Omit<StudioRun, "makeStates" | "runControls" | "startRun"> => {
   const { ui, core } = input;
   const { act } = ui;
+  const tweaks = useStudioTweaks(input, startRun);
 
   const withCanvas = (request: RunRequest): RunRequest => {
     const canvas = core.runCanvas.current();
@@ -179,6 +223,12 @@ const useStudioQuick = (
       focus,
     ] = args;
 
+    const tweaksAsk = toTweaksAsk(text);
+
+    if (tweaksAsk !== null && appDirOf(input.project) === null) {
+      return tweaks.runTweaks(tweaksAsk);
+    }
+
     const request = composeRequest({
       attachmentIds: files,
       canvas: core.runCanvas.current(),
@@ -193,9 +243,6 @@ const useStudioQuick = (
 
     return startRun(withCommentIds(request, commentIds ?? []), true);
   };
-
-  const suggestTweaks = (prompt?: string): Promise<void> =>
-    act((): Promise<void> => startRun(suggestRequestOf(prompt)));
 
   const polish = (): Promise<void> =>
     act((): Promise<void> => startRun(withCanvas(POLISH_REQUEST)));
@@ -213,7 +260,7 @@ const useStudioQuick = (
     }
   };
 
-  return { approvePlan, polish, retryRun, send, suggestTweaks };
+  return { approvePlan, polish, retryRun, send, ...tweaks };
 };
 
 const useStudioRun = (input: StudioRunInput): StudioRun => {

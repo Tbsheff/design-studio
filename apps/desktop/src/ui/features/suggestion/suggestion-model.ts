@@ -11,8 +11,38 @@ interface SuggestionRunIds {
   readonly runId: string;
 }
 
+type TweakChip = "add" | "open";
+
 const toKindLabel = (kind: Suggestion["kind"]): string => copy[kind];
 
-export { toKindLabel };
+const toTweakChip = (
+  tweakCount: number | null,
+  isAppProject: boolean
+): TweakChip | null => {
+  if (isAppProject || tweakCount === null) {
+    return null;
+  }
 
-export type { Suggestion, SuggestionResult, SuggestionRunIds };
+  if (tweakCount === 0) {
+    return "add";
+  }
+
+  return "open";
+};
+
+const toTweakChipText = (chip: TweakChip): string => {
+  if (chip === "add") {
+    return copy.addTweaks;
+  }
+
+  return copy.openTweaks;
+};
+
+const isChipsShown = (
+  chip: TweakChip | null,
+  suggestionCount: number
+): boolean => chip !== null || suggestionCount > 0;
+
+export { isChipsShown, toKindLabel, toTweakChip, toTweakChipText };
+
+export type { Suggestion, SuggestionResult, SuggestionRunIds, TweakChip };

@@ -123,10 +123,18 @@ const toEdgeMessage = (hit: EdgeOffset, line: AlignLine): string => {
   return `The ${word} of this ${hit.child.noun} is ${px} px ${way} than the ${word}s of the ${hit.others} ${plural} ${where}.`;
 };
 
+const toEdgeKey = (hit: EdgeOffset, line: AlignLine): string => {
+  if (line.role === "column") {
+    return `edge|${hit.child.selector}|column-${hit.side}`;
+  }
+
+  return `edge|${hit.child.selector}|${hit.side}`;
+};
+
 const toEdgeHit = (hit: EdgeOffset, line: AlignLine): AlignHit => ({
   fix: toEdgeFix(hit, line.axis),
   hint: EDGE_HINT,
-  key: `edge|${hit.child.selector}|${hit.side}`,
+  key: toEdgeKey(hit, line),
   message: toEdgeMessage(hit, line),
   selector: hit.child.selector,
   severity: "low",

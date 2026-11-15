@@ -2,6 +2,8 @@ type AlignAxis = "column" | "row";
 
 type AlignSide = "center" | "end" | "start";
 
+type AlignRole = "column" | "line" | "rows";
+
 type AlignSeverity = "low" | "medium";
 
 type AlignMarginProp =
@@ -12,11 +14,13 @@ type AlignMarginProp =
 
 interface AlignChild {
   readonly alignSelf: string;
+  readonly display: string;
   readonly height: number;
   readonly margin: readonly [number, number, number, number];
   readonly noun: string;
   readonly selector: string;
   readonly tag: string;
+  readonly verticalAlign: string;
   readonly width: number;
   readonly x: number;
   readonly y: number;
@@ -58,6 +62,7 @@ interface AlignLine {
   readonly children: readonly AlignChild[];
   readonly group: AlignGroup;
   readonly isFlexOrGrid: boolean;
+  readonly role: AlignRole;
 }
 
 interface AlignMode {
@@ -138,41 +143,120 @@ const toBands = (children: readonly AlignChild[]): AlignChild[][] => {
   return bands.filter((each) => isSequence(each, "row"));
 };
 
+const INLINE_BOX = new Set(["inline-block", "inline-flex"]);
+
+const isInlineBox = (child: AlignChild): boolean =>
+  INLINE_BOX.has(child.display);
+
+const toLine = (
+  group: AlignGroup,
+  axis: AlignAxis,
+  children: readonly AlignChild[],
+  role: AlignRole
+): AlignLine => {
+  const align = group.alignItems;
+  const isFlexOrGrid = isFlexOrGridDisplay(group.display);
+
+  return { align, axis, children, group, isFlexOrGrid, role };
+};
+
+const toBandBox = (band: readonly AlignChild[]): AlignChild | null => {
+  const [first] = band;
+
+  if (!first) {
+    return null;
+  }
+
+  const top = Math.min(...band.map((child) => child.y));
+  const bottom = Math.max(...band.map((child) => child.y + child.height));
+  const left = Math.min(...band.map((child) => child.x));
+  const right = Math.max(...band.map((child) => child.x + child.width));
+
+  return {
+    alignSelf: first.alignSelf,
+    display: first.display,
+    height: bottom - top,
+    margin: [0, 0, 0, 0],
+    noun: first.noun,
+    selector: first.selector,
+    tag: first.tag,
+    verticalAlign: first.verticalAlign,
+    width: right - left,
+    x: left,
+    y: top,
+  };
+};
+
+const toCrossLines = (
+  group: AlignGroup,
+  bands: readonly (readonly AlignChild[])[]
+): AlignLine[] => {
+  const count = bands[0]?.length ?? 0;
+
+  if (bands.length < 2 || bands.some((band) => band.length !== count)) {
+    return [];
+  }
+
+  const columns = Array.from({ length: count }, (_slot, index) =>
+    toLine(
+      group,
+      "column",
+      bands.flatMap((band) => band.slice(index, index + 1)),
+      "column"
+    )
+  );
+
+  const boxes = bands.flatMap((band) => toBandBox(band) ?? []);
+
+  return [...columns, toLine(group, "column", boxes, "rows")];
+};
+
 const toLines = (group: AlignGroup): AlignLine[] => {
   const isFlexOrGrid = isFlexOrGridDisplay(group.display);
 
   if (isSequence(group.children, "column")) {
-    return [
-      {
-        align: group.alignItems,
-        axis: "column",
-        children: group.children,
-        group,
-        isFlexOrGrid,
-      },
-    ];
+    return [toLine(group, "column", group.children, "line")];
   }
 
-  if (!isFlexOrGrid || group.direction.startsWith("column")) {
+  const isInlineRow = !isFlexOrGrid && group.children.every(isInlineBox);
+
+  if (!isInlineRow && (!isFlexOrGrid || group.direction.startsWith("column"))) {
     return [];
   }
 
-  return toBands(group.children).map((band): AlignLine => ({
-    align: group.alignItems,
-    axis: "row",
-    children: band,
-    group,
-    isFlexOrGrid,
-  }));
+  const bands = toBands(group.children);
+  const rows = bands.map((band) => toLine(group, "row", band, "line"));
+
+  if (!isFlexOrGrid) {
+    return rows;
+  }
+
+  return [...rows, ...toCrossLines(group, bands)];
+};
+
+const toBlockSides = (line: AlignLine): AlignSide[] => {
+  if (line.axis === "column") {
+    return ["start"];
+  }
+
+  if (line.children.every((child) => child.verticalAlign === "bottom")) {
+    return ["end"];
+  }
+
+  return ["start"];
 };
 
 const toSides = (line: AlignLine): AlignSide[] => {
-  if (!line.isFlexOrGrid) {
-    if (line.axis === "column") {
-      return ["start"];
-    }
-
+  if (line.role === "rows") {
     return [];
+  }
+
+  if (line.role === "column") {
+    return ["start"];
+  }
+
+  if (!line.isFlexOrGrid) {
+    return toBlockSides(line);
   }
 
   if (line.group.display.includes("grid") && line.axis === "column") {
@@ -312,6 +396,7 @@ export type {
   AlignLine,
   AlignMarginProp,
   AlignProbeResult,
+  AlignRole,
   AlignSide,
   EdgeOffset,
 };

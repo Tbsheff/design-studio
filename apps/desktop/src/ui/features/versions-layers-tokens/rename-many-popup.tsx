@@ -20,36 +20,38 @@ const RenameManyPopup = ({ many }: RenameManyPopupProps): ReactNode => {
   }, []);
 
   return (
-    <form
-      className="ui-menu layers-rename-popup"
-      aria-label={COPY.renameManyLabel}
-      onSubmit={many.handleSubmit}
-    >
-      <RenameManyField
-        inputRef={inputRef}
-        isDisabled={many.fields.find !== ""}
-        label={COPY.renameManyTo}
-        name="rename-to"
-        value={many.fields.pattern}
-        onValueChange={many.fields.handlePatternChange}
-        onFieldKeyDown={many.handleKeyDown}
-      />
-      <RenameManyPair many={many} />
-      <p className="layers-rename-hint">{COPY.renameManyHint}</p>
-      {many.isTooMany && (
-        <p className="layers-rename-error" role="alert">
-          {COPY.renameManyTooMany}
-        </p>
-      )}
-      <RenameManyPreview preview={many.preview} />
-      <button
-        type="submit"
-        className="btn small primary layers-rename-apply"
-        disabled={many.isTooMany}
+    <div className="layers-rename-anchor">
+      <form
+        className="ui-menu layers-rename-popup"
+        aria-label={COPY.renameManyLabel}
+        onSubmit={many.handleSubmit}
       >
-        {COPY.renameManyApply}
-      </button>
-    </form>
+        <RenameManyField
+          inputRef={inputRef}
+          isDisabled={many.fields.find !== ""}
+          label={COPY.renameManyTo}
+          name="rename-to"
+          value={many.fields.pattern}
+          onValueChange={many.fields.handlePatternChange}
+          onFieldKeyDown={many.handleKeyDown}
+        />
+        <RenameManyPair many={many} />
+        <p className="layers-rename-hint">{COPY.renameManyHint}</p>
+        {many.isTooMany && (
+          <p className="layers-rename-error" role="alert">
+            {COPY.renameManyTooMany}
+          </p>
+        )}
+        <RenameManyPreview preview={many.preview} />
+        <button
+          type="submit"
+          className="btn small primary layers-rename-apply"
+          disabled={many.isTooMany}
+        >
+          {COPY.renameManyApply}
+        </button>
+      </form>
+    </div>
   );
 };
 

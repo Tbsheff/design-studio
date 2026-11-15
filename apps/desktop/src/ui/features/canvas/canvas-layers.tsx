@@ -45,6 +45,45 @@ const useHoveredNode = (hover: LiveStore<HoverBox | null>): number | null => {
   return useSyncExternalStore(hover.subscribe, read, read);
 };
 
+interface LayerMenuState {
+  readonly canPaste: boolean;
+  readonly count: number;
+  readonly hasSource: boolean;
+  readonly isBusy: boolean;
+}
+
+interface CanvasLayerActions {
+  readonly menuItems: () => PreviewMenuItem[];
+  readonly onDrop: (id: number, drop: LayerDrop) => void;
+  readonly onMove: (id: number, move: ReorderMove) => void;
+  readonly onMoveSelected: (move: ReorderMove) => void;
+  readonly onRename: (id: number, name: string | null) => void;
+  readonly onRenameMany: (ids: number[], names: (string | null)[]) => void;
+  readonly onStructureKey: (key: StructureKey) => void;
+  readonly onToggleHidden: (id: number, hidden: boolean) => void;
+}
+
+const toLayerActions = (
+  edits: LayerEdits,
+  menuState: LayerMenuState
+): CanvasLayerActions | null => {
+  if (!edits.enabled) {
+    return null;
+  }
+
+  return {
+    menuItems: (): PreviewMenuItem[] =>
+      toStructureMenuEntries(menuState, edits.structureKey, false),
+    onDrop: edits.dropNode,
+    onMove: edits.moveNode,
+    onMoveSelected: edits.moveSelected,
+    onRename: edits.renameNode,
+    onRenameMany: edits.renameNodes,
+    onStructureKey: edits.structureKey,
+    onToggleHidden: edits.setNodeHidden,
+  };
+};
+
 const CanvasLayersPanel = ({
   frames,
   edits,
@@ -64,30 +103,7 @@ const CanvasLayersPanel = ({
     isBusy: edits.busy,
   };
 
-  let actions: {
-    menuItems: () => PreviewMenuItem[];
-    onDrop: (id: number, drop: LayerDrop) => void;
-    onMove: (id: number, move: ReorderMove) => void;
-    onMoveSelected: (move: ReorderMove) => void;
-    onRename: (id: number, name: string | null) => void;
-    onRenameMany: (ids: number[], names: (string | null)[]) => void;
-    onStructureKey: (key: StructureKey) => void;
-    onToggleHidden: (id: number, hidden: boolean) => void;
-  } | null = null;
-
-  if (edits.enabled) {
-    actions = {
-      menuItems: (): PreviewMenuItem[] =>
-        toStructureMenuEntries(menuState, edits.structureKey, false),
-      onDrop: edits.dropNode,
-      onMove: edits.moveNode,
-      onMoveSelected: edits.moveSelected,
-      onRename: edits.renameNode,
-      onRenameMany: edits.renameNodes,
-      onStructureKey: edits.structureKey,
-      onToggleHidden: edits.setNodeHidden,
-    };
-  }
+  const actions = toLayerActions(edits, menuState);
 
   let selectedNode2: number | null = null;
 

@@ -87,6 +87,17 @@ const toMenu = (
   );
 };
 
+const toOverlays = (
+  rowMenu: RowMenuApi,
+  edits: LayerEditActions | null,
+  many: RenameManyApi
+): ReactNode => (
+  <>
+    {many.isOpen && <RenameManyPopup many={many} />}
+    {toMenu(rowMenu, edits, many)}
+  </>
+);
+
 const LayersPanel = ({
   tree,
   frameName,
@@ -130,9 +141,7 @@ const LayersPanel = ({
         toTip={tipWithKey}
       />
       <LayerSearchField search={state.search} />
-      <div className="layers-rename-anchor">
-        {rename.many.isOpen && <RenameManyPopup many={rename.many} />}
-      </div>
+      {toOverlays(rowMenu, edits, rename.many)}
       <LayersList
         ref={listRef}
         isBusy={busy}
@@ -166,7 +175,6 @@ const LayersPanel = ({
           selectedNodes={state.selectedNodes}
         />
       </LayersList>
-      {toMenu(rowMenu, edits, rename.many)}
     </aside>
   );
 };

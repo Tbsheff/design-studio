@@ -55,6 +55,7 @@ const TokenDarkSlot = ({
     <div className="tkp-dark">
       <ColorValue
         label={`${name} dark value`}
+        path={entry.path}
         trail="moon"
         value={darkValue}
         swatch={swatchFor(darkValue, true)}

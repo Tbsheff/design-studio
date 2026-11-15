@@ -25,7 +25,7 @@ interface TokensSectionsProps {
 }
 
 const TokensSections = (props: TokensSectionsProps): ReactNode => (
-  <TokenCommitSlot.Provider value={props.draft.commit}>
+  <TokenCommitSlot.Provider value={props.draft.commitOne}>
     <div className="ins-scroll tkp-scroll">
       {props.sections.length === 0 && (
         <p className="ins-empty tkp-empty">

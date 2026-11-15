@@ -52,6 +52,7 @@ const TokenValueEditor = ({
     return (
       <ColorValue
         label={label}
+        path={entry.path}
         value={shown.value}
         invalid={invalid}
         swatch={swatchFor(shown.value, false)}

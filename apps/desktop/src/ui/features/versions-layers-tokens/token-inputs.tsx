@@ -18,6 +18,7 @@ interface ColorValueProps {
   readonly label: string;
   readonly trail?: IconName;
   readonly onChange: (next: string) => void;
+  readonly path?: string;
   readonly swatch: string;
   readonly value: string;
 }
@@ -28,6 +29,7 @@ const ColorValue = ({
   invalid,
   label,
   onChange,
+  path,
   swatch,
   trail,
   value,
@@ -49,6 +51,7 @@ const ColorValue = ({
         hex={toHexColor(swatch) ?? colorHex(swatch)}
         isEmpty={isSwatchEmpty(swatch)}
         label={label}
+        path={path ?? null}
         swatch={swatch}
         value={value}
         onChange={onChange}

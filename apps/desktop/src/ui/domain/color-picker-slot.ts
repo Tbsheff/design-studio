@@ -1,7 +1,8 @@
 import { createContext } from "react";
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 interface ColorPickerSlotProps {
+  readonly header: ReactNode | null;
   readonly label: string;
   readonly swatch: string;
   readonly value: string;

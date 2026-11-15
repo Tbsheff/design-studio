@@ -18,6 +18,7 @@ interface LayerFrames {
   elements: MutableRefObject<Record<string, HTMLIFrameElement | null>>;
   tree: LayerTree | null;
   selectedNode: number | null;
+  readonly selectedNodes: ReadonlyMap<string, number>;
   post: (body: ParentMessageBody) => void;
   selectNode: (id: number, additive: boolean) => void;
 }
@@ -69,6 +70,7 @@ interface LayerEdits {
   clearNotice: () => void;
   notify: (message: string) => void;
   renameNode: (id: number, name: string | null) => void;
+  renameNodes: (ids: number[], names: (string | null)[]) => void;
   setNodeHidden: (id: number, hidden: boolean) => void;
   setNodeLocked: (id: number, locked: boolean) => void;
   moveNode: (id: number, move: ReorderMove) => void;

@@ -35,6 +35,7 @@ import { ImpactActions } from "./impact/index.js";
 import { IntegrationActions } from "./integration/index.js";
 import { KitDriftActions } from "./kit-drift/index.js";
 import { LayerStyleActions } from "./layer-style/index.js";
+import { LayerActions } from "./layer/index.js";
 import { MarkupActions } from "./markup/index.js";
 import { MockupActions } from "./mockup/index.js";
 import { MotionActions } from "./motion/index.js";
@@ -106,6 +107,7 @@ const ALL_ACTIONS = {
   impact: ImpactActions,
   integration: IntegrationActions,
   kitDrift: KitDriftActions,
+  layer: LayerActions,
   layerStyle: LayerStyleActions,
   markup: MarkupActions,
   mockup: MockupActions,

@@ -35,6 +35,7 @@ import { ImpactLive } from "./impact/live.js";
 import { IntegrationLive } from "./integration/live.js";
 import { KitDriftLive } from "./kit-drift/live.js";
 import { LayerStyleLive } from "./layer-style/live.js";
+import { LayerLive } from "./layer/live.js";
 import { MarkupLive } from "./markup/live.js";
 import { MockupLive } from "./mockup/live.js";
 import { MotionLive } from "./motion/live.js";
@@ -106,6 +107,7 @@ const ALL_LIVE = {
   impact: ImpactLive,
   integration: IntegrationLive,
   kitDrift: KitDriftLive,
+  layer: LayerLive,
   layerStyle: LayerStyleLive,
   markup: MarkupLive,
   mockup: MockupLive,

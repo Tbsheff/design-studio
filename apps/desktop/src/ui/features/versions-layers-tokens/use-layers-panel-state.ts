@@ -20,6 +20,7 @@ import { useLayerRowCallbacks } from "./use-layer-row-callbacks.js";
 import { useLayerSearch } from "./use-layer-search.js";
 import type { LayerSearchApi } from "./use-layer-search.js";
 import { usePendingSelect } from "./use-pending-select.js";
+import type { RenameMany } from "./use-rename-many.js";
 import { useRowMenu } from "./use-row-menu.js";
 import type { RowMenuApi } from "./use-row-menu.js";
 
@@ -28,6 +29,7 @@ interface PanelEdits extends LayerKeyEdits {
   readonly onDrop?: NonNullable<DragHandlers["onDrop"]>;
   readonly onMove: NonNullable<DragHandlers["onMove"]>;
   readonly onRename: (id: number, name: string | null) => void;
+  readonly onRenameMany?: RenameMany;
 }
 
 interface PanelStateInput {
@@ -126,6 +128,30 @@ const usePanelTree = (input: PanelStateInput): PanelTree => {
   };
 };
 
+interface PanelRenameInput {
+  readonly edits: PanelEdits | null;
+  readonly listRef: RefObject<HTMLDivElement | null>;
+  readonly treeState: PanelTree;
+}
+
+const usePanelRename = (input: PanelRenameInput): LayerRenameApi => {
+  const { edits, listRef, treeState } = input;
+  const { keys, nodes, rows, select: onSelect, selectedNodes } = treeState;
+  const onRename = edits?.onRename ?? null;
+  const onRenameMany = edits?.onRenameMany ?? null;
+
+  return useLayerRename({
+    keys,
+    listRef,
+    nodes,
+    onRename,
+    onRenameMany,
+    onSelect,
+    rows,
+    selectedNodes,
+  });
+};
+
 const usePanelState = (input: PanelStateInput): PanelState => {
   const { edits, isMac, onHover, onToggleLocked } = input;
   const treeState = usePanelTree(input);
@@ -146,12 +172,12 @@ const usePanelState = (input: PanelStateInput): PanelState => {
     selectedNode,
   });
 
-  const onRename = edits?.onRename ?? null;
   const onSelect = select;
-  const rename = useLayerRename({ keys, listRef, onRename, onSelect, rows });
+  const rename = usePanelRename({ edits, listRef, treeState });
+
   const rowMenu = useRowMenu(Boolean(edits?.menuItems), selectedNodes, select);
   const { selectedIndex } = list;
-  const { setEditing: onStartEdit } = rename;
+  const { startRename: onStartEdit } = rename;
 
   const onKeyDown = useLayerKeys({
     collapsed,

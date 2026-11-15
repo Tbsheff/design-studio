@@ -1,0 +1,32 @@
+call-action layer.rename on http://127.0.0.1:7520. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.
+
+[http] ok, 144 ms, git spawns: not counted (server side)
+{
+  "renamed": 4,
+  "skipped": [],
+  "versionId": "pending-374dfb7a6c0bda59"
+}
+
+[mcp] ok, 45 ms, git spawns: not counted (server side)
+{
+  "renamed": 4,
+  "skipped": [],
+  "versionId": "pending-17ff79c7ef6f7175"
+}
+
+[agent] ok, 4 ms, git spawns: not counted (server side)
+{
+  "renamed": 4,
+  "skipped": [],
+  "versionId": "pending-8f40ce6743d15d7a"
+}
+
+[http] reset: 1 undo
+
+[mcp] reset: 1 undo
+
+[agent] reset: 1 undo
+
+answered approval cards: none
+
+call-action: pass, 3 surfaces ran, 0 diffs, 0 failed surfaces, 0 error results

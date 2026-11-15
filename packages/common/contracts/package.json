@@ -51,6 +51,7 @@
     "./start-points": "./src/start-points.ts",
     "./state-styles": "./src/state-styles.ts",
     "./states": "./src/states.ts",
+    "./studio-token": "./src/studio-token.ts",
     "./style-search": "./src/style-search.ts",
     "./text-format-properties": "./src/text-format-properties.ts",
     "./text-search": "./src/text-search.ts",

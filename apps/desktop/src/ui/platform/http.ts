@@ -7,7 +7,7 @@ import type {
   WireOutput,
 } from "@design-studio/actions/_core/action";
 import type { WireBody } from "@design-studio/actions/_core/wire";
-import { STUDIO_TOKEN_HEADER } from "@design-studio/contracts";
+import { STUDIO_TOKEN_HEADER } from "@design-studio/contracts/studio-token";
 
 import { isText } from "./json-guard";
 import { getSession, renewSession } from "./session";

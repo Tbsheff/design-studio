@@ -11,6 +11,7 @@ import type {
 import type { PortReviewRecord } from "@design-studio/contracts/port";
 import type { ForcedStatePart } from "@design-studio/contracts/state-styles";
 import type { StatesRequest } from "@design-studio/contracts/states";
+import { STUDIO_TOKEN_HEADER } from "@design-studio/contracts/studio-token";
 import type {
   StyleQuery,
   StyleScanResult,
@@ -1180,7 +1181,6 @@ export const API_ROUTES = {
   workTreeStatus: "GET /api/projects/:pid/d/:did/status -> WorkTreeStatus",
 } as const;
 
-export const STUDIO_TOKEN_HEADER = "x-studio-token";
 export const BRIDGE_TOKEN_PARAM = "__studio_token";
 export const BRIDGE_PARENT_ORIGIN_PARAM = "__studio_parent";
 export const BRIDGE_PASSIVE_PARAM = "__studio_passive";
@@ -2756,3 +2756,5 @@ export interface VersionChanges {
   truncated: boolean;
   thumbs?: VersionThumbs;
 }
+
+export { STUDIO_TOKEN_HEADER };

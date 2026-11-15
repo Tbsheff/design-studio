@@ -1,10 +1,18 @@
 export { createActivityLog } from "./activity.js";
 
-export { runAgentTool, runConfirmedAgentTool } from "./agent-call.js";
+export {
+  runAgentTool,
+  runConfirmedAgentTool,
+  runGatedAgentTool,
+} from "./agent-call.js";
+
+export { toQueueAsk } from "./queue-ask.js";
 
 export type { ConfirmedScope } from "./agent-call.js";
 
 export { createApprovalQueue } from "./approvals.js";
+
+export type { ApprovalQueue } from "./approvals.js";
 
 export { createCloudIntrospect } from "./key-introspect.js";
 

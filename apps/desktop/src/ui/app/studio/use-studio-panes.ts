@@ -89,8 +89,10 @@ const useStudioPanes = (ui: StudioUi): StudioPanes => {
 
   useSelectionReveal(ui);
 
+  const hasSubject = selection.length > 0 || ui.inspectorTab === "tweaks";
+
   const isInspectorOpen =
-    selection.length > 0 && !ui.isInspectorHidden && !ui.isCommentsShown;
+    hasSubject && !ui.isInspectorHidden && !ui.isCommentsShown;
 
   const showInspector = (): Promise<boolean> => {
     setIsInspectorHidden(false);
@@ -106,7 +108,7 @@ const useStudioPanes = (ui: StudioUi): StudioPanes => {
   };
 
   const toggleInspector = (): void => {
-    if (selection.length === 0) {
+    if (!hasSubject) {
       return;
     }
 

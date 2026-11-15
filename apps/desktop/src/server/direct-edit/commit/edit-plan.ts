@@ -11,6 +11,7 @@ import { DirectEditError } from "../engine/errors.js";
 import type { PatchResult } from "../engine/errors.js";
 import { assertKnownTokens } from "../engine/tokens.js";
 import { patchSource, resolveSource, themeForFile } from "./edit-source.js";
+import { toFontLinkedCode } from "./google-font-link.js";
 import { findTextSource } from "./text-source.js";
 
 export async function planDirectEdit(
@@ -25,12 +26,10 @@ export async function planDirectEdit(
   const theme = await themeForFile(workTree, target.relative, original, scope);
 
   try {
-    return {
-      request,
-      target,
-      original,
-      patch: patchSource(target.relative, original, request, theme),
-    };
+    const patch = patchSource(target.relative, original, request, theme);
+    const code = toFontLinkedCode(target.relative, patch.code, [request]);
+
+    return { request, target, original, patch: { ...patch, code } };
   } catch (error) {
     if (!isDataText(error, request)) {
       throw error;

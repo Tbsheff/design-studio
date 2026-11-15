@@ -30,6 +30,7 @@ import {
   writeNewFile,
 } from "./edit-source.js";
 import { editSummary } from "./edit-title.js";
+import { toFontLinkedCode } from "./google-font-link.js";
 import {
   announceWhile,
   assertCanEdit,
@@ -229,6 +230,14 @@ function applySplice(
   done.push(splice);
 }
 
+function applyGroupFonts(group: FileGroup): void {
+  group.code = toFontLinkedCode(
+    group.target.relative,
+    group.code,
+    group.edits.map((edit) => edit.request)
+  );
+}
+
 function patchGroups(
   groups: FileGroup[],
   applied: AppliedEdit[],
@@ -260,6 +269,7 @@ function patchGroups(
       };
       tags[index] = patch.tag;
     }
+    applyGroupFonts(group);
   }
 }
 

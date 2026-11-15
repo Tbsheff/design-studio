@@ -302,3 +302,23 @@ None. No pick changes a prompt or the run loop. Total: 0 runs.
 10. The Review entry tooltip does not name alignment (`review-entry-button.tsx`, align-check "Left out"), and `get_screenshot` still says "up to 6000 px" (tall-frames "Left out").
 
 Dropped from the list: Figma variables import and export, the scale tool, distribute and tidy up, group, gradients, inner shadow and blurs, constraints and min and max size, layer search and drag reorder, Copy as CSS, version compare, image paste, Alt-drag duplicate, Tailwind alpha writes (the code exists, see Findings). Canvas memory (doop) fell off the list after cycle 36.
+
+## Results
+
+Merged into main in this order: polish-41, wrap-check, near-values, color-pick, font-web. There were no conflicts. A main fix followed, `ed6a4335b`: `keepSharedAsk` in `review/run.ts` changed `appDir: "."` into `"./"`, and this dropped every Fix in an app at the repo root. wrap-check found the bug. No app check was done on the fix.
+
+- **polish-41:** Frames up to 8,000 px tall now export. PNG works at 1x and 2x, and 3x is refused with a clear message. PDF covers the full page. Review takes tall frames, and the critique sends tiles of 4,000 px or less. Align now covers grid rows and inline-block rows. Front and back on many layers now give 1 version. The `set_forced_state` cause is confirmed: the snapshot has 5 states and the code has 19, and no script runs `mcp-snapshot.ts --check`.
+- **wrap-check:** Review finds orphan words in headings and button text that wraps. The Fix writes `text-wrap: balance` or `text-balance`. It costs about 2.7 ms per frame.
+- **near-values:** When a project has no tokens, Review finds colors and radii that are almost the same. A value from a CSS rule gets only "Ask Claude" and no Fix.
+- **color-pick:** The color popup has a saturation pad, hue, alpha, hex and "On this page". A drag gives 1 version, and Escape reverts it. In Tailwind, alpha writes `text-card/40`. The Fill row still writes `bg-[rgb(...)]`.
+- **font-web:** HTML prototypes get a "Google Fonts" group of 40 families. Enter writes the link and the font stack as 1 version. Next apps do not show the group, and `next/font` is left out.
+
+Home preload: B1 is 274,705 B, which is 2 B over the 274,703 B baseline. The color-pick merge shifted the chunk index numbers in `screen-preload`, and no new Home code was added. I did not raise the baseline. Cycle 42 must win back the 2 B.
+
+Open (Tyler decides):
+- `check:scripts` S11, E1, O12 and E16.
+- MCP snapshot diffs: `export`, `export_handoff_export`, `review_frame`, the `canvas.json` height and `set_forced_state`.
+- Wire `mcp-snapshot.ts --check` into a script or a hook.
+- Cmd+Z by OS keyboard is a manual check.
+
+Checks: gen, tsc, lint and lint:gate pass (59,593 diagnostics, baseline 89,733). ui passes, clip finds 0, pack and the reinstall pass, and :4570 gives 200. Idle CPU is 0.02 CPU-s over 60 s. check-bundle passes. Nothing was pushed.

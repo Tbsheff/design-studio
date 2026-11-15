@@ -19,7 +19,7 @@ const listFont = defineAction({
   },
   confirm: "none",
   description:
-    "List the font families that a direction loads: next/font imports, @font-face rules, font tokens and Google Fonts links, then the system fonts. Each item has the family, the source, the token or null, the Tailwind class or null, and the font-family value to write.",
+    "List the font families that a direction loads: next/font imports, @font-face rules, font tokens and Google Fonts links. In an HTML prototype, then 40 Google Fonts families that the page does not load yet, with source catalog. Then the system fonts. Each item has the family, the source, the token or null, the Tailwind class or null, and the font-family value to write. When edit_element or batch_edit writes a catalog stack to an HTML file, the edit adds the Google Fonts link in the same version.",
   errors: [BadRequest, Conflict, NotFound],
   http: {
     method: "GET",

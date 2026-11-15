@@ -22,6 +22,7 @@
     "./fill": "./src/fill.ts",
     "./folders": "./src/folders.ts",
     "./frame-state": "./src/frame-state.ts",
+    "./google-fonts": "./src/google-fonts.ts",
     "./grid": "./src/grid.ts",
     "./html-entities": "./src/html-entities.ts",
     "./icons": "./src/icons.ts",

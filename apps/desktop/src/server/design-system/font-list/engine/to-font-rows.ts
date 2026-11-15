@@ -1,4 +1,8 @@
 import type { Font, FontSource } from "@design-studio/actions/font/schema";
+import {
+  GOOGLE_FONTS,
+  toGoogleFontStack,
+} from "@design-studio/contracts/google-fonts";
 
 interface FontText {
   readonly file: string;
@@ -17,6 +21,7 @@ interface NamedFamily {
 
 interface FontScan {
   readonly families: readonly NamedFamily[];
+  readonly isHtmlPrototype: boolean;
   readonly texts: readonly FontText[];
   readonly tokens: readonly FontToken[];
 }
@@ -57,6 +62,12 @@ const SYSTEM_FONTS: readonly Font[] = [
   stack: value,
   token: null,
 }));
+
+const CATALOG_FIELDS = {
+  className: null,
+  source: "catalog",
+  token: null,
+} as const;
 
 const toPlainName = (value: string): string =>
   value.replaceAll(/["']/gu, "").trim();
@@ -227,8 +238,42 @@ const toProjectRows = (scan: FontScan): Font[] => {
   return rows;
 };
 
-const toFontRows = (scan: FontScan): readonly Font[] =>
-  [...toProjectRows(scan), ...SYSTEM_FONTS].slice(0, MAX_ROWS);
+const toCatalogRows = (
+  scan: FontScan,
+  project: readonly Font[]
+): readonly Font[] => {
+  if (!scan.isHtmlPrototype) {
+    return [];
+  }
+
+  const loaded = new Set(project.map((row) => toKey(row.family)));
+
+  const rows: Font[] = [];
+
+  for (const font of GOOGLE_FONTS) {
+    if (!loaded.has(toKey(font.family))) {
+      const stack = toGoogleFontStack(font);
+
+      rows.push({
+        ...CATALOG_FIELDS,
+        family: font.family,
+        preview: stack,
+        stack,
+      });
+    }
+  }
+
+  return rows;
+};
+
+const toFontRows = (scan: FontScan): readonly Font[] => {
+  const project = toProjectRows(scan);
+
+  return [...project, ...toCatalogRows(scan, project), ...SYSTEM_FONTS].slice(
+    0,
+    MAX_ROWS
+  );
+};
 
 export { toFontRows };
 

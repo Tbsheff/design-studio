@@ -324,3 +324,19 @@ None. No pick changes a prompt or the run loop. route-into uses `STUDIO_AGENT=mo
 10. The first double-click after a page load sometimes does not open the text edit (not rechecked).
 
 Dropped from the list: measure, rulers, zoom keys, per-corner radius, aspect lock, absolute position, blend modes, image fit, border per side, select layer, select matching, find and replace, swap instance, shape and text tools, layer copy as PNG, edit and resend, queued comments, templates, URL and image attach, copy code, PPTX export, tweaks (the code exists, see Findings). Voice input: macOS dictation already works in every text field.
+
+## Results
+
+Merged into main in this order: polish-42, route-into, frame-link, token-color, batch-rename. There were no conflicts.
+
+- **polish-42:** B1 went back under the baseline. The Fill row writes 1 version on each drag with no Apply, for example `bg-black/40`, and gradients still need Apply. The text and Fill popups stay open after a write. A value from a `<style>` block or a linked `.css` file now gets a Fix, and a shared rule keeps Ask Claude. Direct edits now take a `.css` file or `tag: "style"` as a rule edit. The `next/font` write was not built.
+- **route-into:** A route copy into an existing prototype now keeps its frames. The cause: `importRouteCopy` always deleted start frame `f1`. Now it deletes `f1` only for a new prototype.
+- **frame-link:** `create_share_link` returns `frameUrls`. In the viewer, `#frame=f3` opens that frame, and Play starts there. The canvas menu copies a frame link. Links from earlier sessions get no frame rows. Incident: one test click turned on LAN sharing on the test server for about 2 minutes, and the agent turned it off.
+- **token-color:** The token editor and tweaks use the color popup with alpha. A drag gives a preview, and pointer up saves 1 version. Open: pointer up saves all pending token edits, and an alias token becomes a literal color after a drag.
+- **batch-rename:** Adds the new action `layer.rename` (tool `rename_layer`). With 2 or more layers selected, F2 opens a rename popup with `$&`, `$n` and `$N` tokens, Find and Replace, and a preview. One rename of up to 50 layers gives 1 version.
+
+Home preload: B1 is 274,673 B, which is 30 B under the 274,703 B baseline. I lowered the baseline to 274,673 B.
+
+Open (Tyler decides): the `check:scripts` S11, E1, O12 and E16 items, the MCP snapshot diffs, the snapshot-check wiring, and Cmd+Z by OS keyboard.
+
+Checks: gen, tsc, lint and lint:gate pass (59,575 diagnostics, baseline 89,733). ui passes, clip finds 0, pack and the reinstall pass, and :4570 gives 200. Idle CPU is 0.02 CPU-s over 60 s. check-bundle passes. Nothing was pushed.

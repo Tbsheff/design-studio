@@ -293,8 +293,18 @@ function fromAppSource(draft: Draft): boolean {
   return draft.source !== null && !draft.source.includes("node_modules/");
 }
 
+const toAppPrefix = (appDir: string): string => {
+  const dir = appDir.replace(/^\.\/?/, "").replace(/\/+$/, "");
+
+  if (dir === "") {
+    return "";
+  }
+
+  return `${dir}/`;
+};
+
 function keepSharedAsk(drafts: Draft[], appDir: string): Draft[] {
-  const prefix = appDir ? `${appDir.replace(/\/+$/, "")}/` : "";
+  const prefix = toAppPrefix(appDir);
 
   for (const draft of drafts) {
     const file = draft.fix?.edit.source.file;

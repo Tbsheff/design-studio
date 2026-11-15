@@ -21,6 +21,7 @@ interface SlashSourceProps {
   commands: readonly Command[];
   onSkill: (id: string) => void;
   onCommand: (command: Command) => void;
+  onTweaks: ((ask: string) => void) | null;
 }
 
 interface UseSlashSectionsResult {
@@ -41,13 +42,35 @@ const toManualNote = (manualCount: number): ReactElement | null => {
   return null;
 };
 
+const toTweaksCommands = (
+  commands: readonly Command[],
+  onTweaks: ((ask: string) => void) | null
+): readonly Command[] => {
+  if (onTweaks === null) {
+    return commands;
+  }
+
+  const tweaks: Command = {
+    group: copy.slashTweaksGroup,
+    icon: "settings",
+    id: "chat.tweaks",
+    run: () => onTweaks(""),
+    slash: "tweaks",
+    title: copy.slashTweaksTitle,
+  };
+
+  return [tweaks, ...commands];
+};
+
 const useSlashSections = ({
   disabled,
   exclude,
   commands,
   onSkill,
   onCommand,
+  onTweaks,
 }: SlashSourceProps): UseSlashSectionsResult => {
+  const shown = toTweaksCommands(commands, onTweaks);
   const { catalog, error } = useSkillCatalog();
   const on = enabledSkills(catalog, disabled);
   const excluded = new Set(exclude);
@@ -64,7 +87,7 @@ const useSlashSections = ({
 
     return [
       {
-        items: shownCommands(commands, query).map((command) =>
+        items: shownCommands(shown, query).map((command) =>
           commandChoice(command, onCommand)
         ),
         label: "Commands",

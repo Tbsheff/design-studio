@@ -210,6 +210,8 @@ const copy = {
   skillsForThisProject: "Skills for this project",
   skillsOnOff: "Skills on",
   skipQuestions: "Skip questions",
+  slashTweaksGroup: "Design",
+  slashTweaksTitle: "Add live tweaks: sliders for color, radius and type",
   sources: "Sources",
   step: " step",
   stopRun: "Stop run",

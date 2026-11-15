@@ -34,7 +34,8 @@ token-inputs.tsx ColorValue -> token-color-swatch.tsx (popup or native input)
 
 - **No `anchor` prop.** `useColorPopup` finds the `.ins-field` anchor itself, so the slot has `swatch` instead.
 - **Second provider.** The tweaks panel is under the inspector, not the column, so `studio-inspector.tsx` also provides the slot.
-- **Inspector chunk.** `ColorPickerPopup` is exported from `inspector.tsx` and the lazy loader imports `./inspector.js`. A separate lazy chunk renamed a Home preload chunk to `contracts` (check-bundle fail, +448 B). Now check-bundle passes: B1 is 274,743 B, which is 38 B over main (274,705 B). The new 86 B `color-picker-slot` shared chunk shifts the `screen-preload` indexes.
+- **Inspector chunk.** `ColorPickerPopup` is exported from `inspector.tsx` and the lazy loader imports `./inspector.js`. A separate lazy chunk renamed a Home preload chunk to `contracts` (check-bundle fail, +448 B). Now check-bundle passes: B1 is 274,743 B. The spec gives main as 274,705 B (the cycle-41 number, not a build run here), so about 38 B more. The new 86 B `color-picker-slot` shared chunk shifts the `screen-preload` indexes.
+- **Home chunk list.** In both builds here, the Home list is not the same as `baseline.json` B1.chunks: `stream` and `keymap` are missing, and `pick` is there 2 times. check-bundle fails only on a new name, so it passes. Main was not built here, so it is not known if main shows the same list. Run check-bundle after the merge.
 - **Commit scope.** Pointer up commits every pending token draft, not only this token.
 - **Value seed.** The popup opens on the resolved swatch color. An alias token (`var(--x)`) becomes a literal after a drag.
 - **Not rebased on polish-42.** It is not merged yet, so the token popup still uses the current dismiss.
@@ -62,6 +63,8 @@ token-inputs.tsx ColorValue -> token-color-swatch.tsx (popup or native input)
 ## Fixture
 
 `ds-wt/tc-seed`: an HTML prototype with `design-system/{tokens.json,pack.json,tokens.css}` and `studio/tweaks.json` (Accent color tweak).
+
+An extra project from the first `project.create` call (no `parentPath`) is at `token-color/studio-projects/tc-seed`. It is gitignored and is registered only in `ds-wt/token-color-data`.
 
 ## Screenshots
 

@@ -20,19 +20,19 @@ const BALANCED = new Set(["balance", "pretty"]);
 const BALANCE_FIX: TypeFix = {
   label: "Balance the lines",
   style: { "text-wrap": "balance" },
-  tailwindClass: "text-balance",
+  tailwindClass: null,
 };
 
 const PRETTY_FIX: TypeFix = {
   label: "Avoid a 1-word last line",
   style: { "text-wrap": "pretty" },
-  tailwindClass: "text-pretty",
+  tailwindClass: null,
 };
 
 const NOWRAP_FIX: TypeFix = {
   label: "Keep the label on 1 line",
   style: { "white-space": "nowrap" },
-  tailwindClass: "whitespace-nowrap",
+  tailwindClass: null,
 };
 
 const isOrphan = (text: TypeText): boolean =>

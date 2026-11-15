@@ -21,8 +21,6 @@ interface TypeDraftInput {
 
 const MAX_WIDTH_CLASS = /^max-w-/u;
 
-const CLASS_PROPS = new Set(["max-width", "text-wrap", "white-space"]);
-
 const TYPE_CAP = 800;
 
 const toTypeExpression = (): string => toTypeProbeExpression(TYPE_CAP);
@@ -47,7 +45,7 @@ const toStyle = (
 ): Partial<Record<DirectStyleProperty, string>> =>
   Object.fromEntries(
     Object.entries(style).filter(
-      ([prop]) => !isClassFix || !CLASS_PROPS.has(prop)
+      ([prop]) => !isClassFix || prop !== "max-width"
     )
   );
 
@@ -80,11 +78,7 @@ const toEdit = (
   if (isClassFix && fix.tailwindClass) {
     edit.classes = {
       add: [fix.tailwindClass],
-      remove: el.classes.filter(
-        (cls) =>
-          MAX_WIDTH_CLASS.test(cls) &&
-          MAX_WIDTH_CLASS.test(fix.tailwindClass ?? "")
-      ),
+      remove: el.classes.filter((cls) => MAX_WIDTH_CLASS.test(cls)),
     };
   }
 

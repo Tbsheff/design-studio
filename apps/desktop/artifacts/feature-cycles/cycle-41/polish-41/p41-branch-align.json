@@ -1,0 +1,30 @@
+{
+  "status": 200,
+  "ms": 589,
+  "frame": {
+    "id": "f2",
+    "label": "Desktop",
+    "width": 1440,
+    "height": 900
+  },
+  "hits": [
+    {
+      "selector": "#g22",
+      "message": "The left edge of this card is 2 px further right than the left edges of the 3 cards in this column.",
+      "fix": "Set margin-left to 0px",
+      "severity": "medium"
+    },
+    {
+      "selector": "#grid",
+      "message": "The gaps in this grid are 24, 24 and 21 px. Use one gap.",
+      "fix": null,
+      "severity": "medium"
+    },
+    {
+      "selector": "#i3",
+      "message": "This element is 2 px lower than the 3 elements beside it.",
+      "fix": "Set margin-top to 0px",
+      "severity": "medium"
+    }
+  ]
+}

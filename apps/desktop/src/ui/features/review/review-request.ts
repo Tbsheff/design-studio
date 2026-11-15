@@ -1,3 +1,7 @@
+import {
+  CANVAS_MAX_HEIGHT,
+  CANVAS_MAX_SIDE,
+} from "@design-studio/contracts/canvas-file";
 import type { ReviewRequest } from "@design-studio/contracts/review";
 
 interface ReviewFrame {
@@ -8,16 +12,18 @@ interface ReviewFrame {
 }
 
 const SIDE_MIN = 200;
-const SIDE_MAX = 4000;
 
-const toSide = (value: number): number =>
-  Math.min(SIDE_MAX, Math.max(SIDE_MIN, Math.round(value)));
+const toWidth = (value: number): number =>
+  Math.min(CANVAS_MAX_SIDE, Math.max(SIDE_MIN, Math.round(value)));
+
+const toHeight = (value: number): number =>
+  Math.min(CANVAS_MAX_HEIGHT, Math.max(SIDE_MIN, Math.round(value)));
 
 const toReviewRequest = (frame: ReviewFrame): ReviewRequest => {
   const request: ReviewRequest = {
     frame: frame.id,
-    height: toSide(frame.height),
-    width: toSide(frame.width),
+    height: toHeight(frame.height),
+    width: toWidth(frame.width),
   };
 
   if (frame.path) {

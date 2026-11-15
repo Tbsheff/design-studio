@@ -16,6 +16,11 @@ type ZPlan =
 
 type PaintKey = readonly [number, number, number];
 
+interface EndPlan {
+  readonly stop: ZStop | null;
+  readonly writes: readonly ZWrite[];
+}
+
 const isZApplied = (peer: StackPeer): boolean =>
   peer.position !== "static" || peer.isStackItem;
 
@@ -224,6 +229,73 @@ const toZPlan = (stack: SelectionStack | null, step: ZStep): ZPlan => {
   return PLAN_OF_STEP[step](stack);
 };
 
-export { toPaintKey, toCompare, toZPlan };
+const toPeerKey = (peer: StackPeer): string => {
+  if (peer.source === null) {
+    return peer.selector;
+  }
 
-export type { ZPlan, ZStep, ZStop, ZWrite };
+  return `${peer.source.file}:${peer.source.line}:${peer.source.col}`;
+};
+
+const toLastWrites = (writes: readonly ZWrite[]): ZWrite[] => {
+  const last = new Map<string, ZWrite>();
+
+  for (const write of writes) {
+    last.set(toPeerKey(write.peer), write);
+  }
+
+  return [...last.values()];
+};
+
+const toPeerWith = (
+  peer: StackPeer,
+  done: ReadonlyMap<string, ZWrite>
+): StackPeer => {
+  const write = done.get(toPeerKey(peer));
+
+  if (!write) {
+    return peer;
+  }
+
+  return {
+    ...peer,
+    position: write.position ?? peer.position,
+    z: Number(write.zIndex),
+  };
+};
+
+const toStackWith = (
+  stack: SelectionStack,
+  done: ReadonlyMap<string, ZWrite>
+): SelectionStack => ({
+  peers: stack.peers.map((peer) => toPeerWith(peer, done)),
+  self: toPeerWith(stack.self, done),
+});
+
+const toEndPlans = (
+  stacks: readonly SelectionStack[],
+  step: ZStep
+): EndPlan => {
+  const done = new Map<string, ZWrite>();
+  const writes: ZWrite[] = [];
+  let stop: ZStop | null = null;
+
+  for (const stack of stacks) {
+    const plan = toZPlan(toStackWith(stack, done), step);
+
+    if (plan.kind === "stop") {
+      stop ??= plan.stop;
+    } else {
+      for (const write of plan.writes) {
+        done.set(toPeerKey(write.peer), write);
+        writes.push(write);
+      }
+    }
+  }
+
+  return { stop, writes: toLastWrites(writes) };
+};
+
+export { toEndPlans, toLastWrites, toPaintKey, toCompare, toZPlan };
+
+export type { EndPlan, ZPlan, ZStep, ZStop, ZWrite };

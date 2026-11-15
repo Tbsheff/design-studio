@@ -65,6 +65,10 @@ const toGapText = (gaps: readonly number[]): string => {
 };
 
 const toLineWord = (line: AlignLine): string => {
+  if (line.role === "rows") {
+    return "grid";
+  }
+
   if (line.group.tag === "ul" || line.group.tag === "ol") {
     return "list";
   }
@@ -106,8 +110,16 @@ const toOffGaps = (gaps: readonly number[], common: number): number[] =>
     return [];
   });
 
+const toGapKey = (line: AlignLine): string => {
+  if (line.role === "rows") {
+    return `gap|${line.group.selector}|rows`;
+  }
+
+  return `gap|${line.group.selector}|${line.children[0]?.selector ?? ""}`;
+};
+
 const toGapHit = (line: AlignLine): AlignHit | null => {
-  if (!isUniformLine(line)) {
+  if (line.role === "column" || !isUniformLine(line)) {
     return null;
   }
 
@@ -129,7 +141,7 @@ const toGapHit = (line: AlignLine): AlignHit | null => {
   return {
     fix,
     hint: GAP_HINT,
-    key: `gap|${line.group.selector}|${line.children[0]?.selector ?? ""}`,
+    key: toGapKey(line),
     message: `The gaps in this ${toLineWord(line)} are ${toGapText(gaps)} px. Use one gap.`,
     selector: line.group.selector,
     severity: "low",

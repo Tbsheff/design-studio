@@ -1,4 +1,8 @@
 import { SourceUseFields } from "@design-studio/actions/direct-edit/schema";
+import {
+  CANVAS_MAX_HEIGHT,
+  CANVAS_MAX_SIDE,
+} from "@design-studio/contracts/canvas-file";
 import { DESIGN_RULES_TEXT_MAX } from "@design-studio/contracts/design-rules";
 import { FIGMA_NODES_MAX_BYTES } from "@design-studio/contracts/figma-nodes";
 import { INSERT_TEXT_MAX } from "@design-studio/contracts/insert";
@@ -13,8 +17,6 @@ import { REVIEW_FIX_MAX } from "@design-studio/contracts/review";
 import { Effect, Schema } from "effect";
 
 const SIDE_MIN = 200;
-
-const SIDE_MAX = 4000;
 
 const FRAME_TEXT_MAX = 60;
 
@@ -49,7 +51,11 @@ const FOLDER_TEXT_MAX = 500;
 const SourceLocationSchema = Schema.Struct(SourceUseFields);
 
 const SideSchema = Schema.Int.check(
-  Schema.isBetween({ maximum: SIDE_MAX, minimum: SIDE_MIN })
+  Schema.isBetween({ maximum: CANVAS_MAX_SIDE, minimum: SIDE_MIN })
+);
+
+const HeightSchema = Schema.Int.check(
+  Schema.isBetween({ maximum: CANVAS_MAX_HEIGHT, minimum: SIDE_MIN })
 );
 
 const OwnerSchema = Schema.Struct({
@@ -105,7 +111,7 @@ const NodesTextSchema = Schema.String.check(
 
 const ReviewFrameFields = {
   frame: Schema.optionalKey(FrameTextSchema),
-  height: Schema.optionalKey(SideSchema),
+  height: Schema.optionalKey(HeightSchema),
   path: Schema.optionalKey(PathTextSchema),
   width: Schema.optionalKey(SideSchema),
 } as const;

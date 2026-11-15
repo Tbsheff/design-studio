@@ -46,7 +46,7 @@ const ExportOptionFields = ({
       {format === "png" && (
         <ExportScaleField
           scale={scale}
-          first={chosen[0] ?? null}
+          chosen={chosen}
           isSelectionOnly={isSelectionOnly}
           onChange={onChooseScale}
         />

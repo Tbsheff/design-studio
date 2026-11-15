@@ -1,8 +1,11 @@
+import {
+  EXPORT_FRAME_MAX_HEIGHT,
+  EXPORT_FRAME_MAX_SIDE,
+} from "@design-studio/contracts/export";
 import { Schema } from "effect";
 
 const SELECTOR_MAX = 2000;
 const PAGE_PATH_MAX = 300;
-const FRAME_SIDE_MAX = 4000;
 
 const CopyCodeFormatSchema = Schema.Literals(["html", "tailwind", "react"]);
 
@@ -14,7 +17,11 @@ const CopySelectorSchema = Schema.String.check(
 const PagePathSchema = Schema.String.check(Schema.isMaxLength(PAGE_PATH_MAX));
 
 const FrameSideSchema = Schema.Int.check(
-  Schema.isBetween({ maximum: FRAME_SIDE_MAX, minimum: 1 })
+  Schema.isBetween({ maximum: EXPORT_FRAME_MAX_SIDE, minimum: 1 })
+);
+
+const FrameHeightSchema = Schema.Int.check(
+  Schema.isBetween({ maximum: EXPORT_FRAME_MAX_HEIGHT, minimum: 1 })
 );
 
 const CopyCodeResultSchema = Schema.Struct({
@@ -33,14 +40,14 @@ const FrameNameSchema = Schema.String.check(Schema.isMaxLength(FRAME_NAME_MAX));
 const FramePathSchema = Schema.String.check(Schema.isMaxLength(FRAME_PATH_MAX));
 
 const ExportFrameSchema = Schema.Struct({
-  height: FrameSideSchema,
+  height: FrameHeightSchema,
   name: FrameNameSchema,
   path: Schema.optionalKey(FramePathSchema),
   width: FrameSideSchema,
 });
 
 const ExportFrameInputSchema = Schema.Struct({
-  height: FrameSideSchema,
+  height: FrameHeightSchema,
   name: Schema.optionalKey(FrameNameSchema),
   path: Schema.optionalKey(FramePathSchema),
   width: FrameSideSchema,

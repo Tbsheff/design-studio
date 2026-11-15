@@ -1,0 +1,10 @@
+versions before 12 top at x60,x100,x140,x200: z2,z2,z4,z4
+hit z3 sel ?
+WRITE {"zIndex":"3","breakpoint":"base","others":[],"target":{"selector":"#z1","source":{"col":550,"file":"index.html","line":1},"tag":"div"}}
+RESP 200 {"breakpoint":"base","classes":null,"files":["index.html"],"mode":"css","prefix":"","style":{"z-index":"3"},"title":"Stacking: z-index 3","versionId":"pending-cd73c672c1249445"}
+WRITE {"zIndex":"3","breakpoint":"base","others":[],"target":{"selector":"#z3","source":{"col":622,"file":"index.html","line":1},"tag":"div"}}
+RESP 400 {"_tag":"BadRequest","code":null,"error":"BadRequest","message":"No element starts at line 1, column 622"}
+versions after 13 top: z1,z1,z1,z4
+<div class="stack"><div style="z-index: 3;" class="zc" id="z1">Card 1</div><div class="zc" id="z2">Card 2</div><div class="zc" id="z3">Card 3</div><div class="zc" id="z4">Card 4</div></div></body>
+after undo versions 14 top: z2,z2,z4,z4
+<div class="stack"><div class="zc" id="z1">Card 1</div><div class="zc" id="z2">Card 2</div><div class="zc" id="z3">Card 3</div><div class="zc" id="z4">Card 4</div></div></body>

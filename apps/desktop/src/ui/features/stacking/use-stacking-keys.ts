@@ -8,6 +8,7 @@ import {
   isTypingTarget,
   matchesKey,
   STACKING_KEY_EVENT,
+  STACKING_OTHERS_MAX,
   useEditVariant,
 } from "./deps.js";
 import type {
@@ -20,7 +21,7 @@ import { writeZOrder } from "./stacking-api.js";
 import type { StackingIds, ZTargetEdit } from "./stacking-api.js";
 import { breakpointOf } from "./stacking-model.js";
 import type { StackingEdit } from "./stacking-model.js";
-import { toCompare, toPaintKey, toZPlan } from "./z-order-model.js";
+import { toCompare, toEndPlans, toPaintKey, toZPlan } from "./z-order-model.js";
 import type { ZStep, ZStop, ZWrite } from "./z-order-model.js";
 import { readStack } from "./z-order-read.js";
 
@@ -41,7 +42,7 @@ interface StepRun {
   readonly step: ZStep;
 }
 
-type StepStop = ZStop | "no-read";
+type StepStop = ZStop | "no-read" | "too-many";
 
 const IS_MAC = isMacPlatform();
 
@@ -55,6 +56,14 @@ const STEP_KEYS = [
 type StepKey = (typeof STEP_KEYS)[number];
 
 const toStopText = (stop: StepStop, step: ZStep): string => {
+  if (stop === "too-many" && step === "back") {
+    return copy.zTooMany.back;
+  }
+
+  if (stop === "too-many") {
+    return copy.zTooMany.front;
+  }
+
   if (stop === "no-overlap") {
     return copy.zStop[`no-overlap-${step}`];
   }
@@ -90,6 +99,11 @@ const toZEdit = (write: ZWrite): StackingEdit => {
   return { position: write.position, zIndex: write.zIndex };
 };
 
+const toTargetEdit = (write: ZWrite): ZTargetEdit => ({
+  edit: toZEdit(write),
+  target: toTarget(write),
+});
+
 interface StepPlan {
   readonly stop: StepStop | null;
   readonly writes: readonly ZTargetEdit[];
@@ -121,13 +135,7 @@ const toStepPlan = async (
     return { stop: plan.stop, writes: [] };
   }
 
-  return {
-    stop: null,
-    writes: plan.writes.map((write) => ({
-      edit: toZEdit(write),
-      target: toTarget(write),
-    })),
-  };
+  return { stop: null, writes: plan.writes.map(toTargetEdit) };
 };
 
 const toUniqueWrites = (plans: readonly StepPlan[]): ZTargetEdit[] => {
@@ -171,48 +179,49 @@ const toPaintCompare = (one: PaintEntry, two: PaintEntry): number => {
 const isEndStep = (run: StepRun): boolean =>
   run.step === "front" || run.step === "back";
 
-const toRunOrder = async (run: StepRun): Promise<SelectionContext[]> => {
-  const targets = toDomOrder(run.options.selection);
+const toEndOrder = (
+  entries: readonly PaintEntry[],
+  step: ZStep
+): PaintEntry[] => {
+  const sorted = entries.toSorted(toPaintCompare);
 
-  if (targets.length < 2 || !isEndStep(run)) {
-    return targets;
+  if (step === "back") {
+    sorted.reverse();
   }
 
-  const read = await readEntries(run, targets);
-  const entries = read.toSorted(toPaintCompare);
-
-  if (run.step === "back") {
-    entries.reverse();
-  }
-
-  return entries.map((entry) => entry.target);
+  return sorted;
 };
 
-const runEndSteps = async (
+const runEndPlan = async (
   run: StepRun,
-  targets: readonly SelectionContext[],
-  done: readonly StepPlan[]
+  targets: readonly SelectionContext[]
 ): Promise<StepPlan[]> => {
-  const target = targets.at(0) ?? null;
+  const entries = toEndOrder(await readEntries(run, targets), run.step);
+  const stacks = entries.flatMap((entry) => entry.stack ?? []);
+  const plan = toEndPlans(stacks, run.step);
+  const writes = plan.writes.map(toTargetEdit);
+  let stop: StepStop | null = plan.stop;
 
-  if (target === null) {
-    return [...done];
+  if (stacks.length < entries.length) {
+    stop ??= "no-read";
   }
 
-  const plan = await toStepPlan(run, target);
-
-  if (plan.writes.length > 0) {
-    await writeZOrder(run.ids, plan.writes, run.breakpoint);
+  if (writes.length > STACKING_OTHERS_MAX + 1) {
+    return [{ stop: "too-many", writes: [] }];
   }
 
-  return runEndSteps(run, targets.slice(1), [...done, plan]);
+  if (writes.length > 0) {
+    await writeZOrder(run.ids, writes, run.breakpoint);
+  }
+
+  return [{ stop, writes }];
 };
 
 const runStepPlans = async (run: StepRun): Promise<StepPlan[]> => {
-  const targets = await toRunOrder(run);
+  const targets = toDomOrder(run.options.selection);
 
   if (isEndStep(run) && targets.length > 1) {
-    return runEndSteps(run, targets, []);
+    return runEndPlan(run, targets);
   }
 
   const plans = await Promise.all(

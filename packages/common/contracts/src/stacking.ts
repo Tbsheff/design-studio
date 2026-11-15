@@ -31,6 +31,8 @@ const Z_SCALE = ["0", "10", "20", "30", "40", "50", "auto"] as const;
 
 const STACKING_VALUE_MAX = 200;
 
+const STACKING_OTHERS_MAX = 20;
+
 type StackingPosition = (typeof STACKING_POSITIONS)[number];
 
 type StackingOverflow = (typeof STACKING_OVERFLOWS)[number];
@@ -96,6 +98,7 @@ interface StackingSetResult {
 }
 
 export {
+  STACKING_OTHERS_MAX,
   STACKING_OVERFLOWS,
   STACKING_POSITIONS,
   STACKING_PROPERTIES,

@@ -49,6 +49,8 @@ const ALIGN_PROBE_SOURCE = String.raw`(cap) => {
       width: r.width,
       height: r.height,
       alignSelf: cs.alignSelf,
+      display: cs.display,
+      verticalAlign: cs.verticalAlign,
       margin: [num(cs.marginTop), num(cs.marginRight), num(cs.marginBottom), num(cs.marginLeft)],
     };
   };

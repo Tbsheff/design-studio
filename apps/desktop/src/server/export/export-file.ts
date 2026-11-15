@@ -9,7 +9,12 @@ import type {
 import type { ZipEntry } from "../design-system/zip.js";
 import type { Shot } from "../preview/page-capture/index.js";
 import type { ExportRuntime } from "./export-core.js";
-import { parseFrames, parseScale, resolveSource } from "./source.js";
+import {
+  parseFrames,
+  parseScale,
+  resolveSource,
+  toPngFrames,
+} from "./source.js";
 import type { VectorRequest } from "./vector-export.js";
 
 type FileFormat = "html" | "pdf" | "png" | "pptx" | "svg" | "zip";
@@ -314,13 +319,20 @@ const buildExportFile = async (
     return toBytes(zip, ZIP, `${fileStem}.zip`, null);
   }
 
+  const pngScale = parseScale(request.scale ?? 1);
+  let shotFrames = parseFrames(request.frames ?? []);
+
+  if (request.format === "png" && !request.selector) {
+    shotFrames = toPngFrames(shotFrames, pngScale);
+  }
+
   const opened = await source.open();
 
   const job: ImageJob = {
-    frames: parseFrames(request.frames ?? []),
+    frames: shotFrames,
     name: source.project.name,
     runtime: exportRuntime,
-    scale: parseScale(request.scale ?? 1),
+    scale: pngScale,
     scope: toScope(request.scope),
     selector: request.selector,
     stem: fileStem,

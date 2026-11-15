@@ -6,9 +6,11 @@ import type {
 } from "@design-studio/contracts";
 import {
   cleanExportPath,
+  EXPORT_FRAME_MAX_HEIGHT,
   EXPORT_FRAME_MAX_SIDE,
   EXPORT_MAX_FRAMES,
   EXPORT_SCALES,
+  isPngScaleAllowed,
 } from "@design-studio/contracts/export";
 import type { ExportFrame, ExportScale } from "@design-studio/contracts/export";
 import { Result, Schema } from "effect";
@@ -208,8 +210,12 @@ const toBadRequestFailure = (message: string): never => {
   throw new BadRequestError(message);
 };
 
-const SideSchema = Schema.Int.check(
+const WidthSchema = Schema.Int.check(
   Schema.isBetween({ maximum: EXPORT_FRAME_MAX_SIDE, minimum: 1 })
+);
+
+const HeightSchema = Schema.Int.check(
+  Schema.isBetween({ maximum: EXPORT_FRAME_MAX_HEIGHT, minimum: 1 })
 );
 
 const FrameFieldsSchema = Schema.Struct({
@@ -229,7 +235,9 @@ const toFrameFields = toDecoder(FrameFieldsSchema, "ignore");
 
 const toFrameList = toDecoder(Schema.Array(Schema.Unknown), "error");
 
-const toSideResult = toDecoder(SideSchema, "error");
+const toWidthResult = toDecoder(WidthSchema, "error");
+
+const toHeightResult = toDecoder(HeightSchema, "error");
 
 const toNameResult = toDecoder(NameSchema, "error");
 
@@ -239,12 +247,11 @@ const toScaleResult = toDecoder(FrameScaleSchema, "error");
 
 const toSide = (
   label: string,
+  max: number,
   result: Result.Result<number, unknown>
 ): number => {
   if (Result.isFailure(result)) {
-    return toBadRequestFailure(
-      `${label} must be 1 to ${EXPORT_FRAME_MAX_SIDE}`
-    );
+    return toBadRequestFailure(`${label} must be 1 to ${max}`);
   }
 
   return result.success;
@@ -275,9 +282,20 @@ const toFrame = (fields: FrameFields): ExportFrame => {
     return toBadRequestFailure("frame must be an object");
   }
 
-  const height = toSide("height", toSideResult(fields.success.height));
+  const height = toSide(
+    "height",
+    EXPORT_FRAME_MAX_HEIGHT,
+    toHeightResult(fields.success.height)
+  );
+
   const framePath = toFramePath(toPathResult(fields.success.path));
-  const width = toSide("width", toSideResult(fields.success.width));
+
+  const width = toSide(
+    "width",
+    EXPORT_FRAME_MAX_SIDE,
+    toWidthResult(fields.success.width)
+  );
+
   const name = toFrameName(toNameResult(fields.success.name));
   const frame: ExportFrame = { height, name, width };
 
@@ -330,6 +348,45 @@ const parseScale = (raw: ExportScale): ExportScale => {
   return scale.success ?? 1;
 };
 
-export { parseFrame, parseFrames, parseScale, resolveSource, withPagePath };
+const toPngScaleText = (height: number): string => {
+  const allowed: string[] = [];
+
+  for (const scale of EXPORT_SCALES) {
+    if (isPngScaleAllowed(height, scale)) {
+      allowed.push(`${scale}x`);
+    }
+  }
+
+  const last = allowed.at(-1) ?? "1x";
+  let scales = last;
+
+  if (allowed.length > 1) {
+    scales = `${allowed.slice(0, -1).join(", ")} or ${last}`;
+  }
+
+  return `This frame is ${height.toLocaleString("en-US")} px tall. Export it at ${scales}.`;
+};
+
+const toPngFrames = (
+  frames: readonly ExportFrame[],
+  scale: ExportScale
+): ExportFrame[] => {
+  const tall = frames.find((frame) => !isPngScaleAllowed(frame.height, scale));
+
+  if (tall) {
+    return toBadRequestFailure(toPngScaleText(tall.height));
+  }
+
+  return [...frames];
+};
+
+export {
+  parseFrame,
+  parseFrames,
+  parseScale,
+  resolveSource,
+  toPngFrames,
+  withPagePath,
+};
 
 export type { ExportSource, SourceDeps };

@@ -31,6 +31,8 @@
 - Put the message types in `contracts/src/contracts.ts` (`ParentToBridge` `font-preview`, `BridgeToParent` `font-status`), not in `bridge-protocol.ts` or `bridge-types.ts`. The bridge handlers derive from these unions, and `bridge-protocol.ts` holds only the boot messages.
 - The UI sends only the family name. The bridge builds the href from the catalog, so the catalog stays out of the UI bundle.
 - Fixed a bug from before this pick: `inspector-props.css` loaded only with the component panel. In an HTML prototype the font popup had no position and no max height. `font-field.tsx` now lazy-loads the popup together with that CSS.
+- Hidden coupling: `inspector-props.css` is global after it loads. After the first popup opens, it also restyles the rest of the HTML-prototype inspector (for example, the font input aligns left). Other `cls-suggest` popups in an HTML prototype stay unstyled until the font popup has opened once. Color-pick should know this.
+- Checked the other `planDirectEdit` callers (`state-styles/set.ts`, `agent/direct-tools.ts`, `agent/layer-state-tool.ts`). Each writes `patch.code` whole, so the `<head>` insert is safe. A prototype made in a workspace has `kind: "html"` and only `appProjectId`, so it gets the Google group.
 - The link uses `wght@400;700` for families that have both weights. The 4 one-weight families get no axis.
 - The text in `copy.ts` grew by 3 lines (479 to 482).
 

@@ -1,7 +1,8 @@
-import { useCallback, useState } from "react";
-import type { ChangeEvent, InputEvent, KeyboardEvent } from "react";
+import { useCallback, useMemo, useState } from "react";
+import type { ChangeEvent, KeyboardEvent } from "react";
 
 import { isValidColor } from "./css-value-model.js";
+import type { ColorTarget } from "./use-color-popup.js";
 import type { FieldProps } from "./use-same-field.js";
 
 interface ColorFieldState {
@@ -9,14 +10,16 @@ interface ColorFieldState {
   readonly handleSettle: () => void;
   readonly handleKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
   readonly handleTextChange: (event: ChangeEvent<HTMLInputElement>) => void;
-  readonly handleSwatchInput: (event: InputEvent<HTMLInputElement>) => void;
-  readonly handleSwatchChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  readonly target: ColorTarget;
 }
 
 const useColorField = ({
   prop,
   edit,
-}: Pick<FieldProps, "edit" | "prop">): ColorFieldState => {
+  shown,
+}: Pick<FieldProps, "edit" | "prop"> & {
+  readonly shown: string;
+}): ColorFieldState => {
   const [text, setText] = useState<string | null>(null);
 
   const handleSettle = useCallback((): void => {
@@ -57,27 +60,27 @@ const useColorField = ({
     [edit, prop]
   );
 
-  const handleSwatchInput = useCallback(
-    (event: InputEvent<HTMLInputElement>): void => {
-      edit.preview({ [prop]: event.currentTarget.value });
-    },
-    [edit, prop]
-  );
-
-  const handleSwatchChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>): void => {
-      edit.preview({ [prop]: event.currentTarget.value });
-      edit.commitSoon();
-    },
-    [edit, prop]
+  const target = useMemo(
+    (): ColorTarget => ({
+      onCommit: (next: string): void => {
+        edit.preview({ [prop]: next });
+        edit.commitSoon();
+      },
+      onPreview: (next: string): void => edit.preview({ [prop]: next }),
+      onRevert: (base: string): void => {
+        edit.preview({ [prop]: base });
+        edit.revert([prop]);
+      },
+      value: shown,
+    }),
+    [edit, prop, shown]
   );
 
   return {
     handleKeyDown,
     handleSettle,
-    handleSwatchChange,
-    handleSwatchInput,
     handleTextChange,
+    target,
     text,
   };
 };

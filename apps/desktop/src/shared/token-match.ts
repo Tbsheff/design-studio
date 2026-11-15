@@ -135,6 +135,11 @@ function sortMatches(matches: TokenMatch[]): TokenMatch[] {
   );
 }
 
+const ALPHA_TOLERANCE = 0.01;
+
+const isSameAlpha = (first: Color, second: Color): boolean =>
+  Math.abs((first.alpha ?? 1) - (second.alpha ?? 1)) <= ALPHA_TOLERANCE;
+
 export function matchColor(
   value: string,
   entries: CompiledTokenEntry[],
@@ -159,7 +164,7 @@ export function matchColor(
     const tokenValue = modeValue(entry, mode);
     const color = parseColor(tokenValue);
 
-    if (!color) {
+    if (!color || !isSameAlpha(target, color)) {
       continue;
     }
 

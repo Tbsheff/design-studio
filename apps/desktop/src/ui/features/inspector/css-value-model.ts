@@ -169,6 +169,25 @@ const toDisplayColor = (raw: string): string => {
   return toHexColor(raw) ?? raw.trim();
 };
 
+const SWATCH_CHECKER =
+  "repeating-conic-gradient(var(--surface-active) 0 25%, var(--surface) 0 50%) 0 0 / 8px 8px";
+
+const toSwatchColor = (raw: string): string => {
+  const value = raw.trim();
+
+  if (value === "") {
+    return "transparent";
+  }
+
+  return `linear-gradient(${value}, ${value}), ${SWATCH_CHECKER}`;
+};
+
+const isSwatchEmpty = (raw: string): boolean => {
+  const value = raw.trim();
+
+  return value === "" || value === "transparent" || TRANSPARENT_RE.test(value);
+};
+
 const isValidColor = (raw: string): boolean => {
   const value = raw.trim();
 
@@ -273,6 +292,7 @@ const toChangedProps = (
 export {
   SIDES,
   hasChildElements,
+  isSwatchEmpty,
   isValidColor,
   toBoxSides,
   toChangedProps,
@@ -285,6 +305,7 @@ export {
   toShiftedValue,
   toSteppedValue,
   toStyleValues,
+  toSwatchColor,
   toTextEditability,
 };
 

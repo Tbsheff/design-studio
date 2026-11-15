@@ -1,23 +1,17 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { ChangeEvent, KeyboardEvent } from "react";
 
 import { VECTOR_COLOR } from "../../../shared/vector.js";
-import { toHexColor } from "./css-value-model.js";
-import {
-  DEFAULT_HEX,
-  isValidPaint,
-  toPaintValue,
-  toShownColor,
-} from "./vector-model.js";
+import type { ColorTarget } from "./use-color-popup.js";
+import { isValidPaint, toPaintValue, toShownColor } from "./vector-model.js";
 
 interface VectorColorState {
   readonly handleBlur: () => void;
   readonly handleChange: (event: ChangeEvent<HTMLInputElement>) => void;
   readonly handleKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
-  readonly handleSwatch: (event: ChangeEvent<HTMLInputElement>) => void;
-  readonly hex: string;
   readonly isInvalid: boolean;
   readonly shown: string;
+  readonly target: ColorTarget;
 }
 
 const useVectorColor = (
@@ -65,13 +59,16 @@ const useVectorColor = (
     []
   );
 
-  const handleSwatch = useCallback(
-    (event: ChangeEvent<HTMLInputElement>): void =>
-      onSave(event.currentTarget.value),
-    [onSave]
+  const target = useMemo(
+    (): ColorTarget => ({
+      onCommit: onSave,
+      onPreview: null,
+      onRevert: null,
+      value,
+    }),
+    [onSave, value]
   );
 
-  const hex = toHexColor(value) ?? DEFAULT_HEX;
   const isInvalid = text !== null && !isValidPaint(text, VECTOR_COLOR);
   const shown = text ?? toShownColor(value);
 
@@ -79,10 +76,9 @@ const useVectorColor = (
     handleBlur,
     handleChange,
     handleKeyDown,
-    handleSwatch,
-    hex,
     isInvalid,
     shown,
+    target,
   };
 };
 

@@ -1,0 +1,179 @@
+.swatchButton {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.swatchButton:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.popup {
+  position: fixed;
+  z-index: 90;
+  display: grid;
+  gap: var(--s-2);
+  width: 240px;
+  margin: 0;
+  padding: 0 0 var(--s-2);
+  border: 0;
+  border-radius: var(--r-lg);
+  color: inherit;
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-pop);
+  overflow: hidden;
+  font-size: var(--t-xs);
+  line-height: 16px;
+}
+
+.pad {
+  position: relative;
+  display: block;
+  width: 240px;
+  height: 160px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  background:
+    linear-gradient(to top, #000, transparent),
+    linear-gradient(to right, #fff, var(--pad-hue));
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.pad:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.padThumb {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 3px rgb(0 0 0 / 0.35);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.rows {
+  min-width: 0;
+  display: grid;
+  gap: var(--s-2);
+  padding: 0 var(--s-2);
+}
+
+.slider {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 12px;
+  margin: 0;
+  border-radius: 6px;
+  background:
+    var(--slider-track),
+    repeating-conic-gradient(var(--surface-active) 0 25%, var(--surface) 0 50%)
+      0 0 / 8px 8px;
+  box-shadow: inset 0 0 0 1px var(--edge-strong);
+  cursor: pointer;
+  appearance: none;
+  touch-action: none;
+}
+
+.slider:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.slider::-webkit-slider-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: linear-gradient(var(--slider-thumb), var(--slider-thumb)), #fff;
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 3px rgb(0 0 0 / 0.35);
+  appearance: none;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 72px;
+  gap: var(--s-1);
+}
+
+.field {
+  box-sizing: border-box;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  height: 28px;
+  padding: 0 var(--s-2);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+
+.fieldLabel {
+  color: var(--text-3);
+}
+
+.fieldInput {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+}
+
+.field:focus-within {
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.pageHead {
+  margin: 0;
+  color: var(--text-3);
+}
+
+.pageList {
+  display: grid;
+  grid-template-columns: repeat(8, 20px);
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pageSwatch {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-xs);
+  background: var(--swatch);
+  box-shadow: inset 0 0 0 1px var(--edge-strong);
+  cursor: pointer;
+}
+
+.pageSwatch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

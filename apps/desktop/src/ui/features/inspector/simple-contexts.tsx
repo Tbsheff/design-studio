@@ -1,7 +1,9 @@
 import type { ElementSourceInfo } from "@design-studio/contracts";
 import { useMemo } from "react";
-import type { ReactElement, ReactNode } from "react";
+import type { MutableRefObject, ReactElement, ReactNode } from "react";
 
+import type { PreviewPort } from "../../platform/bridge.js";
+import { ColorPageContext } from "./use-color-page.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 import { VariantScopeContext } from "./use-edit-variant.js";
 import type { VariantScope } from "./use-edit-variant.js";
@@ -15,6 +17,7 @@ interface SimpleContextsProps {
   readonly variantScope: VariantScope;
   readonly tokenUi: TokenUi | null;
   readonly edit: DirectEdit;
+  readonly port: MutableRefObject<PreviewPort | null>;
   readonly children: ReactNode;
 }
 
@@ -23,13 +26,20 @@ const SimpleContexts = ({
   variantScope,
   tokenUi,
   edit,
+  port,
   children,
 }: SimpleContextsProps): ReactElement => {
   const app = useInspectorApp();
 
+  const colored = (
+    <ColorPageContext.Provider value={port}>
+      {children}
+    </ColorPageContext.Provider>
+  );
+
   const scoped = (
     <DirectEditContext.Provider value={edit}>
-      {children}
+      {colored}
     </DirectEditContext.Provider>
   );
 

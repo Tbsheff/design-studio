@@ -1,6 +1,5 @@
 import type { SelectionContext } from "@design-studio/contracts";
 import type { InsertTarget } from "@design-studio/contracts/insert";
-import type { CSSProperties } from "react";
 
 import type { BooleanOpName, VectorPaint } from "../../../shared/vector.js";
 
@@ -37,7 +36,6 @@ const GLYPH_SECOND = "M6.5 6.5h7v7h-7z";
 const GLYPH_OPACITY = 0.35;
 const NO_OPACITY = 0;
 const NO_PAINT = "none";
-const DEFAULT_HEX = "#ffffff";
 
 const BOOLEAN_LABEL: Record<BooleanOpName, string> = {
   exclude: "Exclude",
@@ -175,25 +173,13 @@ const toPaintValue = (next: string): string | null => {
   return next;
 };
 
-const toSwatchColor = (value: string): string => {
+const toPaintSwatch = (value: string): string => {
   if (isPainted(value)) {
     return value;
   }
 
   return "transparent";
 };
-
-const toSwatchClass = (value: string): string => {
-  if (isPainted(value)) {
-    return "ins-swatch";
-  }
-
-  return "ins-swatch empty";
-};
-
-const toSwatchStyle = (value: string): CSSProperties => ({
-  ["--swatch" as string]: toSwatchColor(value),
-});
 
 const toFillPaint = (isFilled: boolean): string => {
   if (isFilled) {
@@ -219,7 +205,6 @@ export {
   BOOLEAN_GLYPH,
   BOOLEAN_LABEL,
   BOOLEAN_TIP,
-  DEFAULT_HEX,
   GLYPH_OPACITY,
   isPainted,
   isValidPaint,
@@ -227,9 +212,8 @@ export {
   toInsertTarget,
   toOnlySelection,
   toPaint,
+  toPaintSwatch,
   toPaintValue,
   toSavedPaint,
   toShownColor,
-  toSwatchClass,
-  toSwatchStyle,
 };

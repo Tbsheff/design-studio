@@ -58,13 +58,13 @@ import {
   type TypeHit,
   type TypeProbeResult,
 } from "./engine/index.js";
-import { verifyFixes } from "./fixes.js";
+import { runFixChecks } from "./fixes.js";
 import {
   toInteractionDrafts,
   toInteractionExpression,
 } from "./interaction-drafts.js";
+import { toNearValueDrafts } from "./near-value-drafts.js";
 import { reviewProbeExpression, type ProbeResult } from "./probe.js";
-import { markShared, pageOwnDir } from "./shared-files.js";
 import { toTypeDrafts, toTypeExpression, toTypeSteps } from "./type-drafts.js";
 
 const LAYOUT_CAP = 12;
@@ -365,6 +365,10 @@ export async function runReview(
           entries,
           TOKEN_CAP
         ),
+        ...(await toNearValueDrafts(page, {
+          hasTokens: entries.length > 0,
+          probe: read.probe,
+        })),
         ...layoutDrafts(read.layout),
         ...toTypeDrafts({
           elements: read.probe.elements,
@@ -403,8 +407,7 @@ export async function runReview(
     ? keepSharedAsk(all.filter(fromAppSource), project.app.appDir)
     : all;
 
-  await verifyFixes(project, direction, drafts);
-  markShared(drafts, await pageOwnDir(project, direction, frame.path));
+  await runFixChecks(project, direction, drafts, frame.path);
 
   const findings = ordered(
     groupKitTokens(

@@ -6,6 +6,7 @@ import type {
 } from "@design-studio/contracts";
 import type {
   ReviewFinding,
+  ReviewFrame,
   ReviewFixResult,
 } from "@design-studio/contracts/review";
 
@@ -17,6 +18,7 @@ import {
 } from "../direct-edit/commit/index.js";
 import { knownTokenVars } from "../direct-edit/engine/index.js";
 import type { Draft, FixGuard } from "./checks.js";
+import { markShared, pageOwnDir } from "./shared-files.js";
 
 const VERIFY_MAX = 60;
 
@@ -181,3 +183,13 @@ export async function applyFindingFixes(
 
   return { files: result.files, version };
 }
+
+export const runFixChecks = async (
+  project: Project,
+  direction: Direction,
+  drafts: Draft[],
+  pagePath: ReviewFrame["path"]
+): Promise<void> => {
+  await verifyFixes(project, direction, drafts);
+  markShared(drafts, await pageOwnDir(project, direction, pagePath));
+};

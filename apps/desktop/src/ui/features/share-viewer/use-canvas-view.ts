@@ -59,11 +59,12 @@ const useFirstFit = (
 
 const useCanvasView = (
   stage: RefObject<HTMLDivElement | null>,
-  frames: readonly ViewerFrame[]
+  frames: readonly ViewerFrame[],
+  focus: readonly ViewerFrame[]
 ): CanvasViewState => {
   const [view, setView] = useState<CanvasView>(START_VIEW);
 
-  useFirstFit(stage, frames, setView);
+  useFirstFit(stage, focus, setView);
   useCanvasWheel(stage, setView);
   const pointers = useCanvasPointers(setView);
 

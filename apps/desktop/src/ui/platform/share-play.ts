@@ -1,3 +1,4 @@
+import { SHARE_FRAME_HASH_KEY } from "@design-studio/contracts/share";
 import { SHARE_PLAY_DATA_PATH } from "@design-studio/contracts/share-play";
 import type {
   ShareCommentDraft,
@@ -35,6 +36,12 @@ const toShareBase = (): string => {
   }
 
   return path.slice(0, end);
+};
+
+const readShareFrameKey = (): string | null => {
+  const hash = globalThis.location.hash.replace(/^#/u, "");
+
+  return new URLSearchParams(hash).get(SHARE_FRAME_HASH_KEY);
 };
 
 const isObject = (value: unknown): value is object =>
@@ -150,6 +157,11 @@ const createShareComment = async (
   return { comment: null, error: SEND_FAILED };
 };
 
-export { createShareComment, getSharePlay, listShareComments };
+export {
+  createShareComment,
+  getSharePlay,
+  listShareComments,
+  readShareFrameKey,
+};
 
 export type { CommentReply };

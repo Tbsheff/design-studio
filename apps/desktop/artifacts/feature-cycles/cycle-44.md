@@ -373,3 +373,10 @@ Feature cycles are paused. Tyler asked to refine the app and cut fluff, and a UX
 - **Merged:** dark-a11y (`c110797d6`): Light / Dark choice in the Accessibility section (now under More). Checks pass, app installed.
 - **Fixed:** App and folder workspaces have a "Start from a template" entry again (`3e1064431`), not checked in the UI.
 - **Clip:** the first run after the dark-a11y merge failed once on "canvas menu preview right-click"; 2 reruns passed with 0 findings, so the step is flaky.
+
+## Leftover fixes (2026-11-16)
+
+- Merged `feat/fix-leftover` as `d0698586e`: full frame labels to about 15% zoom, short Numbers labels and a full Code tab file link at 248 px, and "Running" before "Ran" in chat.
+- Passed: gen-routes, typecheck, lint:gate (59501 diagnostics, baseline 89733), build:ui, check-bundle, clip (0 findings), desktop:pack.
+- Installed to `/Applications`. :4570 returns 200. Idle CPU is 0.01 CPU-s per minute.
+- Kept: `autoApprove`, `allowBash` and `allowInstall` stay on, by Tyler's choice.

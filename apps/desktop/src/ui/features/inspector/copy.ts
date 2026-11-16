@@ -157,6 +157,7 @@ const copy = {
   lockedForClaude: "Locked for Claude",
   lookingForWhereThisText: "Looking for where this text is set…",
   mixed: "Mixed",
+  more: "More",
   near: "Near ",
   noPropsToEditHere: "No props to edit here.",
   noSource:

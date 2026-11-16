@@ -3,7 +3,6 @@ import type { ReactElement } from "react";
 
 import {
   FillSlot,
-  MotionSlot,
   TextRewriteSlot,
   TextStyleSlot,
 } from "../../inspector-slots.js";
@@ -86,14 +85,6 @@ const SimpleMiddle = ({ props, state }: SimpleMiddleProps): ReactElement => {
         fill={fill}
         effects={effects}
       />
-      {directionId && (
-        <MotionSlot
-          projectId={projectId}
-          directionId={directionId}
-          target={target}
-          port={port}
-        />
-      )}
     </>
   );
 };

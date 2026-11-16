@@ -268,6 +268,12 @@ const EDIT_STARTER: WorkspaceStarter = {
   title: copy.editApp,
 };
 
+const APP_TEMPLATE_STARTER: WorkspaceStarter = {
+  id: "template",
+  sub: copy.starterTemplateAppSub,
+  title: copy.startFromATemplate,
+};
+
 const toStarters = (
   workspace: Workspace | null
 ): readonly WorkspaceStarter[] => {
@@ -284,10 +290,10 @@ const toStarters = (
   }
 
   if (workspace.kind === "folder") {
-    return [PROTOTYPE_STARTER];
+    return [PROTOTYPE_STARTER, APP_TEMPLATE_STARTER];
   }
 
-  return [PROTOTYPE_STARTER, EDIT_STARTER];
+  return [PROTOTYPE_STARTER, EDIT_STARTER, APP_TEMPLATE_STARTER];
 };
 
 const isFolderWorkspace = (workspace: Workspace | null): boolean =>

@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 
 import { MODES } from "./composer-menu-model.js";
 import type { PlusMenuProps } from "./composer-menu-model.js";
+import type { ComposerMode } from "./composer-mode-model.js";
 import { copy } from "./copy.js";
 import { MenuItem } from "./menu-item.js";
 import { MenuSection } from "./menu-section.js";
@@ -13,11 +14,13 @@ import { PlusPrototypeItem } from "./plus-prototype-item.js";
 const PlusMenuBody = ({
   menuProps,
   onAct,
+  onPickMode,
 }: {
   menuProps: PlusMenuProps;
   onAct: (run: () => void) => () => void;
+  onPickMode: (mode: ComposerMode) => void;
 }): ReactElement => {
-  const { mode, onMode } = menuProps;
+  const { mode } = menuProps;
 
   return (
     <>
@@ -63,7 +66,7 @@ const PlusMenuBody = ({
             key={choice}
             choice={choice}
             isChecked={mode === choice}
-            onMode={onMode}
+            onMode={onPickMode}
           />
         ))}
       </MenuSection>

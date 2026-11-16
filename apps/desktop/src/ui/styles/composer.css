@@ -8,7 +8,8 @@
 }
 
 .prompt-bar {
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
+  row-gap: var(--s-1);
   min-width: 0;
 }
 
@@ -679,7 +680,8 @@ dialog.run-settings-pop {
 }
 
 .composer-state-short {
-  display: none;
+  display: inline-grid;
+  place-items: center;
 }
 
 .composer-menu {
@@ -710,46 +712,6 @@ dialog.run-settings-pop {
 
 .prompt-bar {
   container: prompt-bar / inline-size;
-}
-
-@container prompt-bar (max-width: 340px) {
-  .prompt-bar .composer-state {
-    justify-content: center;
-    width: var(--composer-ctl);
-    height: var(--composer-ctl);
-    padding: 0;
-    border-radius: var(--r-control);
-  }
-
-  .prompt-bar .composer-state-label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-
-  .prompt-bar .composer-state-short {
-    display: grid;
-    place-items: center;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .prompt-bar .composer-state .icon-btn.chip-x {
-    position: absolute;
-    inset: 0;
-    width: auto;
-    height: auto;
-    border-radius: inherit;
-    background: inherit;
-    opacity: 0;
-  }
-
-  .prompt-bar .composer-state:hover .icon-btn.chip-x,
-  .prompt-bar .composer-state .icon-btn.chip-x:focus-visible {
-    opacity: 1;
-  }
 }
 
 @container prompt-bar (max-width: 300px) {
@@ -1295,28 +1257,28 @@ button.skill-opt {
   }
 }
 
-.prompt-bar .drafts-short,
-.prompt-bar .level-short {
-  display: none;
+@container prompt-bar (max-width: 300px) {
+  .prompt-bar > [data-slot="composer-toolbar-spacer"] {
+    order: 2;
+    flex-basis: 100%;
+    justify-content: flex-start;
+    margin-left: 0;
+  }
+
+  .prompt-bar > .icon-btn.send-btn {
+    margin-left: auto;
+  }
 }
 
-@container prompt-bar (max-width: 300px) {
-  .prompt-bar .level-pill .level-full,
-  .prompt-bar .level-pill .stable-text-size {
-    display: none;
+@container prompt-bar (max-width: 420px) {
+  .prompt-bar:has(> .composer-state) > [data-slot="composer-toolbar-spacer"] {
+    order: 2;
+    flex-basis: 100%;
+    justify-content: flex-start;
+    margin-left: 0;
   }
 
-  .prompt-bar .level-pill .level-short {
-    display: inline-grid;
-    place-items: center;
-  }
-
-  .prompt-bar .drafts-pill .drafts-full,
-  .prompt-bar .drafts-pill .stable-text-size {
-    display: none;
-  }
-
-  .prompt-bar .drafts-pill .drafts-short {
-    display: inline;
+  .prompt-bar:has(> .composer-state) > .icon-btn.send-btn {
+    margin-left: auto;
   }
 }

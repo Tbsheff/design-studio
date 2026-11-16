@@ -8,7 +8,6 @@ import { ComposerPill } from "./composer-pill.js";
 import { copy } from "./copy.js";
 import { LevelMenuBody } from "./level-menu-body.js";
 import { levelLabel } from "./level-model.js";
-import { LevelPillValue } from "./level-pill-value.js";
 import { MenuPanel } from "./menu-panel.js";
 import { useFocusOnOpen } from "./use-focus-on-open.js";
 import { useMenuToggle } from "./use-menu-toggle.js";
@@ -46,7 +45,7 @@ const LevelPill = ({
         sizes={LEVEL_SIZES}
         onToggle={onToggle}
       >
-        <LevelPillValue level={level} />
+        {levelLabel(level)}
       </ComposerPill>
       <MenuPanel
         panel={panel}

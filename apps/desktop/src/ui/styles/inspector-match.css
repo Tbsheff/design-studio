@@ -75,11 +75,6 @@
   color: var(--accent-text);
 }
 
-.sm-tag.raw {
-  background: var(--warn-soft);
-  color: var(--warn);
-}
-
 .sm-tag.mixed {
   background: var(--surface-active);
   color: var(--text-2);

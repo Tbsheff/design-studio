@@ -10,7 +10,6 @@ import { useAction } from "../../platform/query.js";
 import {
   requestScaleMode,
   scaleFocusCount,
-  scaleKeepTokens,
   scaleMode,
   stopScaleMode,
 } from "../../platform/scale-mode.js";
@@ -217,7 +216,7 @@ const useScaleCommit = (): ScaleSession["commit"] => {
           factor: request.percent / FULL_PERCENT,
           layerId: scaleLayerId,
           projectId: options.projectId,
-          shouldKeepTokens: scaleKeepTokens.get(),
+          shouldKeepTokens: true,
         });
 
         if (result === null) {

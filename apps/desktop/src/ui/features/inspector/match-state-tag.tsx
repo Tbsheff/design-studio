@@ -1,11 +1,6 @@
 import type { StyleValueRow } from "@design-studio/contracts/style-search";
 import type { ReactElement } from "react";
 
-import { copy } from "./copy.js";
-import { toShownValue } from "./match-candidates-model.js";
-
-const RAW_TAG_STYLE = { border: 0, cursor: "pointer" };
-
 const MIXED_TIP = "Some elements use a token, some a raw value";
 
 const toStateClass = (state: StyleValueRow["state"]): string => {
@@ -34,24 +29,11 @@ const toMoreText = (count: number): string => {
 
 const StateTag = ({
   row,
-  onReplace,
 }: {
   readonly row: StyleValueRow;
-  readonly onReplace: () => void;
-}): ReactElement => {
+}): ReactElement | null => {
   if (row.state === "raw") {
-    return (
-      <button
-        type="button"
-        className="sm-tag raw"
-        style={RAW_TAG_STYLE}
-        aria-label={`Replace ${toShownValue(row)} with a token`}
-        data-tip={copy.notATokenReplaceIt}
-        onClick={onReplace}
-      >
-        {copy.raw}
-      </button>
-    );
+    return null;
   }
 
   if (row.state === "palette") {

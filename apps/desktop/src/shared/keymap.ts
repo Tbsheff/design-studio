@@ -80,14 +80,20 @@ export const KEYMAP = [
     desktop: true,
   },
   {
+    id: "export",
+    label: "Export",
+    keys: ["Mod+E"],
+    group: "General",
+  },
+  {
     id: "next-direction",
-    label: "Next direction",
+    label: "Next variation",
     keys: ["Mod+Alt+]"],
     group: "General",
   },
   {
     id: "prev-direction",
-    label: "Previous direction",
+    label: "Previous variation",
     keys: ["Mod+Alt+["],
     group: "General",
   },

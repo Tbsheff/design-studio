@@ -26,6 +26,7 @@ const KEYED: [KeyId, string][] = [
   ["inspector", "panel.inspector"],
   ["present", "present.window"],
   ["settings", "project.settings"],
+  ["export", "version.export"],
   ["next-direction", "direction.next"],
   ["prev-direction", "direction.prev"],
 ];

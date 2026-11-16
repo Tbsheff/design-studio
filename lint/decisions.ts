@@ -1137,7 +1137,6 @@ export const decisionOverrides: OxlintOverride[] = [
       "apps/desktop/src/ui/features/home/templates-section.tsx",
       "apps/desktop/src/ui/features/home/use-chip-flow.ts",
       "apps/desktop/src/ui/features/home/use-doctor-gate.ts",
-      "apps/desktop/src/ui/features/home/use-example.ts",
       "apps/desktop/src/ui/features/home/use-home-screen.tsx",
       "apps/desktop/src/ui/features/home/use-module.ts",
       "apps/desktop/src/ui/features/home/use-open-app-requests.ts",

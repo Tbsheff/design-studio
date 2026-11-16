@@ -1,14 +1,12 @@
 import { Suspense, useCallback } from "react";
 import type { ReactElement, RefObject } from "react";
 
-import { DRAFT_COUNTS, toDraftsLabel } from "../../domain/draft-counts.js";
+import { toDraftsLabel } from "../../domain/draft-counts.js";
 import type { PopState } from "./composer-pop-model.js";
 import { copy } from "./copy.js";
 import type { DesignCount } from "./home-model.js";
 import { DraftsPopover } from "./lazy-parts-model.js";
 import { PillSelect } from "./pill-select.js";
-
-const DRAFT_SIZES = DRAFT_COUNTS.map((count) => toDraftsLabel(count));
 
 interface DraftsAnchorProps {
   readonly pops: PopState;
@@ -33,7 +31,6 @@ const DraftsAnchor = ({
         label={copy.drafts}
         ariaLabel={copy.drafts}
         value={toDraftsLabel(designs.value)}
-        sizes={DRAFT_SIZES}
         isOpen={pops.pop === "drafts"}
         triggerRef={triggerRef}
         onOpen={open}

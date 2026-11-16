@@ -16,6 +16,14 @@ const FILTERS: readonly FilterTab[] = [
   { id: "systems", label: copy.filterSystems },
 ];
 
+const toFilterTabs = (hasPrototypesTab: boolean): readonly FilterTab[] => {
+  if (hasPrototypesTab) {
+    return FILTERS;
+  }
+
+  return FILTERS.filter((item) => item.id !== "prototypes");
+};
+
 const FILTER_EMPTY: Record<HomeFilter, string> = {
   all: "projects",
   apps: "apps",
@@ -54,6 +62,6 @@ const listFilteredLibrary = (
   );
 };
 
-export { FILTERS, FILTER_EMPTY, listFilteredLibrary };
+export { FILTER_EMPTY, listFilteredLibrary, toFilterTabs };
 
 export type { FilterTab };

@@ -95,6 +95,7 @@ const copy = {
   emptyTrash: "Empty trash…",
   emptyTrashAction: "Empty trash",
   environmentForNextDev: "Environment for next dev",
+  exampleBrief: "A pricing page for a developer tool with three tiers",
   exampleTabHint: "Press Tab to use the example brief.",
   expandPrompt: "Expand prompt",
   expandPromptFailed: "Could not expand the prompt",

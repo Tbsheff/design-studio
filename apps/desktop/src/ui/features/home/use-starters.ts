@@ -1,10 +1,8 @@
 import type { Starter } from "@design-studio/contracts";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 
 import { api } from "../../api.js";
 import { createLiveStore, useLive } from "../../platform/live-store.js";
-
-const MAX_STARTERS = 4;
 
 const starterStore = createLiveStore<Starter[] | null>(null);
 
@@ -46,10 +44,4 @@ const useStarterList = (): readonly Starter[] | null => {
   return list;
 };
 
-const useStarters = (): Starter[] => {
-  const list = useStarterList();
-
-  return useMemo(() => (list ?? []).slice(0, MAX_STARTERS), [list]);
-};
-
-export { useStarterList, useStarters };
+export { useStarterList };

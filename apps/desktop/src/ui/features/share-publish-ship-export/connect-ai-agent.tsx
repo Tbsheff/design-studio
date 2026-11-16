@@ -17,13 +17,8 @@ const ConnectAiAgent = ({ setup }: ConnectAiAgentProps): ReactElement => {
   return (
     <section className="connect-ai-agent" aria-label={uiCopy.connectAiAgent}>
       <h3>{uiCopy.connectAiAgent}</h3>
-      {!setup.isEnabled && <p className="export-sub">{uiCopy.connectAiOff}</p>}
-      {setup.isEnabled && (
-        <ConnectAiClients selected={clientId} onSelect={setClientId} />
-      )}
-      {setup.isEnabled && (
-        <ConnectAiSnippet clientId={clientId} setup={setup} />
-      )}
+      <ConnectAiClients selected={clientId} onSelect={setClientId} />
+      <ConnectAiSnippet clientId={clientId} setup={setup} />
     </section>
   );
 };

@@ -78,6 +78,18 @@ const toFramesTip = (frames: FrameFocus): string => {
   return `${copy.focusFramesTip}. ${frames.skipped}${copy.focusFramesLeftOut}`;
 };
 
+const toSelectionFocusAction = (
+  selectionPath: string | null,
+  paths: readonly string[],
+  addSelection: () => void
+): (() => void) | null => {
+  if (selectionPath === null || paths.includes(selectionPath)) {
+    return null;
+  }
+
+  return addSelection;
+};
+
 const toFocusWithout = (list: readonly string[], path: string): string[] =>
   list.filter((item) => item !== path);
 
@@ -105,6 +117,7 @@ export {
   toFocusWithout,
   toFramesLabel,
   toFramesTip,
+  toSelectionFocusAction,
   toSelectionFocusPath,
 };
 

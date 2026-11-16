@@ -56,12 +56,13 @@ const FRAME_MENU_GROUPS: readonly FrameMenuGroupSpec[] = [
       "section",
       "layout-grid",
       "hide",
-      "remove-frame",
     ],
   },
 ];
 
 const FRAME_MENU_TOP_ORDER: readonly string[] = [
+  "page",
+  "preview-dark",
   "redesign-prototype",
   "port-to-app",
   "group:states",
@@ -70,10 +71,16 @@ const FRAME_MENU_TOP_ORDER: readonly string[] = [
   "style-reference",
 ];
 
+const FRAME_MENU_LAST = "remove-frame";
+
 const GROUPED_IDS = new Set(FRAME_MENU_GROUPS.flatMap((spec) => spec.items));
 
 const toRank = (key: string, index: number): number => {
   const known = FRAME_MENU_TOP_ORDER.indexOf(key);
+
+  if (key === FRAME_MENU_LAST) {
+    return Number.MAX_SAFE_INTEGER;
+  }
 
   if (known === -1) {
     return FRAME_MENU_TOP_ORDER.length + index;

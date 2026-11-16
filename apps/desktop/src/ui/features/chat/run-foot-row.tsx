@@ -32,10 +32,11 @@ const RunFootRow = ({
   const hasCard = hasErrorCard(run);
   const isFailed = hasCard && run.status === "failed";
   const { summary } = run;
+  const isBadgeShown = !done && !isFailed && run.status !== "budget_exceeded";
 
   return (
     <div className="run-foot" data-status={run.status}>
-      {!done && !isFailed && <RunStatusBadge status={run.status} />}
+      {isBadgeShown && <RunStatusBadge status={run.status} />}
       {summary && <RunFootMeta summary={summary} />}
       {!hasCard && (
         <RunFootActions

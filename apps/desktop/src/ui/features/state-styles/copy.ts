@@ -62,8 +62,6 @@ const copy = {
     },
   },
   groupLabel: "Layer state",
-  groupOff: "Add the group class to the parent",
-  hasStyles: "Has styles in this state",
   label: {
     ...dataStates.label,
     active: "Pressed",
@@ -83,8 +81,9 @@ const copy = {
     open: "Open",
     selected: "Selected",
   },
+  menuTip:
+    "State to edit. The frame shows the layer in this state. Press Esc for Default",
   otherTip: dataStates.otherTip,
-  stateNote: "Edits go to this state. Press Esc for Default.",
 } as const;
 
 export { copy };

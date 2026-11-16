@@ -1,23 +1,7 @@
 const copy = {
-  axisLabel: {
-    overflowX: "Overflow X",
-    overflowY: "Overflow Y",
-  },
-  axisTip: {
-    overflowX: "What the layer does with content wider than the box",
-    overflowY:
-      "What the layer does with content taller than the box. Auto or Scroll makes the layer scroll",
-  },
   inset: "Offsets",
   noSource:
-    "Design Studio cannot find this layer in the code, so it cannot change scroll and stacking.",
-  overflow: {
-    auto: "Auto",
-    clip: "Clip",
-    hidden: "Hidden",
-    scroll: "Scroll",
-    visible: "Visible",
-  },
+    "Design Studio cannot find this layer in the code, so it cannot change its position.",
   position: "Position",
   positionLabel: {
     absolute: "Absolute",
@@ -37,7 +21,6 @@ const copy = {
   },
   sideTip:
     "A spacing key (0, 4, px) or a CSS length (16px). Clear it to remove the offset",
-  title: "Scroll and stacking",
   unset: "Not set",
   zIndex: "Z-index",
   zStop: {

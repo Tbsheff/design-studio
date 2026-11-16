@@ -15,7 +15,6 @@ interface KitDrift {
   readonly handleSwapAll: () => void;
   readonly hasHigh: boolean;
   readonly isBusy: boolean;
-  readonly isLoading: boolean;
   readonly items: readonly KitDriftView[];
 }
 
@@ -63,7 +62,6 @@ const useKitDrift = (setup: KitDriftSetup): KitDrift => {
   const error = swapper.error?.message ?? list.error?.message ?? null;
   const hasHigh = highIds.length > 0;
   const isBusy = isWorking || swapper.pending;
-  const isLoading = list.loading;
 
   return {
     error,
@@ -71,7 +69,6 @@ const useKitDrift = (setup: KitDriftSetup): KitDrift => {
     handleSwapAll,
     hasHigh,
     isBusy,
-    isLoading,
     items,
   };
 };

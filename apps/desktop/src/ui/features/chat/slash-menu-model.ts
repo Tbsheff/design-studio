@@ -79,6 +79,8 @@ const lockReason = (group: SlashGroup | null | undefined): string | null =>
 
 const MAX_HEIGHT = 288;
 
+const SETTINGS_HEADING = "Settings";
+
 const GAP = 6;
 
 const sectionRows = (sections: readonly SlashSection[]): Row[] =>
@@ -323,6 +325,10 @@ const toRowHeading = (
 ): string | null => {
   const row = rows[at];
   const before = rows[at - 1];
+
+  if (row?.kind === "group" && !hasHeading && before?.kind !== "group") {
+    return SETTINGS_HEADING;
+  }
 
   if (
     row?.kind === "choice" &&

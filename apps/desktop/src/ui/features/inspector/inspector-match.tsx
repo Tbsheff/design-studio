@@ -2,7 +2,6 @@ import type { SelectionContext } from "@design-studio/contracts";
 import { memo } from "react";
 import type { ReactElement } from "react";
 
-import { InspectorSection } from "./inspector-fields.js";
 import { MatchEmpty } from "./match-empty.js";
 import { MatchKinds } from "./match-kinds.js";
 import { toMatchTitle, toTargetLabel } from "./match-model.js";
@@ -10,6 +9,7 @@ import type { InspectorMatchProps, Scope } from "./match-scan-model.js";
 import { ScopeToggle } from "./match-scope-toggle.js";
 import { StatusLine } from "./match-status-line.js";
 import { TokenPicker } from "./match-token-picker.js";
+import { RareSection } from "./rare-section.js";
 import { useInspectorMatch } from "./use-inspector-match.js";
 
 const toScopeAside = (
@@ -22,7 +22,7 @@ const InspectorMatchView = (props: InspectorMatchProps): ReactElement => {
   const { picker } = match;
 
   return (
-    <InspectorSection
+    <RareSection
       title={toMatchTitle(match.scope, props.selection.length)}
       modifier="sm-section"
       aside={toScopeAside(match.scope, match.setScope)}
@@ -47,7 +47,7 @@ const InspectorMatchView = (props: InspectorMatchProps): ReactElement => {
         />
       )}
       <StatusLine status={match.status} />
-    </InspectorSection>
+    </RareSection>
   );
 };
 

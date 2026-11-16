@@ -15,6 +15,17 @@ import { tokenEntries } from "./token-model";
 
 type LeftProps = ComponentProps<typeof LeftPane>;
 
+const toShownDirectionName = (
+  project: StudioCtx["project"],
+  direction: StudioCtx["core"]["direction"]
+): string | null => {
+  if (project.directions.length < 2) {
+    return null;
+  }
+
+  return nameOf(direction);
+};
+
 const headerProps = (
   ctx: StudioCtx
 ): ComponentProps<typeof StudioPaneHeader> => {
@@ -24,10 +35,9 @@ const headerProps = (
   return {
     actionError: ui.actionError,
     connection: data.connection,
-    directionName: nameOf(core.direction),
+    directionName: toShownDirectionName(project, core.direction),
     kindLabel: kindLabel(project),
     name: project.name,
-    onDesignMd: (): void => ui.setDesignOpen(true),
     onDismissError: (): void => ui.setActionError(null),
     onDuplicate: (): void => {
       void ui.act(async (): Promise<void> => {
@@ -57,20 +67,17 @@ const chatProps = (ctx: StudioCtx): LeftProps["chat"] => {
   const shown = shownPending(core.pendingRun, directionRuns, directionId);
 
   return {
-    busy: ui.busy,
     direction: core.direction,
     lead: core.draftChrome.banner,
     mcp: core.mcp,
     offline: data.connection === "reconnecting",
     onApprovePlan: run.approvePlan,
     onDetails: ui.setDetailsRunId,
-    onPolish: run.polish,
     onRetry: run.retryRun,
     onReview: core.reviewVersionId,
     onStop: run.runControls.onCancel,
     pending: shown,
     rewind: core.rewind,
-    running: core.activeRun !== null,
     runs: directionRuns,
     suggestions: toSuggestionSlot(ctx, shown !== null),
   };

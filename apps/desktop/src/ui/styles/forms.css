@@ -194,19 +194,19 @@ kbd {
 }
 
 .settings-fields .check,
-.settings-fields .warn-line {
+.settings-fields .settings-note {
   grid-column: 1 / -1;
 }
 
-.warn-line {
-  display: flex;
-  gap: var(--s-2);
-  padding: var(--s-3);
-  border-radius: var(--r-md);
-  background: var(--warn-soft);
-  color: var(--warn);
-  font-size: var(--t-xs);
-  line-height: 1.5;
+.app-settings-body > .ship-settings:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.app-settings-body .segmented,
+.app-settings-open {
+  justify-self: start;
 }
 
 .settings-fields .check + .check {

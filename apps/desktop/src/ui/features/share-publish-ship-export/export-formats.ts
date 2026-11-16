@@ -5,6 +5,7 @@ type DialogFormat = ExportFormat | "flow";
 
 interface FormatInfo {
   id: DialogFormat;
+  isMore: boolean;
   label: string;
   icon: IconName;
   hint: string;
@@ -17,34 +18,23 @@ const FORMATS: FormatInfo[] = [
     hint: "One image per frame. Many frames download as a zip.",
     icon: "image",
     id: "png",
+    isMore: false,
     label: "PNG",
-  },
-  {
-    action: "Export SVG",
-    hint: "Vector shapes and live text, with font names. Pictures stay embedded. Many frames download as a zip.",
-    icon: "pencil",
-    id: "svg",
-    label: "SVG",
   },
   {
     action: "Export PDF",
     hint: "One page per frame, at 2× for sharp print.",
     icon: "doc",
     id: "pdf",
+    isMore: false,
     label: "PDF",
-  },
-  {
-    action: "Export PPTX",
-    hint: "One slide per frame, or per slide of a deck, with text, boxes, shadows, gradients, SVG icons and images you can edit in Keynote or PowerPoint.",
-    icon: "play",
-    id: "pptx",
-    label: "PPTX",
   },
   {
     action: "Export HTML",
     hint: "One file with CSS, fonts and images inside. Opens offline.",
     icon: "code",
     id: "html",
+    isMore: false,
     label: "HTML",
   },
   {
@@ -52,13 +42,31 @@ const FORMATS: FormatInfo[] = [
     hint: "The project files of this version as a zip.",
     icon: "folder",
     id: "zip",
+    isMore: false,
     label: "Source",
+  },
+  {
+    action: "Export SVG",
+    hint: "Vector shapes and live text, with font names. Pictures stay embedded. Many frames download as a zip.",
+    icon: "pencil",
+    id: "svg",
+    isMore: true,
+    label: "SVG",
+  },
+  {
+    action: "Export PPTX",
+    hint: "One slide per frame, or per slide of a deck, with text, boxes, shadows, gradients, SVG icons and images you can edit in Keynote or PowerPoint.",
+    icon: "play",
+    id: "pptx",
+    isMore: true,
+    label: "PPTX",
   },
   {
     action: "Export video",
     hint: "A click-through video of the prototype: a cursor clicks each saved link from the start frame. Save it as webm, mp4 or gif.",
     icon: "play",
     id: "flow",
+    isMore: true,
     label: "Prototype video",
   },
   {
@@ -66,6 +74,7 @@ const FORMATS: FormatInfo[] = [
     hint: "A folder for a coding agent: HANDOFF.md, tokens, screens and source.",
     icon: "terminal",
     id: "handoff",
+    isMore: true,
     label: "Handoff",
   },
 ];

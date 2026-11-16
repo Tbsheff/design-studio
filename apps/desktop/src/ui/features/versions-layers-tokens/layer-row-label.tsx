@@ -3,6 +3,7 @@ import { useCallback } from "react";
 import type { ReactNode } from "react";
 
 import { LayerRenameInput } from "./layer-rename-input.js";
+import { toLayerTitle } from "./layer-row-model.js";
 import { editableName } from "./layers-tree.js";
 
 interface LayerRowLabelProps {
@@ -35,7 +36,7 @@ const LayerRowLabel = ({
 
   return (
     <>
-      {node.name && <span className="layers-name">{node.name}</span>}
+      <span className="layers-name">{toLayerTitle(node)}</span>
       {node.text && <span className="layers-text">{node.text}</span>}
     </>
   );

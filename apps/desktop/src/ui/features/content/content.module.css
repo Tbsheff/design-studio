@@ -1,17 +1,10 @@
 .section {
   display: grid;
   gap: var(--s-2);
-  padding: var(--s-2) var(--pane-inset);
+  padding: 0 var(--pane-inset) var(--s-2);
   border: 0;
-  border-top: 1px solid var(--line);
   margin: 0;
   min-width: 0;
-}
-
-.title {
-  color: var(--text);
-  font-size: var(--t-xs);
-  font-weight: 600;
 }
 
 .label {

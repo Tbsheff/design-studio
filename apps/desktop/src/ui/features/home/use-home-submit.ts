@@ -38,7 +38,6 @@ interface SubmitInput {
   readonly clarifyRef: RefObject<HTMLDivElement | null>;
   readonly contexts: ContextDraft[];
   readonly designCount: number;
-  readonly designMd: string;
   readonly images: ImageDraft[];
   readonly isEditApp: boolean;
   readonly kind: ProjectKind;
@@ -111,7 +110,6 @@ const runBuild = async (
     const project = await createFromHome({
       beforeRun: toBeforeRun(input.contexts),
       designCount: input.designCount,
-      designMd: input.designMd,
       images: input.images,
       kind: input.kind,
       location: input.location,

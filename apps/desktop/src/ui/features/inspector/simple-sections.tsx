@@ -20,6 +20,9 @@ interface SimpleSectionsProps {
   readonly classes: ElementClasses | null;
   readonly textStyle: ReactNode;
   readonly fill: ReactNode;
+  readonly layout: ReactNode;
+  readonly hasEffectLayers: boolean;
+  readonly hasEffectShadow: boolean;
 }
 
 const SimpleSections = ({
@@ -29,6 +32,9 @@ const SimpleSections = ({
   classes,
   textStyle,
   fill,
+  layout,
+  hasEffectLayers,
+  hasEffectShadow,
 }: SimpleSectionsProps): ReactElement => {
   const [revealed, setRevealed] = useState<Set<Extra>>(() => new Set());
 
@@ -50,7 +56,12 @@ const SimpleSections = ({
 
   return (
     <>
-      <LayoutSection edit={edit} selection={selection} classes={classes} />
+      <LayoutSection
+        edit={edit}
+        selection={selection}
+        classes={classes}
+        extra={layout}
+      />
       <TextSection
         edit={edit}
         ui={ui}
@@ -62,9 +73,10 @@ const SimpleSections = ({
         edit={edit}
         extras={extras}
         fill={fill}
+        canAddShadow={!hasEffectLayers}
         onReveal={reveal}
       />
-      {extras.has("shadow") && (
+      {extras.has("shadow") && !hasEffectShadow && (
         <EffectsSection edit={edit} isRevealed={revealed.has("shadow")} />
       )}
       <BorderSection edit={edit} selection={selection} classes={classes} />

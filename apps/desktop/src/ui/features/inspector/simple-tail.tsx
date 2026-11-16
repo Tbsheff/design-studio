@@ -1,8 +1,11 @@
 import { useMemo } from "react";
 import type { ReactElement, ReactNode } from "react";
 
+import { copy } from "./copy.js";
 import { InspectorOtherStyles } from "./inspector-other-styles.js";
 import { MatchSection } from "./match-section.js";
+import { RareSection } from "./rare-section.js";
+import { SampleContentSection } from "./sample-content-section.js";
 import { SelectMatchingSection } from "./select-matching-section.js";
 import type { SimpleEditorProps, SimpleEditorState } from "./simple-model.js";
 
@@ -33,7 +36,14 @@ const SimpleTail = ({
       />
       <SelectMatchingSection selection={selection} port={port} />
       <InspectorOtherStyles css={state.authored.css} />
-      <div className="ins-export">{exportMenu}</div>
+      <SampleContentSection
+        projectId={projectId}
+        directionId={directionId}
+        target={target}
+      />
+      <RareSection title={copy.exportTitle} aside={null} modifier={null}>
+        <div className="ins-export">{exportMenu}</div>
+      </RareSection>
     </>
   );
 };

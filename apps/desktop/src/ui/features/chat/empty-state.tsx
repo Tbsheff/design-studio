@@ -25,7 +25,7 @@ const EmptyState = ({
       <span className="chat-empty-icon">
         <Icon name="sparkle" size={18} />
       </span>
-      <strong>{copy.noRunsYet}</strong>
+      <strong>{copy.emptyTitle}</strong>
       <p>{copy.describeAChangeBelow}</p>
     </div>
   );

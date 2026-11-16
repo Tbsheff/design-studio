@@ -12,6 +12,10 @@ const ZOOM_100 = 100;
 const PAD = 24;
 const RAIL_INSET = 24;
 
+const FIT_SIDE = PAD + RAIL_INSET;
+
+const TOOLS_ROOM = 56;
+
 const FRAME_LABEL_H = 28;
 
 const SELECTION_PAD = 64;
@@ -55,15 +59,18 @@ const fitZoomFor = (
     MIN_ZOOM,
     Math.min(
       1,
-      (stageWidth - PAD * 2) / bounds.width,
-      (stageHeight - PAD * 2 - FRAME_LABEL_H) / bounds.height
+      (stageWidth - FIT_SIDE * 2) / bounds.width,
+      (stageHeight - PAD - FRAME_LABEL_H - TOOLS_ROOM) / bounds.height
     )
   );
 };
 
 const fitTop = (stageHeight: number, height: number): number =>
   FRAME_LABEL_H +
-  Math.max(PAD, Math.round((stageHeight - FRAME_LABEL_H - height) / 2));
+  Math.max(
+    PAD,
+    Math.round((stageHeight - FRAME_LABEL_H - TOOLS_ROOM - height) / 2)
+  );
 
 const blocksZoomKey = (event: KeyboardEvent): boolean => {
   if (!isTypingTarget(event.target)) {

@@ -1,45 +1,35 @@
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
+import { pick } from "../../platform/pick.js";
 import { copy } from "./copy.js";
-import { DropMenu } from "./top-bar-drop.js";
-import { shareGroups } from "./top-bar-menu-model.js";
-import type { MenuGroup } from "./top-bar-menu-model.js";
 import type { Props } from "./top-bar-props.js";
 
-const toShareTip = (hasShip: boolean): string => {
-  if (hasShip) {
-    return "Export, or ship as a pull request";
+const TopBarShare = ({ props }: { props: Props }): ReactElement | null => {
+  const { canExport, onShareLink } = props;
+
+  const openLink = useCallback((): void => {
+    onShareLink?.("link");
+  }, [onShareLink]);
+
+  if (!onShareLink) {
+    return null;
   }
 
-  return "Export images, files or a handoff";
-};
-
-const TopBarShare = ({
-  props,
-  onPort,
-}: {
-  props: Props;
-  onPort: (() => void) | null;
-}): ReactElement => {
-  const { canExport, onExport, onShip, onShareLink } = props;
-
-  const groups = useCallback(
-    (): MenuGroup[] =>
-      shareGroups({ canExport, onExport, onShareLink, onShip }, onPort),
-    [canExport, onExport, onShareLink, onShip, onPort]
-  );
-
   return (
-    <DropMenu
-      label="Share"
-      triggerClass="topbar-share"
-      groups={groups}
-      align="end"
-      tip={toShareTip(Boolean(onShip))}
-    >
-      <span className="topbar-label">{copy.share}</span>
-    </DropMenu>
+    <span className="topbar-anchor">
+      <button
+        type="button"
+        className="topbar-share"
+        aria-label={copy.share}
+        disabled={!canExport}
+        data-tip={pick(canExport, copy.shareTip, copy.shareNeedsVersion)}
+        data-tip-align="end"
+        onClick={openLink}
+      >
+        <span className="topbar-label">{copy.share}</span>
+      </button>
+    </span>
   );
 };
 

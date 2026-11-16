@@ -111,16 +111,22 @@ const nextId = (frames: CanvasFrame[]): string => {
 const canAddFrame = (layout: CanvasLayout): boolean =>
   layout.frames.length < MAX_FRAMES;
 
-const nextLabel = (frames: CanvasFrame[]): string => {
-  let count = frames.length + 1;
+const nextLabel = (frames: CanvasFrame[], base: string): string => {
+  const names = new Set(
+    frames.map((canvasFrame7) => canvasFrame7.label ?? frameName(canvasFrame7))
+  );
 
-  while (
-    frames.some((canvasFrame7) => canvasFrame7.label === `Frame ${count}`)
-  ) {
+  if (!names.has(base)) {
+    return base;
+  }
+
+  let count = 2;
+
+  while (names.has(`${base} ${count}`)) {
     count += 1;
   }
 
-  return `Frame ${count}`;
+  return `${base} ${count}`;
 };
 
 const addFrame = (
@@ -136,7 +142,7 @@ const addFrame = (
   const frame: CanvasFrame = {
     height: size.height,
     id: nextId(layout.frames),
-    label: nextLabel(layout.frames),
+    label: nextLabel(layout.frames, frameName(size)),
     width: size.width,
     ...toPosition(bounds.x + bounds.width + FRAME_GAP, bounds.y),
   };

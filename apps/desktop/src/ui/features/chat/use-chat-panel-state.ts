@@ -4,7 +4,11 @@ import type { ReactNode } from "react";
 
 import { timelineOf } from "./mcp-timeline.js";
 import type { RunView } from "./run-state-model.js";
-import { usePolish, useRunSearch, useTurnActions } from "./use-chat-panel.js";
+import {
+  useRunCallbacks,
+  useRunSearch,
+  useTurnActions,
+} from "./use-chat-panel.js";
 import type { McpFeedControl, TimelineItem } from "./use-mcp-feed.js";
 import type { RewindControl } from "./use-rewind.js";
 import type { TimelineRunContext } from "./use-timeline-context.js";
@@ -16,9 +20,6 @@ interface ChatPanelProps {
   pending?: RunView | null;
   direction: Direction | null;
   onDetails: (runId: string) => void;
-  running: boolean;
-  busy: boolean;
-  onPolish: () => void;
   onRetry?: (run: RunView) => void;
   onApprovePlan?: (run: RunView) => void;
   mcp?: McpFeedControl | null;
@@ -38,16 +39,13 @@ interface ChatPanelState {
 }
 
 const useChatPanelState = (props: ChatPanelProps): ChatPanelState => {
-  const { runs, direction, rewind, running, busy } = props;
+  const { runs, direction, rewind } = props;
   const mcp = props.mcp ?? null;
   const workTree = direction?.workTree ?? null;
 
-  const polish = usePolish({
-    headVersionId: direction?.headVersionId ?? null,
+  const callbacks = useRunCallbacks({
     onApprovePlan: props.onApprovePlan,
-    onPolish: props.onPolish,
     onRetry: props.onRetry,
-    polishing: running || busy,
   });
 
   const { titles, actions } = useTurnActions(rewind);
@@ -62,10 +60,10 @@ const useChatPanelState = (props: ChatPanelProps): ChatPanelState => {
 
   const context = useTimelineContext({
     actions,
+    callbacks,
     detailsSource,
     isOffline,
     lastId,
-    polish,
     reviewSource,
     rewind,
     stopSource,

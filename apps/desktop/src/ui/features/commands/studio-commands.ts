@@ -57,7 +57,7 @@ const focusComposer = (studioActions: StudioActions): void => {
 const goCommands = (studioActions: StudioActions): Command[] => {
   const noDirection = toReason(
     studioActions.directions.length < MIN_DIRECTIONS,
-    "Only one direction"
+    "Only one variation"
   );
 
   return [
@@ -94,7 +94,7 @@ const goCommands = (studioActions: StudioActions): Command[] => {
         id: "direction.next",
         keyId: "next-direction",
         run: stepDirection(studioActions, 1) ?? idle,
-        title: "Next direction",
+        title: "Next variation",
       },
       noDirection
     ),
@@ -105,7 +105,7 @@ const goCommands = (studioActions: StudioActions): Command[] => {
         id: "direction.prev",
         keyId: "prev-direction",
         run: stepDirection(studioActions, -1) ?? idle,
-        title: "Previous direction",
+        title: "Previous variation",
       },
       noDirection
     ),
@@ -170,7 +170,7 @@ const directionCommands = (studioActions: StudioActions): Command[] =>
         id: `direction.open.${direction.id}`,
         keywords: "switch variation",
         run: () => studioActions.onDirection(direction.id),
-        title: `Open direction ${direction.name}`,
+        title: `Open variation ${direction.name}`,
       },
     ];
   });
@@ -293,6 +293,7 @@ const versionCommands = (studioActions: StudioActions): Command[] => [
       group: "Version",
       icon: "download",
       id: "version.export",
+      keyId: "export",
       keywords: "share download png pdf html handoff zip source files",
       run: () => {
         if (studioActions.exportId) {

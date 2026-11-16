@@ -33,9 +33,9 @@ const FoundList = ({
   const roots = toRootsLabel(found);
 
   return (
-    <section className="home-found" aria-label={copy.foundOnThisMac}>
+    <section className="home-found" aria-label={copy.appFolders}>
       <div className="home-found-head">
-        <span>{copy.foundOnThisMac}</span>
+        <span>{copy.appFolders}</span>
         <span className="spacer" />
         <span className="home-found-roots truncate">{roots}</span>
       </div>
@@ -46,7 +46,7 @@ const FoundList = ({
         <p className="home-found-note">
           {copy.noAppFoldersFoundIn}
           {roots || "your home folder"}
-          {copy.labelUseAddAppFolderOr}
+          {copy.labelUseOpenFolderOr}
         </p>
       )}
       {apps.map((app) => (

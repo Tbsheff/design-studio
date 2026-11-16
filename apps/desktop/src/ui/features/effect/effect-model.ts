@@ -359,7 +359,11 @@ const toRowKeys = (list: readonly EffectItem[]): string[] => {
 
 const toKindList = (): readonly EffectKind[] => EFFECT_KINDS;
 
+const hasShadowItem = (items: readonly EffectItem[]): boolean =>
+  items.some((item) => isShadowItem(item));
+
 export {
+  hasShadowItem,
   toFieldViews,
   toItemSize,
   toKindList,

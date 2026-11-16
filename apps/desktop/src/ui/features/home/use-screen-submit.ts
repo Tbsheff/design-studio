@@ -13,7 +13,7 @@ import type { WorkspaceTarget } from "./use-workspace-target.js";
 
 type DraftParts = Pick<
   SubmitInput,
-  "designCount" | "designMd" | "kind" | "prompt" | "questions" | "setQuestions"
+  "designCount" | "kind" | "prompt" | "questions" | "setQuestions"
 >;
 
 interface ScreenSubmitParts {
@@ -34,7 +34,7 @@ const useScreenSubmit = (parts: ScreenSubmitParts): ScreenSubmit => {
   const { openHome: onOpen } = parts;
   const { busy, setBusy, setFormError } = base;
   const { clarifyRef } = refs;
-  const { designCount, designMd, kind, prompt } = draft;
+  const { designCount, kind, prompt } = draft;
   const { questions, setQuestions } = draft;
   const { attach, flow } = composer;
   const { contexts, images, references } = attach;
@@ -50,7 +50,6 @@ const useScreenSubmit = (parts: ScreenSubmitParts): ScreenSubmit => {
     clarifyRef,
     contexts,
     designCount,
-    designMd,
     images,
     isEditApp,
     kind,

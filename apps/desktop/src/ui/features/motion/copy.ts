@@ -21,7 +21,6 @@ const copy = {
   stateEnd: "Animates to the {state} styles from the variant bar.",
   stateNone:
     "Pick Hover, Focus or Active in the variant bar to set the end state.",
-  title: "Motion",
   unguarded: "No prefers-reduced-motion guard on this layer yet.",
 } as const;
 

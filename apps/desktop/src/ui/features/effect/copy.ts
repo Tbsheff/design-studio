@@ -1,8 +1,6 @@
 const copy = {
   add: "Add effect",
-  addPick: "Pick a kind",
   addTip: "Add shadows, blur, glass, noise or a shader to this layer",
-  empty: "No effects yet. Use Add effect for a shadow, blur or noise.",
   fieldLabel: {
     blur: "Blur",
     edge: "Edge",
@@ -57,7 +55,7 @@ const copy = {
     },
     tip: "Pick a size from the shadow scale of the project. Edit a number for a custom shadow",
   },
-  style: "Style",
+  style: "Effect style",
   styleName: "Style name",
   styleNone: "No style",
   styleTip:

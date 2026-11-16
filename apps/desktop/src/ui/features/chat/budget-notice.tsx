@@ -2,7 +2,7 @@ import { Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
-import { toSpentText } from "./run-notice-model.js";
+import { toLimitText } from "./run-notice-model.js";
 import type { RunView } from "./run-state-model.js";
 
 const ALERT_ICON_SIZE = 14;
@@ -18,10 +18,7 @@ const BudgetNotice = ({
 }): ReactElement => (
   <output className="ui-notice run-notice" data-testid="budget-notice">
     <Icon name="alert" size={ALERT_ICON_SIZE} />
-    <span className="run-notice-text">
-      {copy.thisRunStoppedAt}
-      {toSpentText(run)}
-    </span>
+    <span className="run-notice-text">{toLimitText(run)}</span>
     {latest && onRetry && (
       <button
         type="button"

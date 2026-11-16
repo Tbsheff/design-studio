@@ -1,23 +1,23 @@
 import type { SelectionContext } from "@design-studio/contracts";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import type { FrameFocus } from "./run-focus-model.js";
 import {
   toFocusWith,
   toFocusWithAll,
   toFocusWithout,
+  toSelectionFocusAction,
   toSelectionFocusPath,
 } from "./run-focus-model.js";
 
 interface RunFocus {
   readonly add: (path: string) => void;
   readonly addFrames: () => void;
-  readonly addSelection: () => void;
   readonly clear: () => void;
+  readonly focusSelection: (() => void) | null;
   readonly frames: FrameFocus | null;
   readonly paths: string[];
   readonly remove: (path: string) => void;
-  readonly selectionPath: string | null;
 }
 
 const useRunFocus = (
@@ -32,12 +32,6 @@ const useRunFocus = (
     []
   );
 
-  const addSelection = useCallback((): void => {
-    if (selectionPath !== null) {
-      setPaths((prev) => toFocusWith(prev, selectionPath));
-    }
-  }, [selectionPath]);
-
   const addFrames = useCallback((): void => {
     if (frames !== null) {
       setPaths((prev) => toFocusWithAll(prev, frames.files));
@@ -51,15 +45,25 @@ const useRunFocus = (
     []
   );
 
+  const addSelection = useCallback((): void => {
+    if (selectionPath !== null) {
+      setPaths((prev) => toFocusWith(prev, selectionPath));
+    }
+  }, [selectionPath]);
+
+  const focusSelection = useMemo(
+    () => toSelectionFocusAction(selectionPath, paths, addSelection),
+    [selectionPath, paths, addSelection]
+  );
+
   return {
     add,
     addFrames,
-    addSelection,
     clear,
+    focusSelection,
     frames,
     paths,
     remove,
-    selectionPath,
   };
 };
 

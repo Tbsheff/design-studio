@@ -1,13 +1,12 @@
 interface StudioPaneHeaderProps {
   name: string;
-  kindLabel: string;
+  kindLabel: string | null;
   directionName: string | null;
   connection: string;
   actionError: string | null;
   onDismissError: () => void;
   onRename: (name: string) => Promise<void>;
   onExit: () => void;
-  onDesignMd: () => void;
   onDuplicate: () => void;
   onTrash: () => void;
   onSettings: () => void;

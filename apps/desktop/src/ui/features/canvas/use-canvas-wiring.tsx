@@ -68,17 +68,16 @@ const useCanvasWiring = (
     selectionCount,
   });
 
-  const labelProps = useFrameLabels(toLabelInput(props, text, baseLabel));
+  const labelInput = toLabelInput(props, text, baseLabel, darkSwitch);
+  const labelProps = useFrameLabels(labelInput);
   const proto = usePrototype(toPrototypeInput(props, text, pv, ed));
   const appCanvas = useAppCanvas(toAppCanvasInput(props, text, pv, ed));
   const capture = pz.spaceHeld || pz.panning || pz.zoomHeld;
   const stageMode = stageCursor(pz);
 
-  const activeId = text.active.id;
-
   const commandsInput = toCommandsInput(text, {
     addSection: () => {
-      addSectionAround(props.projectId, [activeId]);
+      addSectionAround(props.projectId, [text.active.id]);
     },
     dark: darkSwitch,
     hasHead: props.headVersionId !== null,

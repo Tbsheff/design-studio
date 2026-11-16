@@ -8,20 +8,10 @@ interface ThemeControl {
   readonly onToggle: () => void;
 }
 
-const toSwitchClass = (place: "row" | "zoom"): string => {
-  if (place === "zoom") {
-    return "canvas-zoom-step canvas-theme";
-  }
-
-  return "icon-btn theme-switch";
-};
-
 const ThemeSwitch = ({
   control,
-  place,
 }: {
   readonly control: ThemeControl;
-  readonly place: "row" | "zoom";
 }): ReactElement => {
   const { dark, onToggle } = control;
 
@@ -34,7 +24,7 @@ const ThemeSwitch = ({
   return (
     <button
       type="button"
-      className={toSwitchClass(place)}
+      className="icon-btn theme-switch"
       aria-label={copy.previewDarkMode}
       aria-pressed={dark}
       data-tip={datatip}

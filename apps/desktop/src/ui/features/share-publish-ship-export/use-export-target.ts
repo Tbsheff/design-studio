@@ -34,12 +34,15 @@ const toOptionalTarget = (
   return optional;
 };
 
-const toVersionLabel = (match: Version | null): string => {
-  if (match) {
-    return match.name ?? match.title;
+const toVersionLabel = (
+  match: Version | null,
+  isLatest: boolean
+): string | null => {
+  if (isLatest || !match) {
+    return null;
   }
 
-  return "Newest version";
+  return match.name ?? match.title;
 };
 
 const useExportTarget = (
@@ -69,7 +72,10 @@ const useExportTarget = (
         directionId: current?.id ?? null,
         projectId,
         versionId,
-        versionLabel: toVersionLabel(match),
+        versionLabel: toVersionLabel(
+          match,
+          versionId === current?.headVersionId
+        ),
         ...toOptionalTarget(detail),
       });
     },

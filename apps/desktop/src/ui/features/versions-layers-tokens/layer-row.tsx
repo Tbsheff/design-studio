@@ -82,7 +82,6 @@ const LayerRowBase = (props: LayerRowProps): ReactNode => {
       <span className="layers-kind" aria-hidden="true">
         <Icon name={toLayerIcon(node)} size={TWISTY_ICON_SIZE} />
       </span>
-      <span className="layers-tag">{node.tag}</span>
       <LayerRowLabel
         isEditing={props.isEditing}
         node={node}

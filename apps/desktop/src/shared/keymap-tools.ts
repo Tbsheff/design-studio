@@ -89,7 +89,7 @@ const TOOL_KEYS = [
     group: "Panels",
     id: "column-tokens",
     keys: ["Alt+5"],
-    label: "Tokens",
+    label: "Assets",
   },
   {
     group: "Panels",

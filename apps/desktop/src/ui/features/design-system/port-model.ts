@@ -333,6 +333,22 @@ const toWritesText = (
   return `${COPY.textWrites}${files} ${COPY.textIn}${appName}${COPY.textGlyph2}`;
 };
 
+const toRouteHint = (path: string): string => {
+  const file = (path.split("/").pop() ?? "").replace(/\.html?$/iu, "");
+
+  const slug = file
+    .toLowerCase()
+    .split(/[^a-z0-9]/u)
+    .filter(Boolean)
+    .join("-");
+
+  if (slug === "" || slug === "index") {
+    return "/home";
+  }
+
+  return `/${slug}`;
+};
+
 const toStartedLine = (result: PortStartResult, appName: string): string =>
   `${COPY.textStartedA}${PORT_LEVEL_LABEL} ${COPY.textRunIn}${appName} ${COPY.textFor}${toStartedText(result)}${COPY.textGlyph2}`;
 
@@ -345,6 +361,7 @@ export {
   toFirstFrameId,
   toKitList,
   toPagePath,
+  toRouteHint,
   toRouteProblem,
   toRouteUpdate,
   toShownRoute,

@@ -3,7 +3,7 @@ import type { CSSProperties, ReactElement, ReactNode } from "react";
 import { createPortal } from "react-dom";
 
 import type { TopBarHosts } from "./canvas-shell.js";
-import { copy } from "./copy.js";
+import { copy, presentCopy } from "./copy.js";
 import { TopBarConnect } from "./top-bar-connect.js";
 import { lazyPortToAppDialog, usePortDialog } from "./top-bar-drop-menu.js";
 import { TopBarFileMenu } from "./top-bar-file-menu.js";
@@ -17,30 +17,29 @@ import { ZoomControl } from "./zoom-control.js";
 
 const CONTENTS_STYLE: CSSProperties = { display: "contents" };
 
-const presentItems = (onPresent: (mode: PresentMode) => void): MenuEntry[] => [
-  {
-    icon: "play",
-    id: "window",
-    label: "In this window",
-    run: () => onPresent("window"),
-  },
+const presentItems = (
+  onPresent: (mode: PresentMode) => void,
+  canPlay: boolean
+): MenuEntry[] => [
   {
     icon: "expand",
     id: "fullscreen",
-    label: "Fullscreen",
+    label: presentCopy.fullscreen,
     run: () => onPresent("fullscreen"),
   },
   {
     icon: "window",
     id: "new-window",
-    label: "New window",
+    label: presentCopy.newWindow,
     run: () => onPresent("new-window"),
   },
   {
+    disabled: !canPlay,
     icon: "link",
     id: "play",
-    label: "Play prototype",
+    label: presentCopy.play,
     run: () => onPresent("play"),
+    tip: presentCopy.playTip,
   },
 ];
 
@@ -86,12 +85,15 @@ const toHosted = (
 
 const CanvasTopBar = (props: Props): ReactElement => {
   const port = usePortDialog(!props.onShip);
-  const { open: openPort, close: closePort } = port;
-  const hasShip = Boolean(props.onShip);
-  const openPortDialog = useCallback((): void => openPort(null), [openPort]);
+  const { close: closePort } = port;
   const { canPlay, onPresent } = props;
-  const present = useMemo(() => presentItems(onPresent), [onPresent]);
-  const onPlay = useCallback((): void => onPresent("play"), [onPresent]);
+
+  const present = useMemo(
+    () => presentItems(onPresent, canPlay),
+    [onPresent, canPlay]
+  );
+
+  const onWindow = useCallback((): void => onPresent("window"), [onPresent]);
 
   const {
     onFit: fit,
@@ -112,20 +114,14 @@ const CanvasTopBar = (props: Props): ReactElement => {
     [fit, step, zoomTo, zoomSetting, zoomStore]
   );
 
-  let onPort: (() => void) | null = null;
-
-  if (!hasShip) {
-    onPort = openPortDialog;
-  }
-
   const parts: TopBarParts = {
     end: (
       <>
         {props.matrix}
         <span data-topbar-slot="review" style={CONTENTS_STYLE} />
-        <TopBarPresent canPlay={canPlay} onPlay={onPlay} present={present} />
+        <TopBarPresent onPresent={onWindow} present={present} />
         <TopBarConnect />
-        <TopBarShare props={props} onPort={onPort} />
+        <TopBarShare props={props} />
         {props.account}
         {port.target && (
           <Suspense fallback={null}>
@@ -143,7 +139,7 @@ const CanvasTopBar = (props: Props): ReactElement => {
         onTool={props.onTool}
       />
     ),
-    zoom: <ZoomControl control={zoom} theme={props.theme} />,
+    zoom: <ZoomControl control={zoom} />,
   };
 
   return <>{toHosted(parts, props.hosts)}</>;

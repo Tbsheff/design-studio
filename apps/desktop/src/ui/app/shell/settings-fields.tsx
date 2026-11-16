@@ -61,7 +61,7 @@ const SettingsFields = ({
         name="autoApprove"
         onChange={handlers.handleAuto}
       />
-      <p className="warn-line">{copy.theseAreOnByDefault}</p>
+      <p className="field-help settings-note">{copy.shellRiskNote}</p>
       {children}
       <SkillsChecklist
         disabled={draft.disabledSkills}

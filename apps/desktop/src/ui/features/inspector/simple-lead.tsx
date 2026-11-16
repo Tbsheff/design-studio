@@ -1,7 +1,7 @@
-import { Suspense, useMemo } from "react";
+import { useMemo } from "react";
 import type { ReactElement } from "react";
 
-import { ContentPanel, StateStylesSlot } from "../../inspector-slots.js";
+import { StateStylesSlot } from "../../inspector-slots.js";
 import { ClassLine } from "./class-line.js";
 import { toDomClasses } from "./element-classes-model.js";
 import { ErrorLine } from "./error-line.js";
@@ -20,6 +20,23 @@ const SimpleLead = ({ props, state }: SimpleLeadProps): ReactElement => {
   const hasSource = Boolean(directionId && target.source);
   const { outerHTML } = target;
   const resolved = useMemo(() => toDomClasses(outerHTML), [outerHTML]);
+  const { status } = edit;
+
+  const states = useMemo(() => {
+    if (!directionId || !hasSource) {
+      return null;
+    }
+
+    return (
+      <StateStylesSlot
+        projectId={projectId}
+        directionId={directionId}
+        target={target}
+        port={port}
+        status={status}
+      />
+    );
+  }, [projectId, directionId, hasSource, target, port, status]);
 
   return (
     <>
@@ -35,25 +52,8 @@ const SimpleLead = ({ props, state }: SimpleLeadProps): ReactElement => {
         port={port}
         support={classes.variants}
         quietNote={classLine?.note ?? null}
+        states={states}
       />
-      {directionId && hasSource && (
-        <StateStylesSlot
-          projectId={projectId}
-          directionId={directionId}
-          target={target}
-          port={port}
-          status={edit.status}
-        />
-      )}
-      {directionId && hasSource && (
-        <Suspense fallback={null}>
-          <ContentPanel
-            projectId={projectId}
-            directionId={directionId}
-            target={target}
-          />
-        </Suspense>
-      )}
     </>
   );
 };

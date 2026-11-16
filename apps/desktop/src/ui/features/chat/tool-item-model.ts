@@ -6,6 +6,10 @@ import { shortName } from "./tool-chips-model.js";
 import { toolTally } from "./tool-labels-model.js";
 import { shellEdits } from "./tool-rows-model.js";
 
+const WAITING_NAME = "Waiting";
+
+const RUNNING_NAME = "Running";
+
 const toRowClass = (state: ToolState, isSkill: boolean): string => {
   if (isSkill) {
     return `tool-row ${state} skill-tool`;
@@ -50,14 +54,30 @@ const toTargetText = (target: string, isFull: boolean): string => {
   return shortName(target);
 };
 
-const toSummaryLabel = (tools: ToolRow[]): string => {
-  const names = tools.map((tool) => {
-    if (shellEdits(tool).length > 0) {
-      return "Edit";
-    }
+const toTallyName = (
+  tool: ToolRow,
+  waitingIds: ReadonlySet<string>
+): string => {
+  if (tool.durationMs === null && waitingIds.has(tool.toolUseId)) {
+    return WAITING_NAME;
+  }
 
-    return tool.name;
-  });
+  if (tool.durationMs === null) {
+    return RUNNING_NAME;
+  }
+
+  if (shellEdits(tool).length > 0) {
+    return "Edit";
+  }
+
+  return tool.name;
+};
+
+const toSummaryLabel = (
+  tools: ToolRow[],
+  waitingIds: ReadonlySet<string>
+): string => {
+  const names = tools.map((tool) => toTallyName(tool, waitingIds));
 
   return toolTally(names)
     .map((item) => {

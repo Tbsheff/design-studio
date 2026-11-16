@@ -275,6 +275,40 @@ const styledStates = (
 const hasDot = (chip: ChipId, styled: ReadonlySet<StyleState>): boolean =>
   chip !== "default" && styled.has(chip);
 
+interface MenuEntry {
+  readonly chip: ChipId;
+  readonly hasStyles: boolean;
+  readonly isDisabled: boolean;
+}
+
+const toMenuOptions = (
+  chips: readonly ChipId[],
+  styled: ReadonlySet<StyleState>,
+  info: StateListResult | null,
+  isOff: boolean
+): MenuEntry[] =>
+  chips.flatMap((chip) => {
+    if (chip === "dark") {
+      return [];
+    }
+
+    return [
+      {
+        chip,
+        hasStyles: hasDot(chip, styled),
+        isDisabled: (isOff && chip !== "default") || isGroupOff(chip, info),
+      },
+    ];
+  });
+
+const toMenuValue = (active: ChipId | null): ChipId => {
+  if (active === null || active === "dark") {
+    return "default";
+  }
+
+  return active;
+};
+
 const roundOf = (status: SaveStatus): number => {
   if (status.kind === "saved") {
     return status.at;
@@ -307,6 +341,8 @@ export {
   stateWire,
   styledStates,
   toEdgeNote,
+  toMenuOptions,
+  toMenuValue,
 };
 
-export type { ChipId };
+export type { ChipId, MenuEntry };

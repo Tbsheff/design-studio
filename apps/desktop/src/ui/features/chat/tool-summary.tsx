@@ -8,13 +8,19 @@ import { ToolSummaryHead } from "./tool-summary-head.js";
 
 const ToolSummary = ({
   tools,
+  waitingIds,
   children,
 }: {
   tools: ToolRow[];
+  waitingIds: ReadonlySet<string>;
   children: ReactNode;
 }): ReactElement | null => {
   const [open, setOpen] = useState(false);
-  const label = useMemo(() => toSummaryLabel(tools), [tools]);
+
+  const label = useMemo(
+    () => toSummaryLabel(tools, waitingIds),
+    [tools, waitingIds]
+  );
 
   const failedCount = useMemo(
     () => tools.filter((tool) => failed(tool)).length,

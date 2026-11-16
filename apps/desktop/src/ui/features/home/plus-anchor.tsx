@@ -13,12 +13,7 @@ const PLUS_ICON_SIZE = 16;
 interface PlusAnchorProps {
   readonly pops: PopState;
   readonly triggerRef: RefObject<HTMLButtonElement | null>;
-  readonly locationLabel: string;
-  readonly plusActions: Omit<
-    PlusMenuActions,
-    "kind" | "onDesignSystem" | "onKind"
-  >;
-  readonly onDesignSystem: () => void;
+  readonly plusActions: Omit<PlusMenuActions, "kind" | "onKind">;
   readonly kind: ProjectKind | null;
   readonly onKind: (kind: ProjectKind) => void;
 }
@@ -26,9 +21,7 @@ interface PlusAnchorProps {
 const PlusAnchor = ({
   pops,
   triggerRef,
-  locationLabel,
   plusActions,
-  onDesignSystem,
   kind,
   onKind,
 }: PlusAnchorProps): ReactElement => {
@@ -43,8 +36,8 @@ const PlusAnchor = ({
   }, []);
 
   const actions = useMemo(
-    () => ({ ...plusActions, kind, onDesignSystem, onKind }),
-    [kind, onDesignSystem, onKind, plusActions]
+    () => ({ ...plusActions, kind, onKind }),
+    [kind, onKind, plusActions]
   );
 
   return (
@@ -69,7 +62,6 @@ const PlusAnchor = ({
             trigger={triggerRef}
             isClosing={pops.isClosing}
             onClose={close}
-            locationLabel={locationLabel}
             actions={actions}
           />
         </Suspense>

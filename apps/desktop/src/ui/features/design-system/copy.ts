@@ -54,7 +54,7 @@ const COPY = {
   placeholderCodeMyApp: "~/code/my-app",
   placeholderDesignMd:
     "# Brand\nPrimary color, type, spacing and voice rules Claude should follow.",
-  placeholderExampleClasses: "Example: /classes",
+  placeholderExamplePrefix: "Example: ",
   placeholderFromTheWebsiteOrBrief: "From the website or brief",
   placeholderHttpsExampleCom: "https://example.com",
   placeholderLoadingApps: "Loading apps…",
@@ -153,8 +153,7 @@ const COPY = {
   textNewDesignSystem: "New design system",
   textNewDesignSystem2: "New design system…",
   textNewRouteFiles: "new route files",
-  textNoAppIsAttached:
-    "No app is attached yet. Type the folder of your Next.js app, then Attach. Your design stays open.",
+  textNoAppIsAttached: "No app is attached yet. Type the folder of your app, then Attach. Your design stays open.",
   textNoComponentsMatch: "No components match “",
   textNoDesignSystem: "No design system",
   textNoFolderChosen: "No folder chosen",
@@ -183,6 +182,7 @@ const COPY = {
   textReadOnlyTheStudio:
     "Read only. The studio scans CSS, SCSS and Tailwind config files.",
   textReadingThePages: "Reading the pages…",
+  textRebuildsOnePage: "Claude rebuilds the page of this frame as a route in your app, with its components and token classes.",
   textRemove: "Remove",
   textRename: "Rename",
   textReplace: "Replace",

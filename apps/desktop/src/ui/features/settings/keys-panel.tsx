@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from "react";
+import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { KeyForm } from "./key-form.js";
@@ -6,29 +6,15 @@ import { KeyRow } from "./key-row.js";
 import { SecretLine } from "./secret-line.js";
 import { useKeys } from "./use-keys.js";
 
-interface KeysPanelProps {
-  readonly children: ReactNode;
-}
-
-const KeysPanel = ({ children }: KeysPanelProps): ReactElement => {
+const KeysPanel = (): ReactElement => {
   const state = useKeys();
 
   if (!state.isAvailable) {
-    return (
-      <>
-        <p>{copy.unavailable}</p>
-        {children}
-      </>
-    );
+    return <p className="field-help">{copy.unavailable}</p>;
   }
 
   if (!state.isSignedIn) {
-    return (
-      <>
-        <p>{copy.signedOut}</p>
-        {children}
-      </>
-    );
+    return <p className="field-help">{copy.signedOut}</p>;
   }
 
   return (
@@ -50,11 +36,8 @@ const KeysPanel = ({ children }: KeysPanelProps): ReactElement => {
         ))}
       </ul>
       {state.error !== null && <p role="alert">{state.error}</p>}
-      {children}
     </section>
   );
 };
 
 export { KeysPanel };
-
-export type { KeysPanelProps };

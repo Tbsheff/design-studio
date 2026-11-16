@@ -2,7 +2,11 @@ import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { SuggestionChip } from "./suggestion-chip.js";
-import { isChipsShown, toTweakChip } from "./suggestion-model.js";
+import {
+  isChipsShown,
+  toShownSuggestions,
+  toTweakChip,
+} from "./suggestion-model.js";
 import type { SuggestionRunIds } from "./suggestion-model.js";
 import { TweakChip } from "./tweak-chip.js";
 import { useSuggestions } from "./use-suggestions.js";
@@ -26,24 +30,22 @@ const SuggestionChips = ({
 }: SuggestionChipsProps): ReactElement | null => {
   const { suggestions } = useSuggestions(ids);
   const chip = toTweakChip(tweakCount, isAppProject);
+  const shown = toShownSuggestions(suggestions, chip);
 
-  if (!isChipsShown(chip, suggestions.length)) {
+  if (!isChipsShown(chip, shown.length)) {
     return null;
   }
 
   return (
     <section aria-label={copy.heading} className={styles.chips}>
-      <h3 className={styles.heading}>{copy.heading}</h3>
-      <div className={styles.list}>
-        {chip !== null && <TweakChip chip={chip} onTweaks={onTweaks} />}
-        {suggestions.map((suggestion) => (
-          <SuggestionChip
-            key={suggestion.prompt}
-            suggestion={suggestion}
-            onPick={onPick}
-          />
-        ))}
-      </div>
+      {chip !== null && <TweakChip chip={chip} onTweaks={onTweaks} />}
+      {shown.map((suggestion) => (
+        <SuggestionChip
+          key={suggestion.prompt}
+          suggestion={suggestion}
+          onPick={onPick}
+        />
+      ))}
     </section>
   );
 };

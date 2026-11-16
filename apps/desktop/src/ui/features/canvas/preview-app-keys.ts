@@ -24,7 +24,7 @@ const COMMAND_OF_KEY: Partial<Record<AppKey, string>> = {
   "column-layers": "panel.layers",
   "column-pages": "panel.pages",
   "column-system": "panel.system",
-  "column-tokens": "panel.tokens",
+  "column-tokens": "panel.assets",
   "column-versions": "panel.versions",
   inspector: "panel.inspector",
   "view-outline": "view.outline",

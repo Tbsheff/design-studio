@@ -8,6 +8,8 @@ import {
   TextStyleSlot,
 } from "../../inspector-slots.js";
 import { BackgroundField } from "./background-field.js";
+import { copy } from "./copy.js";
+import { RareSection } from "./rare-section.js";
 import type { SimpleEditorProps, SimpleEditorState } from "./simple-model.js";
 import { SimpleSections } from "./simple-sections.js";
 import { TokenLint } from "./token-lint.js";
@@ -26,7 +28,7 @@ const SimpleMiddle = ({ props, state }: SimpleMiddleProps): ReactElement => {
   const textStyle = useMemo(
     () =>
       directionId && (
-        <>
+        <div className="ins-text-tools">
           <TextStyleSlot
             projectId={projectId}
             directionId={directionId}
@@ -39,7 +41,7 @@ const SimpleMiddle = ({ props, state }: SimpleMiddleProps): ReactElement => {
               targets={targets}
             />
           </Suspense>
-        </>
+        </div>
       ),
     [projectId, directionId, targets]
   );
@@ -71,14 +73,19 @@ const SimpleMiddle = ({ props, state }: SimpleMiddleProps): ReactElement => {
         classes={state.classes}
         textStyle={textStyle}
         fill={fill}
+        layout={props.layout}
+        hasEffectLayers={Boolean(directionId && target.source)}
+        hasEffectShadow={props.hasEffectShadow}
       />
       {directionId && (
-        <MotionSlot
-          projectId={projectId}
-          directionId={directionId}
-          target={target}
-          port={port}
-        />
+        <RareSection title={copy.motionTitle} aside={null} modifier={null}>
+          <MotionSlot
+            projectId={projectId}
+            directionId={directionId}
+            target={target}
+            port={port}
+          />
+        </RareSection>
       )}
     </>
   );

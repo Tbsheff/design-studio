@@ -1,3 +1,4 @@
+import { Icon } from "@design-studio/ui";
 import { useMemo } from "react";
 import type { ReactElement } from "react";
 
@@ -16,6 +17,8 @@ import { useGridHandlers } from "./use-grid-handlers.js";
 import { useGrid } from "./use-grid.js";
 
 import styles from "./grid.module.css";
+
+const MAKE_ICON_SIZE = 12;
 
 interface GridPanelProps {
   readonly directionId: string;
@@ -54,12 +57,14 @@ const GridPanel = ({
       )}
       {!isLayer && canBecomeGrid(target) && (
         <button
-          className={styles.make}
+          aria-label={copy.makeGridTip}
+          className={`ins-add ${styles.make}`}
           data-tip={copy.makeGridTip}
           disabled={isOff}
           type="button"
           onClick={handlers.handleMake}
         >
+          <Icon name="plus" size={MAKE_ICON_SIZE} />
           {copy.makeGrid}
         </button>
       )}

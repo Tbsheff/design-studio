@@ -25,7 +25,6 @@ const NumberStyleRow = ({
   return (
     <div className="wide">
       <div className="ins-field ins-align-row ins-numbers">
-        <span className="ins-scrub static">{copy.numbers}</span>
         <NumberStyleSelects
           numbers={style}
           onFigure={onFigure}

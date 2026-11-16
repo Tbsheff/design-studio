@@ -321,6 +321,7 @@ export {
 };
 
 export type {
+  FrameMenu,
   FrameShareLink,
   FrameShareLookup,
   RedesignEntry,

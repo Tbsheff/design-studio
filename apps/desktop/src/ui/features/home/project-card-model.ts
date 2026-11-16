@@ -2,7 +2,11 @@ import type { PackSummary, Project } from "@design-studio/contracts";
 import { shortenHome } from "@design-studio/contracts/folders";
 import type { ReactNode } from "react";
 
-import { TYPE_LABELS, projectTypeOf } from "../../../shared/project-search.js";
+import {
+  TYPE_LABELS,
+  isPrototypeType,
+  projectTypeOf,
+} from "../../../shared/project-search.js";
 import { copy } from "./copy.js";
 import type { AppHealth, ProjectType } from "./deps.js";
 import type { Point } from "./home-model.js";
@@ -53,11 +57,15 @@ const PRIVATE_PREFIX = /^\/private(?=\/)/u;
 const isFolderProject = (project: Project): boolean =>
   Boolean(project.imported && !project.imported.created);
 
-const toProjectBadge = (project: Project): ProjectBadge => {
+const toProjectBadge = (project: Project): ProjectBadge | null => {
   const type = projectTypeOf(project);
 
   if (type === "html" && isFolderProject(project)) {
     return { label: TYPE_LABELS[type], tone: "html" };
+  }
+
+  if (isPrototypeType(type)) {
+    return null;
   }
 
   return { label: TYPE_LABELS[type], tone: TYPE_TONE[type] };

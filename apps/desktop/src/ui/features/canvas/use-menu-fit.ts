@@ -2,18 +2,12 @@ import { useCallback } from "react";
 import type { RefCallback, RefObject } from "react";
 
 import { toMenuFit, toVisibleBounds } from "./menu-fit-model.js";
-import type {
-  MenuBox,
-  MenuFit,
-  MenuSize,
-  PanelInset,
-} from "./menu-fit-model.js";
+import type { MenuBox, MenuFit, MenuSize } from "./menu-fit-model.js";
 import { toolsBarStore } from "./tools-bar-store.js";
 
 type MenuFitKind = "root" | "submenu";
 
 const STAGE = ".stage";
-const PANEL_OPEN = '[data-inspector="open"]';
 const TOOLS_HOST = ".studio-tools";
 const SUBMENU_GAP = 2;
 const SUBMENU_LIFT = 4;
@@ -33,17 +27,6 @@ const toPixels = (value: string): number => {
   }
 
   return parsed;
-};
-
-const toPanelInset = (stage: Element): PanelInset => {
-  const style = getComputedStyle(stage);
-  const gap = toPixels(style.getPropertyValue("--dock-gap"));
-  const width = toPixels(style.getPropertyValue("--inspector-w"));
-
-  return {
-    isOpen: stage.closest(PANEL_OPEN) !== null && width > 0,
-    width: width + gap * 2,
-  };
 };
 
 const toToolsCut = (bounds: MenuBox): MenuBox => {
@@ -71,11 +54,11 @@ const toBounds = (menu: HTMLElement): MenuBox => {
   const view = { height: globalThis.innerHeight, width: globalThis.innerWidth };
 
   if (stage === null) {
-    return toVisibleBounds(null, view, { isOpen: false, width: 0 });
+    return toVisibleBounds(null, view);
   }
 
   return toToolsCut(
-    toVisibleBounds(stage.getBoundingClientRect(), view, toPanelInset(stage))
+    toVisibleBounds(stage.getBoundingClientRect(), view)
   );
 };
 

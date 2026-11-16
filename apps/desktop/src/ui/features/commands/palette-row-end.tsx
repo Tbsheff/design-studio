@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 
-import { HealthDot } from "./deps.js";
+import { HealthDot, isPrototypeType } from "./deps.js";
 import { Keys } from "./keys-view.js";
 import { toRowNote } from "./palette-model.js";
 import { typePair } from "./palette-row-builders.js";
@@ -24,7 +24,7 @@ const PaletteRowEnd = ({
     <span className="cmdk-end">
       {note && <span className="cmdk-note">{note}</span>}
       {isPlain && hit?.health?.level === "failed" && <HealthDot hit={hit} />}
-      {isPlain && hit && (
+      {isPlain && hit && !isPrototypeType(hit.type) && (
         <span className="cmdk-type">{typePair(hit.type)}</span>
       )}
       {isEnter && <Keys keys="Enter" extraClass="cmdk-keys" />}

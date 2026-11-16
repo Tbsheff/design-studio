@@ -2,31 +2,13 @@ import { DEFAULT_BREAKPOINTS } from "../../../shared/variants.js";
 import type {
   Breakpoint,
   ParsedVariant,
-  VariantState,
   VariantSupport,
 } from "../../../shared/variants.js";
-
-interface StateChip {
-  readonly id: VariantState;
-  readonly label: string;
-}
 
 interface WidthOption {
   readonly label: string;
   readonly value: string;
 }
-
-const STATES: readonly StateChip[] = [
-  { id: "hover", label: "Hover" },
-  { id: "focus", label: "Focus" },
-  { id: "active", label: "Active" },
-];
-
-const STATE_VERBS: Readonly<Record<VariantState, string>> = {
-  active: "pressed",
-  focus: "focused",
-  hover: "hovered",
-};
 
 const SHOWN_BREAKPOINTS = 4;
 
@@ -39,8 +21,6 @@ const BASE: ParsedVariant = {
   states: [],
 };
 
-const DARK_CHIP = "dark";
-
 const toBreakpoints = (support: VariantSupport | null): Breakpoint[] => {
   let list: readonly Breakpoint[] = DEFAULT_BREAKPOINTS;
 
@@ -49,33 +29,6 @@ const toBreakpoints = (support: VariantSupport | null): Breakpoint[] => {
   }
 
   return list.slice(0, SHOWN_BREAKPOINTS);
-};
-
-const toChipClass = (isPressed: boolean): string => {
-  if (isPressed) {
-    return "ins-variant-chip on";
-  }
-
-  return "ins-variant-chip";
-};
-
-type PseudoStateId = ParsedVariant["states"][number];
-
-const isStateId = (id: string): id is PseudoStateId =>
-  STATES.some((state) => state.id === id);
-
-const toStateTip = (state: StateChip): string =>
-  `${state.label} state. The frame shows the element as if ${STATE_VERBS[state.id]}`;
-
-const toNextStates = (
-  states: readonly PseudoStateId[],
-  state: PseudoStateId
-): PseudoStateId[] => {
-  if (states.includes(state)) {
-    return [];
-  }
-
-  return [state];
 };
 
 const toFrameWidth = (
@@ -134,16 +87,10 @@ const toSummary = (prefix: string, support: VariantSupport | null): string => {
 export {
   ANY_WIDTH,
   BASE,
-  DARK_CHIP,
-  STATES,
-  isStateId,
   toBreakpoints,
-  toChipClass,
   toFrameWidth,
-  toNextStates,
-  toStateTip,
   toSummary,
   toWidthOptions,
 };
 
-export type { StateChip, WidthOption };
+export type { WidthOption };

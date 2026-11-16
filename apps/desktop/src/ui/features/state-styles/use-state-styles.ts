@@ -36,6 +36,7 @@ interface StateStylesView {
   readonly chips: readonly ChipId[];
   readonly error: string | null;
   readonly isOff: boolean;
+  readonly handleDark: () => void;
   readonly handlePick: (chip: ChipId) => void;
   readonly info: StateListResult | null;
   readonly reason: string | null;
@@ -185,6 +186,16 @@ const useStateStyles = (options: StateStylesOptions): StateStylesView => {
     [ids, info, port, selector]
   );
 
+  const handleDark = useCallback(() => {
+    if (active === "dark") {
+      handlePick("default");
+
+      return;
+    }
+
+    handlePick("dark");
+  }, [active, handlePick]);
+
   useEffect(() => {
     const moved = held.selector !== null && held.selector !== selector;
 
@@ -205,7 +216,17 @@ const useStateStyles = (options: StateStylesOptions): StateStylesView => {
   const isOff = info?.layer.mode === "none";
   const reason = info?.layer.reason ?? null;
 
-  return { active, chips, error, handlePick, info, isOff, reason, styled };
+  return {
+    active,
+    chips,
+    error,
+    handleDark,
+    handlePick,
+    info,
+    isOff,
+    reason,
+    styled,
+  };
 };
 
 export { useStateStyles };

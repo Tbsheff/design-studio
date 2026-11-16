@@ -9,15 +9,20 @@ import type { Extra } from "./simple-model.js";
 interface AppearanceExtrasProps {
   readonly edit: DirectEdit;
   readonly extras: Set<Extra>;
+  readonly canAddShadow: boolean;
   readonly onReveal: (extra: Extra) => void;
 }
 
 const AppearanceExtras = ({
   edit,
   extras,
+  canAddShadow,
   onReveal,
 }: AppearanceExtrasProps): ReactElement => {
-  const hidden = EXTRAS.filter((entry) => !extras.has(entry.id));
+  const hidden = EXTRAS.filter(
+    (entry) => !extras.has(entry.id) && (canAddShadow || entry.id !== "shadow")
+  );
+
   const rows = EXTRA_ROWS.filter((row) => extras.has(row.extra));
 
   return (

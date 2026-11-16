@@ -15,11 +15,12 @@ const ConnectAiBody = ({ state }: ConnectAiBodyProps): ReactElement => {
   return (
     <div className="modal-body connect-ai-body">
       {setup !== null && <ConnectAiServer setup={setup} state={state} />}
-      {setup !== null && <ConnectAiAgent setup={setup} />}
+      {setup?.isEnabled === true && <ConnectAiAgent setup={setup} />}
       {setup !== null && (
         <ConnectAiFoot
           clients={clients}
           isBusy={isBusy}
+          isEnabled={setup.isEnabled}
           onRotate={rotateToken}
         />
       )}

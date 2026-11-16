@@ -170,7 +170,7 @@ const toScrollPinPatch = (
 };
 
 const toSideValue = (
-  side: keyof ScrollPinCurrent,
+  side: Exclude<keyof ScrollPinCurrent, "zIndex">,
   values: StyleValues,
   styles: Readonly<Record<string, string>>
 ): string => styles[`authored-${side}`] ?? values[side];

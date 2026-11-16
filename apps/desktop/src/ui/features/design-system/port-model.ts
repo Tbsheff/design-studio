@@ -134,7 +134,7 @@ const isPartOf = (part: string, actual: string | undefined): boolean =>
 
 const isHeadOf = (head: string[], actual: string[]): boolean =>
   head.length <= actual.length &&
-  head.entries().every(([index, part]) => isPartOf(part, actual[index]));
+  head.every((part, index) => isPartOf(part, actual[index]));
 
 const isPartsOf = (parts: string[], actual: string[]): boolean => {
   const tailMin = toTailMin(parts.at(-1) ?? "");

@@ -58,20 +58,17 @@ const chatProps = (ctx: StudioCtx): LeftProps["chat"] => {
   const shown = shownPending(core.pendingRun, directionRuns, directionId);
 
   return {
-    busy: ui.busy,
     direction: core.direction,
     lead: core.draftChrome.banner,
     mcp: core.mcp,
     offline: data.connection === "reconnecting",
     onApprovePlan: run.approvePlan,
     onDetails: ui.setDetailsRunId,
-    onPolish: run.polish,
     onRetry: run.retryRun,
     onReview: core.reviewVersionId,
     onStop: run.runControls.onCancel,
     pending: shown,
     rewind: core.rewind,
-    running: core.activeRun !== null,
     runs: directionRuns,
     suggestions: toSuggestionSlot(ctx, shown !== null),
   };

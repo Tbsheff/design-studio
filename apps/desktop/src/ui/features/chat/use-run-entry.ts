@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from "react";
 
 import type { RunUndoAction } from "./chat-parts-model.js";
-import type { PolishProps, TurnActions } from "./chat-turn-model.js";
+import type { RunCallbacks, TurnActions } from "./chat-turn-model.js";
 import { toRunAction, toUndo, toVersionAction } from "./run-entry-model.js";
 import type { RunBodyTailProps } from "./run-entry-model.js";
 import type { RunView } from "./run-state-model.js";
@@ -9,7 +9,7 @@ import type { RunView } from "./run-state-model.js";
 interface RunEntryOptions {
   readonly run: RunView;
   readonly latest: boolean;
-  readonly polish: PolishProps;
+  readonly callbacks: RunCallbacks;
   readonly actions: TurnActions | null;
   readonly undoVersionId: string | null;
   readonly undoTip: string | null;
@@ -25,7 +25,7 @@ interface RunEntryState {
 }
 
 const useRunEntry = (options: RunEntryOptions): RunEntryState => {
-  const { run, polish, actions, undoVersionId, undoTip } = options;
+  const { run, callbacks, actions, undoVersionId, undoTip } = options;
   const { reviewVersionId, onReview, onDetails } = options;
   const { runId } = run;
   const details = useCallback(() => onDetails(runId), [onDetails, runId]);
@@ -43,27 +43,24 @@ const useRunEntry = (options: RunEntryOptions): RunEntryState => {
   );
 
   const retry = useMemo(
-    () => toRunAction(polish.onRetry ?? null, run),
-    [polish.onRetry, run]
+    () => toRunAction(callbacks.onRetry ?? null, run),
+    [callbacks.onRetry, run]
   );
 
   const approve = useMemo(
-    () => toRunAction(polish.onApprovePlan ?? null, run),
-    [polish.onApprovePlan, run]
+    () => toRunAction(callbacks.onApprovePlan ?? null, run),
+    [callbacks.onApprovePlan, run]
   );
 
   const tail = useMemo(
     () => ({
-      headVersionId: polish.headVersionId,
-      isPolishDisabled: polish.running,
       latest: options.latest,
       onApprovePlan: approve,
       onDetails: details,
-      onPolish: polish.onPolish,
       onReview: review,
       run,
     }),
-    [polish, options.latest, approve, details, review, run]
+    [options.latest, approve, details, review, run]
   );
 
   return { retry, tail, undo };

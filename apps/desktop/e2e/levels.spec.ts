@@ -141,7 +141,7 @@ test("new project flow sends the chosen level with the first run", async ({
   await expectLevel(page, "wireframe");
 });
 
-test("wireframe run shows its level; Polish this on the head starts a polish run", async ({
+test("wireframe run shows its level; Polish on the head version starts a polish run", async ({
   page,
 }) => {
   const api = await openHome(page);
@@ -152,7 +152,6 @@ test("wireframe run shows its level; Polish this on the head starts a polish run
   const chips = page.getByTestId("run-level-chip");
 
   await expect(chips).toHaveText(["Prototype"]);
-  await expect(page.getByTestId("polish-this")).toHaveCount(1);
 
   await chooseRunSetting(page, { testId: "level-option-wireframe" });
   await expectLevel(page, "wireframe");
@@ -162,11 +161,6 @@ test("wireframe run shows its level; Polish this on the head starts a polish run
   await api.waitForRuns(project.id, 2);
   await expect(chat.locator(".run .status.completed")).toHaveCount(2);
   await expect(chips).toHaveText(["Prototype", "Wireframe"]);
-  const polishInChat = page.getByTestId("polish-this");
-  await expect(polishInChat).toHaveCount(1);
-  await expect(
-    chat.locator(".run").last().getByTestId("polish-this")
-  ).toBeVisible();
 
   await showVersions(page);
   const head = page.locator("li.version.head");
@@ -196,7 +190,6 @@ test("wireframe run shows its level; Polish this on the head starts a polish run
   expect(polishRun?.request.prompt).toContain("Polish this design");
   expect(polishRun?.request.mode).toBe("edit");
   await expect(chat.locator(".run .status.completed")).toHaveCount(3);
-  await expect(page.getByTestId("polish-this")).toHaveCount(0);
   await expectLevel(page, "wireframe");
   await closeRunSettings(page);
   await page.screenshot({
@@ -220,16 +213,15 @@ test("wireframe run shows its level; Polish this on the head starts a polish run
   expect(headVersion?.meta.level).toBe("polish");
 });
 
-test("Polish this is disabled while a run is in progress", async ({ page }) => {
+test("version polish is disabled while a run is in progress", async ({
+  page,
+}) => {
   const api = await openHome(page);
   const project = await createProject(api, "Levels Gallery");
   await openProject(page, project.id);
-  const polishInChat = page.getByTestId("polish-this");
-  await expect(polishInChat).toBeEnabled();
 
   await sendPrompt(page, "[slow] Add a gallery hours line");
   await expect(page.locator(".chat .run .status.running")).toHaveCount(1);
-  await expect(polishInChat).toBeDisabled();
   await showVersions(page);
   await openHeadMore(page);
   await expect(page.getByTestId("version-polish-this")).toBeDisabled();

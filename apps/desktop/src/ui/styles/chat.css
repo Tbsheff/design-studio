@@ -1230,25 +1230,6 @@
   font-size: var(--t-2xs);
 }
 
-.polish-this .btn {
-  flex: none;
-  height: 28px;
-  border-radius: var(--r-control-sm);
-  font-size: var(--t-xs);
-}
-
-.polish-this {
-  min-width: 0;
-  font-size: var(--t-2xs);
-}
-
-.polish-this > span {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .drawer .tools-table {
   border-radius: var(--r-md);
 }

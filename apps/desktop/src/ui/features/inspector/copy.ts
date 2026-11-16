@@ -89,7 +89,6 @@ const copy = {
   editVariantStyles: "Edit variant styles",
   edits: "Edits ",
   editsGoToThisUse: "Edits go to this use of ",
-  effectLayers: "Effect layers",
   effects: "Effects",
   elementSource: "Layer source",
   emDash: "—",
@@ -256,6 +255,7 @@ const copy = {
   setByCode: "Set by code",
   setEachCorner: "Set each corner",
   shadow: "Shadow ",
+  shadowTitle: "Shadow and blur",
   sharedAllChanged:
     "Every page changed since the check. Look at the pages, then try again.",
   sharedAppliedSkipped: (

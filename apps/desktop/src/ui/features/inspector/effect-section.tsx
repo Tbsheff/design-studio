@@ -2,9 +2,9 @@ import { Suspense } from "react";
 import type { ReactElement } from "react";
 
 import { EffectSlot } from "../../inspector-slots.js";
-import { copy } from "./copy.js";
+import { EffectsFrame } from "./effects-frame.js";
+import { hasBoxShadow } from "./effects-model.js";
 import type { InspectorProps } from "./inspector-model.js";
-import { RareSection } from "./rare-section.js";
 import { useEditVariant } from "./use-edit-variant.js";
 
 const EffectLayersSection = (props: InspectorProps): ReactElement | null => {
@@ -18,17 +18,17 @@ const EffectLayersSection = (props: InspectorProps): ReactElement | null => {
   }
 
   return (
-    <RareSection title={copy.effectLayers} aside={null} modifier={null}>
-      <Suspense fallback={null}>
-        <EffectSlot
-          key={target.selector}
-          directionId={directionId ?? ""}
-          projectId={projectId}
-          target={target}
-          variant={variant}
-        />
-      </Suspense>
-    </RareSection>
+    <Suspense fallback={null}>
+      <EffectSlot
+        key={target.selector}
+        directionId={directionId ?? ""}
+        projectId={projectId}
+        target={target}
+        variant={variant}
+        isHiddenWhenEmpty={hasBoxShadow(target.styles)}
+        frame={EffectsFrame}
+      />
+    </Suspense>
   );
 };
 

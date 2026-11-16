@@ -1,7 +1,6 @@
 import { useMemo } from "react";
-import type { ReactElement } from "react";
+import type { ComponentType, ReactElement, ReactNode } from "react";
 
-import { copy } from "./copy.js";
 import type { SelectionContext } from "./deps.js";
 import { EffectAddMenu } from "./effect-add-menu.js";
 import { EffectList } from "./effect-list.js";
@@ -18,6 +17,8 @@ interface EffectPanelProps {
   readonly projectId: string;
   readonly target: SelectionContext;
   readonly variant: string;
+  readonly isHiddenWhenEmpty: boolean;
+  readonly frame: ComponentType<{ readonly children: ReactNode }>;
 }
 
 const EffectPanel = ({
@@ -25,7 +26,9 @@ const EffectPanel = ({
   projectId,
   target,
   variant,
-}: EffectPanelProps): ReactElement => {
+  isHiddenWhenEmpty,
+  frame: Frame,
+}: EffectPanelProps): ReactElement | null => {
   const ids = useMemo(
     () => ({ directionId, projectId }),
     [directionId, projectId]
@@ -39,31 +42,34 @@ const EffectPanel = ({
   const sizes = useMemo(() => toShadowSizes(info), [info]);
   const isOff = info === null || effects.isPending;
 
+  if (isHiddenWhenEmpty && list.length === 0) {
+    return null;
+  }
+
   return (
-    <div className={styles.body}>
-      <EffectList
-        handlers={handlers}
-        isOff={isOff}
-        items={list}
-        keys={keys}
-        sizes={sizes}
-      />
-      {list.length === 0 && info !== null && (
-        <EffectNote isError={false} text={copy.empty} />
-      )}
-      <EffectAddMenu disabled={isOff} onAdd={handlers.handleAdd} />
-      {(list.length > 0 || effects.styles.length > 0) && (
-        <EffectStyleBar
-          canSave={list.length > 0}
-          disabled={isOff}
-          styleName={info?.styleName ?? null}
-          styles={effects.styles}
-          onPick={effects.handleStyle}
-          onSave={effects.handleSave}
+    <Frame>
+      <div className={styles.body}>
+        <EffectList
+          handlers={handlers}
+          isOff={isOff}
+          items={list}
+          keys={keys}
+          sizes={sizes}
         />
-      )}
-      <EffectNote isError text={effects.error} />
-    </div>
+        <EffectAddMenu disabled={isOff} onAdd={handlers.handleAdd} />
+        {(list.length > 0 || effects.styles.length > 0) && (
+          <EffectStyleBar
+            canSave={list.length > 0}
+            disabled={isOff}
+            styleName={info?.styleName ?? null}
+            styles={effects.styles}
+            onPick={effects.handleStyle}
+            onSave={effects.handleSave}
+          />
+        )}
+        <EffectNote isError text={effects.error} />
+      </div>
+    </Frame>
   );
 };
 

@@ -302,39 +302,16 @@
 }
 
 .ins-meta .ins-source {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--s-1);
   flex: 1 1 auto;
   min-width: 80px;
-  height: 24px;
   padding: 0 var(--s-1);
-  border: 0;
-  border-radius: var(--r-control-sm);
-  background: transparent;
   direction: ltr;
   font-size: var(--t-2xs);
-  cursor: pointer;
 }
 
-.ins-meta .ins-source > svg {
-  flex: none;
-  opacity: 0;
-}
-
-.ins-meta .ins-source:hover:not(:disabled) {
-  background: var(--surface-hover);
+.ins-meta .ins-layer-name {
   color: var(--text);
-}
-
-.ins-meta .ins-source:hover > svg,
-.ins-meta .ins-source:focus-visible > svg {
-  opacity: 1;
-}
-
-.ins-meta .ins-source:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
+  font-weight: 500;
 }
 
 .ins-meta .ins-header-end {
@@ -351,11 +328,6 @@
 
 .ins-meta .icon-btn {
   flex: none;
-}
-
-.edit-pane .ins-crumbs {
-  border-bottom: 0;
-  padding: 0 calc(var(--pane-inset) - var(--s-1));
 }
 
 .edit-pane .ins-section {

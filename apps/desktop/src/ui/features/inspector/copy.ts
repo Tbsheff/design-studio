@@ -91,7 +91,6 @@ const copy = {
   editsGoToThisUse: "Edits go to this use of ",
   effectLayers: "Effect layers",
   effects: "Effects",
-  elementPath: "Layer path",
   elementSource: "Layer source",
   emDash: "—",
   emptyHint:

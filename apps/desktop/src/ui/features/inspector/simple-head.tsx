@@ -1,9 +1,8 @@
 import { useMemo } from "react";
 import type { ReactElement } from "react";
 
+import { toElementLabel } from "./breadcrumb-model.js";
 import { CopyCssButton } from "./copy-css-button.js";
-import { InspectorBreadcrumb } from "./inspector-breadcrumb.js";
-import { SourceLink } from "./inspector-source.js";
 import { MetaRow } from "./meta-row.js";
 import type { SimpleEditorProps, SimpleEditorState } from "./simple-model.js";
 
@@ -13,28 +12,25 @@ interface SimpleHeadProps {
 }
 
 const SimpleHead = ({ props, state }: SimpleHeadProps): ReactElement => {
-  const { projectId, directionId, target, port } = props;
   const { edit, tokens, authored } = state;
   const { reset } = edit;
+  const label = toElementLabel(props.target);
 
-  const source = useMemo(
+  const name = useMemo(
     () => (
-      <SourceLink
-        projectId={projectId}
-        directionId={directionId}
-        source={target.source}
-      />
+      <span className="ins-source ins-layer-name" data-tip={label}>
+        {label}
+      </span>
     ),
-    [projectId, directionId, target.source]
+    [label]
   );
 
   return (
     <div className="ins-head">
-      <InspectorBreadcrumb selection={target} port={port} />
       <MetaRow
         tag={null}
         isResetDisabled={false}
-        source={source}
+        source={name}
         status={edit.status}
         ui={tokens.ui}
         onReset={reset}

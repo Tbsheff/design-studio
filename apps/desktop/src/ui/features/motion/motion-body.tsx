@@ -6,7 +6,7 @@ import type { MotionKind, MotionState } from "./deps.js";
 import { KindTabs } from "./kind-tabs.js";
 import { MotionActions } from "./motion-actions.js";
 import { MotionFields } from "./motion-fields.js";
-import { withKind } from "./motion-model.js";
+import { hasSavedMotion, withKind } from "./motion-model.js";
 import { MotionNotes } from "./motion-notes.js";
 import type { MotionView } from "./use-motion.js";
 
@@ -55,13 +55,15 @@ const MotionBody = ({
           onDraft={onDraft}
         />
       )}
-      <MotionActions
-        busy={motion.busy}
-        canPreview={draft.kind !== "none"}
-        disabled={disabled}
-        onApply={handleApply}
-        onPreview={handlePreview}
-      />
+      {(draft.kind !== "none" || hasSavedMotion(motion.info)) && (
+        <MotionActions
+          busy={motion.busy}
+          canPreview={draft.kind !== "none"}
+          disabled={disabled}
+          onApply={handleApply}
+          onPreview={handlePreview}
+        />
+      )}
       <MotionNotes
         info={motion.info}
         kind={draft.kind}

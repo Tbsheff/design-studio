@@ -6,8 +6,6 @@ export { call } from "../../platform/http.js";
 
 export { useEditVariant } from "../inspector/index.js";
 
-export { InspectorSection } from "../inspector/inspector-fields.js";
-
 export { parseVariant } from "../../../shared/variants.js";
 
 export {

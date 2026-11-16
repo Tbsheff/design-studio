@@ -3,8 +3,8 @@ import type { ReactElement } from "react";
 
 import { EffectSlot } from "../../inspector-slots.js";
 import { copy } from "./copy.js";
-import { InspectorSection } from "./inspector-fields.js";
 import type { InspectorProps } from "./inspector-model.js";
+import { RareSection } from "./rare-section.js";
 import { useEditVariant } from "./use-edit-variant.js";
 
 const EffectLayersSection = (props: InspectorProps): ReactElement | null => {
@@ -18,7 +18,7 @@ const EffectLayersSection = (props: InspectorProps): ReactElement | null => {
   }
 
   return (
-    <InspectorSection title={copy.effectLayers}>
+    <RareSection title={copy.effectLayers} aside={null} modifier={null}>
       <Suspense fallback={null}>
         <EffectSlot
           key={target.selector}
@@ -28,7 +28,7 @@ const EffectLayersSection = (props: InspectorProps): ReactElement | null => {
           variant={variant}
         />
       </Suspense>
-    </InspectorSection>
+    </RareSection>
   );
 };
 

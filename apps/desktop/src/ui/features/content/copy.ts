@@ -56,7 +56,6 @@ const copy = {
   repeatLabel: "Rows",
   reset: "Reset",
   stressLabel: "Stress",
-  title: "Content",
 } as const;
 
 export { copy, dataFill };

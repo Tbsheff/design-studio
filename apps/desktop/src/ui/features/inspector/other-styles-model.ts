@@ -24,14 +24,6 @@ const toCopyIcon = (state: CopyState): "check" | "copy" => {
   return "copy";
 };
 
-const toToggleIcon = (isOpen: boolean): "chevronDown" | "chevronRight" => {
-  if (isOpen) {
-    return "chevronDown";
-  }
-
-  return "chevronRight";
-};
-
 const getOtherRows = (css: AuthoredCss | null): AuthoredDeclaration[] => {
   if (!css) {
     return [];
@@ -40,6 +32,6 @@ const getOtherRows = (css: AuthoredCss | null): AuthoredDeclaration[] => {
   return toOtherStyles(css);
 };
 
-export { getOtherRows, toCopyIcon, toCopyLabel, toToggleIcon };
+export { getOtherRows, toCopyIcon, toCopyLabel };
 
 export type { CopyState };

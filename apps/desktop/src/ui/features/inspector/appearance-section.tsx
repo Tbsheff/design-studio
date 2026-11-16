@@ -11,6 +11,7 @@ interface AppearanceSectionProps {
   readonly edit: DirectEdit;
   readonly extras: Set<Extra>;
   readonly fill: ReactNode;
+  readonly canAddShadow: boolean;
   readonly onReveal: (extra: Extra) => void;
 }
 
@@ -18,11 +19,17 @@ const AppearanceSection = ({
   edit,
   extras,
   fill,
+  canAddShadow,
   onReveal,
 }: AppearanceSectionProps): ReactElement => (
   <InspectorSection title={copy.appearance}>
     <AppearanceGrid edit={edit} fill={fill} />
-    <AppearanceExtras edit={edit} extras={extras} onReveal={onReveal} />
+    <AppearanceExtras
+      edit={edit}
+      extras={extras}
+      canAddShadow={canAddShadow}
+      onReveal={onReveal}
+    />
   </InspectorSection>
 );
 

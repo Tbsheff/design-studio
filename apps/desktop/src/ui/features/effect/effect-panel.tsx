@@ -52,14 +52,16 @@ const EffectPanel = ({
         <EffectNote isError={false} text={copy.empty} />
       )}
       <EffectAddMenu disabled={isOff} onAdd={handlers.handleAdd} />
-      <EffectStyleBar
-        canSave={list.length > 0}
-        disabled={isOff}
-        styleName={info?.styleName ?? null}
-        styles={effects.styles}
-        onPick={effects.handleStyle}
-        onSave={effects.handleSave}
-      />
+      {(list.length > 0 || effects.styles.length > 0) && (
+        <EffectStyleBar
+          canSave={list.length > 0}
+          disabled={isOff}
+          styleName={info?.styleName ?? null}
+          styles={effects.styles}
+          onPick={effects.handleStyle}
+          onSave={effects.handleSave}
+        />
+      )}
       <EffectNote isError text={effects.error} />
     </div>
   );

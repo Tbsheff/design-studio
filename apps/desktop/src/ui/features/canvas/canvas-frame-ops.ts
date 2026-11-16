@@ -111,7 +111,10 @@ const nextId = (frames: CanvasFrame[]): string => {
 const canAddFrame = (layout: CanvasLayout): boolean =>
   layout.frames.length < MAX_FRAMES;
 
-const nextLabel = (frames: CanvasFrame[]): string => {
+const toShownName = (frame: CanvasFrame): string =>
+  frame.label?.trim() || frameName(frame);
+
+const toCountLabel = (frames: CanvasFrame[]): string => {
   let count = frames.length + 1;
 
   while (
@@ -121,6 +124,32 @@ const nextLabel = (frames: CanvasFrame[]): string => {
   }
 
   return `Frame ${count}`;
+};
+
+const nextLabel = (
+  frames: CanvasFrame[],
+  size: { width: number; height: number }
+): string => {
+  const preset = FRAME_PRESETS.find(
+    (framePreset) =>
+      framePreset.width === size.width && framePreset.height === size.height
+  );
+
+  if (!preset) {
+    return toCountLabel(frames);
+  }
+
+  const names = new Set(frames.map((frame) => toShownName(frame)));
+  const { label: base } = preset;
+  let count = 1;
+  let label = base;
+
+  while (names.has(label)) {
+    count += 1;
+    label = `${base} ${count}`;
+  }
+
+  return label;
 };
 
 const addFrame = (
@@ -136,7 +165,7 @@ const addFrame = (
   const frame: CanvasFrame = {
     height: size.height,
     id: nextId(layout.frames),
-    label: nextLabel(layout.frames),
+    label: nextLabel(layout.frames, size),
     width: size.width,
     ...toPosition(bounds.x + bounds.width + FRAME_GAP, bounds.y),
   };

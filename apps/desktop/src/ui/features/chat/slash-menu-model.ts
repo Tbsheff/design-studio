@@ -1,8 +1,6 @@
 import type { IconName } from "@design-studio/ui";
 import type { KeyboardEvent, ReactNode } from "react";
 
-import { copy } from "./copy.js";
-
 interface SlashChoice {
   id: string;
   label: string;
@@ -78,6 +76,8 @@ type MenuKey = "move" | "pick" | "drill" | "back" | "escape" | null;
 const lockReason = (group: SlashGroup | null | undefined): string | null =>
   group?.choices.find((choice) => choice.disabledReason)?.disabledReason ??
   null;
+
+const SETTINGS_HEADING = "Settings";
 
 const MAX_HEIGHT = 288;
 
@@ -327,7 +327,7 @@ const toRowHeading = (
   const before = rows[at - 1];
 
   if (row?.kind === "group" && before?.kind === "choice" && !hasHeading) {
-    return copy.settingsHeading;
+    return SETTINGS_HEADING;
   }
 
   if (

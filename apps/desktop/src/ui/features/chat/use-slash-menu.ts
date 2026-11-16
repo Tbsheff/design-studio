@@ -46,7 +46,11 @@ const toRows = (
     return choiceRows(group, filter);
   }
 
-  return [...groupRows(groups, filter), ...sectionRows(shown)];
+  return [
+    ...sectionRows(shown.slice(0, 1)),
+    ...groupRows(groups, filter),
+    ...sectionRows(shown.slice(1)),
+  ];
 };
 
 const toIndex = (

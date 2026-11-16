@@ -4,7 +4,6 @@ import type { ReactElement } from "react";
 
 import { tipWithKey } from "../../canvas-toolbar-slots.js";
 import { copy } from "./copy.js";
-import { ThemeSwitch } from "./theme-switch.js";
 import type { ThemeControl } from "./theme-switch.js";
 import type { ZoomProps } from "./top-bar-zoom-model.js";
 import { ZoomPill } from "./top-bar-zoom.js";
@@ -22,7 +21,6 @@ const ZoomControl = ({
 
   return (
     <fieldset className="canvas-zoom" aria-label={copy.zoom}>
-      {theme && <ThemeSwitch control={theme} place="zoom" />}
       <button
         type="button"
         className="canvas-zoom-step"
@@ -32,7 +30,7 @@ const ZoomControl = ({
       >
         <Icon name="minus" size={14} />
       </button>
-      <ZoomPill control={control} />
+      <ZoomPill control={control} theme={theme} />
       <button
         type="button"
         className="canvas-zoom-step"

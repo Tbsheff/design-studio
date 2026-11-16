@@ -323,15 +323,6 @@
   color: var(--text);
 }
 
-.canvas-zoom-step[aria-pressed="true"] {
-  background: var(--accent-soft);
-  color: var(--accent-text);
-}
-
-.canvas-theme {
-  margin-inline-end: var(--s-1);
-}
-
 .canvas-zoom .topbar-menu {
   top: auto;
   bottom: calc(100% + var(--s-2));

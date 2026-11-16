@@ -5,17 +5,24 @@ import type { ReactElement } from "react";
 import { tipWithKey } from "../../canvas-toolbar-slots.js";
 import { useLive } from "../../platform/live-store.js";
 import { copy } from "./copy.js";
+import type { ThemeControl } from "./theme-switch.js";
 import { DropMenu } from "./top-bar-drop.js";
 import { zoomGroups } from "./top-bar-zoom-model.js";
 import type { ZoomProps } from "./top-bar-zoom-model.js";
 
 const ZoomPill = ({
   control: zoomProps,
+  theme,
 }: {
   control: ZoomProps;
+  theme: ThemeControl | null;
 }): ReactElement => {
   const percent = useLive(zoomProps.zoom);
-  const groups = useCallback(() => zoomGroups(zoomProps), [zoomProps]);
+
+  const groups = useCallback(
+    () => zoomGroups(zoomProps, theme),
+    [zoomProps, theme]
+  );
 
   return (
     <DropMenu

@@ -183,6 +183,8 @@ const copy = {
   present: "Present",
   presentedDesign: "Presented design",
   previewDarkMode: "Preview dark mode",
+  previewDarkTip:
+    "Show the design in its dark theme. The app theme stays the same",
   previewDefaultMode: "Back to the default mode",
   previewSource: "Preview source",
   previewState: "Preview state",

@@ -2,6 +2,8 @@ import { shortcutLabel } from "../../../shared/keymap.js";
 import { IS_MAC } from "../../canvas-toolbar-slots.js";
 import type { LiveStore } from "../../platform/live-store.js";
 import type { ZoomSetting } from "../../platform/storage.js";
+import { copy } from "./copy.js";
+import type { ThemeControl } from "./theme-switch.js";
 import type { MenuGroup } from "./top-bar-menu-model.js";
 
 const ITEM_0_5 = 0.5;
@@ -22,12 +24,30 @@ interface ZoomProps {
   onStep: (delta: 1 | -1) => void;
 }
 
-const zoomGroups = ({
-  setting,
-  onZoomTo,
-  onFit,
-  onStep,
-}: Omit<ZoomProps, "zoom">): MenuGroup[] => [
+const toThemeGroups = (theme: ThemeControl | null): MenuGroup[] => {
+  if (!theme) {
+    return [];
+  }
+
+  return [
+    {
+      items: [
+        {
+          checked: theme.dark,
+          id: "preview-dark",
+          label: copy.previewDarkMode,
+          run: theme.onToggle,
+          tip: copy.previewDarkTip,
+        },
+      ],
+    },
+  ];
+};
+
+const zoomGroups = (
+  { setting, onZoomTo, onFit, onStep }: Omit<ZoomProps, "zoom">,
+  theme: ThemeControl | null
+): MenuGroup[] => [
   {
     items: [
       {
@@ -61,6 +81,7 @@ const zoomGroups = ({
       })),
     ],
   },
+  ...toThemeGroups(theme),
 ];
 
 export { zoomGroups };

@@ -1,4 +1,4 @@
-import { TYPE_LABELS } from "../../../shared/project-search.js";
+import { toKindBadge } from "../../../shared/project-search.js";
 import { copy } from "./copy.js";
 import type { ProjectHit } from "./deps.js";
 
@@ -30,7 +30,7 @@ const GROUPS: readonly RailGroup[] = [
 ];
 
 const toRailTip = (hit: ProjectHit, isCurrent: boolean): string => {
-  const parts = [hit.name, TYPE_LABELS[hit.type], hit.health?.note].filter(
+  const parts = [hit.name, toKindBadge(hit.type), hit.health?.note].filter(
     Boolean
   );
 
@@ -41,12 +41,14 @@ const toRailTip = (hit: ProjectHit, isCurrent: boolean): string => {
   return parts.join(" · ");
 };
 
-const toRowTip = (hit: ProjectHit): string => {
-  if (hit.health) {
-    return `${TYPE_LABELS[hit.type]} · ${hit.health.note}`;
+const toRowTip = (hit: ProjectHit): string | null => {
+  const parts = [toKindBadge(hit.type), hit.health?.note].filter(Boolean);
+
+  if (parts.length === 0) {
+    return null;
   }
 
-  return TYPE_LABELS[hit.type];
+  return parts.join(" · ");
 };
 
 const toMiniHits = (

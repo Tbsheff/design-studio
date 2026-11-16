@@ -1,10 +1,18 @@
 import type { ReactElement } from "react";
 
-import { HealthDot } from "./deps.js";
+import { HealthDot, toKindBadge } from "./deps.js";
+import type { ProjectHit } from "./deps.js";
 import { Keys } from "./keys-view.js";
 import { toRowNote } from "./palette-model.js";
-import { typePair } from "./palette-row-builders.js";
 import type { Row } from "./palette-row-types.js";
+
+const toHitBadge = (hit: ProjectHit | null): string | null => {
+  if (hit === null) {
+    return null;
+  }
+
+  return toKindBadge(hit.type);
+};
 
 const PaletteRowEnd = ({
   row,
@@ -19,13 +27,14 @@ const PaletteRowEnd = ({
   const note = toRowNote(row, isEnter);
   const isPlain = Boolean(row.hit) && row.kind === "project" && !row.icon;
   const hit = row.hit ?? null;
+  const kindBadge = toHitBadge(hit);
 
   return (
     <span className="cmdk-end">
       {note && <span className="cmdk-note">{note}</span>}
       {isPlain && hit?.health?.level === "failed" && <HealthDot hit={hit} />}
-      {isPlain && hit && (
-        <span className="cmdk-type">{typePair(hit.type)}</span>
+      {isPlain && kindBadge !== null && (
+        <span className="cmdk-type">{kindBadge}</span>
       )}
       {isEnter && <Keys keys="Enter" extraClass="cmdk-keys" />}
       {!isEnter && row.keys && <Keys keys={row.keys} extraClass="cmdk-keys" />}

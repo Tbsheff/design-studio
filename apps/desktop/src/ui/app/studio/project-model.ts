@@ -1,6 +1,6 @@
 import type { Project, Version } from "@design-studio/contracts";
 
-import { projectTypeOf, TYPE_LABELS } from "../../../shared/project-search";
+import { projectTypeOf, toKindBadge } from "../../../shared/project-search";
 
 const shipOpener = (
   project: { app?: unknown },
@@ -52,8 +52,8 @@ const openAttr = (isOpen: boolean): string => {
 const nameOf = (direction: { name: string } | null): string | null =>
   direction?.name ?? null;
 
-const kindLabel = (project: Project): string =>
-  TYPE_LABELS[projectTypeOf(project)];
+const kindLabel = (project: Project): string | null =>
+  toKindBadge(projectTypeOf(project));
 
 const whenDirection = <Value>(
   did: string | null,

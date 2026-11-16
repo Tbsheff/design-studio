@@ -62,11 +62,6 @@
   white-space: nowrap;
 }
 
-.home-badge.proto {
-  background: var(--brand-soft);
-  color: color-mix(in oklab, var(--brand) 50%, var(--text));
-}
-
 .home-badge.next {
   background: var(--accent-soft);
   color: var(--accent-text);

@@ -102,7 +102,7 @@ const newRow = (query: string, actions: RowActions): Row => {
     key: "new",
     kind: "new",
     marks: [],
-    meta: `${typePair("html")} · starts an AI run`,
+    meta: "Starts an AI run",
     run: () => actions.newPrototype(text),
     title: `New prototype: “${text}”`,
     tone: "brand",

@@ -358,3 +358,14 @@ Feature cycles are paused. Tyler asked to refine the app and cut fluff, and a UX
 - **Open for Tyler:** the cut list; risky defaults `allowBash`, `allowInstall`, `autoApprove` are on (`packages/common/contracts/src/settings-defaults.ts`).
 
 - **Merged:** frame-at (`e2611752c`): `@` frame mentions in the chat and `start_run`; an unknown frame now fails with a clear error. All checks pass, clip 0, app installed, idle CPU 0.02 CPU-s per minute. type-detail, layout-more and dark-a11y stay held for the cut decision.
+
+## Fluff cuts (2026-11-15)
+
+- **Merged:** feat/cut-home, feat/cut-chat, feat/cut-canvas, feat/cut-insp (`291138307`), all 19 audit cut-list items. UI only: no server action, MCP tool or agent tool removed.
+- **Home:** one sample and one template entry, no Recent strip, no "Prototype · HTML" badges, one MCP status segment, settings out of the plus menu ("Ask questions on short briefs" moved to Advanced).
+- **Chat:** at most 2 chips after a run, one chip per selected layer, commands first in the slash menu, visible Plan / Build pill.
+- **Canvas:** frame header is name + "…", Tokens merged into Assets, context menu 15 items + More, one-click Share, Export More formats, one-click Present.
+- **Inspector:** name, Width, one State row, Layout, Text, Appearance, Border, Effects, More. Lost from UI: effect styles (MCP only), per-axis overflow, the Prototype tab (Position select sets Fixed and Sticky).
+- **Bytes:** cuts added 19 B to Home B1; one shared `pick` helper removed it. B1 271,671 B, baseline lowered (`23c6947c9`).
+- **Checks:** gen-routes, typecheck, lint:gate (59,501), build:ui, clip (0), check-bundle pass. App installed, :4570 200, idle CPU 0.02 CPU-s per minute.
+- **Open:** stale e2e specs `canvas-r2`, `canvas-r7`, `versions-panel` reference removed controls; App workspaces have no template entry; risky defaults still on.

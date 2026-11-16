@@ -217,7 +217,7 @@
 }
 
 .msg-user-actions .copy-btn:hover,
-.msg-user-actions .msg-action:not([aria-disabled="true"]):hover {
+.msg-user-actions .msg-action:hover {
   color: var(--text);
 }
 
@@ -620,26 +620,10 @@
   color: var(--text-3);
 }
 
-.msg-action[aria-disabled="true"] {
-  cursor: default;
-}
-
-.msg-action[aria-disabled="true"] > svg {
-  opacity: 0.4;
-}
-
 .msg.user:hover,
 .msg.user:focus-within {
   position: relative;
   z-index: 2;
-}
-
-.msg-action[aria-disabled="true"]:hover {
-  background: transparent;
-}
-
-.msg-action[aria-disabled="true"]:active {
-  scale: 1;
 }
 
 .run-title {

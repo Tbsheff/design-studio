@@ -63,18 +63,8 @@ test("R7-4: restore code at message 2 of 4, with a confirm for unfinished change
   const workTree = mainDirection(project).workTree;
   const file = path.join(workTree, "index.html");
 
-  await expect(await action(page, 3, "Restore code here")).toHaveAttribute(
-    "aria-disabled",
-    "true"
-  );
-  await expect(await action(page, 3, "Restore code here")).toHaveAttribute(
-    "data-tip",
-    "The code is already at this message"
-  );
-  await expect(await action(page, 0, "Edit and rerun")).toHaveAttribute(
-    "data-tip",
-    "No earlier version to start from"
-  );
+  await expect(await action(page, 3, "Restore code here")).toHaveCount(0);
+  await expect(await action(page, 0, "Edit and rerun")).toHaveCount(0);
 
   writeFileSync(file, `${files[3]}<!-- my unsaved edit -->\n`);
   writeFileSync(path.join(workTree, "my-notes.txt"), "keep me\n");
@@ -118,10 +108,7 @@ test("R7-4: restore code at message 2 of 4, with a confirm for unfinished change
     sessionId: null,
     sessionResetReason: "restore",
   });
-  await expect(await action(page, 1, "Restore code here")).toHaveAttribute(
-    "aria-disabled",
-    "true"
-  );
+  await expect(await action(page, 1, "Restore code here")).toHaveCount(0);
 });
 
 test("R7-4: edit and resend forks a new direction from the version before that message; the old chat stays", async ({

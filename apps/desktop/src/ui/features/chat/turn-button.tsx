@@ -15,27 +15,25 @@ const TurnButton = ({
   icon: IconName;
   tip: string | null;
   onClick: () => void;
-}): ReactElement => {
-  const off = tip !== null;
-
+}): ReactElement | null => {
   const activate = useCallback(
     (event: MouseEvent<HTMLButtonElement>): void => {
       event.stopPropagation();
-
-      if (!off) {
-        onClick();
-      }
+      onClick();
     },
-    [off, onClick]
+    [onClick]
   );
+
+  if (tip !== null) {
+    return null;
+  }
 
   return (
     <button
       type="button"
       className="icon-btn small msg-action"
       aria-label={label}
-      aria-disabled={off}
-      data-tip={tip ?? label}
+      data-tip={label}
       data-tip-side="top"
       onClick={activate}
     >

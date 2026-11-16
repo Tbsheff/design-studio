@@ -5,6 +5,7 @@ import { pick } from "./pick.js";
 interface UiSelectOption<OptionValue extends string = string> {
   value: OptionValue;
   label: string;
+  shortLabel?: string;
   disabled?: boolean;
   icon?: ReactNode;
 }

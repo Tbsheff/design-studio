@@ -1,11 +1,9 @@
 import type { SelectionContext } from "@design-studio/contracts";
 import type { ReactElement } from "react";
 
-import { CodeEditButton } from "./code-edit-button.js";
-import { CopySnippet } from "./copy-snippet.js";
+import { CodeBarActions } from "./code-bar-actions.js";
 import { copy } from "./copy.js";
 import { FileLockRow } from "./file-lock-row.js";
-import { OpenInEditor } from "./open-in-editor.js";
 import { toFileLabel, toFileTip, toLockFile } from "./snippet-model.js";
 import { SnippetView } from "./snippet-view.js";
 import { useSnippet } from "./use-snippet.js";
@@ -42,22 +40,11 @@ const InspectorCode = ({
         <span className="ins-code-file" data-tip={toFileTip(snippet)}>
           {toFileLabel(snippet)}
         </span>
-        {snippet.kind === "ready" && <CopySnippet code={snippet.code} />}
-        {snippet.kind === "ready" && snippet.file && directionId && (
-          <CodeEditButton
-            projectId={projectId}
-            directionId={directionId}
-            file={snippet.file}
-            line={snippet.line}
-          />
-        )}
-        {snippet.kind === "ready" && snippet.file && directionId && (
-          <OpenInEditor
-            projectId={projectId}
-            directionId={directionId}
-            file={snippet.file}
-          />
-        )}
+        <CodeBarActions
+          projectId={projectId}
+          directionId={directionId}
+          snippet={snippet}
+        />
       </div>
       <SnippetView snippet={snippet} />
       <FileLockRow

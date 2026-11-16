@@ -151,6 +151,19 @@
   border-end-start-radius: 0;
 }
 
+.studio-top-end .topbar-present-split:hover > .topbar-present,
+.studio-top-end .topbar-present-split:hover .topbar-present-more,
+.studio-top-end
+  .topbar-present-split:has([aria-expanded="true"])
+  > .topbar-present {
+  background: var(--tint-hover);
+  color: var(--text);
+}
+
+.studio-body .prail-head > .icon-btn {
+  display: none;
+}
+
 .studio-top-end .topbar-present-more > svg {
   color: var(--text-3);
 }

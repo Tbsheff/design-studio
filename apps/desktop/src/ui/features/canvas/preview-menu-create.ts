@@ -1,6 +1,5 @@
 import type { ProjectKind, SelectionContext } from "@design-studio/contracts";
 
-import { commandBlocker, runCommand } from "../../canvas-preview-slots.js";
 import { STACKING_KEY_EVENT } from "../../domain/stacking-key-events.js";
 import type { StackingAppKey } from "../../domain/stacking-key-events.js";
 import { uiStore } from "../../platform/storage.js";
@@ -71,17 +70,6 @@ const createItem = (
   ];
 };
 
-const toCommandItem = (
-  item: Omit<PreviewMenuItem, "run">,
-  command: string
-): PreviewMenuItem => ({
-  ...item,
-  run: (): void => {
-    runCommand(command);
-  },
-  ...disabledBy(commandBlocker(command)),
-});
-
 const toLayersItem = (): PreviewMenuItem => ({
   icon: "layers",
   id: "layers",
@@ -141,29 +129,6 @@ const toTransformMenuItems = (): PreviewMenuItem[] => [
       label: copy.layerMenuBack,
     },
     "layer-back"
-  ),
-  toCommandItem(
-    {
-      divider: true,
-      icon: "compare",
-      id: "flip-h",
-      keyId: "flip-h",
-      label: copy.layerMenuFlipH,
-    },
-    "selection.flip-h"
-  ),
-  toCommandItem(
-    {
-      icon: "compare",
-      id: "flip-v",
-      keyId: "flip-v",
-      label: copy.layerMenuFlipV,
-    },
-    "selection.flip-v"
-  ),
-  toCommandItem(
-    { icon: "reload", id: "rotate", label: copy.layerMenuRotate },
-    "selection.rotate"
   ),
 ];
 

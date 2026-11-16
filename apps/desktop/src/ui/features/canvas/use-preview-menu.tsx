@@ -4,12 +4,10 @@ import type {
   SelectMove,
   ZoomKey,
 } from "@design-studio/contracts";
-import { TRY_VARIANTS_COMMAND } from "@design-studio/contracts/element-variants";
 import { Suspense, useCallback, useMemo, useState } from "react";
 import type { MutableRefObject, ReactElement, ReactNode } from "react";
 
 import {
-  commandBlocker,
   IconSlot,
   ImageGenerateSlot,
   ImageSearchMount,
@@ -49,6 +47,7 @@ import {
 } from "./preview-menu-create.js";
 import { PreviewMenu } from "./preview-menu.js";
 import type { PreviewMenuItem } from "./preview-menu.js";
+import { toCoreMenuItems } from "./preview-more-menu.js";
 import { toValueOr } from "./settle-model.js";
 import { useFramePin } from "./use-frame-pin.js";
 import type { FramePin } from "./use-frame-pin.js";
@@ -164,13 +163,6 @@ const menuItems = (
     label: "Ask the agent about this",
     run: () =>
       runCommand("selection.ask-inline") || runCommand("panel.focus-composer"),
-  },
-  {
-    icon: "compare",
-    id: "variants",
-    label: "Try variants…",
-    run: () => runCommand(TRY_VARIANTS_COMMAND),
-    ...disabledBy(commandBlocker(TRY_VARIANTS_COMMAND)),
   },
   {
     icon: "pointer",
@@ -397,12 +389,15 @@ const toMenuNode = (
     return null;
   }
 
-  const items = toAfterSelectChild(
-    toAfterCopyCss(
-      menuItems(options, target, onCreate, (item) => toHostItems(hosts, item)),
-      hosts.layerStyle.items(target)
-    ),
-    hosts.pickItems
+  const all = menuItems(options, target, onCreate, (item) =>
+    toHostItems(hosts, item)
+  );
+
+  const withStyle = toAfterCopyCss(all, hosts.layerStyle.items(target));
+
+  const items = toCoreMenuItems(
+    toAfterSelectChild(withStyle, hosts.pickItems),
+    onClose
   );
 
   return (

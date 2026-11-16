@@ -372,3 +372,4 @@ Feature cycles are paused. Tyler asked to refine the app and cut fluff, and a UX
 
 - **Merged:** dark-a11y (`c110797d6`): Light / Dark choice in the Accessibility section (now under More). Checks pass, app installed.
 - **Fixed:** App and folder workspaces have a "Start from a template" entry again (`3e1064431`), not checked in the UI.
+- **Clip:** the first run after the dark-a11y merge failed once on "canvas menu preview right-click"; 2 reruns passed with 0 findings, so the step is flaky.

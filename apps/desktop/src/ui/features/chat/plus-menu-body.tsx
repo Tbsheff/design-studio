@@ -43,6 +43,13 @@ const PlusMenuBody = ({
         meta="@"
         onPick={onAct(menuProps.onMention)}
       />
+      {menuProps.onFocusSelection && (
+        <MenuItem
+          icon="pointer"
+          label={copy.focusOnFile}
+          onPick={onAct(menuProps.onFocusSelection)}
+        />
+      )}
       <MenuItem
         icon="book"
         label="Skills and commands"

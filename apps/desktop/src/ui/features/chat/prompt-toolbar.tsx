@@ -46,6 +46,7 @@ interface PromptToolbarProps {
   readonly onReferenceFolder: () => Promise<void>;
   readonly onReferenceUrl: () => void;
   readonly onMention: () => void;
+  readonly onFocusSelection: (() => void) | null;
   readonly onMode: (mode: ComposerMode) => void;
   readonly onOpenSkills: () => void;
   readonly project: PlusProjectProps;
@@ -82,6 +83,7 @@ const PromptToolbar = (props: PromptToolbarProps): ReactElement => {
         onAttachUrl={props.onReferenceUrl}
         onAttachZip={attachZip}
         onMention={props.onMention}
+        onFocusSelection={props.onFocusSelection}
         onSkills={props.onOpenSkills}
         onOpen={props.onCloseSlash}
         project={props.project}

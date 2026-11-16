@@ -18,6 +18,7 @@ const PromptToolbarRow = ({ parts }: { parts: PromptParts }): ReactElement => {
   const { designs } = slash;
   const { close: onCloseSlash } = slash.slash;
   const { model } = box;
+  const onFocusSelection = parts.input.focus.focusSelection;
   const { spoken } = sending.status;
   const project = usePlusProject(box, base.sheet);
   const contextTokens = box.contextTokens ?? null;
@@ -41,6 +42,7 @@ const PromptToolbarRow = ({ parts }: { parts: PromptParts }): ReactElement => {
       onReferenceFolder={pickReferenceFolder}
       onReferenceUrl={openUrlForm}
       onMention={insertMention}
+      onFocusSelection={onFocusSelection}
       onMode={setMode}
       onOpenSkills={openSkills}
       project={project}

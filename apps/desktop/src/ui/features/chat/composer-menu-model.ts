@@ -22,6 +22,7 @@ interface PlusMenuProps {
   onAttachUrl: () => void;
   onAttachZip: () => void;
   onMention: () => void;
+  onFocusSelection: (() => void) | null;
   onSkills: () => void;
   onOpen?: () => void;
   project?: PlusProjectProps | null;

@@ -5,8 +5,8 @@ import type { FrameFocus } from "./run-focus-model.js";
 import {
   toFocusWith,
   toFocusWithAll,
-  toFocusWithSelection,
   toFocusWithout,
+  toSelectionFocusAction,
   toSelectionFocusPath,
 } from "./run-focus-model.js";
 
@@ -14,10 +14,10 @@ interface RunFocus {
   readonly add: (path: string) => void;
   readonly addFrames: () => void;
   readonly clear: () => void;
+  readonly focusSelection: (() => void) | null;
   readonly frames: FrameFocus | null;
   readonly paths: string[];
   readonly remove: (path: string) => void;
-  readonly sendPaths: string[];
 }
 
 const useRunFocus = (
@@ -45,19 +45,25 @@ const useRunFocus = (
     []
   );
 
-  const sendPaths = useMemo(
-    () => toFocusWithSelection(paths, selectionPath),
-    [paths, selectionPath]
+  const addSelection = useCallback((): void => {
+    if (selectionPath !== null) {
+      setPaths((prev) => toFocusWith(prev, selectionPath));
+    }
+  }, [selectionPath]);
+
+  const focusSelection = useMemo(
+    () => toSelectionFocusAction(selectionPath, paths, addSelection),
+    [selectionPath, paths, addSelection]
   );
 
   return {
     add,
     addFrames,
     clear,
+    focusSelection,
     frames,
     paths,
     remove,
-    sendPaths,
   };
 };
 

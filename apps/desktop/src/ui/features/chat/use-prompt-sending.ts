@@ -60,7 +60,7 @@ const usePromptSending = (
   const { level } = base.runLevel;
   const linkedCommentIds = prefill.linked;
   const { mentions } = mentionState;
-  const focusPaths = input.focus.sendPaths;
+  const focusPaths = input.focus.paths;
   const onSend = sendRequest;
 
   const { canSend, isSending, send } = usePromptSend({

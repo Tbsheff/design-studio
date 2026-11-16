@@ -9,7 +9,7 @@ const copy = {
   failed: "Could not reach your account. Try again.",
   orgs: "Organizations",
   pending: "Waiting for the browser to finish sign-in.",
-  settings: "Settings",
+  settings: "Project settings…",
   signIn: "Sign in",
   signOut: "Sign out",
   signedInAs: "Signed in as",

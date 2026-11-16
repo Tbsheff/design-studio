@@ -1,6 +1,7 @@
 import { shortenHome } from "@design-studio/contracts/folders";
 import type { ReactElement } from "react";
 
+import { isMacPlatform } from "../../platform/mac.js";
 import { copy } from "./copy.js";
 import type { FoundApps } from "./deps.js";
 import { FoundRow } from "./found-row.js";
@@ -18,6 +19,14 @@ const toRootsLabel = (found: FoundApps | null): string => {
     .join(", ");
 };
 
+const toFoundTitle = (): string => {
+  if (isMacPlatform()) {
+    return copy.foundOnThisMac;
+  }
+
+  return copy.foundOnThisComputer;
+};
+
 const FoundList = ({
   onUse,
 }: {
@@ -31,11 +40,12 @@ const FoundList = ({
 
   const apps = found?.apps.slice(0, MAX_FOUND) ?? [];
   const roots = toRootsLabel(found);
+  const title = toFoundTitle();
 
   return (
-    <section className="home-found" aria-label={copy.foundOnThisMac}>
+    <section className="home-found" aria-label={title}>
       <div className="home-found-head">
-        <span>{copy.foundOnThisMac}</span>
+        <span>{title}</span>
         <span className="spacer" />
         <span className="home-found-roots truncate">{roots}</span>
       </div>

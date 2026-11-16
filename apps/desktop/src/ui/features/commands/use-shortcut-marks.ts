@@ -33,12 +33,24 @@ const scheduleUnmark = (
   );
 };
 
+const POPUP_SELECTOR = '[role="menu"], [role="listbox"], [role="dialog"]';
+
+const isInOtherPopup = (
+  active: Element | null,
+  rootRef: RefObject<HTMLElement | null>
+): boolean => {
+  if (active === null || rootRef.current?.contains(active) === true) {
+    return false;
+  }
+
+  return active.closest(POPUP_SELECTOR) !== null;
+};
+
 const isCloseKey = (
   event: KeyboardEvent,
   rootRef: RefObject<HTMLElement | null>
 ): boolean =>
-  event.key === "Escape" &&
-  Boolean(rootRef.current?.contains(document.activeElement));
+  event.key === "Escape" && !isInOtherPopup(document.activeElement, rootRef);
 
 const useShortcutMarks = (
   rootRef: RefObject<HTMLElement | null>,

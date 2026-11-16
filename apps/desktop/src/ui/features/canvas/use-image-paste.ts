@@ -30,6 +30,7 @@ import {
 import type { Point } from "./prototype-model.js";
 import type { PrototypeOptions } from "./prototype-options-model.js";
 import { activateFrameId } from "./use-canvas-frames.js";
+import { useStagePaste } from "./use-stage-paste.js";
 
 interface ImageDropControl {
   readonly drop: ImageDrop | null;
@@ -242,6 +243,7 @@ const useImagePaste = (options: ImagePasteOptions): ImageDropControl => {
   }, []);
 
   useImageListeners(begin, live);
+  useStagePaste(begin, live);
 
   const onCancel = useCallback((): void => setDrop(null), []);
 

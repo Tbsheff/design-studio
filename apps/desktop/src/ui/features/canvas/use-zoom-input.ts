@@ -78,3 +78,5 @@ const useZoomInput = (
 };
 
 export { useZoomInput };
+
+export type { ZoomSource };

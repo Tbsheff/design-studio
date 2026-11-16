@@ -26,11 +26,6 @@ interface MenuFit {
   readonly side: MenuSide;
 }
 
-interface PanelInset {
-  readonly isOpen: boolean;
-  readonly width: number;
-}
-
 const MENU_MARGIN = 8;
 
 const toShift = (
@@ -114,11 +109,7 @@ const toMenuFit = (input: MenuFitInput): MenuFit => {
   return toSubmenuFit(input, input.gap);
 };
 
-const toVisibleBounds = (
-  stage: MenuBox | null,
-  view: MenuSize,
-  panel: PanelInset
-): MenuBox => {
+const toVisibleBounds = (stage: MenuBox | null, view: MenuSize): MenuBox => {
   const window: MenuBox = {
     bottom: view.height,
     left: 0,
@@ -130,20 +121,14 @@ const toVisibleBounds = (
     return window;
   }
 
-  let inset = 0;
-
-  if (panel.isOpen) {
-    inset = panel.width;
-  }
-
   return {
     bottom: Math.min(stage.bottom, window.bottom),
     left: Math.max(stage.left, window.left),
-    right: Math.min(stage.right, window.right) - inset,
+    right: Math.min(stage.right, window.right),
     top: Math.max(stage.top, window.top),
   };
 };
 
 export { MENU_MARGIN, toMenuFit, toVisibleBounds };
 
-export type { MenuBox, MenuFit, MenuFitInput, MenuSide, MenuSize, PanelInset };
+export type { MenuBox, MenuFit, MenuFitInput, MenuSide, MenuSize };

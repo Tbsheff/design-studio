@@ -19,7 +19,6 @@ const COLUMNS: readonly ColumnSpec[] = [
     tab: "versions",
     title: "Versions",
   },
-  { icon: "token", keyId: "column-tokens", tab: "tokens", title: "Tokens" },
   {
     icon: "component",
     keyId: "column-components",

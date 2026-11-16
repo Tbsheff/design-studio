@@ -4,22 +4,27 @@ import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { stopPointer, toAskStyle } from "./selection-prompt-model.js";
-import type { PromptRect } from "./selection-prompt-model.js";
+import type { PromptBounds, PromptRect } from "./selection-prompt-model.js";
 
 const ASK_ICON = 12;
 
 interface SelectionPromptAskProps {
+  readonly bounds: PromptBounds;
   readonly onOpen: () => void;
   readonly rect: PromptRect;
   readonly zoom: number;
 }
 
 const SelectionPromptAsk = ({
+  bounds,
   onOpen,
   rect,
   zoom,
 }: SelectionPromptAskProps): ReactElement => {
-  const style = useMemo(() => toAskStyle(rect, zoom), [rect, zoom]);
+  const style = useMemo(
+    () => toAskStyle(rect, zoom, bounds),
+    [rect, zoom, bounds]
+  );
 
   return (
     <button

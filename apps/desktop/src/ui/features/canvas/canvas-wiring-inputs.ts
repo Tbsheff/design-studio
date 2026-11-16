@@ -105,7 +105,28 @@ const toBlockedReason = (
   }
 };
 
-const toFrameActions = (
+type DarkSwitch = ReturnType<typeof themeSwitch>;
+
+const toDarkItems = (dark: DarkSwitch): FrameMenuItem[] => {
+  if (!dark) {
+    return [];
+  }
+
+  const item: FrameMenuItem = {
+    icon: "moon",
+    id: "preview-dark",
+    label: copy.previewDarkMode,
+    run: dark.onToggle,
+  };
+
+  if (dark.dark) {
+    item.label = copy.previewDefaultMode;
+  }
+
+  return [item];
+};
+
+const toStatesItems = (
   props: ViewProps,
   frame: CanvasFrame,
   frameDirectionId: string | null
@@ -131,6 +152,16 @@ const toFrameActions = (
 
   return [item];
 };
+
+const toFrameActions = (
+  props: ViewProps,
+  frame: CanvasFrame,
+  frameDirectionId: string | null,
+  dark: DarkSwitch
+): FrameMenuItem[] => [
+  ...toDarkItems(dark),
+  ...toStatesItems(props, frame, frameDirectionId),
+];
 
 const toCommandsInput = (
   text: StageState,
@@ -164,7 +195,8 @@ const toCommandsInput = (
 const toLabelInput = (
   props: ViewProps,
   text: StageState,
-  baseLabel: LabelInput["baseLabel"]
+  baseLabel: LabelInput["baseLabel"],
+  dark: DarkSwitch
 ): LabelInput => {
   const { projectId, directionId, kind, selection, setSelection } = props;
   const { directions, headVersionId } = props;
@@ -176,7 +208,7 @@ const toLabelInput = (
   const frameActions = (
     frame: CanvasFrame,
     did: string | null
-  ): FrameMenuItem[] => toFrameActions(props, frame, did);
+  ): FrameMenuItem[] => toFrameActions(props, frame, did, dark);
 
   return {
     activeId,

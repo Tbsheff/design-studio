@@ -10,12 +10,20 @@ interface ChangePillProps {
   readonly control: ChangeRings;
 }
 
-const toCountText = (count: number): string => {
+const toCountBase = (count: number): string => {
   if (count === 1) {
     return copy.changeSpotOne;
   }
 
   return `${count}${copy.changeSpotCount}`;
+};
+
+const toCountText = (count: number, isStepping: boolean): string => {
+  if (isStepping) {
+    return toCountBase(count);
+  }
+
+  return `${toCountBase(count)}${copy.changeSpotReview}`;
 };
 
 const toHunkText = (count: number): string => {
@@ -91,7 +99,7 @@ const ChangePill = ({ control }: ChangePillProps): ReactElement | null => {
         data-tip={copy.changeSpotTip}
         onClick={onStep}
       >
-        {toCountText(count)}
+        {toCountText(count, stepText !== null)}
         {stepText && <span className="change-pill-step">{stepText}</span>}
       </button>
       {stepText && (

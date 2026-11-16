@@ -3,7 +3,6 @@ const COLUMN_TABS = [
   "pages",
   "assets",
   "versions",
-  "tokens",
   "components",
   "system",
 ] as const;

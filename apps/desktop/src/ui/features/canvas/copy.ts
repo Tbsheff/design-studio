@@ -22,6 +22,7 @@ const copy = {
   changeSpotCount: " changes",
   changeSpotOf: " of ",
   changeSpotOne: "1 change",
+  changeSpotReview: " · Review",
   changeSpotStaleTip:
     "This layer changed again, so this undoes the whole change block. Cmd+Z takes it back.",
   changeSpotTip: "Step through the changes. Shift+click or Esc clears.",
@@ -98,6 +99,8 @@ const copy = {
   frameMenuCopy: "Copy",
   frameMenuStates: "States",
   framePage: "Frame page",
+  framePageItem: "Page: ",
+  framePageItemEnd: "…",
   frameRemoved: "Frame removed.",
   frameSelectAlign: "Align",
   frameSelectCount: " frames",
@@ -136,10 +139,12 @@ const copy = {
   layOutThe: "Lay out the routes left to right and link them from their source",
   layerMenuBack: "Send to back",
   layerMenuBackward: "Send backward",
+  layerMenuCut: "Cut",
   layerMenuFlipH: "Flip horizontal",
   layerMenuFlipV: "Flip vertical",
   layerMenuForward: "Bring forward",
   layerMenuFront: "Bring to front",
+  layerMenuMore: "More",
   layerMenuRotate: "Rotate…",
   linkArrows: "Link arrows",
   linkElementsTo: "Link elements to frames, then Play",
@@ -257,6 +262,11 @@ const copy = {
   skipReview: "Skip review",
   soTheFramesShow: " so the frames show real pages.",
   spent: " spent",
+  stageMenu: "Canvas actions",
+  stageMenuAddFrame: "Add frame",
+  stageMenuFit: "Zoom to fit",
+  stageMenuPaste: "Paste",
+  stagePasteEmpty: "The clipboard has no image. Copy a screenshot, then paste it.",
   startFrame: "Start frame",
   startNowWith: "Start now with the generated briefs",
   styleReference: "Style reference for new runs",
@@ -348,8 +358,12 @@ const layoutGridCopy = {
 } as const;
 
 const presentCopy = {
+  fullscreen: "Fullscreen",
   more: "More ways to present",
-  playTip: "Play prototype. The arrow shows more ways to present",
+  newWindow: "New window",
+  play: "Play prototype",
+  playTip: "Click through the prototype links from the start frame",
+  windowTip: "Present in this window",
 } as const;
 
 const groupResizeCopy = {

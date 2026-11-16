@@ -1,5 +1,10 @@
 import { useCallback, useMemo, useRef } from "react";
-import type { KeyboardEvent, MouseEvent, ReactElement } from "react";
+import type {
+  KeyboardEvent,
+  MouseEvent,
+  PointerEvent,
+  ReactElement,
+} from "react";
 
 import {
   moveItemFocus,
@@ -23,6 +28,9 @@ interface PreviewMenuProps {
 
 const stopContextMenu = (event: MouseEvent<HTMLElement>): void =>
   event.preventDefault();
+
+const stopMenuPointer = (event: PointerEvent<HTMLElement>): void =>
+  event.stopPropagation();
 
 const PreviewMenu = ({
   at,
@@ -74,6 +82,7 @@ const PreviewMenu = ({
       aria-label={label}
       style={style}
       onKeyDown={onKeyDown}
+      onPointerDown={stopMenuPointer}
       onContextMenu={stopContextMenu}
     >
       {visible.map((item) => (

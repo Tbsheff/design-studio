@@ -1,8 +1,8 @@
 import type { ShipPrepare } from "@design-studio/contracts/ship";
 import type { ReactElement } from "react";
 
+import { pick } from "../../platform/pick.js";
 import { copy } from "./copy.js";
-import { pick } from "./pick.js";
 import { actionLabel, footNote } from "./ship-model.js";
 import type { Draft } from "./ship-model.js";
 

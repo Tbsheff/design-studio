@@ -5,7 +5,7 @@ import type {
 import { useCallback, useEffect, useState, useTransition } from "react";
 
 import { errorText, rulesApi } from "../../api.js";
-import { pick } from "./pick.js";
+import { pick } from "../../platform/pick.js";
 
 interface LiveFrame {
   frame: string;

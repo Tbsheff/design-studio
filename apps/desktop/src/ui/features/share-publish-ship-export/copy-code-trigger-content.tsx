@@ -2,7 +2,7 @@ import { Icon } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
 import type { ReactElement } from "react";
 
-import { pick } from "./pick.js";
+import { pick } from "../../platform/pick.js";
 
 const ROW_ICON_SIZE = 12;
 const ICON_SIZE = 14;

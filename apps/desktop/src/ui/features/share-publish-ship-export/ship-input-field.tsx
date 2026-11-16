@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import type { ChangeEvent, ReactElement } from "react";
 
-import { pick } from "./pick.js";
+import { pick } from "../../platform/pick.js";
 
 interface ShipInputFieldProps {
   readonly label: string;

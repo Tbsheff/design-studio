@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
-import { pick } from "./pick.js";
+import { pick } from "../../platform/pick.js";
 import type { ShareMode } from "./share-mode.js";
 
 interface ShareTabButtonProps {

@@ -19,11 +19,11 @@ import { desktopBridge } from "../../platform/desktop.js";
 import { call as callAction, getJson, sendJson } from "../../platform/http.js";
 import type { RouteOutput } from "../../platform/http.js";
 import { isFieldSource } from "../../platform/json-guard.js";
+import { pick } from "../../platform/pick.js";
 import { readStored, uiStore, writeStored } from "../../platform/storage.js";
 import { canvasStore } from "../canvas/canvas-frames-model.js";
 import type { CanvasFrame } from "../canvas/canvas-frames-model.js";
 import { activeFrame, defaultLayout, frameName } from "../canvas/index.js";
-import { pick } from "./pick.js";
 
 interface PathFields {
   path?: string;

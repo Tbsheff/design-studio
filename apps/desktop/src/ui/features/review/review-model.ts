@@ -5,8 +5,8 @@ import type {
   ReviewSeverity,
 } from "@design-studio/contracts/review";
 
+import { pick } from "../../platform/pick.js";
 import { copy } from "./copy.js";
-import { pick } from "./pick.js";
 
 interface ReviewActions {
   readonly fixBlocked: string | null;

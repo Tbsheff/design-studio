@@ -1,9 +1,9 @@
 import type { ReactElement } from "react";
 
+import { pick } from "../../platform/pick.js";
 import { copy as uiCopy } from "./copy.js";
 import { ExportFrameRow } from "./export-frame-row.js";
 import type { FrameLabel } from "./frame-label.js";
-import { pick } from "./pick.js";
 import type { ExportOptions } from "./use-export-options.js";
 
 const EMPTY_LABEL: FrameLabel = { name: "", page: "" };

@@ -1,9 +1,9 @@
 import type { ReactElement } from "react";
 
+import { pick } from "../../platform/pick.js";
 import { copy } from "./copy.js";
 import type { FrameChoice } from "./export-api.js";
 import type { FrameLabel } from "./frame-label.js";
-import { pick } from "./pick.js";
 import { PublishExpiryPicker } from "./publish-expiry-picker.js";
 import { PublishFramePicker } from "./publish-frame-picker.js";
 import { PublishPasswordField } from "./publish-password-field.js";

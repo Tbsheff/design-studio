@@ -5,7 +5,7 @@ import type {
   DesignRulesTestResult,
 } from "@design-studio/contracts/design-rules";
 
-import { pick } from "./pick.js";
+import { pick } from "../../platform/pick.js";
 
 type RuleTone = "bad" | "idle" | "ok";
 

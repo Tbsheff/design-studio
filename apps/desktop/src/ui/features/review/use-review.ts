@@ -13,9 +13,9 @@ import {
 import type { Dispatch, RefObject, SetStateAction } from "react";
 
 import { api, errorText } from "../../api.js";
+import { pick } from "../../platform/pick.js";
 import type { CanvasFrame } from "../canvas/canvas-frames-model.js";
 import type { FilesChange } from "../home/use-studio-data.js";
-import { pick } from "./pick.js";
 import { toFrameKey, toReviewRequest } from "./review-request.js";
 
 const RERUN_MS = 900;

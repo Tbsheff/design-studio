@@ -3,11 +3,11 @@ import { useCallback, useState } from "react";
 import type { ReactElement } from "react";
 
 import type { PublishKind } from "../../../shared/publish.js";
+import { pick } from "../../platform/pick.js";
 import { useBackdropDismiss } from "../../platform/use-backdrop-dismiss.js";
 import { canvasFrameName, framePage } from "../canvas/index.js";
 import { copy } from "./copy.js";
 import { LinkShare } from "./link-share.js";
-import { pick } from "./pick.js";
 import { PublishPane } from "./publish-pane.js";
 import { ShareHead } from "./share-head.js";
 import type { ShareMode } from "./share-mode.js";

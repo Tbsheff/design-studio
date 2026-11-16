@@ -6,8 +6,8 @@ import type {
   PublishBackendState,
   PublishCliState,
 } from "../../../shared/publish.js";
+import { pick } from "../../platform/pick.js";
 import { copy } from "./copy.js";
-import { pick } from "./pick.js";
 
 interface Props {
   backend: PublishBackendState;

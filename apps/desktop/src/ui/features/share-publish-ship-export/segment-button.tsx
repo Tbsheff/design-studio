@@ -3,7 +3,7 @@ import type { IconName } from "@design-studio/ui";
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
-import { pick } from "./pick.js";
+import { pick } from "../../platform/pick.js";
 
 const RADIO_ROLE = "radio";
 

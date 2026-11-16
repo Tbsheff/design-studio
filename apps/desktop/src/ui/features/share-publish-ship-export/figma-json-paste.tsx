@@ -2,9 +2,9 @@ import { looksLikeFigmaNodes } from "@design-studio/contracts/figma-nodes";
 import { useCallback, useState } from "react";
 import type { ChangeEvent, ReactElement } from "react";
 
+import { pick } from "../../platform/pick.js";
 import { copy } from "./copy.js";
 import { toNodesUrl } from "./figma-import-model.js";
-import { pick } from "./pick.js";
 
 interface Props {
   readonly link: string;

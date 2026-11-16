@@ -1,8 +1,8 @@
 import type { ShipResult } from "@design-studio/contracts/ship";
 import type { ReactElement } from "react";
 
+import { pick } from "../../platform/pick.js";
 import { copy } from "./copy.js";
-import { pick } from "./pick.js";
 
 type ShipFormat = NonNullable<ShipResult["format"]>;
 

@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { ReactElement } from "react";
 
 import type { Publication } from "../../../shared/publish.js";
-import { pick } from "./pick.js";
+import { pick } from "../../platform/pick.js";
 import { PublicationComments } from "./publication-comments.js";
 import { toStatusText, toViewsTip } from "./publication-model.js";
 import { PublicationRowActions } from "./publication-row-actions.js";

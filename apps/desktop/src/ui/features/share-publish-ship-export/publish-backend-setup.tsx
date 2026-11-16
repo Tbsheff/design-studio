@@ -1,11 +1,11 @@
 import type { ReactElement } from "react";
 
 import type { PublishCliState } from "../../../shared/publish.js";
+import { pick } from "../../platform/pick.js";
 import { BackendActions } from "./backend-actions.js";
 import { toBackendSummary, toKeyStoreText } from "./backend-model.js";
 import { BackendStepRow } from "./backend-step-row.js";
 import { copy } from "./copy.js";
-import { pick } from "./pick.js";
 import type { PublishBackend } from "./use-publish-backend.js";
 
 interface Props {

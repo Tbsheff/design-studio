@@ -1,11 +1,11 @@
 import { Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
 
+import { pick } from "../../platform/pick.js";
 import type { ConnectSetup } from "./connect-ai-api.js";
 import { ConnectTrustedAdd } from "./connect-trusted-add.js";
 import { ConnectTrustedList } from "./connect-trusted-list.js";
 import { trustedCopy } from "./copy.js";
-import { pick } from "./pick.js";
 import {
   toEnvOnlyFolders,
   toFolderCountText,

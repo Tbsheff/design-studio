@@ -3,7 +3,7 @@ import { Icon } from "@design-studio/ui";
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
-import { pick } from "./pick.js";
+import { pick } from "../../platform/pick.js";
 import { ShipCounts } from "./ship-counts.js";
 import { STATUS_LETTER, shippable } from "./ship-model.js";
 

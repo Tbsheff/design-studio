@@ -1,8 +1,8 @@
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
+import { pick } from "../../platform/pick.js";
 import { copy as uiCopy } from "./copy.js";
-import { pick } from "./pick.js";
 import { ToggleSwitch } from "./toggle-switch.js";
 
 interface ConnectEditsRowProps {

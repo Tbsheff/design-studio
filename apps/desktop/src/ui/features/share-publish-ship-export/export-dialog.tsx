@@ -2,6 +2,7 @@ import { useModalDialog } from "@design-studio/ui";
 import { useCallback, useMemo } from "react";
 import type { ReactElement } from "react";
 
+import { pick } from "../../platform/pick.js";
 import { useBackdropDismiss } from "../../platform/use-backdrop-dismiss.js";
 import { canvasFrameName, framePage } from "../canvas/index.js";
 import { copy as uiCopy } from "./copy.js";
@@ -12,7 +13,6 @@ import { ExportDialogHead } from "./export-dialog-head.js";
 import { FORMATS, GROUP_CHOICES } from "./export-formats.js";
 import type { DialogFormat, FormatInfo } from "./export-formats.js";
 import { toFrameLabels } from "./frame-labels.js";
-import { pick } from "./pick.js";
 import { useEditors } from "./use-editors.js";
 import { useExportGroup } from "./use-export-group.js";
 import { useExportOptions } from "./use-export-options.js";

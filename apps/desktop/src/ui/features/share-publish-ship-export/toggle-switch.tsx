@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 
-import { pick } from "./pick.js";
+import { pick } from "../../platform/pick.js";
 
 interface ToggleSwitchProps {
   readonly label: string;

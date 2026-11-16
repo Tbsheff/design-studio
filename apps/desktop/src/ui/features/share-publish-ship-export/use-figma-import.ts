@@ -7,7 +7,7 @@ import type {
 import { useCallback, useState } from "react";
 import type { FormEvent } from "react";
 
-import { pick } from "./pick.js";
+import { pick } from "../../platform/pick.js";
 import { useFigmaPreview } from "./use-figma-preview.js";
 import type { FigmaPreview, FigmaPreviewIds } from "./use-figma-preview.js";
 import { useFigmaSubmit } from "./use-figma-submit.js";

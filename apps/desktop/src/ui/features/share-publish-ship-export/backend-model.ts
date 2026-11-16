@@ -1,5 +1,5 @@
 import type { PublishBackendState } from "../../../shared/publish.js";
-import { pick } from "./pick.js";
+import { pick } from "../../platform/pick.js";
 
 const toBackendSummary = (backend: PublishBackendState): string => {
   if (backend.running) {

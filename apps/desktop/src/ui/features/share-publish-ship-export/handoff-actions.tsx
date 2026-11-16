@@ -4,11 +4,11 @@ import { useCallback } from "react";
 import type { ReactElement } from "react";
 
 import { downloadBlob } from "../../domain/format.js";
+import { pick } from "../../platform/pick.js";
 import { copy as uiCopy } from "./copy.js";
 import { toErrorText } from "./error-text.js";
 import { exportApi } from "./export-api.js";
 import type { ExportTarget } from "./export-api.js";
-import { pick } from "./pick.js";
 import { useCopied } from "./use-copied.js";
 
 interface HandoffActionsProps {

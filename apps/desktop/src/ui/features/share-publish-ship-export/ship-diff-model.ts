@@ -1,7 +1,7 @@
 import type { ShipFile } from "@design-studio/contracts/ship";
 
+import { pick } from "../../platform/pick.js";
 import { copy } from "./copy.js";
-import { pick } from "./pick.js";
 
 const toEmptyDiffText = (file: ShipFile): string => {
   if (file.diff.includes("Binary files")) {

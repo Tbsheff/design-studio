@@ -2,8 +2,8 @@ import type { ReviewResult } from "@design-studio/contracts/review";
 import { Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
 
+import { pick } from "../../platform/pick.js";
 import { copy } from "./copy.js";
-import { pick } from "./pick.js";
 import { ReviewEntryBadge } from "./review-entry-badge.js";
 
 interface Props {

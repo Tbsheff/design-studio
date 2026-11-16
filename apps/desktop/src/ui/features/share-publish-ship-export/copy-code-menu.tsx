@@ -2,6 +2,7 @@ import { usePopover } from "@design-studio/ui";
 import { useCallback, useRef, useState } from "react";
 import type { ReactElement } from "react";
 
+import { pick } from "../../platform/pick.js";
 import { CopyCodeMenuList } from "./copy-code-menu-list.js";
 import {
   toStatusIcon,
@@ -11,7 +12,6 @@ import {
 import type { CopyVariant } from "./copy-code-model.js";
 import { CopyCodeTriggerContent } from "./copy-code-trigger-content.js";
 import { copy } from "./copy.js";
-import { pick } from "./pick.js";
 import { useCopyCodeItems } from "./use-copy-code-items.js";
 import { useCopyStatus } from "./use-copy-status.js";
 

@@ -2,8 +2,8 @@ import type { ShareLink } from "@design-studio/contracts/share";
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
+import { pick } from "../../platform/pick.js";
 import { copy } from "./copy.js";
-import { pick } from "./pick.js";
 import { ShareSwitchRow } from "./share-switch-row.js";
 import { ToggleSwitch } from "./toggle-switch.js";
 

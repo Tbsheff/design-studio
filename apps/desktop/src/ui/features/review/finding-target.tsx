@@ -2,8 +2,8 @@ import type { ReviewFinding } from "@design-studio/contracts/review";
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
+import { pick } from "../../platform/pick.js";
 import { copy } from "./copy.js";
-import { pick } from "./pick.js";
 import { SEVERITY_WORD } from "./review-model.js";
 
 const IMAGE_ROLE = "img";

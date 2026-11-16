@@ -6,8 +6,8 @@ import type {
 import { copyText } from "@design-studio/ui";
 import { useEffect, useRef, useState } from "react";
 
+import { pick } from "../../platform/pick.js";
 import { sessionTokens } from "../../platform/share-tokens.js";
-import { pick } from "./pick.js";
 import { settleValue } from "./settle.js";
 import type { ShareCopied } from "./share-types.js";
 

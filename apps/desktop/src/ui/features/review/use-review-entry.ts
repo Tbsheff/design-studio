@@ -2,7 +2,7 @@ import type { ReviewFinding } from "@design-studio/contracts/review";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { ParentMessageBody } from "../../platform/bridge.js";
-import { pick } from "./pick.js";
+import { pick } from "../../platform/pick.js";
 import { useReview } from "./use-review.js";
 import type { ReviewInput, ReviewState } from "./use-review.js";
 

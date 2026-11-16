@@ -1,8 +1,8 @@
 import type { ReactElement } from "react";
 
 import type { PublishPlan } from "../../../shared/publish.js";
+import { pick } from "../../platform/pick.js";
 import { copy } from "./copy.js";
-import { pick } from "./pick.js";
 import { toPlanRows } from "./publish-plan-model.js";
 import { PublishPlanRow } from "./publish-plan-row.js";
 

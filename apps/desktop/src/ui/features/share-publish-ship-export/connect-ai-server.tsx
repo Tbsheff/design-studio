@@ -1,12 +1,12 @@
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
+import { pick } from "../../platform/pick.js";
 import type { ConnectSetup } from "./connect-ai-api.js";
 import { ConnectAiTitles } from "./connect-ai-titles.js";
 import { ConnectEditsRow } from "./connect-edits-row.js";
 import { ConnectTrustedRow } from "./connect-trusted-row.js";
 import { copy as uiCopy } from "./copy.js";
-import { pick } from "./pick.js";
 import { ToggleSwitch } from "./toggle-switch.js";
 import type { ConnectAiState } from "./use-connect-ai.js";
 

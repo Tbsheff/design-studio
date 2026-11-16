@@ -1,7 +1,7 @@
 import { publishExpiryText } from "../../../shared/publish.js";
 import type { Publication } from "../../../shared/publish.js";
+import { pick } from "../../platform/pick.js";
 import { copy } from "./copy.js";
-import { pick } from "./pick.js";
 
 const SHORT_VERSION = 7;
 

@@ -2,8 +2,8 @@ import { useCallback } from "react";
 import type { ReactElement } from "react";
 
 import type { Publication } from "../../../shared/publish.js";
+import { pick } from "../../platform/pick.js";
 import { copy } from "./copy.js";
-import { pick } from "./pick.js";
 import { isReadOnlyPublication } from "./publish-api.js";
 import { RowPublicationButton } from "./row-publication-button.js";
 import { RowToggleButton } from "./row-toggle-button.js";

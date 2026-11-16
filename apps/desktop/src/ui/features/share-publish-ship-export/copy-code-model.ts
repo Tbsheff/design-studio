@@ -1,7 +1,7 @@
 import type { IconName } from "@design-studio/ui";
 
+import { pick } from "../../platform/pick.js";
 import { copy } from "./copy.js";
-import { pick } from "./pick.js";
 
 type CopyState =
   | { readonly kind: "busy" }

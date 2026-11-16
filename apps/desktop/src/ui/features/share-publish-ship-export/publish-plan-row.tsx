@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 
-import { pick } from "./pick.js";
+import { pick } from "../../platform/pick.js";
 import type { PlanRow } from "./publish-plan-model.js";
 
 interface PublishPlanRowProps {

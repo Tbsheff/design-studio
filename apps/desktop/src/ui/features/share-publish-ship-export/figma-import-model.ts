@@ -4,8 +4,8 @@ import type {
 } from "@design-studio/contracts/figma-nodes";
 import type { JsxInsertPosition } from "@design-studio/contracts/insert";
 
+import { pick } from "../../platform/pick.js";
 import { copy } from "./copy.js";
-import { pick } from "./pick.js";
 
 const MAX_FAILURE_LENGTH = 140;
 const LINKS_OFF = /Figma API, which is off/u;

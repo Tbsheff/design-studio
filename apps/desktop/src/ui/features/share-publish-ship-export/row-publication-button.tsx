@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import type { ReactElement } from "react";
 
 import type { Publication } from "../../../shared/publish.js";
-import { pick } from "./pick.js";
+import { pick } from "../../platform/pick.js";
 
 interface Props {
   isBusy: boolean;

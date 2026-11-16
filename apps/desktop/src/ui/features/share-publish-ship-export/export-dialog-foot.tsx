@@ -1,10 +1,10 @@
 import { Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
 
+import { pick } from "../../platform/pick.js";
 import { copy as uiCopy } from "./copy.js";
 import type { ExportStatus } from "./export-formats.js";
 import { ExportStatusLine } from "./export-status-line.js";
-import { pick } from "./pick.js";
 
 interface ExportDialogFootProps {
   readonly status: ExportStatus;

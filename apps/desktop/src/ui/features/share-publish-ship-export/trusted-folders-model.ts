@@ -1,5 +1,5 @@
+import { pick } from "../../platform/pick.js";
 import { trustedCopy } from "./copy.js";
-import { pick } from "./pick.js";
 
 const toFolderCountText = (count: number): string =>
   `${String(count)} ${pick(count === 1, trustedCopy.folderOne, trustedCopy.folderMany)}`;

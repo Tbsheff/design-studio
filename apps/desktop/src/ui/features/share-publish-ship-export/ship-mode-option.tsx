@@ -2,7 +2,7 @@ import type { ShipMode } from "@design-studio/contracts/ship";
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
-import { pick } from "./pick.js";
+import { pick } from "../../platform/pick.js";
 
 interface ShipModeOptionProps {
   readonly id: ShipMode;

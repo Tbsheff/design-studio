@@ -1,8 +1,8 @@
 import { Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
 
+import { pick } from "../../platform/pick.js";
 import { copy } from "./copy.js";
-import { pick } from "./pick.js";
 import type { WalkthroughView } from "./use-walkthrough.js";
 
 interface HeadProps {

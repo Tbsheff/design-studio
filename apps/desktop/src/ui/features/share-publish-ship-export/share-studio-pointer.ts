@@ -3,7 +3,7 @@ import type { StudioCursorInput } from "@design-studio/contracts/share";
 
 import type { BridgeFrame } from "../../platform/bridge.js";
 import { call } from "../../platform/http.js";
-import { pick } from "./pick.js";
+import { pick } from "../../platform/pick.js";
 
 const SEND_MS = 50;
 const FRAME_SELECTOR = ".artboard[data-frame-id], .canvas-frame[data-frame-id]";

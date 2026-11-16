@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 
+import { pick } from "../../platform/pick.js";
 import { copy } from "./copy.js";
-import { pick } from "./pick.js";
 import type { PublishFlow } from "./use-publish-flow.js";
 
 interface PublishPaneFootProps {

@@ -1,6 +1,5 @@
 import { useCallback, useMemo } from "react";
 
-import type { InspectorProps } from "./inspector-model.js";
 import {
   toFixedPatch,
   toFixedSide,
@@ -14,11 +13,9 @@ import {
 } from "./scroll-pin-model.js";
 import type { FixedSide, ScrollPin } from "./scroll-pin-model.js";
 import type { DirectEdit } from "./use-direct-edit.js";
-import { useDirectEdits } from "./use-direct-edits.js";
 import { setEdit } from "./use-layout-keys.js";
 
 interface ScrollPinState {
-  readonly blocked: string | null;
   readonly choice: ScrollPin | null;
   readonly edit: DirectEdit;
   readonly handlePick: (value: string) => void;
@@ -28,23 +25,16 @@ interface ScrollPinState {
   readonly side: FixedSide;
 }
 
-const useScrollPin = (props: InspectorProps): ScrollPinState => {
-  const edit = useDirectEdits({
-    control: props.control,
-    directionId: props.directionId,
-    onCommitted: props.onCommitted,
-    onStale: props.onStale,
-    port: props.port,
-    projectId: props.projectId,
-    rewrite: null,
-    selections: props.selection,
-  });
+const NO_STYLES: Readonly<Record<string, string>> = {};
 
+const useScrollPin = (
+  edit: DirectEdit,
+  styles: Readonly<Record<string, string>> | null
+): ScrollPinState => {
   const { position } = edit.values;
-  const styles = props.selection[0]?.styles ?? null;
 
   const current = useMemo(
-    () => toScrollPinCurrent(edit.values, styles ?? {}),
+    () => toScrollPinCurrent(edit.values, styles ?? NO_STYLES),
     [edit.values, styles]
   );
 
@@ -73,12 +63,10 @@ const useScrollPin = (props: InspectorProps): ScrollPinState => {
     [current, edit, side]
   );
 
-  const { blocked } = edit;
   const locked = toLockedPin(position);
   const offset = toOffsetSide(choice, side);
 
   return {
-    blocked,
     choice,
     edit,
     handlePick,

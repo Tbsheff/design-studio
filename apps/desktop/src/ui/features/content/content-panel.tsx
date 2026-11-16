@@ -15,7 +15,6 @@ const ContentPanel = (props: ContentOptions): ReactElement => {
 
   return (
     <fieldset aria-label={copy.groupLabel} className={styles.section}>
-      <span className={styles.title}>{copy.title}</span>
       <PresetChips
         mode={content.mode}
         onPick={content.handlePreset}

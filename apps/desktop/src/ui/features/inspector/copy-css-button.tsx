@@ -7,9 +7,9 @@ import { toCopyIcon, toCopyLabel } from "./other-styles-model.js";
 import type { AuthoredCssState } from "./use-authored-css.js";
 import { useCopyCss } from "./use-copy-css.js";
 
-const toTip = (isIdle: boolean, label: string): string => {
+const toVisibleLabel = (isIdle: boolean, label: string): string => {
   if (isIdle) {
-    return copy.copyCss;
+    return copy.cssLabel;
   }
 
   return label;
@@ -32,15 +32,13 @@ const CopyCssButton = ({
   return (
     <button
       type="button"
-      className="icon-btn small ins-copy-css"
-      data-tip={toTip(state === "idle", label)}
+      className="btn ghost small has-icon ins-copy-css"
+      data-tip={copy.copyCss}
       data-tip-align="end"
       onClick={handleCopy}
     >
-      <Icon name={toCopyIcon(state)} size={14} />
-      <span className="sr-only" aria-live="polite">
-        {label}
-      </span>
+      <Icon name={toCopyIcon(state)} size={13} />
+      <span aria-live="polite">{toVisibleLabel(state === "idle", label)}</span>
     </button>
   );
 };

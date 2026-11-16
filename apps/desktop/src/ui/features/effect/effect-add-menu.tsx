@@ -1,4 +1,4 @@
-import { UiSelect } from "@design-studio/ui";
+import { Icon, UiSelect } from "@design-studio/ui";
 import type { UiSelectOption } from "@design-studio/ui";
 import { useCallback } from "react";
 import type { ReactElement } from "react";
@@ -15,6 +15,10 @@ interface EffectAddMenuProps {
 }
 
 const ADD_ID = "effect-add";
+
+const PLUS_SIZE = 12;
+
+const PLUS_ICON = <Icon name="plus" size={PLUS_SIZE} />;
 
 const KIND_OPTIONS: readonly UiSelectOption[] = EFFECT_KINDS.map((kind) => ({
   label: copy.kind[kind],
@@ -37,16 +41,15 @@ const EffectAddMenu = ({
   );
 
   return (
-    <div className="ins-field select">
-      <label className={styles.label} htmlFor={ADD_ID}>
-        {copy.add}
-      </label>
+    <div className={styles.addRow}>
       <UiSelect
         aria-label={copy.add}
         disabled={disabled}
+        icon={PLUS_ICON}
         id={ADD_ID}
         options={KIND_OPTIONS}
-        placeholder={copy.addPick}
+        placeholder={copy.add}
+        size="sm"
         tip={copy.addTip}
         value=""
         onChange={addKind}

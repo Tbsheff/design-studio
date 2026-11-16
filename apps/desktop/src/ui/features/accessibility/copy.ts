@@ -9,7 +9,8 @@ const copy = {
   contrast: "Contrast",
   contrastFail: "Fails",
   contrastPass: "Passes",
-  contrastTip: "WCAG contrast of the text and its background",
+  contrastTip: (need: number): string =>
+    `WCAG contrast of the text and its background. This text needs ${need}:1`,
   decorative: "Decorative",
   decorativeTip: 'Marks the image as decorative with alt=""',
   fixLabel: (token: string): string =>
@@ -21,8 +22,7 @@ const copy = {
   noSource:
     "Design Studio cannot find this layer in the code, so it cannot change accessibility.",
   noText: "No text on this layer to check.",
-  ratio: (ratio: number, need: number): string =>
-    `${ratio.toFixed(2)}:1 (needs ${need}:1)`,
+  ratio: (ratio: number): string => `${ratio.toFixed(1)}:1`,
   readerChecked: (isChecked: boolean): string => {
     if (isChecked) {
       return "checked";
@@ -67,7 +67,6 @@ const copy = {
     `Tab stop ${order}: ${name}`,
   tabStopUnnamed: (order: number): string => `Tab stop ${order}: unnamed`,
   tabText: "Tabs",
-  title: "Accessibility",
   unnamedMark: "!",
   unset: "Not set",
   visionChips: "Vision types",

@@ -34,15 +34,17 @@ const MotionActions = ({
 
   return (
     <div className={styles.actions}>
-      <button
-        aria-label={copy.previewLabel}
-        className="btn small ghost"
-        disabled={disabled || !canPreview}
-        type="button"
-        onClick={onPreview}
-      >
-        {copy.preview}
-      </button>
+      {canPreview && (
+        <button
+          aria-label={copy.previewLabel}
+          className="btn small ghost"
+          disabled={disabled}
+          type="button"
+          onClick={onPreview}
+        >
+          {copy.preview}
+        </button>
+      )}
       <button
         className="btn small"
         disabled={disabled}

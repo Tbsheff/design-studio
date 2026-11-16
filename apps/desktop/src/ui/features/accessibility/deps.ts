@@ -14,8 +14,6 @@ export type { BridgeFrame } from "../../platform/bridge.js";
 
 export { insertError } from "../design-system/component-insert-api.js";
 
-export { InspectorSection } from "../inspector/inspector-fields.js";
-
 export {
   ACCESSIBILITY_LABEL_MAX,
   ACCESSIBILITY_LIST_MAX,

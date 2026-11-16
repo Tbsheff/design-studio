@@ -4,7 +4,6 @@ import type { ReactElement } from "react";
 import { AccessibilityBody } from "./accessibility-body.js";
 import { AccessibilityNote } from "./accessibility-note.js";
 import { copy } from "./copy.js";
-import { InspectorSection } from "./deps.js";
 import type { SelectionContext } from "./deps.js";
 import { useAccessibilityHandlers } from "./use-accessibility-handlers.js";
 import { useAccessibility } from "./use-accessibility.js";
@@ -29,7 +28,7 @@ const AccessibilitySection = ({
   const handlers = useAccessibilityHandlers(accessibility);
 
   return (
-    <InspectorSection title={copy.title}>
+    <>
       {target.source === null && (
         <AccessibilityNote isError={false} text={copy.noSource} />
       )}
@@ -39,7 +38,7 @@ const AccessibilitySection = ({
         target={target}
       />
       <AccessibilityNote isError text={accessibility.error} />
-    </InspectorSection>
+    </>
   );
 };
 

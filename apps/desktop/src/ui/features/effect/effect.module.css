@@ -142,3 +142,33 @@
   color: var(--danger);
   font-size: var(--t-xs);
 }
+
+.addRow {
+  display: flex;
+}
+
+.addRow :global(.ui-select) {
+  width: auto;
+  height: 24px;
+  padding: 0 6px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-2);
+  font-size: var(--t-xs);
+  font-weight: var(--w-medium);
+}
+
+.addRow :global(.ui-select):hover:not(:disabled) {
+  background: var(--surface-hover);
+  box-shadow: none;
+  color: var(--text);
+}
+
+.addRow :global(.ui-select-value.placeholder) {
+  color: inherit;
+}
+
+.addRow :global(.ui-select) > svg:last-child {
+  display: none;
+}

@@ -1,6 +1,8 @@
 import type { SelectionContext } from "@design-studio/contracts";
-import type { ReactElement } from "react";
+import type { MutableRefObject, ReactElement } from "react";
 
+import type { PreviewPort } from "../../platform/bridge.js";
+import { CodeCopyCss } from "./code-copy-css.js";
 import { CodeEditButton } from "./code-edit-button.js";
 import { CopySnippet } from "./copy-snippet.js";
 import { copy } from "./copy.js";
@@ -14,12 +16,14 @@ interface Props {
   readonly projectId: string;
   readonly directionId: string | null;
   readonly selection: SelectionContext | null;
+  readonly port: MutableRefObject<PreviewPort | null>;
 }
 
 const InspectorCode = ({
   projectId,
   directionId,
   selection,
+  port,
 }: Props): ReactElement => {
   const snippet = useSnippet(projectId, directionId, selection);
 
@@ -43,6 +47,7 @@ const InspectorCode = ({
           {toFileLabel(snippet)}
         </span>
         {snippet.kind === "ready" && <CopySnippet code={snippet.code} />}
+        <CodeCopyCss port={port} selector={selection.selector} />
         {snippet.kind === "ready" && snippet.file && directionId && (
           <CodeEditButton
             projectId={projectId}

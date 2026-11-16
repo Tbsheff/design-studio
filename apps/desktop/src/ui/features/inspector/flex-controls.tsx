@@ -21,6 +21,8 @@ const FlexControls = ({ edit }: Props): ReactElement => {
       <AlignGrid edit={edit} isRow={direction === "row"} isGrid={false} />
       <div className="ins-flex-side">
         <FlexToolbar edit={edit} direction={direction} wraps={wraps} />
+      </div>
+      <div className="ins-flex-gaps">
         <GapModeField edit={edit} />
         <GapFields edit={edit} isSplit={wraps} isAuto={isAuto} />
       </div>

@@ -1,8 +1,7 @@
 import { useMemo } from "react";
 import type { MutableRefObject, ReactElement } from "react";
 
-import { copy } from "./copy.js";
-import { InspectorSection, useEditVariant } from "./deps.js";
+import { useEditVariant } from "./deps.js";
 import type { PreviewPort, SelectionContext } from "./deps.js";
 import { MotionBody } from "./motion-body.js";
 import { childCount, stateOf } from "./motion-model.js";
@@ -45,15 +44,13 @@ const MotionSection = ({
   });
 
   return (
-    <InspectorSection title={copy.title}>
-      <MotionBody
-        hasChildren={hasChildren}
-        motion={motion}
-        noSource={target.source === null}
-        reduced={reduced}
-        state={state}
-      />
-    </InspectorSection>
+    <MotionBody
+      hasChildren={hasChildren}
+      motion={motion}
+      noSource={target.source === null}
+      reduced={reduced}
+      state={state}
+    />
   );
 };
 

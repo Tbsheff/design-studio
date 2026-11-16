@@ -10,6 +10,7 @@ import {
   hasSplitCorners,
   toCorners,
 } from "./corners-model.js";
+import { FieldGlyph } from "./field-glyph.js";
 import { NumberField } from "./number-field.js";
 import { RadiusToggle } from "./radius-toggle.js";
 import type { DirectEdit } from "./use-direct-edit.js";
@@ -21,6 +22,8 @@ interface RadiusFieldProps {
 }
 
 const BORDER_RADIUS = "border-radius" as const;
+
+const RADIUS_GLYPH = <FieldGlyph kind="radius" tip={copy.borderRadius} />;
 
 const RadiusField = ({ edit, short }: RadiusFieldProps): ReactElement => {
   const radius = edit.values[BORDER_RADIUS];
@@ -47,7 +50,7 @@ const RadiusField = ({ edit, short }: RadiusFieldProps): ReactElement => {
   if (!isSplit) {
     return (
       <div className="ins-radius">
-        <NumberField short={short} spec={spec} />
+        <NumberField short={short} spec={spec} icon={RADIUS_GLYPH} />
         <RadiusToggle isSplit={isSplit} onToggle={handleToggle} />
       </div>
     );

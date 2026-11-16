@@ -20,7 +20,7 @@ const EffectsSection = ({
   const anchor = useScrollInOnMount(isRevealed);
 
   return (
-    <InspectorSection title={copy.effects}>
+    <InspectorSection title={copy.shadowTitle}>
       <span ref={anchor} hidden />
       {view === null && <CustomShadow edit={edit} />}
       {view !== null && <ShadowList edit={edit} view={view} />}

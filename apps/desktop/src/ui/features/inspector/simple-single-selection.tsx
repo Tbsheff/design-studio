@@ -11,6 +11,7 @@ import { SimpleEditor } from "./inspector-simple.js";
 import { toEditorKey } from "./simple-tab-model.js";
 import { StackingSection } from "./stacking-section.js";
 import { useEditVariant } from "./use-edit-variant.js";
+import { useEffectShadow } from "./use-effect-shadow.js";
 import { useUseSite } from "./use-use-site.js";
 import { VectorSection } from "./vector-section.js";
 
@@ -23,6 +24,7 @@ const SimpleSingleSelection = ({
   const site = useUseSite(inspector);
   const [first] = inspector.selection;
   const { onCommitted, onStale } = inspector;
+  const { hasEffectShadow } = useEffectShadow(first?.selector ?? null);
 
   if (!first) {
     return null;
@@ -32,10 +34,11 @@ const SimpleSingleSelection = ({
     <>
       {createElement(VectorSection, inspector)}
       {createElement(ImageSection, inspector)}
-      {createElement(GridSection, inspector)}
       {createElement(ComponentSection, inspector)}
     </>
   );
+
+  const layout = createElement(GridSection, inspector);
 
   const trailing = (
     <>
@@ -59,6 +62,8 @@ const SimpleSingleSelection = ({
       target={site.effective ?? first}
       sharedEditing={site.sharedEditing}
       component={sections}
+      layout={layout}
+      hasEffectShadow={hasEffectShadow}
       trailing={trailing}
     />
   );

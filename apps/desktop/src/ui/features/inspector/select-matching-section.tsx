@@ -4,7 +4,7 @@ import type { MutableRefObject, ReactElement } from "react";
 
 import type { PreviewPort } from "../../platform/bridge.js";
 import { copy } from "./copy.js";
-import { InspectorSection } from "./inspector-fields.js";
+import { RareSection } from "./rare-section.js";
 import { SelectMatchingButton } from "./select-matching-button.js";
 import { MATCH_OPTIONS } from "./select-matching-model.js";
 import { runMatching, useMatchNote } from "./use-match-note.js";
@@ -35,7 +35,7 @@ const SelectMatchingView = ({
   }
 
   return (
-    <InspectorSection title={copy.selectMatching}>
+    <RareSection title={copy.selectMatching} aside={null} modifier={null}>
       <fieldset
         className="ins-add-links ins-select-matching"
         aria-label={copy.selectMatching}
@@ -49,7 +49,7 @@ const SelectMatchingView = ({
         ))}
       </fieldset>
       {note && <output className="ins-select-matching-note">{note}</output>}
-    </InspectorSection>
+    </RareSection>
   );
 };
 

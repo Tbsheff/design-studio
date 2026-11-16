@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
-import { InspectorSection } from "./deps.js";
 import type { SelectionContext } from "./deps.js";
 import { StackingBody } from "./stacking-body.js";
 import { StackingNote } from "./stacking-note.js";
@@ -31,7 +30,7 @@ const StackingSection = ({
   const isOff = info === null || info.mode === "none";
 
   return (
-    <InspectorSection title={copy.title}>
+    <>
       {target.source === null && (
         <StackingNote isError={false} text={copy.noSource} />
       )}
@@ -46,7 +45,7 @@ const StackingSection = ({
         <StackingNote isError={false} text={info.reason} />
       )}
       <StackingNote isError text={stacking.error} />
-    </InspectorSection>
+    </>
   );
 };
 

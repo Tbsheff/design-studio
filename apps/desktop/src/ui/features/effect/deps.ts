@@ -4,6 +4,8 @@ export { errorText } from "../../api.js";
 
 export { call } from "../../platform/http.js";
 
+export { setEffectShadow } from "../../platform/effect-shadow-store.js";
+
 export {
   EFFECT_KINDS,
   EFFECT_NAME_PATTERN,

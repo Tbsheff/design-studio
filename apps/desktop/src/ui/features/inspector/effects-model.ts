@@ -176,6 +176,20 @@ const toShadowRows = (
 ): readonly { readonly id: string; readonly index: number }[] =>
   view.list.map((_shadow, index) => ({ id: `shadow-${index}`, index }));
 
-export { PARTS, FIELDS, toFieldPart, toShadowRows, setShadows, getShadowView };
+const hasBoxShadow = (styles: Readonly<Record<string, string>>): boolean => {
+  const value = styles[BOX_SHADOW] ?? "";
+
+  return value !== "" && value !== "none";
+};
+
+export {
+  PARTS,
+  FIELDS,
+  getShadowView,
+  hasBoxShadow,
+  setShadows,
+  toFieldPart,
+  toShadowRows,
+};
 
 export type { Part, Field, ShadowView };

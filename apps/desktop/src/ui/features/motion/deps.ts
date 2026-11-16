@@ -8,8 +8,6 @@ export type { PreviewPort } from "../../platform/bridge.js";
 
 export { setForceState, useEditVariant } from "../inspector/index.js";
 
-export { InspectorSection } from "../inspector/inspector-fields.js";
-
 export type { SelectionContext } from "@design-studio/contracts";
 
 export {

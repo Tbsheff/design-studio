@@ -16,8 +16,6 @@ type StackingField =
   | "top"
   | "zIndex";
 
-type OverflowAxis = "overflowX" | "overflowY";
-
 type StackingEdit = Readonly<Partial<Record<StackingField, string | null>>>;
 
 const INSET_POSITIONS: ReadonlySet<string> = new Set([
@@ -153,4 +151,4 @@ export {
   snapZ,
 };
 
-export type { OverflowAxis, StackingEdit, StackingField };
+export type { StackingEdit, StackingField };

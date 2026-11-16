@@ -16,13 +16,13 @@ interface NumberStyleSelectsProps {
 }
 
 const SPACING_OPTIONS = [
-  { label: copy.numbersDefault, value: "default" },
+  { label: copy.numbersSpacingDefault, value: "default" },
   { label: copy.numbersTabular, value: "tabular" },
   { label: copy.numbersProportional, value: "proportional" },
 ];
 
 const FIGURE_OPTIONS = [
-  { label: copy.numbersDefault, value: "default" },
+  { label: copy.numbersFigureDefault, value: "default" },
   { label: copy.numbersLining, value: "lining" },
   { label: copy.numbersOldstyle, value: "oldstyle" },
 ];

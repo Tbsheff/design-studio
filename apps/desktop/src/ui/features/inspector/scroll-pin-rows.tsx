@@ -1,9 +1,8 @@
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
+import type { DirectEdit } from "./deps.js";
 import { InsetField } from "./inset-field.js";
-import { InspectorSection } from "./inspector-fields.js";
-import type { InspectorProps } from "./inspector-model.js";
 import { ScrollPinChoices } from "./scroll-pin-choices.js";
 import {
   FIXED_SIDE_OPTIONS,
@@ -12,15 +11,17 @@ import {
 } from "./scroll-pin-model.js";
 import { useScrollPin } from "./use-scroll-pin.js";
 
-const ScrollPinSection = ({
-  props,
-}: {
-  readonly props: InspectorProps;
-}): ReactElement => {
-  const pin = useScrollPin(props);
+interface ScrollPinRowsProps {
+  readonly edit: DirectEdit;
+  readonly styles: Readonly<Record<string, string>> | null;
+}
+
+const ScrollPinRows = ({ edit, styles }: ScrollPinRowsProps): ReactElement => {
+  const pin = useScrollPin(edit, styles);
+  const isPinned = pin.choice === "fixed" || pin.choice === "sticky";
 
   return (
-    <InspectorSection title={copy.scrollPinTitle} modifier="ins-scroll-pin">
+    <div className="ins-scroll-pin">
       <ScrollPinChoices
         label={SCROLL_PIN_TEXT.position}
         locked={pin.locked}
@@ -44,12 +45,9 @@ const ScrollPinSection = ({
           <InsetField edit={pin.edit} prop={pin.offset} />
         </div>
       )}
-      {pin.blocked !== null && (
-        <p className="ins-scroll-pin-note">{pin.blocked}</p>
-      )}
-      <p className="ins-scroll-pin-note">{copy.scrollPinHint}</p>
-    </InspectorSection>
+      {isPinned && <p className="ins-scroll-pin-note">{copy.scrollPinHint}</p>}
+    </div>
   );
 };
 
-export { ScrollPinSection };
+export { ScrollPinRows };

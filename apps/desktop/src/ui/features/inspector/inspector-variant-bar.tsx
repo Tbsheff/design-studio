@@ -1,5 +1,5 @@
 import { Suspense, lazy } from "react";
-import type { MutableRefObject, ReactElement } from "react";
+import type { MutableRefObject, ReactElement, ReactNode } from "react";
 
 import type { VariantSupport } from "../../../shared/variants.js";
 import type { PreviewPort } from "../../platform/bridge.js";
@@ -9,6 +9,7 @@ interface Props {
   readonly port: MutableRefObject<PreviewPort | null>;
   readonly support: VariantSupport | null;
   readonly quietNote: string | null;
+  readonly states: ReactNode;
 }
 
 const LazyVariantBar = lazy(async () => {
@@ -23,6 +24,7 @@ const InspectorVariantBar = ({
   port,
   support,
   quietNote,
+  states,
 }: Props): ReactElement => (
   <Suspense fallback={null}>
     <LazyVariantBar
@@ -30,6 +32,7 @@ const InspectorVariantBar = ({
       port={port}
       support={support}
       quietNote={quietNote}
+      states={states}
     />
   </Suspense>
 );

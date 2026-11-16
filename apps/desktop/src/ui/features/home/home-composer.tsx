@@ -79,7 +79,6 @@ const HomeComposer = ({
         onFiles={addImages}
         onContextFiles={addContextFiles}
         plusActions={ui.plusActions}
-        locationLabel={lib.locationLabel}
         packs={lib.packs}
         pack={lib.pack}
         kind={draft.kind}

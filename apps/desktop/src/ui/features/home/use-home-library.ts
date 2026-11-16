@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 
 import { uiStore, useUi } from "../../platform/storage.js";
-import { folderLabel, homeOf } from "./home-model.js";
+import { homeOf } from "./home-model.js";
 import type { CardActions } from "./project-card-model.js";
 import { useAppHealth } from "./projects-store-model.js";
 import type { HomeBase } from "./use-home-base.js";
@@ -20,7 +20,6 @@ interface HomeLibrary<Packs, Pack> extends HomeProjects {
   readonly health: ReturnType<typeof useAppHealth>;
   readonly homeDir: string | null;
   readonly location: string | null;
-  readonly locationLabel: string;
   readonly openFlows: OpenFlows;
   readonly pack: Pack;
   readonly packs: Packs;
@@ -78,7 +77,6 @@ const useHomeLibrary = <Packs, Pack>(
     health,
     homeDir,
     location,
-    locationLabel: folderLabel(workspaces.workspaces, location),
     openFlows,
     pack,
     packs,

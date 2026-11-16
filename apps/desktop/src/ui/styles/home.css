@@ -547,10 +547,6 @@
   padding: 0;
 }
 
-.home-foot > .home-foot-row:focus {
-  outline: none;
-}
-
 .home-foot[data-location="default"]:not(:has(> .advanced[open]))
   > .home-foot-row:not(:focus-within) {
   opacity: 0;

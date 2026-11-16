@@ -48,19 +48,6 @@ type TakeKeyEvent = Pick<
 
 const EMPTY_PROMPT = "Describe the design first";
 
-const getFolderLabel = (
-  list: WorkspaceList | null,
-  location: string | null
-): string => {
-  const folders = list?.folders ?? [];
-
-  const match =
-    folders.find((folder) => folder.path === location) ??
-    folders.find((folder) => folder.default);
-
-  return match?.label ?? "Design Studio";
-};
-
 const getModelSummary = (model: string): string =>
   modelLabel(model).replace(/^Claude /u, "");
 
@@ -295,7 +282,6 @@ export {
   LEVEL_LABEL,
   MODEL_OPTIONS,
   createFromHome,
-  getFolderLabel as folderLabel,
   hasFiles,
   getHome as homeOf,
   getHomeSendBlocker as homeSendBlocker,

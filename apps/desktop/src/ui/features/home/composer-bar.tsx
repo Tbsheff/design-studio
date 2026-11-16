@@ -24,11 +24,7 @@ interface ComposerBarProps {
   readonly contextFileRef: RefObject<HTMLInputElement | null>;
   readonly onContextFiles: (files: File[]) => void;
   readonly onFiles: (files: File[]) => void;
-  readonly plusActions: Omit<
-    PlusMenuActions,
-    "kind" | "onDesignSystem" | "onKind"
-  >;
-  readonly locationLabel: string;
+  readonly plusActions: Omit<PlusMenuActions, "kind" | "onKind">;
   readonly packs: PacksState;
   readonly pack: PackSummary | null;
   readonly kind: ProjectKind;
@@ -63,7 +59,6 @@ const ComposerBar = ({
   onContextFiles,
   onFiles,
   plusActions,
-  locationLabel,
   packs,
   pack,
   kind,
@@ -88,7 +83,7 @@ const ComposerBar = ({
     shown,
   });
 
-  const { closeFolder: handleFolderClose, openPack: onDesignSystem } = pops;
+  const { closeFolder: handleFolderClose } = pops;
 
   return (
     <div className="home-composer-bar">
@@ -97,9 +92,7 @@ const ComposerBar = ({
       <PlusAnchor
         pops={pops.state}
         triggerRef={pops.refs.plus}
-        locationLabel={locationLabel}
         plusActions={plusActions}
-        onDesignSystem={onDesignSystem}
         kind={toMenuKind(app.chip === null, kind)}
         onKind={onKind}
       />

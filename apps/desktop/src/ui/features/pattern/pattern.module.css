@@ -1,5 +1,6 @@
 .panel {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   align-content: start;
   gap: var(--s-2);
   padding: var(--s-3);
@@ -10,6 +11,11 @@
   display: flex;
   align-items: center;
   gap: var(--s-2);
+}
+
+.head > .input {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .title {
@@ -72,7 +78,9 @@
 
 .small,
 .primary {
+  flex: none;
   height: 24px;
+  white-space: nowrap;
   padding: 0 var(--s-3);
   border: 1px solid var(--line);
   border-radius: var(--r-control-sm);

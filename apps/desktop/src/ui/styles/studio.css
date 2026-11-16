@@ -241,18 +241,34 @@
   flex: none;
   display: flex;
   align-items: flex-end;
-  flex-wrap: wrap;
   padding-inline: var(--s-1);
   border-bottom: 1px solid var(--line);
 }
 
-.pane-insert-tabs > [role="tablist"] {
-  padding-inline: 0;
-  border-bottom: 0;
+.pane-insert-tab {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 28px;
+  padding: 0 var(--s-1);
+  overflow: hidden;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--text-3);
+  font: inherit;
+  font-size: var(--t-xs);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  cursor: pointer;
 }
 
-.pane-insert-tabs [role="tab"] {
-  padding-inline: var(--s-2);
+.pane-insert-tab:hover {
+  color: var(--text-2);
+}
+
+.pane-insert-tab[aria-selected="true"] {
+  border-bottom-color: var(--accent-line);
+  color: var(--text);
 }
 
 .pane-system {

@@ -1,14 +1,14 @@
 import { Suspense, useCallback } from "react";
 import type { ComponentProps, ReactElement } from "react";
 
-import { BlockPanel, BlockTabBar } from "../features/block/index.js";
-import { ChartPanel, ChartTabBar } from "../features/chart/index.js";
+import { BlockPanel } from "../features/block/index.js";
+import { ChartPanel } from "../features/chart/index.js";
 import { ComponentsPanel as FeatureComponentsPanel } from "../features/design-system/components-panel.js";
 import { GalleryHost } from "../features/gallery/gallery-host.js";
 import { CodeEditDialog } from "../features/inspector/index.js";
-import { PatternPanel, PatternTabs } from "../features/pattern/index.js";
+import { PatternPanel } from "../features/pattern/index.js";
+import { InsertTabBar } from "./insert-tab-bar.js";
 import { useInsertPanel } from "./use-insert-panel.js";
-import type { InsertPanelState } from "./use-insert-panel.js";
 
 type PanelProps = Omit<
   ComponentProps<typeof FeatureComponentsPanel>,
@@ -35,16 +35,6 @@ interface ExtraPanelProps {
   readonly projectId: string;
   readonly selection: PanelProps["selection"];
 }
-
-const toTabBar = (props: InsertPanelState): ReactElement => (
-  <div className="pane-insert-tabs">
-    <Suspense fallback={null}>
-      <PatternTabs onSelect={props.onSelect} tab={props.tab} />
-      <ChartTabBar isOpen={props.isChartOpen} onToggle={props.onChartToggle} />
-      <BlockTabBar isOpen={props.isBlockOpen} onToggle={props.onBlockToggle} />
-    </Suspense>
-  </div>
-);
 
 const toExtraPanel = (
   open: ExtraPanelState,
@@ -133,6 +123,7 @@ const ComponentsPanel = ({
   }, []);
 
   const panel = useInsertPanel();
+  const handlePick = panel.onPick;
 
   const extra = toExtraPanel(panel, {
     directionId,
@@ -143,7 +134,7 @@ const ComponentsPanel = ({
 
   return (
     <>
-      {toTabBar(panel)}
+      <InsertTabBar active={panel.active} onPick={handlePick} />
       {extra ?? (
         <FeatureComponentsPanel
           projectId={projectId}

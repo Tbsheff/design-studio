@@ -30,8 +30,6 @@ const copy = {
   missingTip:
     "This project has no component with these names. The block draws them as plain markup.",
   needsPackages: "Run this in the kit package, then restart the dev server:",
-  tabBlocks: "Blocks",
-  tabsLabel: "Insert panels",
   title: "Blocks",
   usesLabel: "Uses",
 } as const;

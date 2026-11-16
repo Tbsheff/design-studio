@@ -5,12 +5,16 @@ import { useChartTab } from "../features/chart/index.js";
 import { useInsertTab } from "../features/pattern/index.js";
 import type { InsertTab } from "../features/pattern/index.js";
 
+type InsertPick = InsertTab | "blocks" | "charts";
+
 interface InsertPanelState {
+  readonly active: InsertPick;
   readonly isBlockOpen: boolean;
   readonly isChartOpen: boolean;
   readonly isPatternsOpen: boolean;
   readonly onBlockToggle: () => void;
   readonly onChartToggle: () => void;
+  readonly onPick: (pick: InsertPick) => void;
   readonly onSelect: (tab: InsertTab) => void;
   readonly tab: InsertTab | null;
 }
@@ -18,6 +22,22 @@ interface InsertPanelState {
 const toShownTab = (isOtherOpen: boolean, tab: InsertTab): InsertTab | null => {
   if (isOtherOpen) {
     return null;
+  }
+
+  return tab;
+};
+
+const toActive = (
+  isBlockOpen: boolean,
+  isChartOpen: boolean,
+  tab: InsertTab
+): InsertPick => {
+  if (isBlockOpen) {
+    return "blocks";
+  }
+
+  if (isChartOpen) {
+    return "charts";
   }
 
   return tab;
@@ -53,15 +73,35 @@ const useInsertPanel = (): InsertPanelState => {
 
   const isBlockOpen = blockTab.isOpen;
   const isChartOpen = chartTab.isOpen;
+
+  const onPick = useCallback(
+    (pick: InsertPick): void => {
+      if (pick === "charts") {
+        if (!isChartOpen) {
+          onChartToggle();
+        }
+      } else if (pick === "blocks") {
+        if (!isBlockOpen) {
+          onBlockToggle();
+        }
+      } else {
+        onSelect(pick);
+      }
+    },
+    [isBlockOpen, isChartOpen, onBlockToggle, onChartToggle, onSelect]
+  );
+
   const isPatternsOpen = insertTab === "patterns";
   const tab = toShownTab(isBlockOpen || isChartOpen, insertTab);
 
   return {
+    active: toActive(isBlockOpen, isChartOpen, insertTab),
     isBlockOpen,
     isChartOpen,
     isPatternsOpen,
     onBlockToggle,
     onChartToggle,
+    onPick,
     onSelect,
     tab,
   };
@@ -69,4 +109,4 @@ const useInsertPanel = (): InsertPanelState => {
 
 export { useInsertPanel };
 
-export type { InsertPanelState };
+export type { InsertPanelState, InsertPick };

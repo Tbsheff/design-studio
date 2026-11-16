@@ -38,8 +38,6 @@ const copy = {
   removeSeries: "Remove this series",
   seriesLabel: "Series name",
   stackedLabel: "Stacked",
-  tabCharts: "Charts",
-  tabsLabel: "Insert panels",
   title: "Chart",
   titlePlaceholder: "Optional title",
   valueLabel: "Value",

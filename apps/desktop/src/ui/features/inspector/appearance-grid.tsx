@@ -14,7 +14,7 @@ interface AppearanceGridProps {
 }
 
 const AppearanceGrid = ({ edit, fill }: AppearanceGridProps): ReactElement => (
-  <div className="ins-grid">
+  <div className="ins-grid ins-stack">
     <div className="wide">{fill || <BackgroundField edit={edit} />}</div>
     <RadiusField edit={edit} short={copy.radius} />
     <SelectField

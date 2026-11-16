@@ -12,7 +12,7 @@ interface Props {
 }
 
 const AutoLayoutRow = ({ edit, canAdd, onAdd }: Props): ReactElement => (
-  <div className="ins-layout-row">
+  <div className="ins-layout-row ins-display-row">
     <SelectField
       prop="display"
       label="Display"

@@ -37,20 +37,18 @@ const StackingBody = ({
           onCommit={handlers.handleInset}
         />
       )}
-      <div className="ins-grid">
-        <OverflowSelect
-          axis="overflowX"
-          disabled={disabled}
-          value={info.overflowX.value ?? ""}
-          onPick={handlers.handleOverflow}
-        />
-        <OverflowSelect
-          axis="overflowY"
-          disabled={disabled}
-          value={info.overflowY.value ?? ""}
-          onPick={handlers.handleOverflow}
-        />
-      </div>
+      <OverflowSelect
+        axis="overflowX"
+        disabled={disabled}
+        value={info.overflowX.value ?? ""}
+        onPick={handlers.handleOverflow}
+      />
+      <OverflowSelect
+        axis="overflowY"
+        disabled={disabled}
+        value={info.overflowY.value ?? ""}
+        onPick={handlers.handleOverflow}
+      />
       <ZIndexField
         disabled={disabled}
         value={shownValue(info.zIndex)}

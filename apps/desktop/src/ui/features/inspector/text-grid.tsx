@@ -1,10 +1,8 @@
 import type { SelectionContext } from "@design-studio/contracts";
 import type { ReactElement, ReactNode } from "react";
 
-import { AlignField } from "./align-field.js";
 import { ColorField } from "./color-field.js";
 import { ContentRow } from "./content-row.js";
-import { copy } from "./copy.js";
 import type { DirectEdit } from "./deps.js";
 import type { ElementClasses } from "./element-classes-model.js";
 import { FontField } from "./font-field.js";
@@ -18,6 +16,7 @@ import {
   WEIGHTS,
 } from "./simple-model.js";
 import { SpecNumberField } from "./spec-number-field.js";
+import { TextAlignRow } from "./text-align-row.js";
 import { TextStyleToggles } from "./text-style-toggles.js";
 import { TextWrapRow } from "./text-wrap-row.js";
 import { TruncateRow } from "./truncate-row.js";
@@ -54,19 +53,22 @@ const TextGrid = ({
       options={WEIGHTS}
     />
     <TextStyleToggles edit={edit} />
-    <div className="ins-field ins-align-row">
-      <span className="ins-scrub static">{copy.align}</span>
-      <AlignField edit={edit} />
+    <TextAlignRow edit={edit} />
+    <div className="wide">
+      <SpecNumberField edit={edit} field={LINE_HEIGHT} />
     </div>
-    <SpecNumberField edit={edit} field={LINE_HEIGHT} />
-    <SpecNumberField edit={edit} field={LETTER_SPACING} />
-    <SelectField
-      prop="text-transform"
-      label="Text case"
-      short="Case"
-      edit={edit}
-      options={CASES}
-    />
+    <div className="wide">
+      <SpecNumberField edit={edit} field={LETTER_SPACING} />
+    </div>
+    <div className="wide">
+      <SelectField
+        prop="text-transform"
+        label="Text case"
+        short="Case"
+        edit={edit}
+        options={CASES}
+      />
+    </div>
     {selection && classes && (
       <TruncateRow edit={edit} selection={selection} classes={classes} />
     )}

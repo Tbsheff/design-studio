@@ -385,6 +385,10 @@
   gap: var(--s-1);
 }
 
+.edit-pane .ins-flex {
+  gap: var(--s-1);
+}
+
 .edit-pane .ins-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -453,6 +457,15 @@
 
 .edit-pane .ins-field.select {
   padding: 0 var(--s-2);
+}
+
+.edit-pane .ins-field .ui-select {
+  gap: var(--s-1);
+}
+
+.edit-pane .ins-grid.ins-stack,
+.edit-pane .ins-layout-row.ins-display-row {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .edit-pane .ins-swatch {
@@ -1260,7 +1273,11 @@ dialog.code-edit {
 }
 
 .edit-pane .ins-numbers {
-  gap: var(--s-1);
+  gap: 2px;
+}
+
+.edit-pane .ins-numbers .ui-select {
+  gap: 2px;
 }
 
 .edit-pane .ins-numbers > :not(.ins-scrub):not(button) {
@@ -1269,7 +1286,7 @@ dialog.code-edit {
 }
 
 .edit-pane .ins-numbers > button {
-  flex: 0 0 28px;
+  flex: 0 0 24px;
   font-variant-numeric: slashed-zero;
 }
 

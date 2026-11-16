@@ -419,12 +419,12 @@ body.ins-scrubbing * {
 
 .box-ring {
   display: grid;
-  grid-template-columns: 60px minmax(0, 1fr) 60px;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
   grid-template-areas:
     "head head head"
-    ". top ."
+    "top top top"
     "left core right"
-    ". bottom .";
+    "bottom bottom bottom";
   align-items: center;
   gap: var(--s-1);
   padding: var(--s-1) var(--s-2) var(--s-2);
@@ -497,13 +497,13 @@ body.ins-scrubbing * {
 .box-ring .side-cell.top {
   grid-area: top;
   justify-self: center;
-  width: 60px;
+  width: 52px;
 }
 
 .box-ring .side-cell.bottom {
   grid-area: bottom;
   justify-self: center;
-  width: 60px;
+  width: 52px;
 }
 
 .box-ring .side-cell.left {

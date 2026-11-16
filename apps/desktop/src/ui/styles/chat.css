@@ -406,6 +406,7 @@
 }
 
 .permission-actions {
+  flex-wrap: wrap;
   gap: var(--s-1);
 }
 

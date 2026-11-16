@@ -128,8 +128,8 @@ const PromptToolbar = (props: PromptToolbarProps): ReactElement => {
         {designs && (
           <DraftsPill designs={designs} onOpen={props.onCloseSlash} />
         )}
-        <SendButton send={send} />
       </div>
+      <SendButton send={send} />
       <ReasonText id={props.reasonId} text={props.spoken} />
     </div>
   );

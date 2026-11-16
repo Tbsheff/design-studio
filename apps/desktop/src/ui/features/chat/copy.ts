@@ -11,6 +11,8 @@ const copy = {
   attachMentionSkills: "Attach, mention, skills and run settings",
   attachWebPage: "Attach web page…",
   attachZipOrFile: "Attach zip or file…",
+  budgetRetryTip:
+    "Runs have no spending limit now, so this request runs again to the end.",
   cancel: "Cancel",
   changedFiles: "Changed files",
   checkPassed: "Check passed",

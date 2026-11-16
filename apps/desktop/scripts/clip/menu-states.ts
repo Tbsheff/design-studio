@@ -54,6 +54,15 @@ const RIGHTMOST_CHIP = `(() => {
   return best;
 })()`;
 
+const toFramesBottom = (limit: number): string => `(() => {
+  let bottom = 0;
+  for (const frame of document.querySelectorAll("iframe.frame")) {
+    const box = frame.getBoundingClientRect();
+    if (box.left < ${limit}) { bottom = Math.max(bottom, box.bottom); }
+  }
+  return bottom;
+})()`;
+
 const toFrontHeading = (page: Page): Locator =>
   page.frameLocator("iframe.frame.front").locator("h1").first();
 
@@ -256,11 +265,13 @@ const isFrameSelectOpen = async (page: Page): Promise<boolean> => {
     return false;
   }
 
-  await page.mouse.move(first.x - EDGE_PX / 2, first.y - EDGE_PX);
+  const right = second.x + second.width;
+
+  const bottom = await page.evaluate<number>(toFramesBottom(right));
+
+  await page.mouse.move(first.x - EDGE_PX / 2, bottom + EDGE_PX / 2);
   await page.mouse.down();
-  await page.mouse.move(second.x + second.width, second.y + EDGE_PX * 2, {
-    steps: 8,
-  });
+  await page.mouse.move(right, first.y - EDGE_PX / 2, { steps: 8 });
   await page.mouse.up();
 
   const count = '[data-testid="frame-select-count"]';

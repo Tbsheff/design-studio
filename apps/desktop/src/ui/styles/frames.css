@@ -71,7 +71,8 @@
 }
 
 .frame-title {
-  flex: none;
+  flex: 0 1 auto;
+  min-width: 0;
   max-width: 360px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -79,10 +80,7 @@
 
 .frame-size {
   display: none;
-  flex: 0 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex: none;
   color: var(--text-3);
   font-variant-numeric: tabular-nums;
 }
@@ -104,15 +102,6 @@
   flex: none;
 }
 
-.frame-label-tools > .frame-menu-root:has(> .frame-chip.page) {
-  flex: 0 4 auto;
-  min-width: 0;
-}
-
-.frame-label-tools > .frame-menu-root > .frame-chip.page {
-  max-width: min(180px, 100%);
-}
-
 .frame-label:is(:hover, :has(:focus-visible), :has([aria-expanded="true"]))
   .frame-size,
 .canvas-frame:hover > .frame-label .frame-size {
@@ -125,19 +114,17 @@
   visibility: visible;
 }
 
-.frame-label:has([aria-expanded="true"]) > .frame-label-tools {
+.frame-label:has(.frame-page-menu) > .frame-label-tools {
+  visibility: visible;
+}
+
+.frame-label:is(:has([aria-expanded="true"]), :has(.frame-page-menu))
+  > .frame-label-tools {
   flex-shrink: 0;
   overflow: visible;
 }
 
-.frame-label:has([aria-expanded="true"]) > .frame-label-tools > .frame-remove {
-  display: none;
-}
-
 @container frame-label (width < 300px) {
-  .frame-label.variation
-    > .frame-label-tools
-    > .frame-menu-root:has(> .frame-chip.page),
   .frame-label.variation > .frame-label-tools > .variation-status.completed {
     display: none;
   }
@@ -151,15 +138,25 @@
   }
 }
 
-@container frame-label (width < 200px) {
-  .frame-label-tools > .frame-remove,
-  .frame-label-tools > .frame-menu-root:has(> .frame-chip.page) {
-    display: none;
-  }
-}
-
 @container frame-label (width < 120px) {
-  .frame-label-tools > :not(.frame-menu-root:has(> .frame-chip.more)) {
+  .frame-label-tools {
+    display: none;
+    flex-shrink: 0;
+  }
+
+  .frame-label:is(
+      :hover,
+      :has(:focus-visible),
+      :has([aria-expanded="true"]),
+      :has(.frame-page-menu)
+    )
+    > .frame-label-tools,
+  .canvas-frame:hover > .frame-label > .frame-label-tools {
+    display: flex;
+  }
+
+  .frame-label-tools
+    > :not(.frame-menu-root:has(> .frame-chip.more), .frame-page-root) {
     display: none;
   }
 }
@@ -171,37 +168,6 @@
 .frame-label-tools .frame-error,
 .frame-label-tools .variation-status:is(.running, .failed, .budget_exceeded) {
   visibility: visible;
-}
-
-.frame-remove {
-  display: grid;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-  padding: 0;
-  border: 0;
-  border-radius: var(--r-control-sm);
-  background: transparent;
-  color: var(--text-3);
-  cursor: pointer;
-  transition-property: background-color, scale;
-  transition-duration: var(--dur-fast);
-  transition-timing-function: var(--ease);
-}
-
-.frame-remove:hover {
-  color: var(--text);
-  background: var(--tint-hover);
-}
-
-.frame-remove:active {
-  scale: 0.96;
-  background: var(--tint-press);
-}
-
-.frame-remove:focus-visible {
-  outline: none;
-  box-shadow: inset 0 0 0 2px var(--accent);
 }
 
 .frame-label.variation .frame-name {
@@ -284,16 +250,6 @@
 .frame-chip.strong {
   color: var(--accent-text);
   background: var(--accent-soft);
-}
-
-.frame-chip.page {
-  max-width: 180px;
-}
-
-.frame-chip.page .frame-path {
-  font-family: var(--mono);
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .frame-chip.more {

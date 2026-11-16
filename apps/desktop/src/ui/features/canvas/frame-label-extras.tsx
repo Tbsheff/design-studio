@@ -4,16 +4,14 @@ import type { ReactElement } from "react";
 
 import { setFramePath, frameName } from "./canvas-frame-ops.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
-import { FramePageMenu } from "./frame-controls.js";
+import { FramePageDialog } from "./frame-controls.js";
 import { toLiveVariation } from "./frame-label-state.js";
 import type { GetLive } from "./frame-label-state.js";
 import { FrameMoreMenu } from "./frame-more-menu.js";
 import type { FrameMenuItem } from "./frame-more-menu.js";
 import { FramePinMark } from "./frame-pin-mark.js";
 import { RouteSourceChip } from "./route-source-chip.js";
-import { useFramePin } from "./use-frame-pin.js";
-import { useFrameShareLink } from "./use-frame-share-link.js";
-import { useStateBoard } from "./use-state-board.js";
+import { useFrameMenuItems } from "./use-frame-menu-items.js";
 import { VariationControls } from "./variation-controls.js";
 import type { FrameVariation } from "./variation-controls.js";
 
@@ -30,14 +28,6 @@ interface FrameLabelExtrasProps {
   readonly projectId: string;
 }
 
-const toMenuItems = (
-  items: readonly FrameMenuItem[],
-  extras: readonly (FrameMenuItem | null)[]
-): FrameMenuItem[] => [
-  ...items,
-  ...extras.filter((item): item is FrameMenuItem => item !== null),
-];
-
 const FrameLabelExtras = ({
   frame,
   did,
@@ -51,14 +41,7 @@ const FrameLabelExtras = ({
   projectId,
 }: FrameLabelExtrasProps): ReactElement => {
   const frameId = frame.id;
-  const pin = useFramePin(projectId, frameId);
-  const board = useStateBoard(projectId, frameId);
-  const shareLink = useFrameShareLink(projectId, frameId);
-
-  const menuItems = useMemo(
-    () => toMenuItems(items, [board, pin.item, shareLink]),
-    [items, board, pin.item, shareLink]
-  );
+  const menu = useFrameMenuItems(projectId, frame, items);
 
   const liveVariation = useMemo(() => {
     if (variation && did) {
@@ -94,7 +77,7 @@ const FrameLabelExtras = ({
           onMixed={onMixed}
         />
       )}
-      {pin.isPinned && <FramePinMark />}
+      {menu.isPinned && <FramePinMark />}
       <RouteSourceChip
         activate={activate}
         directionId={did ?? live.directionId}
@@ -103,7 +86,8 @@ const FrameLabelExtras = ({
         path={frame.path ?? null}
         projectId={projectId}
       />
-      <FramePageMenu
+      <FramePageDialog
+        menu={menu.pageMenu}
         path={frame.path ?? ""}
         routes={hasRoutes}
         listPages={listPages}
@@ -111,7 +95,7 @@ const FrameLabelExtras = ({
       />
       <FrameMoreMenu
         name={frame.label ?? frameName(frame)}
-        items={menuItems}
+        items={menu.items}
         path={frame.path ?? null}
       />
     </>

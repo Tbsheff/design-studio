@@ -2,7 +2,7 @@
 
 - **Build**: `main` at `c88fc06d5`, UI built with `vite build`, server run from `apps/desktop` with `STUDIO_AGENT=mock` and a temp data dir.
 - **Seed**: 5 starter projects (landing, dashboard, mobile-app, deck, form). All canvas, inspector and chat checks use "Landing page".
-- **Shots**: headless Chromium through playwright, at 1440x900 and 1024x700, in dark and light. They are in `shots/`.
+- **Shots**: the `shots/...` names below refer to screenshots embedded in the description of tbsheff/design-studio PR 1, hosted at commit `77b7a52`. They are not in this branch.
 - **Limits**: only the mock agent ran (no real model, no publish, no LAN share). The app ran in the cloud, so every row was seen in the running app. Paths below are relative to `apps/desktop/`.
 - **Severity**: blocks > looks broken > fluff > polish.
 - **Verdict**: given for fluff rows only (cut / merge / hide / keep).

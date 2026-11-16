@@ -506,6 +506,12 @@ body.ins-scrubbing * {
   width: 52px;
 }
 
+.box-ring .side-cell.top > .tk-control.mini,
+.box-ring .side-cell.bottom > .tk-control.mini {
+  top: 11px;
+  right: -10px;
+}
+
 .box-ring .side-cell.left {
   grid-area: left;
 }

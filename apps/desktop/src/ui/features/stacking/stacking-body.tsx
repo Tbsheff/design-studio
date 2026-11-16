@@ -2,7 +2,6 @@ import type { ReactElement } from "react";
 
 import type { StackingInfo } from "./deps.js";
 import { InsetFields } from "./inset-fields.js";
-import { OverflowSelect } from "./overflow-select.js";
 import { PositionSelect } from "./position-select.js";
 import { isInsetShown, positionOf, shownValue } from "./stacking-model.js";
 import type { StackingHandlers } from "./use-stacking-handlers.js";
@@ -37,18 +36,6 @@ const StackingBody = ({
           onCommit={handlers.handleInset}
         />
       )}
-      <OverflowSelect
-        axis="overflowX"
-        disabled={disabled}
-        value={info.overflowX.value ?? ""}
-        onPick={handlers.handleOverflow}
-      />
-      <OverflowSelect
-        axis="overflowY"
-        disabled={disabled}
-        value={info.overflowY.value ?? ""}
-        onPick={handlers.handleOverflow}
-      />
       <ZIndexField
         disabled={disabled}
         value={shownValue(info.zIndex)}

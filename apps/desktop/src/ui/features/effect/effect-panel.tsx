@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import { copy } from "./copy.js";
 import type { SelectionContext } from "./deps.js";
@@ -7,7 +7,6 @@ import { EffectAddMenu } from "./effect-add-menu.js";
 import { EffectList } from "./effect-list.js";
 import { toRowKeys, toShadowSizes } from "./effect-model.js";
 import { EffectNote } from "./effect-note.js";
-import { EffectStyleBar } from "./effect-style-bar.js";
 import { useEffectHandlers } from "./use-effect-handlers.js";
 import { useEffects } from "./use-effects.js";
 
@@ -15,13 +14,23 @@ import styles from "./effect.module.css";
 
 interface EffectPanelProps {
   readonly directionId: string;
+  readonly fallback: ReactNode;
   readonly projectId: string;
   readonly target: SelectionContext;
   readonly variant: string;
 }
 
+const toEmptyNode = (fallback: ReactNode): ReactNode => {
+  if (fallback) {
+    return fallback;
+  }
+
+  return <EffectNote isError={false} text={copy.empty} />;
+};
+
 const EffectPanel = ({
   directionId,
+  fallback,
   projectId,
   target,
   variant,
@@ -48,18 +57,8 @@ const EffectPanel = ({
         keys={keys}
         sizes={sizes}
       />
-      {list.length === 0 && info !== null && (
-        <EffectNote isError={false} text={copy.empty} />
-      )}
+      {list.length === 0 && info !== null && toEmptyNode(fallback)}
       <EffectAddMenu disabled={isOff} onAdd={handlers.handleAdd} />
-      <EffectStyleBar
-        canSave={list.length > 0}
-        disabled={isOff}
-        styleName={info?.styleName ?? null}
-        styles={effects.styles}
-        onPick={effects.handleStyle}
-        onSave={effects.handleSave}
-      />
       <EffectNote isError text={effects.error} />
     </div>
   );

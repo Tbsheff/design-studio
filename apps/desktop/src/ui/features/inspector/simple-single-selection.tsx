@@ -3,7 +3,6 @@ import type { ReactElement } from "react";
 
 import { AccessibilitySection } from "./accessibility-section.js";
 import { ComponentSection } from "./component-section.js";
-import { EffectLayersSection } from "./effect-section.js";
 import { GridSection } from "./grid-section.js";
 import { ImageSection } from "./image-section.js";
 import type { InspectorProps } from "./inspector-model.js";
@@ -39,7 +38,6 @@ const SimpleSingleSelection = ({
 
   const trailing = (
     <>
-      {createElement(EffectLayersSection, inspector)}
       {createElement(StackingSection, inspector)}
       {createElement(AccessibilitySection, inspector)}
     </>

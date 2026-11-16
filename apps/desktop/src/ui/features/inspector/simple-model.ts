@@ -161,10 +161,7 @@ const EXTRA_ROWS: readonly ExtraRow[] = [
   },
 ];
 
-const SHADOW_PRESET = "0px 2px 8px 0px rgba(0, 0, 0, 0.16)";
-
 const EXTRAS: readonly ExtraEntry[] = [
-  { id: "shadow", label: copy.extraShadow },
   { id: TEXT_SHADOW, label: copy.extraTextShadow },
   { id: "transform", label: copy.extraTransform },
   { id: "filter", label: copy.extraFilter },
@@ -254,7 +251,6 @@ export {
   NEW_BORDER,
   OPACITY,
   OVERFLOWS,
-  SHADOW_PRESET,
   WEIGHTS,
   WIDTH,
   applyEdit,

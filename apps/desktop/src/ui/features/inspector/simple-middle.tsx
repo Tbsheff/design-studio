@@ -8,6 +8,7 @@ import {
   TextStyleSlot,
 } from "../../inspector-slots.js";
 import { BackgroundField } from "./background-field.js";
+import { EffectsSection } from "./inspector-effects.js";
 import type { SimpleEditorProps, SimpleEditorState } from "./simple-model.js";
 import { SimpleSections } from "./simple-sections.js";
 import { TokenLint } from "./token-lint.js";
@@ -61,6 +62,18 @@ const SimpleMiddle = ({ props, state }: SimpleMiddleProps): ReactElement => {
     [projectId, directionId, target, port, edit, fallback]
   );
 
+  const effects = useMemo(
+    () => (
+      <EffectsSection
+        edit={edit}
+        projectId={projectId}
+        directionId={directionId}
+        target={target}
+      />
+    ),
+    [edit, projectId, directionId, target]
+  );
+
   return (
     <>
       <TokenLint ui={tokens.ui} edit={edit} css={authored.css} />
@@ -71,6 +84,7 @@ const SimpleMiddle = ({ props, state }: SimpleMiddleProps): ReactElement => {
         classes={state.classes}
         textStyle={textStyle}
         fill={fill}
+        effects={effects}
       />
       {directionId && (
         <MotionSlot

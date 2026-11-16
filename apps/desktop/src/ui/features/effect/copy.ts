@@ -39,9 +39,6 @@ const copy = {
     mesh: "Mesh",
   },
   remove: "Remove effect",
-  saveStyle: "Save style",
-  saveTip:
-    "Save the stack as a named style. Layers that use the style change when you save it again",
   shadowSize: {
     custom: "Custom",
     label: "Size",
@@ -57,12 +54,6 @@ const copy = {
     },
     tip: "Pick a size from the shadow scale of the project. Edit a number for a custom shadow",
   },
-  style: "Style",
-  styleName: "Style name",
-  styleNone: "No style",
-  styleTip:
-    "Apply a saved effect style to this layer. Edit the style once to change every layer that uses it",
-  title: "Effect layers",
   toggle: "Show or hide this effect",
 } as const;
 

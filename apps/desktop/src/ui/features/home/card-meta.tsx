@@ -34,7 +34,9 @@ const CardMeta = ({
 
   return (
     <span className="project-meta">
-      <span className={`home-badge ${badge.tone}`}>{badge.label}</span>
+      {badge !== null && (
+        <span className={`home-badge ${badge.tone}`}>{badge.label}</span>
+      )}
       <HealthCell health={shownHealth} hasRunFailed={hasRunFailed} />
       <time
         className="project-time"

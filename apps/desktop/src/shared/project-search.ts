@@ -35,11 +35,14 @@ export interface ProjectSearchResult {
 
 export const TYPE_LABELS: Record<ProjectType, string> = {
   "design-system": "System",
-  html: "Prototype · HTML",
+  html: "Prototype",
   next: "App · Next.js",
   react: "Prototype · React",
   vite: "App · Vite",
 };
+
+export const isPrototypeType = (type: ProjectType): boolean =>
+  type === "html" || type === "react";
 
 interface TypedProject {
   kind: "html" | "react";

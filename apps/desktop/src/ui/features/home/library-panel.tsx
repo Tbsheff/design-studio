@@ -22,6 +22,7 @@ interface LibraryProps {
   readonly searchRef: RefObject<HTMLInputElement | null>;
   readonly listError: string | null;
   readonly onPickPack: (id: string | null) => void;
+  readonly hasPrototypesTab: boolean;
 }
 
 const NO_PACKS: PackSummary[] = [];
@@ -39,6 +40,7 @@ const Library = ({
   searchRef,
   listError,
   onPickPack,
+  hasPrototypesTab,
 }: LibraryProps): ReactElement | null => {
   const { filter } = useHomePrefs();
 
@@ -50,6 +52,7 @@ const Library = ({
     <LibraryBody
       lib={lib}
       filter={filter}
+      hasPrototypesTab={hasPrototypesTab}
       projects={projects}
       health={health}
       homeDir={homeDir}

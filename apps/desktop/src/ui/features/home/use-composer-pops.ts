@@ -17,7 +17,6 @@ interface ComposerPops {
   readonly refs: PopRefs;
   readonly state: PopState;
   readonly closeFolder: (shouldRefocus: boolean) => void;
-  readonly openPack: () => void;
 }
 
 interface ComposerPopsDeps {
@@ -81,16 +80,12 @@ const useComposerPops = ({
     [close, onFolderClose]
   );
 
-  const openPack = useCallback((): void => {
-    setPop("pack");
-  }, [setPop]);
-
   const state = useMemo(
     () => ({ close, isClosing, pop, shown, toggle }),
     [close, isClosing, pop, shown, toggle]
   );
 
-  return { closeFolder, openPack, refs, state };
+  return { closeFolder, refs, state };
 };
 
 export { useComposerPops };

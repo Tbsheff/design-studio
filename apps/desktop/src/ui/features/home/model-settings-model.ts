@@ -8,7 +8,6 @@ interface ModelSettings {
   readonly level: RunLevel;
   readonly onLevel: (level: RunLevel) => void;
   readonly designs: DesignCount;
-  readonly onMore: () => void;
 }
 
 export type { ModelSettings };

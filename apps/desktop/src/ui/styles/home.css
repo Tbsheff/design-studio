@@ -522,16 +522,11 @@
   border-radius: var(--r-control);
 }
 
-.home-foot > .advanced > summary {
-  height: var(--composer-ctl);
-  border-radius: var(--r-control);
-}
-
 .home-foot > * {
   grid-column: 1 / -1;
 }
 
-.home-foot > :not(.home-foot-row, .advanced) {
+.home-foot > :not(.home-foot-row) {
   margin-top: var(--s-2);
 }
 
@@ -552,23 +547,8 @@
   outline: none;
 }
 
-.home-foot[data-location="default"]:not(:has(> .advanced[open]))
-  > .home-foot-row:not(:focus-within) {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.home-foot > .advanced {
-  display: contents;
-}
-
-.home-foot > .advanced > summary {
-  grid-column: 2;
-  grid-row: 1;
-}
-
-.home-foot > .advanced::details-content {
-  grid-column: 1 / -1;
+.home-foot:empty {
+  display: none;
 }
 
 .home-tabs {
@@ -612,63 +592,6 @@
   margin: 0;
   color: var(--text-2);
   font-size: var(--t-sm);
-}
-
-.advanced {
-  border-radius: var(--r-lg);
-}
-
-.advanced summary {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--s-1);
-  height: 28px;
-  padding: 0 var(--s-2) 0 var(--s-1);
-  border-radius: var(--r-control-sm);
-  color: var(--text-3);
-  font-size: var(--t-xs);
-  font-weight: 500;
-  cursor: pointer;
-  list-style: none;
-  user-select: none;
-  transition: background-color var(--dur) var(--ease);
-}
-
-.advanced summary::-webkit-details-marker {
-  display: none;
-}
-
-.advanced summary:hover {
-  background: var(--surface-hover);
-  color: var(--text);
-}
-
-.advanced summary .icon {
-  transition: rotate var(--dur) var(--ease);
-}
-
-.advanced[open] summary .icon {
-  rotate: 90deg;
-}
-
-.advanced-body {
-  display: grid;
-  gap: var(--s-4);
-  margin-top: var(--s-2);
-  padding: var(--s-5);
-  border-radius: var(--r-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow-sm);
-  animation: pop-in var(--dur-slow) var(--ease);
-}
-
-.advanced-body textarea {
-  min-height: 112px;
-  background: var(--surface-2);
-}
-
-.file-pick {
-  justify-self: start;
 }
 
 .folder-path {
@@ -1033,7 +956,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-.project-more {
+.project-card .project-more {
   position: absolute;
   right: var(--s-3);
   bottom: var(--s-6);
@@ -1050,7 +973,7 @@
 }
 
 @media (hover: none) {
-  .project-more {
+  .project-card .project-more {
     opacity: 1;
   }
 }
@@ -1695,7 +1618,7 @@
   text-wrap: balance;
 }
 
-.project-star {
+.project-card .project-star {
   position: absolute;
   top: var(--s-3);
   right: var(--s-3);
@@ -1719,7 +1642,7 @@
 }
 
 @media (hover: none) {
-  .project-star {
+  .project-card .project-star {
     opacity: 1;
   }
 }

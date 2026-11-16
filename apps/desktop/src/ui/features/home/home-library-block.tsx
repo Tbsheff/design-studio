@@ -9,13 +9,14 @@ import type { HomeScreen } from "./use-home-screen.js";
 import { toListedProjects } from "./workspace-model.js";
 
 const HomeLibraryBlock = ({
+  hasPrototypesTab,
   screen,
 }: {
+  readonly hasPrototypesTab: boolean;
   readonly screen: HomeScreen;
 }): ReactElement => {
-  const { base, composer, lib, modules, ui } = screen;
+  const { composer, lib, modules, ui } = screen;
   const { loadProjects, setQuery } = lib;
-  const { openSample, openStarter } = lib.openFlows;
   const { putFolder } = composer.flow;
 
   const listed = useMemo(
@@ -35,12 +36,9 @@ const HomeLibraryBlock = ({
   return (
     <LibraryArea
       isEmpty={ui.isEmpty}
-      isBusy={base.busy !== null}
       listError={lib.listError}
       onRetry={retry}
       onUse={putFolder}
-      onSample={openSample}
-      onStarter={openStarter}
     >
       {lib.projects !== null && (
         <Library
@@ -56,6 +54,7 @@ const HomeLibraryBlock = ({
           searchRef={lib.searchRef}
           listError={lib.listError}
           onPickPack={pickPack}
+          hasPrototypesTab={hasPrototypesTab}
         />
       )}
     </LibraryArea>

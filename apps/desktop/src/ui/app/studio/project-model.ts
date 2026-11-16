@@ -1,6 +1,10 @@
 import type { Project, Version } from "@design-studio/contracts";
 
-import { projectTypeOf, TYPE_LABELS } from "../../../shared/project-search";
+import {
+  isPrototypeType,
+  projectTypeOf,
+  TYPE_LABELS,
+} from "../../../shared/project-search";
 
 const shipOpener = (
   project: { app?: unknown },
@@ -52,8 +56,15 @@ const openAttr = (isOpen: boolean): string => {
 const nameOf = (direction: { name: string } | null): string | null =>
   direction?.name ?? null;
 
-const kindLabel = (project: Project): string =>
-  TYPE_LABELS[projectTypeOf(project)];
+const kindLabel = (project: Project): string | null => {
+  const type = projectTypeOf(project);
+
+  if (isPrototypeType(type)) {
+    return null;
+  }
+
+  return TYPE_LABELS[type];
+};
 
 const whenDirection = <Value>(
   did: string | null,

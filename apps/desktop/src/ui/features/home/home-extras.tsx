@@ -2,15 +2,12 @@ import type {
   WorkspaceFolder,
   WorkspaceList,
 } from "@design-studio/contracts/folders";
-import { useRef } from "react";
 import type { ReactElement } from "react";
 
-import type { SettingsDraft } from "../chat/settings-draft-model.js";
 import { HiddenProjectsNote } from "./hidden-projects-note.js";
 import { LocationField } from "./location-field.js";
-import { NewProjectAdvanced } from "./new-project-advanced.js";
-import { useFocusElement } from "./use-focus-request.js";
 import type { FolderChooser } from "./use-folder-chooser.js";
+import { useLocationRow } from "./use-location-row.js";
 
 interface ComposerFootProps {
   readonly workspaces: WorkspaceList | null;
@@ -19,26 +16,10 @@ interface ComposerFootProps {
   readonly chooser: FolderChooser;
   readonly onLocation: (path: string | null) => void;
   readonly onAddFolder: (path: string) => Promise<WorkspaceFolder | null>;
-  readonly advanced: {
-    readonly opened: number;
-    readonly draft: SettingsDraft;
-    readonly onDraft: (next: SettingsDraft) => void;
-    readonly designMd: string;
-    readonly onDesignMd: (value: string) => void;
-    readonly onError: (message: string) => void;
-  };
   readonly onHiddenMoved: () => void;
 }
 
 const EMPTY_FOLDERS: WorkspaceFolder[] = [];
-
-const toLocationMark = (location: string | null): string => {
-  if (location === null) {
-    return "default";
-  }
-
-  return "custom";
-};
 
 const ComposerFoot = ({
   workspaces,
@@ -47,36 +28,30 @@ const ComposerFoot = ({
   chooser,
   onLocation,
   onAddFolder,
-  advanced,
   onHiddenMoved,
 }: ComposerFootProps): ReactElement => {
   const homeDir = workspaces?.homeDir ?? null;
-  const { designMd, draft, onDesignMd, onDraft, onError, opened } = advanced;
-  const rowRef = useRef<HTMLDivElement>(null);
-  useFocusElement("location", rowRef);
+
+  const { attachRow, handleLocationPick, isShown } = useLocationRow(
+    location,
+    onLocation
+  );
 
   return (
-    <div className="home-foot" data-location={toLocationMark(location)}>
-      <div className="home-foot-row" ref={rowRef} tabIndex={-1}>
-        <LocationField
-          folders={workspaces?.folders ?? EMPTY_FOLDERS}
-          value={location}
-          homeDir={homeDir}
-          prompt={prompt}
-          chooser={chooser}
-          onChange={onLocation}
-          onAddFolder={onAddFolder}
-        />
-      </div>
-      <NewProjectAdvanced
-        key={opened}
-        isInitiallyOpen={opened > 0}
-        draft={draft}
-        onDraft={onDraft}
-        designMd={designMd}
-        onDesignMd={onDesignMd}
-        onError={onError}
-      />
+    <div className="home-foot">
+      {isShown && (
+        <div className="home-foot-row" ref={attachRow} tabIndex={-1}>
+          <LocationField
+            folders={workspaces?.folders ?? EMPTY_FOLDERS}
+            value={location}
+            homeDir={homeDir}
+            prompt={prompt}
+            chooser={chooser}
+            onChange={handleLocationPick}
+            onAddFolder={onAddFolder}
+          />
+        </div>
+      )}
       <HiddenProjectsNote homeDir={homeDir} onMoved={onHiddenMoved} />
     </div>
   );

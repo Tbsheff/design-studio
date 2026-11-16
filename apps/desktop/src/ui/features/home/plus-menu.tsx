@@ -9,7 +9,6 @@ interface PlusMenuProps {
   readonly trigger: RefObject<HTMLElement | null>;
   readonly onClose: (shouldRefocus: boolean) => void;
   readonly actions: PlusMenuActions;
-  readonly locationLabel: string;
   readonly isClosing: boolean;
 }
 
@@ -17,7 +16,6 @@ const PlusMenu = ({
   trigger,
   onClose,
   actions,
-  locationLabel,
   isClosing,
 }: PlusMenuProps): ReactElement => (
   <Pop
@@ -29,11 +27,7 @@ const PlusMenu = ({
     role="menu"
     onKeyDown={moveFocusInMenu}
   >
-    <PlusMenuSections
-      actions={actions}
-      locationLabel={locationLabel}
-      onClose={onClose}
-    />
+    <PlusMenuSections actions={actions} onClose={onClose} />
   </Pop>
 );
 

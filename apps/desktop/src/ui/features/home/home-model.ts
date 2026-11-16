@@ -3,7 +3,6 @@ import type {
   ProjectKind,
   ProjectSettings,
   RunLevel,
-  Starter,
 } from "@design-studio/contracts";
 import { shortenHome } from "@design-studio/contracts/folders";
 import type { WorkspaceList } from "@design-studio/contracts/folders";
@@ -18,16 +17,6 @@ import type { ImageDraft, ReferenceDraft } from "./composer-drafts-model.js";
 type Busy = "create" | "ask" | "starter" | null;
 
 type Pop = "plus" | "pack" | "level" | "model" | "drafts" | "folder" | null;
-
-const EXAMPLES = [
-  "Wireframe a settings page",
-  "Prototype a dashboard for tracking orders",
-  "A pricing page for a developer tool with three tiers",
-  "Turn my notes into a one-page brief",
-  "A mobile onboarding flow for a running app",
-];
-
-const EXAMPLE_MS = 3500;
 
 const LEVEL_LABEL: Record<RunLevel, string> = {
   polish: "Polish",
@@ -47,19 +36,6 @@ type TakeKeyEvent = Pick<
 >;
 
 const EMPTY_PROMPT = "Describe the design first";
-
-const getFolderLabel = (
-  list: WorkspaceList | null,
-  location: string | null
-): string => {
-  const folders = list?.folders ?? [];
-
-  const match =
-    folders.find((folder) => folder.path === location) ??
-    folders.find((folder) => folder.default);
-
-  return match?.label ?? "Design Studio";
-};
 
 const getModelSummary = (model: string): string =>
   modelLabel(model).replace(/^Claude /u, "");
@@ -97,7 +73,6 @@ interface HomeCreateInput {
   readonly prompt: string;
   readonly kind: ProjectKind;
   readonly settings: ProjectSettings;
-  readonly designMd: string;
   readonly packId: string | null;
   readonly designCount: number;
   readonly location: string | null;
@@ -118,10 +93,6 @@ const toCreateRequest = (
     prompt: input.prompt,
     settings: input.settings,
   };
-
-  if (input.designMd.trim()) {
-    request.designMd = input.designMd;
-  }
 
   if (input.packId) {
     request.packId = input.packId;
@@ -216,14 +187,6 @@ const getPromptPlaceholder = (chip: AppChip | null): string | null => {
   return null;
 };
 
-const toExamples = (starters: readonly Starter[]): readonly string[] => {
-  if (starters.length === 0) {
-    return EXAMPLES;
-  }
-
-  return starters.map((starter) => starter.prompt);
-};
-
 const isExampleTakeKey = (event: TakeKeyEvent): boolean =>
   event.key === "Tab" && TAKE_MODIFIERS.every((name) => !event[name]);
 
@@ -288,14 +251,11 @@ interface StarProps {
 
 export {
   EMPTY_PROMPT,
-  EXAMPLES,
   EXAMPLE_HINT_ID,
-  EXAMPLE_MS,
   HOME_REASON_ID,
   LEVEL_LABEL,
   MODEL_OPTIONS,
   createFromHome,
-  getFolderLabel as folderLabel,
   hasFiles,
   getHome as homeOf,
   getHomeSendBlocker as homeSendBlocker,
@@ -304,7 +264,6 @@ export {
   getModelSummary as modelSummary,
   getPromptPlaceholder as promptPlaceholder,
   getReasonId as reasonId,
-  toExamples,
   toPromptDescribedBy,
   toShortHome as shortHome,
 };

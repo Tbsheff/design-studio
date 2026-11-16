@@ -3,7 +3,6 @@ import type { ReactElement } from "react";
 
 import { toDataFlag } from "./data-flag-model.js";
 import type { HomeLayer } from "./home-command-model.js";
-import { modelSummary } from "./home-model.js";
 import { HomeOverlays } from "./home-overlays.js";
 import { IdeMain } from "./ide-main.js";
 import { StatusBar } from "./status-bar.js";
@@ -25,7 +24,7 @@ const Home = ({
   onOpenRoute,
 }: HomeProps): ReactElement => {
   const screen = useHomeScreen(onOpen);
-  const { base, composer, draft, lib, refs, toasts } = screen;
+  const { base, composer, lib, refs, toasts } = screen;
   const { homeRef } = refs;
   const { clearToast, toast } = toasts;
   const { setIsTrashOpen: onTrashOpen } = base;
@@ -80,7 +79,6 @@ const Home = ({
       <StatusBar
         activity={ide.activity.activity}
         folder={nav.selected?.folder ?? null}
-        model={modelSummary(draft.settingsDraft.model)}
       />
       <HomeOverlays
         isTrashOpen={base.isTrashOpen}

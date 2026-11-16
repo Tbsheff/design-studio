@@ -97,6 +97,14 @@ const toServerMeta = (server: ActivityServerWire): string => {
   return `localhost:${port} · ${server.state}`;
 };
 
+const toClientsWord = (count: number): string => {
+  if (count === 1) {
+    return copy.clientWord;
+  }
+
+  return copy.clientsWord;
+};
+
 const toMcpText = (activity: ActivityWire | null): string => {
   if (activity === null || !activity.mcp.isEnabled) {
     return copy.mcpOff;
@@ -108,27 +116,14 @@ const toMcpText = (activity: ActivityWire | null): string => {
     return copy.mcpStopped;
   }
 
-  return `${copy.mcpOn} :${port}`;
-};
-
-const toClientsWord = (count: number): string => {
-  if (count === 1) {
-    return copy.clientWord;
-  }
-
-  return copy.clientsWord;
-};
-
-const toClientsText = (activity: ActivityWire | null): string => {
-  const clients = activity?.mcp.clients ?? [];
+  const live = `${copy.mcpOn} :${port}`;
+  const { clients } = activity.mcp;
 
   if (clients.length === 0) {
-    return copy.noClients;
+    return live;
   }
 
-  const count = `${clients.length} ${toClientsWord(clients.length)}`;
-
-  return `${count} · ${clients.join(", ")}`;
+  return `${live} · ${clients.length} ${toClientsWord(clients.length)}`;
 };
 
 const toBranch = (
@@ -171,7 +166,6 @@ export {
   isServerLive,
   toApprovalMeta,
   toBranch,
-  toClientsText,
   toMcpText,
   toRunMeta,
   toRunTone,

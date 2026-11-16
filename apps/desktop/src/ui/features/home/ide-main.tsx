@@ -6,6 +6,7 @@ import { HomeSidebar } from "./home-sidebar.js";
 import { IdeCenter } from "./ide-center.js";
 import type { HomeIde } from "./use-home-ide.js";
 import type { HomeScreen } from "./use-home-screen.js";
+import { isFolderWorkspace } from "./workspace-model.js";
 
 interface IdeMainProps {
   readonly ide: HomeIde;
@@ -34,10 +35,13 @@ const IdeMain = ({
         onTrash={onTrash}
         projects={screen.lib.projects}
       />
-      <IdeCenter ide={ide} onOpen={onOpen} screen={screen} />
+      <IdeCenter ide={ide} screen={screen} />
       <ActivityColumn onOpen={onOpen} onSearch={onSearch} state={activity} />
       <div className="ide-library">
-        <HomeLibraryBlock screen={screen} />
+        <HomeLibraryBlock
+          hasPrototypesTab={isFolderWorkspace(nav.selected)}
+          screen={screen}
+        />
       </div>
     </div>
   );

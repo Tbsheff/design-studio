@@ -27,19 +27,11 @@ const toServerText = (setup: ConnectSetup): string => {
   );
 };
 
-const toClientsText = (clients: readonly string[]): string => {
-  if (clients.length === 0) {
-    return uiCopy.connectAiNoClients;
-  }
-
-  return `${uiCopy.connectAiConnected} ${clients.join(", ")}`;
-};
-
 const ConnectAiServer = ({
   setup,
   state,
 }: ConnectAiServerProps): ReactElement => {
-  const { clients, failure, isBusy, rotateToken } = state;
+  const { failure, isBusy } = state;
   const { setEdits, setEnabled, setTrustedFolders } = state;
 
   const toggleEnabled = useCallback(
@@ -48,7 +40,7 @@ const ConnectAiServer = ({
   );
 
   return (
-    <section className="export-connect connect-ai-server">
+    <section className="connect-ai-server">
       <div className="export-connect-head">
         <ConnectAiTitles title={uiCopy.mcpServer} note={toServerText(setup)} />
         <ToggleSwitch
@@ -77,19 +69,6 @@ const ConnectAiServer = ({
           onChange={setTrustedFolders}
         />
       )}
-      <div className="export-connect-foot">
-        <span className="export-sub" data-testid="connect-ai-clients-text">
-          {toClientsText(clients)}
-        </span>
-        <button
-          type="button"
-          className="btn small ghost"
-          disabled={isBusy}
-          onClick={rotateToken}
-        >
-          {uiCopy.newToken}
-        </button>
-      </div>
     </section>
   );
 };

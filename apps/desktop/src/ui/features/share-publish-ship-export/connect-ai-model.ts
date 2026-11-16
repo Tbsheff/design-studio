@@ -1,5 +1,3 @@
-import type { IconName } from "@design-studio/ui";
-
 const CONNECT_CLIENT_IDS = [
   "claude-code",
   "cursor",
@@ -11,9 +9,7 @@ const CONNECT_CLIENT_IDS = [
 type ConnectClientId = (typeof CONNECT_CLIENT_IDS)[number];
 
 interface ConnectClient {
-  readonly icon: IconName;
   readonly id: ConnectClientId;
-  readonly note: string;
   readonly step: string;
   readonly title: string;
 }
@@ -26,41 +22,33 @@ interface ConnectTarget {
 
 const JSON_INDENT = 2;
 
+const TOKEN_MASK = "••••••••••••";
+
 const CONNECT_CLIENTS: readonly ConnectClient[] = [
   {
-    icon: "terminal",
     id: "claude-code",
-    note: "Run one command in your terminal",
     step: "Run this command in a terminal. Then type /mcp in Claude Code to see the server.",
     title: "Claude Code",
   },
   {
-    icon: "pointer",
     id: "cursor",
-    note: "Add the server to Cursor",
     step: "Put this in ~/.cursor/mcp.json, or in .cursor/mcp.json in a project. Cursor loads it on the next start.",
     title: "Cursor",
   },
   {
-    icon: "code",
     id: "codex",
-    note: "Codex CLI and the Codex app",
     step: "Put this in ~/.codex/config.toml. Then start a new Codex session.",
     title: "Codex",
   },
   {
-    icon: "desktop",
     id: "claude-desktop",
-    note: "Add the server to the Claude app",
     step: "In Claude, open Settings > Developer > Edit Config. Put this in claude_desktop_config.json and restart Claude. It needs Node.js for mcp-remote.",
     title: "Claude Desktop",
   },
   {
-    icon: "plus",
     id: "other",
-    note: "Any client that speaks MCP over HTTP",
     step: "Give your client this Streamable HTTP url and the Authorization header.",
-    title: "Other MCP client",
+    title: "Other",
   },
 ];
 
@@ -127,10 +115,13 @@ const SNIPPETS: Record<ConnectClientId, (target: ConnectTarget) => string> = {
 const toClientSnippet = (id: ConnectClientId, target: ConnectTarget): string =>
   SNIPPETS[id](target);
 
+const toMaskedSnippet = (id: ConnectClientId, target: ConnectTarget): string =>
+  SNIPPETS[id]({ ...target, token: TOKEN_MASK });
+
 const toConnectClient = (id: ConnectClientId): ConnectClient =>
   CONNECT_CLIENTS.find((client) => client.id === id) ??
   (CONNECT_CLIENTS[0] as ConnectClient);
 
-export { CONNECT_CLIENTS, toClientSnippet, toConnectClient };
+export { CONNECT_CLIENTS, toClientSnippet, toConnectClient, toMaskedSnippet };
 
 export type { ConnectClient, ConnectClientId, ConnectTarget };

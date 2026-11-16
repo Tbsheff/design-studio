@@ -68,6 +68,11 @@
   animation: pop-in var(--dur-slow) var(--ease);
 }
 
+.studio-stage .review-panel {
+  right: var(--zoom-right);
+  max-width: calc(100% - var(--zoom-right) - var(--dock-gap));
+}
+
 .review-head {
   display: flex;
   align-items: center;

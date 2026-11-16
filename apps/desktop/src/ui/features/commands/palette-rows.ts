@@ -31,10 +31,10 @@ const RECENT_IN_STUDIO = 4;
 const SUGGESTED_IDS = new Set(["project.new", "project.open-folder"]);
 
 const CONTEXT_IDS = [
-  "tool.select",
+  "version.export",
   "tool.comment",
   "panel.versions",
-  "version.export",
+  "tool.select",
 ];
 
 const MAX_PROJECTS = 6;
@@ -64,6 +64,16 @@ const groupIndex = (group: string): number => {
   return at;
 };
 
+const toUseRank = (recent: readonly string[], id: string): number => {
+  const at = recent.indexOf(id);
+
+  if (at === -1) {
+    return recent.length;
+  }
+
+  return at;
+};
+
 const contextCommands = (input: RowInput): Command[] => {
   if (!input.current) {
     return [];
@@ -71,9 +81,12 @@ const contextCommands = (input: RowInput): Command[] => {
 
   const byId = new Map(input.commands.map((char) => [char.id, char]));
 
-  return CONTEXT_IDS.flatMap((id) => byId.get(id) ?? []).filter(
-    (ch) => !ch.disabled
-  );
+  return CONTEXT_IDS.flatMap((id) => byId.get(id) ?? [])
+    .filter((ch) => !ch.disabled)
+    .toSorted(
+      (first, second) =>
+        toUseRank(input.recent, first.id) - toUseRank(input.recent, second.id)
+    );
 };
 
 const toShortcut = (isDesktop: boolean, keys: string): string | null => {

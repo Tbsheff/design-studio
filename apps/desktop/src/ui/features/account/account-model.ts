@@ -82,7 +82,7 @@ const readDesktopAccount = (): DesktopAccount | null => {
 const needsConfirm = (view: AccountView): boolean =>
   view.phase === "needs-confirm" && view.user !== null;
 
-const SETTINGS_COMMAND = "project.settings";
+const APP_SETTINGS_EVENT = "studio:app-settings";
 
 const toInitial = (user: AccountView["user"]): string | null => {
   const source = (user?.name ?? "").trim() || (user?.email ?? "").trim();
@@ -103,9 +103,7 @@ const toUserLabel = (user: AccountView["user"]): string => {
 };
 
 const openSettings = (): void => {
-  globalThis.dispatchEvent(
-    new CustomEvent("studio:command", { detail: SETTINGS_COMMAND })
-  );
+  globalThis.dispatchEvent(new CustomEvent(APP_SETTINGS_EVENT));
 };
 
 const toStatusText = (phase: AccountPhase): string => {

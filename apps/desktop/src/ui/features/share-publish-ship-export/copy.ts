@@ -43,6 +43,7 @@ const copy = {
   close: "Close",
   closeConnectAi: "Close Connect AI",
   closeExport: "Close export",
+  cloudflareSetup: "Cloudflare setup",
   comments: "Comments ",
   commentsOffHelp: "Off: only the images go up.",
   commentsOnHelp:
@@ -60,10 +61,9 @@ const copy = {
   connectAiLede:
     "Let an agent you already use read and edit this canvas over MCP.",
   connectAiNoClients: "No client has connected yet.",
-  connectAiOff: "Turn on the MCP server to see the setup for your agent.",
   connectAiOpen: "Connect AI…",
   connectAiServerNote:
-    "Off. Runs on this computer only, and agents need its token.",
+    "Off. Turn it on to see the setup for your agent. It runs on this computer only, and agents need its token.",
   copied: "Copied",
   copyAsCode: "Copy as code",
   copyCommandLabel: "Copy command",
@@ -96,7 +96,7 @@ const copy = {
     "Claude Code can also edit files and elements, arrange frames, comment, restore versions, apply design systems, create projects and export. Each edit is a version you can undo. It can start, read and stop Claude runs in the studio with start_run, get_run and stop_run. Reconnect the server in Claude Code after you change this.",
   endsWord: "Ends",
   everyPageOfThe:
-    "Every page of the saved version goes up as a static site: HTML, CSS, scripts, images and fonts. Source files, .env, node_modules and studio scripts stay on this Mac.",
+    "Every page of the saved version goes up as a static site: HTML, CSS, scripts, images and fonts. Source files, .env, node_modules and studio scripts stay on this computer.",
   expiryLabel: "Link ends after",
   export: "Export",
   exportPng: "Export PNG…",
@@ -227,7 +227,6 @@ const copy = {
   publishTip: "Check the head version for this address, then confirm",
   publishWord: "Publish",
   published: "Published",
-  publishing: "Publishing",
   publishingBusy: "Publishing…",
   pullRequest: "Pull request",
   pullRequestBody: "Pull request body",
@@ -236,7 +235,7 @@ const copy = {
   pullRequestTitle: "Pull request title",
   pushedTo: "Pushed to",
   putASavedVersion:
-    "Put a saved version on your publish Worker. The address works when this Mac is off.",
+    "Put a saved version on your publish Worker. The address works when this computer is off.",
   pxWide: "px wide",
   qa1234: "QA-1234",
   qrCodeLabel: "QR code for the local network link",
@@ -274,8 +273,6 @@ const copy = {
   shareAReadOnly: "Share a read-only link",
   shareLinkAria: "Share a read-only link",
   shareLinks: "Share links",
-  sharePublishPutsA:
-    "Share › Publish puts a saved version on your own Cloudflare account. One Worker serves every design; files go to R2, links and view counts to D1.",
   shipAsA: "Ship as a pull request",
   shipAsBranchAnd: "Ship as branch and PR",
   shipBaseLabelId: "ship-base-label",

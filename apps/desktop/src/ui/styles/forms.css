@@ -209,6 +209,17 @@ kbd {
   line-height: 1.5;
 }
 
+.app-settings-body > .ship-settings:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.app-settings-body .segmented,
+.app-settings-open {
+  justify-self: start;
+}
+
 .settings-fields .check + .check {
   margin-top: -8px;
 }

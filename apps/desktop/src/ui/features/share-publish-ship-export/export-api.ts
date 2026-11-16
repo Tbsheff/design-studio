@@ -298,7 +298,7 @@ interface ExportTarget {
   projectId: string;
   directionId: string | null;
   versionId: string;
-  versionLabel: string;
+  versionLabel: string | null;
   selector?: string;
   format?: ExportFormat;
 }

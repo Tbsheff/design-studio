@@ -12,6 +12,7 @@ import { PublishPlanView } from "./publish-plan-view.js";
 import { PublishPublicationList } from "./publish-publication-list.js";
 import { toFormError, toPlanInput } from "./publish-request.js";
 import { PublishSetupBody } from "./publish-setup-body.js";
+import { PublishSetupFold } from "./publish-setup-fold.js";
 import type { PublishTarget } from "./publish-types.js";
 import { usePublishBackend } from "./use-publish-backend.js";
 import { usePublishCli } from "./use-publish-cli.js";
@@ -63,6 +64,9 @@ const PublishPane = ({ onClose, target }: PublishPaneProps): ReactElement => {
     <>
       <div className="modal-body share-body publish-body">
         {!isReady && <PublishSetupBody state={cli} backend={backend} />}
+        {isReady && !flow.plan && (
+          <PublishSetupFold cli={cli} backend={backend} />
+        )}
         {isReady && !flow.plan && (
           <PublishForm
             target={target}

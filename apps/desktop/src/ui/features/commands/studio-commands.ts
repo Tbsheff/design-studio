@@ -8,6 +8,7 @@ import {
   IMPACT_OPEN_COMMAND,
   IMPACT_OPEN_EVENT,
   findElement,
+  openAppSettings,
   requestProjectRename,
 } from "./deps.js";
 import { panelCommands } from "./panel-commands.js";
@@ -57,7 +58,7 @@ const focusComposer = (studioActions: StudioActions): void => {
 const goCommands = (studioActions: StudioActions): Command[] => {
   const noDirection = toReason(
     studioActions.directions.length < MIN_DIRECTIONS,
-    "Only one direction"
+    "Only one variation"
   );
 
   return [
@@ -94,7 +95,7 @@ const goCommands = (studioActions: StudioActions): Command[] => {
         id: "direction.next",
         keyId: "next-direction",
         run: stepDirection(studioActions, 1) ?? idle,
-        title: "Next direction",
+        title: "Next variation",
       },
       noDirection
     ),
@@ -105,7 +106,7 @@ const goCommands = (studioActions: StudioActions): Command[] => {
         id: "direction.prev",
         keyId: "prev-direction",
         run: stepDirection(studioActions, -1) ?? idle,
-        title: "Previous direction",
+        title: "Previous variation",
       },
       noDirection
     ),
@@ -131,6 +132,14 @@ const prototypeCommands = (studioActions: StudioActions): Command[] => {
 
 const projectCommands = (studioActions: StudioActions): Command[] => [
   ...prototypeCommands(studioActions),
+  {
+    group: "Go",
+    icon: "settings",
+    id: "app.settings",
+    keywords: "preferences appearance theme integrations api keys mcp",
+    run: openAppSettings,
+    title: "Settings…",
+  },
   {
     group: "Go",
     icon: "pencil",
@@ -170,7 +179,7 @@ const directionCommands = (studioActions: StudioActions): Command[] =>
         id: `direction.open.${direction.id}`,
         keywords: "switch variation",
         run: () => studioActions.onDirection(direction.id),
-        title: `Open direction ${direction.name}`,
+        title: `Open variation ${direction.name}`,
       },
     ];
   });
@@ -180,7 +189,7 @@ const toStatesReason = (studioActions: StudioActions): string | null => {
     return RUN_GOING;
   }
 
-  return toReason(studioActions.onMakeStates === null, "No direction yet");
+  return toReason(studioActions.onMakeStates === null, "No variation yet");
 };
 
 const toFillReason = (studioActions: StudioActions): string | null => {
@@ -188,7 +197,7 @@ const toFillReason = (studioActions: StudioActions): string | null => {
     return RUN_GOING;
   }
 
-  return toReason(studioActions.onFillPhotos === null, "No direction yet");
+  return toReason(studioActions.onFillPhotos === null, "No variation yet");
 };
 
 const runCommands = (studioActions: StudioActions): Command[] => [
@@ -293,6 +302,7 @@ const versionCommands = (studioActions: StudioActions): Command[] => [
       group: "Version",
       icon: "download",
       id: "version.export",
+      keyId: "export",
       keywords: "share download png pdf html handoff zip source files",
       run: () => {
         if (studioActions.exportId) {

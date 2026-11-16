@@ -78,6 +78,8 @@ export type { CanvasToolId } from "../../platform/canvas-tool.js";
 
 export { requestProjectRename } from "../../platform/project-events.js";
 
+export { openAppSettings } from "../../domain/app-settings-events.js";
+
 export { FIND_TEXT_COMMAND, FIND_TEXT_EVENT } from "../../domain/find-text.js";
 
 export {

@@ -9,6 +9,10 @@ import type {
   LinksFile,
 } from "@design-studio/contracts/links";
 import type { PortReviewRecord } from "@design-studio/contracts/port";
+import type {
+  CommentMention,
+  RunMention,
+} from "@design-studio/contracts/run-mention";
 import type { ForcedStatePart } from "@design-studio/contracts/state-styles";
 import type { StatesRequest } from "@design-studio/contracts/states";
 import { STUDIO_TOKEN_HEADER } from "@design-studio/contracts/studio-token";
@@ -431,16 +435,6 @@ export type RunEffort = "low" | "medium" | "high";
 
 export const RUN_EFFORTS: readonly RunEffort[] = ["low", "medium", "high"];
 
-export type RunMention =
-  | { kind: "file"; path: string }
-  | { kind: "token"; name: string; value: string }
-  | {
-      kind: "component";
-      name: string;
-      file: string | null;
-      selector: string | null;
-    };
-
 export interface ComponentInfo {
   id: string;
   name: string;
@@ -515,7 +509,7 @@ export interface DesignComment {
   versionId?: string | null;
   replies?: CommentReply[];
   attachmentIds?: string[];
-  mentions?: RunMention[];
+  mentions?: CommentMention[];
   drawing?: CommentDrawing;
   author?: string;
   frame?: CommentFrame;
@@ -2758,3 +2752,5 @@ export interface VersionChanges {
 }
 
 export { STUDIO_TOKEN_HEADER };
+
+export type { CommentMention, RunMention };

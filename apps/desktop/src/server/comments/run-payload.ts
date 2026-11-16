@@ -24,6 +24,10 @@ const mentionId = (mention: RunMention): string => {
     return `file:${mention.path}`;
   }
 
+  if (mention.kind === "frame") {
+    return `frame:${mention.frameId}`;
+  }
+
   return `${mention.kind}:${mention.name}`;
 };
 

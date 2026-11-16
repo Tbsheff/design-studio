@@ -6,10 +6,10 @@ import path from "node:path";
 import type {
   CommentDrawing,
   CommentFrame,
+  CommentMention,
   CommentStatus,
   CommentTarget,
   DesignComment,
-  RunMention,
   SelectionContext,
   SourceLoc,
 } from "@design-studio/contracts";
@@ -42,7 +42,7 @@ export interface CreateCommentInput {
   context?: SelectionContext;
   status?: "draft" | "queued";
   attachmentIds?: string[];
-  mentions?: RunMention[];
+  mentions?: CommentMention[];
   drawing?: CommentDrawing;
   author?: string;
   frame?: CommentFrame;

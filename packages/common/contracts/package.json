@@ -43,6 +43,7 @@
     "./port": "./src/port.ts",
     "./props": "./src/props.ts",
     "./review": "./src/review.ts",
+    "./run-mention": "./src/run-mention.ts",
     "./share": "./src/share.ts",
     "./share-play": "./src/share-play.ts",
     "./ship": "./src/ship.ts",

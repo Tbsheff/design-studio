@@ -362,6 +362,17 @@
   font-size: var(--t-xs);
 }
 
+.msg-inline-status {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-3);
+  font-size: var(--t-2xs);
+}
+
+.msg-inline-status[data-used="false"] {
+  color: var(--warn);
+}
+
 .permission {
   min-width: 0;
   margin: 0;

@@ -4,7 +4,7 @@ type Segment =
   | { kind: "text"; key: string; text: string; open: boolean }
   | { kind: "thinking"; key: string; text: string; open: boolean }
   | { kind: "tools"; key: string; tools: ToolRow[] }
-  | { kind: "user"; key: string; text: string };
+  | { kind: "user"; key: string; text: string; isUsed: boolean };
 
 type Part = RunView["parts"][number];
 
@@ -41,7 +41,12 @@ const appendPart = (
   }
 
   if (part.kind === "user") {
-    segments.push({ key: `user-${part.id}`, kind: "user", text: part.text });
+    segments.push({
+      isUsed: false,
+      key: `user-${part.id}`,
+      kind: "user",
+      text: part.text,
+    });
 
     return;
   }
@@ -54,6 +59,25 @@ const appendPart = (
   });
 };
 
+const isAgentWork = (segment: Segment): boolean =>
+  segment.kind === "tools" ||
+  segment.kind === "thinking" ||
+  (segment.kind === "text" && segment.text.trim() !== "");
+
+const toUsedNote = (
+  segments: readonly Segment[],
+  segment: Segment,
+  index: number
+): Segment => {
+  if (segment.kind !== "user") {
+    return segment;
+  }
+
+  const later = segments.slice(index + 1);
+
+  return { ...segment, isUsed: later.some((item) => isAgentWork(item)) };
+};
+
 const segmentsOf = (run: RunView): Segment[] => {
   const byId = new Map(run.tools.map((tool) => [tool.toolUseId, tool]));
   const segments: Segment[] = [];
@@ -62,7 +86,7 @@ const segmentsOf = (run: RunView): Segment[] => {
     appendPart(segments, part, index, byId);
   }
 
-  return segments;
+  return segments.map((segment, index) => toUsedNote(segments, segment, index));
 };
 
 interface RunLayout {

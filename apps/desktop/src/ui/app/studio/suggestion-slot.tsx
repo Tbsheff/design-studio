@@ -7,6 +7,16 @@ import type { StudioCtx } from "./studio-context";
 
 type DirectionRun = StudioCtx["core"]["directionRuns"][number];
 
+const isEditRun = (run: DirectionRun): boolean => {
+  const request = run.request ?? run.summary?.request ?? null;
+
+  if (request === null || request.plan === true) {
+    return false;
+  }
+
+  return request.mode === "edit";
+};
+
 const toFinishedRun = (
   ctx: StudioCtx,
   hasPending: boolean
@@ -18,11 +28,11 @@ const toFinishedRun = (
     return null;
   }
 
-  if (
-    last.status !== "completed" ||
-    last.summary === null ||
-    last.request?.plan === true
-  ) {
+  if (last.status !== "completed" || last.summary === null) {
+    return null;
+  }
+
+  if (!isEditRun(last)) {
     return null;
   }
 

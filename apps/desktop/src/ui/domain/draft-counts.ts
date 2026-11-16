@@ -7,15 +7,15 @@ const DRAFT_COUNTS = toDraftCounts();
 
 const toDraftsLabel = (count: number): string => {
   if (count === 1) {
-    return "1 draft";
+    return "1 design";
   }
 
-  return `${count} drafts`;
+  return `${count} variations`;
 };
 
 const toDraftHint = (count: number): string => {
   if (count === 1) {
-    return "One design";
+    return "No variations";
   }
 
   return `${count} designs side by side`;

@@ -26,7 +26,6 @@ const copy = {
   failed: "Could not apply the content. Try again.",
   groupLabel: "Sample content",
   increase: "More rows",
-  menu: "Fill with sample content…",
   minus: "-",
   mode: {
     empty: "Empty",
@@ -40,7 +39,6 @@ const copy = {
     pseudo: "Add accents and 30% more width to show clipping",
     short: "Use one to three characters",
   },
-  needSource: "This layer has no source location",
   plus: "+",
   preset: {
     commerce: "Commerce",
@@ -60,7 +58,6 @@ const copy = {
   reset: "Reset",
   stressLabel: "Stress",
   title: "Content",
-  wait: "Wait for the last edit to finish",
 } as const;
 
 export { copy, dataFill };

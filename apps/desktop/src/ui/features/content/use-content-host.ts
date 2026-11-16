@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 
-import { copy } from "./copy.js";
+import { MENU_TEXT, toMenuBlocker } from "./content-menu-model.js";
 import type { IconName, SelectionContext } from "./deps.js";
 
 interface ContentHostOptions {
@@ -30,18 +30,6 @@ interface ContentHost {
   readonly opened: ContentTarget | null;
 }
 
-const toBlocker = (busy: boolean, target: SelectionContext): string | null => {
-  if (!target.source) {
-    return copy.needSource;
-  }
-
-  if (busy) {
-    return copy.wait;
-  }
-
-  return null;
-};
-
 const useContentHost = (options: ContentHostOptions): ContentHost => {
   const [opened, setOpened] = useState<ContentTarget | null>(null);
   const { busy, directionId, enabled, projectId } = options;
@@ -57,11 +45,11 @@ const useContentHost = (options: ContentHostOptions): ContentHost => {
       const item: ContentMenuItem = {
         icon: "type",
         id: "sample-content",
-        label: copy.menu,
+        label: MENU_TEXT.label,
         run: (): void => setOpened({ directionId, projectId, target }),
       };
 
-      const blocked = toBlocker(busy, target);
+      const blocked = toMenuBlocker(busy, target);
 
       if (blocked !== null) {
         return [{ ...item, disabled: blocked }];

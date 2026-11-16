@@ -93,9 +93,9 @@
   left: 0;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--s-1);
   height: 22px;
-  padding: 0 8px 0 6px;
+  padding: 0 var(--s-2) 0 var(--s-1-5);
   border-radius: 2px 11px 11px 11px;
   background: var(--accent);
   color: #fff;
@@ -120,7 +120,7 @@
   z-index: 30;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--s-1);
   max-width: min(420px, calc(100% - 32px));
   height: 28px;
   padding: 0 var(--s-3);

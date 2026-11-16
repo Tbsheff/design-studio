@@ -3,11 +3,11 @@
   display: inline-flex;
   align-items: center;
   min-width: 0;
-  margin-right: -4px;
+  margin-right: calc(var(--s-1) * -1);
 }
 
 .ins-field .ins-suffix + .tk-control {
-  margin-left: -4px;
+  margin-left: calc(var(--s-1) * -1);
 }
 
 .ins-field:has(> .tk-control.field) {
@@ -52,7 +52,7 @@
 
 .tk-chip {
   height: 20px;
-  padding: 0 6px 0 var(--s-1);
+  padding: 0 var(--s-1-5) 0 var(--s-1);
   background: var(--accent-soft);
 }
 
@@ -70,7 +70,7 @@
 }
 
 .tk-open:has(.tk-name-chip) {
-  padding-left: 6px;
+  padding-left: var(--s-1-5);
 }
 
 .tk-open > svg {
@@ -218,7 +218,7 @@
 .tk-note {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-1-5);
   flex: none;
   position: absolute;
   right: var(--pane-inset);
@@ -395,7 +395,7 @@
   flex-direction: column;
   gap: 2px;
   min-width: 200px;
-  padding: 4px;
+  padding: var(--s-1);
 }
 
 .eyedrop-list {

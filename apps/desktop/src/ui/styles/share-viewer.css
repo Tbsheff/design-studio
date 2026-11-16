@@ -112,7 +112,7 @@ dialog.present-layer {
   position: absolute;
   bottom: 100%;
   left: 0;
-  padding-bottom: 6px;
+  padding-bottom: var(--s-1-5);
   color: var(--stage-text);
   font-size: 13px;
   white-space: nowrap;
@@ -141,7 +141,7 @@ dialog.present-layer {
   transform: translate(-50%, -100%);
   min-width: 24px;
   height: 24px;
-  padding: 0 6px;
+  padding: 0 var(--s-1-5);
   border-radius: 12px 12px 12px 2px;
   background: var(--pin-bg);
   color: var(--pin-fg);
@@ -228,7 +228,7 @@ dialog.present-layer {
   background: var(--surface);
   border: 1px solid var(--line-input);
   border-radius: var(--r-control);
-  padding: 6px 8px;
+  padding: var(--s-1-5) var(--s-2);
 }
 
 .share-field textarea {

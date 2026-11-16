@@ -65,7 +65,7 @@
 .ide-search {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-1-5);
   height: 30px;
   margin: 0 var(--s-2) var(--s-2);
   padding: 0 var(--s-2);
@@ -101,7 +101,7 @@
 }
 
 .ide-group-label {
-  padding: var(--s-3) var(--s-2) 4px;
+  padding: var(--s-3) var(--s-2) var(--s-1);
   font-size: var(--t-2xs);
   font-weight: var(--w-medium);
   letter-spacing: 0.04em;
@@ -112,7 +112,7 @@
 .ide-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-1-5);
   width: 100%;
   height: 28px;
   padding: 0 var(--s-2);
@@ -131,7 +131,7 @@
 }
 
 .ide-row[data-depth="2"] {
-  padding-left: 40px;
+  padding-left: var(--s-10);
 }
 
 .ide-row:hover {
@@ -177,7 +177,7 @@
 
 .ide-empty {
   margin: 0;
-  padding: 4px var(--s-2) 4px 40px;
+  padding: var(--s-1) var(--s-2) var(--s-1) var(--s-10);
   color: var(--text-faint);
   font-size: var(--t-xs);
 }
@@ -210,7 +210,7 @@
 
 .ide-head {
   display: grid;
-  gap: 4px;
+  gap: var(--s-1);
 }
 
 .ide-head h1 {
@@ -325,7 +325,7 @@
 .ide-live {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-1-5);
   margin-left: auto;
   color: var(--text-3);
   font-size: var(--t-xs);
@@ -374,7 +374,7 @@
 
 .ide-act-empty {
   margin: 0;
-  padding: 4px var(--s-2);
+  padding: var(--s-1) var(--s-2);
   color: var(--text-faint);
   font-size: var(--t-xs);
 }
@@ -385,7 +385,7 @@
   align-items: center;
   gap: 2px var(--s-2);
   width: 100%;
-  padding: 6px var(--s-2);
+  padding: var(--s-1-5) var(--s-2);
   border: 0;
   border-radius: var(--r-control-sm);
   background: transparent;
@@ -492,7 +492,7 @@ button.ide-item:hover {
 
 .ide-mini {
   height: 24px;
-  padding: 0 8px;
+  padding: 0 var(--s-2);
   border: 0;
   border-radius: var(--r-control-xs);
   background: transparent;
@@ -528,9 +528,9 @@ button.ide-item:hover {
 .ide-seg {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-1-5);
   height: 20px;
-  padding: 0 6px;
+  padding: 0 var(--s-1-5);
   border-radius: var(--r-xs);
   font-variant-numeric: tabular-nums;
 }

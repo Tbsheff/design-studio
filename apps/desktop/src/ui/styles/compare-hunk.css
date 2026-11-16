@@ -50,7 +50,7 @@
 .hunk-status {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--s-1);
   flex-shrink: 0;
   font-family: var(--font);
   color: var(--text-2);

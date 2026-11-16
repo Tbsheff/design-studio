@@ -139,7 +139,7 @@
 
 .ship-counts {
   display: inline-flex;
-  gap: 4px;
+  gap: var(--s-1);
   font-family: var(--mono);
   font-variant-numeric: tabular-nums;
 }

@@ -14,7 +14,7 @@
 }
 
 .lib .home-header .back-btn {
-  margin-left: -10px;
+  margin-left: calc(var(--s-2-5) * -1);
 }
 
 .lib-main {
@@ -161,7 +161,7 @@
 
 .lib-text {
   display: grid;
-  gap: 6px;
+  gap: var(--s-1-5);
   min-width: 0;
   padding: 0 var(--s-3) var(--s-1);
 }
@@ -470,7 +470,7 @@
 .pv-alert {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-1-5);
   padding: var(--s-1) var(--space-2, var(--s-2));
   border: 1px solid;
   border-radius: var(--radius-pill);

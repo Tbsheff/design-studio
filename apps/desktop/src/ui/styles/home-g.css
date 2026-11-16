@@ -39,7 +39,7 @@
 }
 
 .home-nav .btn.small {
-  gap: 6px;
+  gap: var(--s-1-5);
 }
 
 .home-goto kbd {
@@ -50,7 +50,7 @@
   display: inline-flex;
   flex: none;
   align-items: center;
-  gap: 4px;
+  gap: var(--s-1);
   height: 20px;
   padding: 0 7px;
   border-radius: var(--r-xs);
@@ -108,7 +108,7 @@
 .home-chip.app {
   max-width: 100%;
   height: 34px;
-  padding: 0 4px 0 2px;
+  padding: 0 var(--s-1) 0 2px;
   border-radius: var(--r-control);
 }
 
@@ -119,10 +119,10 @@
 .home-chip-app {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--s-2);
   min-width: 0;
   height: 30px;
-  padding: 0 6px;
+  padding: 0 var(--s-1-5);
   border: 0;
   border-radius: var(--r-md);
   background: transparent;
@@ -188,7 +188,7 @@
 .home-app-server,
 .home-path-pop .ui-menu-section {
   display: grid;
-  gap: 6px;
+  gap: var(--s-1-5);
 }
 
 .home-app-server .segmented {
@@ -213,7 +213,7 @@
 }
 
 .home-drop-anywhere {
-  margin: 4px 0 0;
+  margin: var(--s-1) 0 0;
   color: var(--accent-text);
   font: 400 var(--t-lg) / 24px var(--serif);
   text-align: center;
@@ -234,7 +234,7 @@
 
 .home-seg button {
   height: 26px;
-  padding: 0 10px;
+  padding: 0 var(--s-2-5);
   border: 0;
   border-radius: var(--r-full);
   background: transparent;
@@ -268,7 +268,7 @@
 .project-health {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-1-5);
   color: var(--text-3);
   font-size: var(--t-xs);
   white-space: nowrap;
@@ -328,9 +328,9 @@
 
 .project-grid.list .project-open {
   grid-template-columns: 48px minmax(0, 1fr);
-  gap: 10px;
+  gap: var(--s-2-5);
   min-height: 48px;
-  padding: 4px 76px 4px 10px;
+  padding: var(--s-1) 76px var(--s-1) var(--s-2-5);
   border-radius: var(--r-md);
 }
 
@@ -343,7 +343,7 @@
   grid-template-columns: minmax(0, 1fr) 128px 120px 76px;
   grid-template-rows: auto auto;
   align-items: center;
-  column-gap: 12px;
+  column-gap: var(--s-3);
   row-gap: 0;
 }
 
@@ -403,7 +403,7 @@
 }
 
 .home-found {
-  padding: 4px 6px 6px;
+  padding: var(--s-1) var(--s-1-5) var(--s-1-5);
   border-radius: var(--r-xl);
   background: var(--surface-raised);
   box-shadow: var(--shadow-sm);
@@ -412,8 +412,8 @@
 .home-found-head {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 12px 10px 4px;
+  gap: var(--s-1-5);
+  padding: var(--s-3) var(--s-2-5) var(--s-1);
   color: var(--text-3);
   font-size: var(--t-xs);
   font-weight: var(--w-medium);
@@ -426,7 +426,7 @@
 
 .home-found-note {
   margin: 0;
-  padding: 8px 10px 10px;
+  padding: var(--s-2) var(--s-2-5) var(--s-2-5);
   color: var(--text-3);
   font-size: var(--t-xs);
 }
@@ -434,9 +434,9 @@
 .home-found-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--s-2-5);
   height: 40px;
-  padding: 0 4px 0 10px;
+  padding: 0 var(--s-1) 0 var(--s-2-5);
   border-radius: var(--r-md);
   font-size: var(--t-sm);
 }
@@ -473,7 +473,7 @@
 .modal.home-doctor {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 10px;
+  gap: var(--s-2-5);
   width: min(500px, 100%);
   padding: 18px;
 }
@@ -481,7 +481,7 @@
 .home-doctor-head {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--s-2);
   min-width: 0;
 }
 
@@ -498,9 +498,9 @@
 
 .home-doctor-steps {
   display: grid;
-  gap: 6px;
+  gap: var(--s-1-5);
   margin: 0;
-  padding: 10px 12px;
+  padding: var(--s-2-5) var(--s-3);
   border-radius: var(--r-lg);
   background: var(--surface-2);
   box-shadow: inset 0 0 0 1px var(--line);
@@ -512,7 +512,7 @@
 .home-doctor-steps li {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--s-2);
 }
 
 .home-doctor-steps .ok {
@@ -527,7 +527,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   min-width: 0;
-  gap: 10px;
+  gap: var(--s-2-5);
   padding: 14px;
   border-radius: var(--r-lg);
   background: var(--warn-soft);
@@ -538,7 +538,7 @@
 .home-doctor-text {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: var(--s-2-5);
 }
 
 .home-doctor-text .icon {
@@ -555,9 +555,9 @@
 .home-doctor-cmd {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--s-2);
   height: 34px;
-  padding: 0 4px 0 10px;
+  padding: 0 var(--s-1) 0 var(--s-2-5);
   border-radius: var(--r-md);
   background: var(--surface-raised);
   box-shadow: inset 0 0 0 1px var(--line);
@@ -573,7 +573,7 @@
 .home-doctor-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--s-2);
 }
 
 @media (max-width: 1100px) {

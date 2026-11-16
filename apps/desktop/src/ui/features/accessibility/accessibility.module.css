@@ -62,7 +62,7 @@
 }
 
 .badge {
-  padding: 1px 6px;
+  padding: 1px var(--s-1-5);
   border-radius: 999px;
   font-size: var(--t-xs);
   font-weight: 600;
@@ -139,7 +139,7 @@ figure.stop {
 }
 
 .chip {
-  padding: 2px 8px;
+  padding: 2px var(--s-2);
   border: 1px solid var(--border);
   border-radius: 999px;
   background: transparent;

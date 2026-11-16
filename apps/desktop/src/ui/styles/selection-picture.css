@@ -1,6 +1,6 @@
 .selection-prompt-foot .selection-picture-chip {
   margin-right: auto;
-  margin-left: 4px;
+  margin-left: var(--s-1);
   border-color: var(--float-line);
   background: transparent;
   color: var(--float-fg-muted);

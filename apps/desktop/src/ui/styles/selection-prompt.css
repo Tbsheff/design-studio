@@ -10,9 +10,9 @@
   z-index: 6;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--s-1);
   height: 22px;
-  padding: 0 8px 0 6px;
+  padding: 0 var(--s-2) 0 var(--s-1-5);
   border: 0;
   border-radius: var(--r-xs);
   background: var(--float-bg);
@@ -67,7 +67,7 @@
   display: flex;
   align-items: flex-start;
   gap: var(--s-1);
-  padding: 4px;
+  padding: var(--s-1);
 }
 
 .selection-prompt-target {
@@ -75,7 +75,7 @@
   max-width: 112px;
   height: 24px;
   margin-top: 2px;
-  padding: 0 6px;
+  padding: 0 var(--s-1-5);
   overflow: hidden;
   border-radius: var(--r-control-sm);
   background: var(--float-accent-tint);
@@ -141,9 +141,9 @@
 .selection-prompt-link {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--s-1);
   height: 24px;
-  padding: 0 6px;
+  padding: 0 var(--s-1-5);
   border: 0;
   border-radius: var(--r-control-sm);
   background: transparent;
@@ -173,7 +173,7 @@
   width: auto;
   max-width: 320px;
   height: 32px;
-  padding: 0 2px 0 10px;
+  padding: 0 2px 0 var(--s-2-5);
   white-space: nowrap;
 }
 

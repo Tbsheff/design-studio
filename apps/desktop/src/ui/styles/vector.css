@@ -65,7 +65,7 @@
   position: absolute;
   transform-origin: 50% 0;
   transform: translateX(-50%) scale(var(--inv-zoom, 1)) translateY(var(--s-1));
-  padding: 0 6px;
+  padding: 0 var(--s-1-5);
   border-radius: var(--r-xs);
   background: var(--accent);
   color: var(--on-accent);

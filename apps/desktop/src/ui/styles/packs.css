@@ -209,7 +209,7 @@
 
 .pack-yours {
   flex-shrink: 0;
-  padding: 0 6px;
+  padding: 0 var(--s-1-5);
   border-radius: var(--r-sm);
   background: var(--surface-2);
   color: var(--text-2);
@@ -378,7 +378,7 @@
 .ds-value {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-1-5);
   min-width: 0;
   color: var(--text-2);
   font-family: var(--mono);

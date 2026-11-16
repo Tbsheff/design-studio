@@ -111,7 +111,7 @@
 .studio-top-end .topbar-text-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-1-5);
   height: 28px;
   padding: 0 var(--s-2-5);
   border: 0;
@@ -342,7 +342,7 @@
 .column-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-1-5);
   width: 100%;
   min-width: 0;
   height: 28px;

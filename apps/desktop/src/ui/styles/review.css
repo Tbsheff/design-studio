@@ -1,7 +1,7 @@
 .canvas-topbar .btn.topbar-review {
   --btn-h: 28px;
   border-radius: var(--r-control-sm);
-  gap: 6px;
+  gap: var(--s-1-5);
   padding: 0 var(--s-2);
   color: var(--text-2);
 }

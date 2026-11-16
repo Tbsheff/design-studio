@@ -19,7 +19,7 @@
   display: grid;
   grid-template-columns: 20px 56px minmax(0, 1fr);
   column-gap: var(--s-2);
-  padding: var(--s-2) var(--s-2) 10px;
+  padding: var(--s-2) var(--s-2) var(--s-2-5);
   border-radius: var(--r-md);
   transition: background-color var(--dur) var(--ease);
 }
@@ -43,7 +43,7 @@
   z-index: 1;
   width: 9px;
   height: 9px;
-  margin: 6px auto 0;
+  margin: var(--s-1-5) auto 0;
   border-radius: 50%;
   background: var(--surface);
   box-shadow: inset 0 0 0 1.5px var(--line-strong);
@@ -139,8 +139,8 @@
   flex: 1;
   min-width: 0;
   height: 24px;
-  margin: -3px 0 -3px -6px;
-  padding: 0 var(--s-1) 0 6px;
+  margin: -3px 0 -3px calc(var(--s-1-5) * -1);
+  padding: 0 var(--s-1) 0 var(--s-1-5);
   border: 0;
   border-radius: var(--r-sm);
   background: var(--surface);
@@ -276,7 +276,7 @@
   display: none;
   align-items: center;
   grid-area: 2 / 1;
-  margin: 0 0 -4px -6px;
+  margin: 0 0 calc(var(--s-1) * -1) calc(var(--s-1-5) * -1);
 }
 
 .version:is(:hover, :has(:focus-visible), .head, .picked, .expanded)
@@ -285,7 +285,7 @@
 }
 
 .version.expanded .version-actions {
-  margin: var(--s-1) 0 0 -6px;
+  margin: var(--s-1) 0 0 calc(var(--s-1-5) * -1);
 }
 
 .version-more {
@@ -324,7 +324,7 @@
 @media (hover: none) {
   .version .version-actions {
     display: flex;
-    margin: var(--s-1) 0 0 -6px;
+    margin: var(--s-1) 0 0 calc(var(--s-1-5) * -1);
   }
 }
 
@@ -413,7 +413,7 @@
 }
 
 .version-files code {
-  padding: 1px 6px;
+  padding: 1px var(--s-1-5);
   border-radius: var(--r-xs);
   background: var(--surface-2);
   font-size: var(--t-xs);

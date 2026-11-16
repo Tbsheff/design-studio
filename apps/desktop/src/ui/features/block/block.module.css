@@ -135,8 +135,8 @@
   align-self: start;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 6px;
+  gap: var(--s-1);
+  padding: var(--s-1-5);
   border: 1px solid var(--line);
   border-radius: var(--r-1, 4px);
   background: var(--surface-inset);
@@ -144,7 +144,7 @@
 
 .wireRow {
   display: flex;
-  gap: 4px;
+  gap: var(--s-1);
 }
 
 .wireLine,

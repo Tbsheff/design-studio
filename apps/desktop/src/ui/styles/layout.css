@@ -57,7 +57,7 @@
 .topbar-direction {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-1-5);
   color: var(--text-2);
   white-space: nowrap;
   max-width: 220px;
@@ -74,9 +74,9 @@
 .conn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-1-5);
   height: 28px;
-  padding: 0 10px;
+  padding: 0 var(--s-2-5);
   border-radius: var(--r-full);
   background: var(--warn-soft);
   color: var(--warn);
@@ -136,7 +136,7 @@
 .section-head h3 {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-1-5);
   margin: 0;
   font: var(--w-medium) var(--t-xs) / 16px var(--font);
 }
@@ -207,7 +207,7 @@
 
 .list-item.compact {
   grid-template-columns: 20px minmax(0, 1fr) auto;
-  padding-block: 6px;
+  padding-block: var(--s-1-5);
 }
 
 .list-item.compact .icon {

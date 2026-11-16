@@ -63,7 +63,7 @@
   flex: 0 1 auto;
   min-width: 0;
   height: 24px;
-  padding: 0 6px;
+  padding: 0 var(--s-1-5);
   white-space: nowrap;
   border-radius: var(--r-control-sm);
   color: var(--text-2);
@@ -617,15 +617,15 @@ fieldset.ins-toggles {
   flex-wrap: wrap;
   align-items: center;
   gap: 2px var(--s-1);
-  margin-left: -6px;
+  margin-left: calc(var(--s-1-5) * -1);
 }
 
 .ins-add {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--s-1);
   height: 24px;
-  padding: 0 6px;
+  padding: 0 var(--s-1-5);
   border: 0;
   border-radius: var(--r-control-sm);
   background: transparent;
@@ -929,7 +929,7 @@ fieldset.ins-toggles {
 }
 
 .ins-data-text .btn {
-  gap: 4px;
+  gap: var(--s-1);
 }
 
 .ins-error-action {
@@ -947,7 +947,7 @@ fieldset.ins-toggles {
   gap: 2px;
   height: 24px;
   margin-block: -2px;
-  margin-left: -16px;
+  margin-left: calc(var(--s-4) * -1);
   padding: 0 var(--s-1) 0 2px;
   border: 0;
   border-radius: var(--r-control-sm);

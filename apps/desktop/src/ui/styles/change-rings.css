@@ -63,9 +63,9 @@
 .change-pill button {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-1-5);
   height: 24px;
-  padding: 0 10px;
+  padding: 0 var(--s-2-5);
   border: 0;
   border-radius: var(--r-full);
   background: transparent;
@@ -105,7 +105,7 @@
 
 .change-pill-error {
   max-width: 240px;
-  padding: 0 8px;
+  padding: 0 var(--s-2);
   overflow: hidden;
   color: var(--danger);
   text-overflow: ellipsis;

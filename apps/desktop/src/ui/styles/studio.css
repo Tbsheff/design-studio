@@ -57,10 +57,10 @@
 .pane-project {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-1-5);
   max-width: 100%;
   height: 26px;
-  padding: 0 6px;
+  padding: 0 var(--s-1-5);
   border: 0;
   border-radius: var(--r-control-sm);
   background: transparent;
@@ -84,7 +84,7 @@
   flex: 1;
   min-width: 0;
   height: 26px;
-  padding: 0 6px;
+  padding: 0 var(--s-1-5);
   font-size: var(--t-xs);
 }
 
@@ -142,7 +142,7 @@
 
 .pane-conn {
   height: 22px;
-  padding: 0 6px;
+  padding: 0 var(--s-1-5);
 }
 
 .pane-error {
@@ -194,7 +194,7 @@
   flex: none;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-1-5);
   height: var(--bar-h);
   padding: 0 var(--s-2) 0 var(--pane-inset);
 }
@@ -349,7 +349,7 @@
   max-width: 220px;
   height: 28px;
   margin-left: var(--s-1);
-  padding: 0 9px 0 10px;
+  padding: 0 9px 0 var(--s-2-5);
   border: 0;
   border-radius: var(--r-control-sm);
   background: var(--surface-raised);
@@ -471,7 +471,7 @@
   max-width: calc(100% - var(--s-4));
   gap: var(--s-2);
   height: 40px;
-  padding: 0 6px;
+  padding: 0 var(--s-1-5);
   border-bottom: 0;
   border-radius: var(--r-lg);
   background: var(--surface-raised);
@@ -546,7 +546,7 @@
 }
 
 .canvas-topbar .btn.topbar-present {
-  gap: 6px;
+  gap: var(--s-1-5);
 }
 
 @container canvas-bar (max-width: 1060px) {

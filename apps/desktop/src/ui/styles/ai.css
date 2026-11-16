@@ -86,7 +86,7 @@
 }
 
 [data-slot="markdown"] :not(pre) > code {
-  padding: 1px 6px;
+  padding: 1px var(--s-1-5);
   border-radius: var(--r-xs);
   background: var(--surface-active);
   font-family: var(--mono);

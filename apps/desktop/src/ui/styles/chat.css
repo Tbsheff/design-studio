@@ -110,7 +110,7 @@
 .status {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-1-5);
   font-weight: var(--w-medium);
   font-size: var(--t-xs);
 }
@@ -654,7 +654,7 @@
   max-width: 60%;
   height: 20px;
   margin: -2px 0;
-  padding: 0 6px;
+  padding: 0 var(--s-1-5);
   border-radius: var(--r-xs);
   font-size: var(--t-2xs);
 }
@@ -794,7 +794,7 @@
 
 .msg-chips .ui-chip {
   height: 20px;
-  padding: 0 6px;
+  padding: 0 var(--s-1-5);
   font-size: var(--t-2xs);
 }
 
@@ -815,7 +815,7 @@
   display: grid;
   gap: var(--s-1);
   max-width: 85%;
-  margin-top: 6px;
+  margin-top: var(--s-1-5);
   padding: var(--s-2) var(--s-3);
   border-radius: var(--r-md);
   background: var(--surface-raised);
@@ -827,7 +827,7 @@
 .msg-answered-head {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-1-5);
   color: var(--text-2);
   font-size: var(--t-2xs);
   font-weight: var(--w-medium);
@@ -871,7 +871,7 @@
   width: 100%;
   min-width: 0;
   height: 24px;
-  padding: 0 10px;
+  padding: 0 var(--s-2-5);
   border-radius: var(--r-md);
   color: var(--text-2);
   font-size: var(--t-2xs);
@@ -928,7 +928,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--s-2);
-  padding: var(--s-1) 10px var(--s-2);
+  padding: var(--s-1) var(--s-2-5) var(--s-2);
   font-size: var(--t-xs);
 }
 
@@ -990,7 +990,7 @@
 .live-status {
   min-width: 0;
   min-height: 28px;
-  gap: 10px;
+  gap: var(--s-2-5);
   font-size: var(--t-xs);
 }
 
@@ -1009,7 +1009,7 @@
   flex: none;
   width: 28px;
   height: 28px;
-  margin: -2px -6px -2px -4px;
+  margin: -2px calc(var(--s-1-5) * -1) -2px calc(var(--s-1) * -1);
   color: var(--text-3);
 }
 
@@ -1019,7 +1019,7 @@
 
 .run-feedback {
   display: grid;
-  gap: 6px;
+  gap: var(--s-1-5);
   min-width: 0;
 }
 
@@ -1220,7 +1220,7 @@
 
 .run-notice .run-retry {
   height: 28px;
-  margin: -6px 0;
+  margin: calc(var(--s-1-5) * -1) 0;
   color: inherit;
   font-size: var(--t-2xs);
 }
@@ -1256,12 +1256,12 @@
 .permission-rows {
   margin: 0;
   display: grid;
-  gap: 4px;
+  gap: var(--s-1);
   font-size: 12px;
 }
 .permission-row {
   display: flex;
-  gap: 8px;
+  gap: var(--s-2);
 }
 .permission-row dt {
   color: var(--text-muted, inherit);

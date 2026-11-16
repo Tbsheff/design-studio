@@ -4,7 +4,7 @@
 
 .attach-app-body {
   display: grid;
-  gap: 16px;
+  gap: var(--s-4);
 }
 
 .attach-app-list {
@@ -18,15 +18,15 @@
 .attach-app-list legend {
   font-size: var(--t-xs);
   color: var(--text-2);
-  margin-bottom: 6px;
+  margin-bottom: var(--s-1-5);
 }
 
 .attach-app-option {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 10px;
-  padding: 7px 8px;
+  gap: var(--s-2-5);
+  padding: 7px var(--s-2);
   border-radius: 6px;
   cursor: pointer;
   font-size: var(--t-sm);
@@ -100,8 +100,8 @@
 .app-panel-head {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  padding: 10px 12px;
+  gap: var(--s-2);
+  padding: var(--s-2-5) var(--s-3);
   border-bottom: 1px solid var(--line);
   font-size: var(--t-sm);
 }
@@ -127,14 +127,14 @@
 
 .app-panel-tabs {
   display: flex;
-  gap: 4px;
-  padding: 6px 8px;
+  gap: var(--s-1);
+  padding: var(--s-1-5) var(--s-2);
   border-bottom: 1px solid var(--line);
 }
 
 .app-routes {
   overflow: auto;
-  padding: 4px;
+  padding: var(--s-1);
 }
 
 .app-routes-list {
@@ -145,18 +145,18 @@
 
 .app-routes-filter {
   width: 100%;
-  margin: 4px 0 6px;
+  margin: var(--s-1) 0 var(--s-1-5);
 }
 
 .app-route {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px;
+  gap: var(--s-2);
   align-items: center;
   width: 100%;
   height: 28px;
   text-align: left;
-  padding: 0 8px;
+  padding: 0 var(--s-2);
   border: 0;
   border-radius: 6px;
   background: transparent;
@@ -192,7 +192,7 @@
 .app-logs {
   margin: 0;
   overflow: auto;
-  padding: 8px 12px;
+  padding: var(--s-2) var(--s-3);
   font:
     var(--t-2xs)/1.5 ui-monospace,
     SFMono-Regular,
@@ -259,7 +259,7 @@
 .app-bar-button {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-1-5);
   background: var(--surface-raised);
   border: 1px solid var(--line);
   box-shadow: 0 1px 3px oklch(0.2 0.01 var(--hue) / 0.1);
@@ -269,7 +269,7 @@
   display: inline-flex;
   align-items: center;
   height: 18px;
-  padding: 0 6px;
+  padding: 0 var(--s-1-5);
   border-radius: 9px;
   background: var(--surface-inset);
   color: var(--text-3);
@@ -283,17 +283,17 @@
 }
 
 .app-routes-more {
-  padding: 6px 8px;
+  padding: var(--s-1-5) var(--s-2);
   font-size: var(--t-2xs);
   color: var(--text-3);
 }
 
 .app-route-custom {
   display: flex;
-  gap: 6px;
-  padding: 8px 4px 4px;
+  gap: var(--s-1-5);
+  padding: var(--s-2) var(--s-1) var(--s-1);
   border-top: 1px solid var(--line);
-  margin-top: 4px;
+  margin-top: var(--s-1);
 }
 
 .app-route-custom input {
@@ -303,8 +303,8 @@
 
 .app-settings {
   display: grid;
-  gap: 12px;
-  padding: 12px;
+  gap: var(--s-3);
+  padding: var(--s-3);
   overflow: auto;
 }
 
@@ -316,7 +316,7 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 8px;
+  gap: var(--s-2);
 }
 
 .app-panel-message {
@@ -335,8 +335,8 @@ body:has(.frame-menu) .app-fail {
   z-index: 41;
   width: min(440px, calc(100vw - 40px));
   display: grid;
-  gap: 10px;
-  padding: 12px;
+  gap: var(--s-2-5);
+  padding: var(--s-3);
   border-radius: var(--r-lg);
   background: var(--surface-raised);
   box-shadow: var(--shadow-pop);
@@ -349,7 +349,7 @@ body:has(.frame-menu) .app-fail {
   display: flex;
   align-items: flex-start;
   line-height: var(--lh-body);
-  gap: 8px;
+  gap: var(--s-2);
   font-size: var(--t-sm);
 }
 
@@ -372,8 +372,8 @@ body:has(.frame-menu) .app-fail {
 
 .app-fail-fix {
   display: grid;
-  gap: 6px;
-  padding: 8px 10px;
+  gap: var(--s-1-5);
+  padding: var(--s-2) var(--s-2-5);
   border-radius: var(--r-md);
   background: var(--warn-soft);
   box-shadow: inset 0 0 0 1px var(--warn-line);
@@ -388,9 +388,9 @@ body:has(.frame-menu) .app-fail {
 .app-fail-cmd {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--s-1);
   min-width: 0;
-  padding: 2px 2px 2px 8px;
+  padding: 2px 2px 2px var(--s-2);
   border-radius: var(--r-sm);
   background: var(--surface-raised);
   box-shadow: inset 0 0 0 1px var(--line);
@@ -403,7 +403,7 @@ body:has(.frame-menu) .app-fail {
 
 .app-fail-url {
   display: grid;
-  gap: 6px;
+  gap: var(--s-1-5);
 }
 
 .app-fail-label {
@@ -413,7 +413,7 @@ body:has(.frame-menu) .app-fail {
 
 .app-fail-url-row {
   display: flex;
-  gap: 6px;
+  gap: var(--s-1-5);
 }
 
 .app-fail-url-row input {
@@ -429,7 +429,7 @@ body:has(.frame-menu) .app-fail {
 .app-fail-foot {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-1-5);
 }
 
 .canvas:has(.app-fail) .app-stage-note[data-kind="failed"],
@@ -443,13 +443,13 @@ body:has(.frame-menu) .app-fail {
 }
 
 .app-stage-note[data-kind="route"] {
-  padding: 4px 4px 4px 14px;
+  padding: var(--s-1) var(--s-1) var(--s-1) 14px;
 }
 
 .app-doctor-evidence {
   display: flex;
   min-width: 0;
-  padding: 4px 8px;
+  padding: var(--s-1) var(--s-2);
   border-radius: var(--r-sm);
   background: var(--surface-2);
   color: var(--text-2);
@@ -458,8 +458,8 @@ body:has(.frame-menu) .app-fail {
 .app-env-suggest {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
+  gap: var(--s-2);
+  padding: var(--s-1-5) var(--s-2);
   border-radius: var(--r-md);
   background: var(--warn-soft);
   box-shadow: inset 0 0 0 1px var(--warn-line);

@@ -110,7 +110,7 @@ fieldset.img-fit {
 .img-adjust {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--s-1);
   min-inline-size: 0;
   margin: 0;
   padding: 0;
@@ -121,7 +121,7 @@ fieldset.img-fit {
   display: grid;
   grid-template-columns: 72px minmax(0, 1fr) 40px;
   align-items: center;
-  gap: 8px;
+  gap: var(--s-2);
   min-height: 28px;
   font-size: 11px;
   color: var(--text-2, inherit);

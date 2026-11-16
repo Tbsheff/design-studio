@@ -43,13 +43,13 @@
 .layout-grid-presets {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: var(--s-1);
 }
 
 .layout-grid-fields {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px;
+  gap: var(--s-1-5);
 }
 
 .layout-grid-field input {

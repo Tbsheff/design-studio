@@ -75,7 +75,7 @@
 
 .modal-head > .icon-btn:last-child {
   flex: none;
-  margin: -4px -4px -4px 0;
+  margin: calc(var(--s-1) * -1) calc(var(--s-1) * -1) calc(var(--s-1) * -1) 0;
 }
 
 .modal-foot {
@@ -103,7 +103,7 @@
   font-size: var(--t-xs);
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-1-5);
 }
 
 .design-md {

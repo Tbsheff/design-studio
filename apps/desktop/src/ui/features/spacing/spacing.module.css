@@ -75,7 +75,7 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  padding: 1px 4px;
+  padding: 1px var(--s-1);
   border-radius: var(--r-sm, 3px);
   background: var(--band);
   color: var(--on-measure);

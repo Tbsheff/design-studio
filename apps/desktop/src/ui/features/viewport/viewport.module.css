@@ -90,7 +90,7 @@
   gap: var(--s-2);
   align-items: baseline;
   width: 100%;
-  padding: 4px var(--s-2);
+  padding: var(--s-1) var(--s-2);
   border: 0;
   border-radius: var(--r-control-sm);
   background: transparent;
@@ -159,7 +159,7 @@
   grid-template-columns: auto auto 1fr;
   gap: var(--s-2);
   align-items: baseline;
-  padding: 4px var(--s-2);
+  padding: var(--s-1) var(--s-2);
   font-size: var(--t-xs);
 }
 

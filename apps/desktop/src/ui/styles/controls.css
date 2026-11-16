@@ -4,7 +4,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: var(--s-1-5);
   height: var(--btn-h);
   padding: 0 var(--s-3);
   border: 0;
@@ -40,13 +40,13 @@
 
 .btn.small {
   --btn-h: var(--control-h-sm);
-  padding: 0 10px;
+  padding: 0 var(--s-2-5);
   font-size: var(--t-xs);
   border-radius: var(--r-control-sm);
 }
 
 .btn.has-icon {
-  padding-left: 10px;
+  padding-left: var(--s-2-5);
 }
 
 .btn.primary,

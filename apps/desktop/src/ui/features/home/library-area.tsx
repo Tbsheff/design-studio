@@ -1,4 +1,3 @@
-import type { Starter } from "@design-studio/contracts";
 import { Suspense } from "react";
 import type { ReactElement, ReactNode } from "react";
 
@@ -7,32 +6,21 @@ import { HomeEmpty } from "./lazy-parts-model.js";
 
 const LibraryArea = ({
   isEmpty,
-  isBusy,
   listError,
   onRetry,
   onUse,
-  onSample,
-  onStarter,
   children,
 }: {
   readonly isEmpty: boolean;
-  readonly isBusy: boolean;
   readonly listError: string | null;
   readonly onRetry: () => void;
   readonly onUse: (path: string) => void;
-  readonly onSample: () => void;
-  readonly onStarter: (starter: Starter) => void;
   readonly children: ReactNode;
 }): ReactElement => {
   if (isEmpty) {
     return (
       <Suspense fallback={null}>
-        <HomeEmpty
-          isBusy={isBusy}
-          onUse={onUse}
-          onSample={onSample}
-          onStarter={onStarter}
-        />
+        <HomeEmpty onUse={onUse} />
       </Suspense>
     );
   }

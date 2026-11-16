@@ -290,7 +290,8 @@
   padding: var(--s-8) var(--s-8) var(--s-12);
 }
 
-.ide-library .home-library {
+.ide-library .home-library,
+.ide-library .home-empty-state {
   width: min(var(--ide-center-max), 100%);
 }
 

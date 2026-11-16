@@ -36,8 +36,6 @@ const copy = {
   checks: "Checks",
   chooseReferenceFolder: "Choose a folder of reference material",
   clearSearch: "Clear search",
-  clickThroughAFinishedPrototype:
-    "Click through a finished prototype. No cost.",
   clientWord: "client",
   clientsWord: "clients",
   close: "Close",
@@ -145,8 +143,6 @@ const copy = {
   labelUseAsReference: "Use as reference",
   labelUseMyRunningServer: "Use my running server",
   labelUseOnlyItsTokens: "Use only its tokens",
-  labelUsePicksTheAppReturn:
-    "“Use” picks the app. Return opens it in the studio, and your changes go to its files. Recent work shows here after your first project.",
   lastPrefix: "Last:",
   lastRunFailed: "Last run failed",
   layout: "Layout",
@@ -218,7 +214,6 @@ const copy = {
   openTrash: "Open Trash",
   opensAsPartOfThe: "Opens as part of the ",
   opensAtOnceNoAgent: "Opens at once, with no run",
-  orStartFrom: "Or start from",
   paletteKey: "⌘K",
   pickADesignSystem: "Pick a design system",
   pickAnApp: "Pick a Next.js app, a Vite app or a folder with an index.html.",

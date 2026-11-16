@@ -463,10 +463,6 @@
   gap: var(--s-1);
 }
 
-.edit-pane .ins-grid > .ins-align-row {
-  grid-column: 1 / -1;
-}
-
 .edit-pane .ins-grid.ins-stack,
 .edit-pane .ins-layout-row.ins-display-row {
   grid-template-columns: minmax(0, 1fr);

@@ -419,7 +419,7 @@ body.ins-scrubbing * {
 
 .box-ring {
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) 40px;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
   grid-template-areas:
     "head head head"
     "top top top"
@@ -497,13 +497,13 @@ body.ins-scrubbing * {
 .box-ring .side-cell.top {
   grid-area: top;
   justify-self: center;
-  width: 40px;
+  width: 52px;
 }
 
 .box-ring .side-cell.bottom {
   grid-area: bottom;
   justify-self: center;
-  width: 40px;
+  width: 52px;
 }
 
 .box-ring .side-cell.left {

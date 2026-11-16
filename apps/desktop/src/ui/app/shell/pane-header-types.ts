@@ -1,6 +1,6 @@
 interface StudioPaneHeaderProps {
   name: string;
-  kindLabel: string;
+  kindLabel: string | null;
   directionName: string | null;
   connection: string;
   actionError: string | null;

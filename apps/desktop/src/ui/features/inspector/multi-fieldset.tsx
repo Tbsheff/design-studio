@@ -28,6 +28,7 @@ const MultiFieldset = ({
       textStyle={textStyle}
       layout={null}
       hasEffectLayers={false}
+      hasEffectShadow={false}
       fill={null}
     />
     {rotation.isShown && <MultiRotationField edit={edit} rotation={rotation} />}

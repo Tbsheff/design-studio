@@ -75,6 +75,7 @@ const SimpleMiddle = ({ props, state }: SimpleMiddleProps): ReactElement => {
         fill={fill}
         layout={props.layout}
         hasEffectLayers={Boolean(directionId && target.source)}
+        hasEffectShadow={props.hasEffectShadow}
       />
       {directionId && (
         <RareSection title={copy.motionTitle} aside={null} modifier={null}>

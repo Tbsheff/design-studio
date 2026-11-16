@@ -11,7 +11,7 @@ const toVisibleGroups = (groups: MenuGroup[]): MenuGroup[] => {
   const visible: MenuGroup[] = [];
 
   for (const group of groups) {
-    if (group.items.length > 0 || group.note) {
+    if (group.items.length > 0) {
       visible.push(group);
     }
   }
@@ -20,7 +20,7 @@ const toVisibleGroups = (groups: MenuGroup[]): MenuGroup[] => {
 };
 
 const toGroupKey = (group: MenuGroup): string =>
-  `${group.label ?? ""}|${group.items.map((entry) => entry.id).join(",")}|${group.note ?? ""}`;
+  `${group.label ?? ""}|${group.items.map((entry) => entry.id).join(",")}`;
 
 const toFocusable = (registered: ItemSet): HTMLButtonElement[] => {
   const focusable: HTMLButtonElement[] = [];

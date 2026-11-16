@@ -8,9 +8,9 @@ const TEXT_NOT_SAVED_PREFIX =
 
 const COLUMN_COPY = {
   assetsIcons: "Icons",
-  assetsNote:
-    "Select a layer on the canvas, then add an asset to it. Components, patterns and charts are on the Components tab.",
+  assetsNote: "Select a layer, then add an icon or photo to it.",
   assetsPhotos: "Stock photos",
+  assetsTokens: "Tokens",
   backToChat: "Back to chat",
   close: "Close",
   column: "Panel column",

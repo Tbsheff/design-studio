@@ -87,12 +87,6 @@ const TOOL_KEYS = [
   },
   {
     group: "Panels",
-    id: "column-tokens",
-    keys: ["Alt+5"],
-    label: "Tokens",
-  },
-  {
-    group: "Panels",
     id: "column-components",
     keys: ["Alt+6"],
     label: "Components",

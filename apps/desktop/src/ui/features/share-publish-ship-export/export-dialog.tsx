@@ -9,12 +9,12 @@ import type { ExportTarget } from "./export-api.js";
 import { ExportDialogBody } from "./export-dialog-body.js";
 import { ExportDialogFoot } from "./export-dialog-foot.js";
 import { ExportDialogHead } from "./export-dialog-head.js";
-import { FORMATS } from "./export-formats.js";
+import { FORMATS, GROUP_CHOICES } from "./export-formats.js";
 import type { DialogFormat, FormatInfo } from "./export-formats.js";
 import { toFrameLabels } from "./frame-labels.js";
 import { pick } from "./pick.js";
-import type { SegmentOption } from "./segmented.js";
 import { useEditors } from "./use-editors.js";
+import { useExportGroup } from "./use-export-group.js";
 import { useExportOptions } from "./use-export-options.js";
 import { useExportRunner } from "./use-export-runner.js";
 
@@ -22,10 +22,6 @@ interface Props {
   target: ExportTarget;
   onClose: () => void;
 }
-
-const FORMAT_OPTIONS: readonly SegmentOption<DialogFormat>[] = FORMATS.map(
-  (entry) => ({ icon: entry.icon, id: entry.id, label: entry.label })
-);
 
 const FRAME_NAMERS = { nameOf: canvasFrameName, pageOf: framePage };
 
@@ -74,13 +70,7 @@ const ExportDialog = ({ onClose, target }: Props): ReactElement => {
   const info = toFormatInfo(format);
   const result = pick(isHandoff, runner.handoff, null);
 
-  const selectFormat = useCallback(
-    (next: DialogFormat): void => {
-      options.onChoose(next);
-      resetStatus();
-    },
-    [options, resetStatus]
-  );
+  const group = useExportGroup(options, resetStatus);
 
   return (
     <dialog
@@ -98,12 +88,15 @@ const ExportDialog = ({ onClose, target }: Props): ReactElement => {
         options={options}
         labels={labels}
         info={info}
-        formatOptions={FORMAT_OPTIONS}
+        groupId={group.groupId}
+        groupOptions={GROUP_CHOICES}
+        memberOptions={group.memberChoices}
         status={runner.status}
         isBusy={isBusy}
         result={result}
         editors={editors}
-        onFormat={selectFormat}
+        onFormat={group.handleFormat}
+        onGroup={group.handleGroup}
         onError={failWith}
       />
       <ExportDialogFoot

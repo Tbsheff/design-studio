@@ -20,7 +20,6 @@ interface MenuEntry {
 interface MenuGroup {
   label?: string;
   items: MenuEntry[];
-  note?: string;
   fold?: "wide" | "narrow" | "tight";
 }
 
@@ -64,49 +63,6 @@ const toShipItems = (ship: (() => void) | null | undefined): MenuEntry[] => {
   ];
 };
 
-const toPortItems = (onPort: (() => void) | null): MenuEntry[] => {
-  if (!onPort) {
-    return [];
-  }
-
-  return [
-    {
-      icon: "react",
-      id: "port",
-      label: "Move to app…",
-      meta: "Route in your app",
-      run: onPort,
-      tip: "The agent rebuilds a page as a route in an attached app, with its kit components",
-    },
-  ];
-};
-
-const toLinkItems = (point: SharePoint): MenuEntry[] => {
-  const link = point.onShareLink;
-
-  if (!link) {
-    return [];
-  }
-
-  let tip = "Save a version to share";
-
-  if (point.canExport) {
-    tip = "Others see still images of the frames and can comment";
-  }
-
-  return [
-    {
-      disabled: !point.canExport,
-      icon: "link",
-      id: "share-link",
-      label: "Share a read-only link…",
-      meta: "View and comment",
-      run: (): void => link("link"),
-      tip,
-    },
-  ];
-};
-
 const toPublishItems = (point: SharePoint): MenuEntry[] => {
   const link = point.onShareLink;
 
@@ -134,24 +90,13 @@ const toPublishItems = (point: SharePoint): MenuEntry[] => {
   ];
 };
 
-const shareGroups = (
-  point: SharePoint,
-  onPort: (() => void) | null
-): MenuGroup[] => [
+const shareGroups = (point: SharePoint): MenuGroup[] => [
   {
     items: [
       toExportItem(point),
       ...toShipItems(point.onShip),
-      ...toPortItems(onPort),
+      ...toPublishItems(point),
     ],
-  },
-  {
-    items: toLinkItems(point),
-    note: "Links are off until you make one. Nothing leaves this computer.",
-  },
-  {
-    items: toPublishItems(point),
-    note: "Publish uploads only after you confirm what goes public.",
   },
 ];
 

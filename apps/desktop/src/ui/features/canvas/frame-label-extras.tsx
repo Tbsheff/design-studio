@@ -2,7 +2,7 @@ import type { SelectionContext } from "@design-studio/contracts";
 import { useCallback, useMemo } from "react";
 import type { ReactElement } from "react";
 
-import { setFramePath, frameName } from "./canvas-frame-ops.js";
+import { frameName } from "./canvas-frame-ops.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import { FramePageMenu } from "./frame-controls.js";
 import { toLiveVariation } from "./frame-label-state.js";
@@ -11,6 +11,7 @@ import { FrameMoreMenu } from "./frame-more-menu.js";
 import type { FrameMenuItem } from "./frame-more-menu.js";
 import { FramePinMark } from "./frame-pin-mark.js";
 import { RouteSourceChip } from "./route-source-chip.js";
+import { useFramePageItem } from "./use-frame-page-item.js";
 import { useFramePin } from "./use-frame-pin.js";
 import { useFrameShareLink } from "./use-frame-share-link.js";
 import { useStateBoard } from "./use-state-board.js";
@@ -54,10 +55,11 @@ const FrameLabelExtras = ({
   const pin = useFramePin(projectId, frameId);
   const board = useStateBoard(projectId, frameId);
   const shareLink = useFrameShareLink(projectId, frameId);
+  const page = useFramePageItem(getLive, frameId);
 
   const menuItems = useMemo(
-    () => toMenuItems(items, [board, pin.item, shareLink]),
-    [items, board, pin.item, shareLink]
+    () => toMenuItems(items, [page.item, board, pin.item, shareLink]),
+    [items, page.item, board, pin.item, shareLink]
   );
 
   const liveVariation = useMemo(() => {
@@ -75,14 +77,6 @@ const FrameLabelExtras = ({
 
   const live = getLive();
   const { activate, layout } = live.frames;
-
-  const onPath = useCallback(
-    (path: string): void =>
-      getLive().frames.update((canvasLayout) =>
-        setFramePath(canvasLayout, frameId, path)
-      ),
-    [getLive, frameId]
-  );
 
   return (
     <>
@@ -104,10 +98,11 @@ const FrameLabelExtras = ({
         projectId={projectId}
       />
       <FramePageMenu
+        menu={page.menu}
         path={frame.path ?? ""}
         routes={hasRoutes}
         listPages={listPages}
-        onPath={onPath}
+        onPath={page.handlePath}
       />
       <FrameMoreMenu
         name={frame.label ?? frameName(frame)}

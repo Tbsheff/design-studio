@@ -1622,7 +1622,6 @@ export type AppKey =
   | "column-pages"
   | "column-assets"
   | "column-versions"
-  | "column-tokens"
   | "column-components"
   | "column-system"
   | "inspector"
@@ -1657,7 +1656,6 @@ const ALT_APP_KEYS = new Map<string, AppKey>([
   ["Digit2", "column-pages"],
   ["Digit3", "column-assets"],
   ["Digit4", "column-versions"],
-  ["Digit5", "column-tokens"],
   ["Digit6", "column-components"],
   ["Digit7", "column-system"],
   ["Digit8", "inspector"],

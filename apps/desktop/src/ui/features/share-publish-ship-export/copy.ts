@@ -118,6 +118,7 @@ const copy = {
   flowSteps: "Steps",
   flowStepsLabel: "Most clicks to record",
   format: "Format",
+  formatKindLabel: "Kind",
   formatLabel: "Format",
   frame: "Frame",
   frameJson: "Frame JSON",

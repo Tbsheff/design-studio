@@ -98,6 +98,7 @@ const copy = {
   frameMenuCopy: "Copy",
   frameMenuStates: "States",
   framePage: "Frame page",
+  framePageItem: "Change page…",
   frameRemoved: "Frame removed.",
   frameSelectAlign: "Align",
   frameSelectCount: " frames",
@@ -136,11 +137,9 @@ const copy = {
   layOutThe: "Lay out the routes left to right and link them from their source",
   layerMenuBack: "Send to back",
   layerMenuBackward: "Send backward",
-  layerMenuFlipH: "Flip horizontal",
-  layerMenuFlipV: "Flip vertical",
   layerMenuForward: "Bring forward",
   layerMenuFront: "Bring to front",
-  layerMenuRotate: "Rotate…",
+  layerMenuMore: "More",
   linkArrows: "Link arrows",
   linkElementsTo: "Link elements to frames, then Play",
   linkStepsTo: "Link steps to follow",
@@ -160,6 +159,7 @@ const copy = {
   loadingPages: "Loading pages…",
   loadingRoutes: "Loading routes…",
   makeStatesWithAi: "Make states with AI",
+  moveToApp: "Move to app…",
   name: "Name",
   newMockData: "New mock data…",
   noDesignYetSend:
@@ -184,6 +184,8 @@ const copy = {
   present: "Present",
   presentedDesign: "Presented design",
   previewDarkMode: "Preview dark mode",
+  previewDarkTip:
+    "Show the design in its dark theme. The app theme stays the same",
   previewDefaultMode: "Back to the default mode",
   previewSource: "Preview source",
   previewState: "Preview state",
@@ -246,6 +248,9 @@ const copy = {
   },
   set: "Set ",
   share: "Share",
+  shareBlocked: "Save a version to share",
+  shareMore: "Export, ship or publish",
+  shareTip: "Make a read-only link. Others can view and comment",
   showAll: "Show all",
   showAllStates: "Show all states",
   showChatPane: "Show chat pane",
@@ -350,6 +355,7 @@ const layoutGridCopy = {
 const presentCopy = {
   more: "More ways to present",
   playTip: "Play prototype. The arrow shows more ways to present",
+  windowTip: "Present in this window",
 } as const;
 
 const groupResizeCopy = {

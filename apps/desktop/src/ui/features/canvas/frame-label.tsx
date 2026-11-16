@@ -11,7 +11,6 @@ import { FlowFromHere } from "./flow-from-here.js";
 import type { FrameBadge } from "./frame-label-model.js";
 import { toLabelView } from "./frame-label-view-model.js";
 import { FrameNameButton } from "./frame-name-button.js";
-import { FrameRemoveButton } from "./frame-remove-button.js";
 import type { ResizeEdge } from "./frame-resize-handles.js";
 import { FrameStateMenu } from "./frame-state-menu.js";
 import { useIsFrameSelected } from "./use-frame-selection.js";
@@ -53,7 +52,6 @@ const toSelectedClass = (className: string, isSelected: boolean): string => {
 const FrameLabel = ({
   frame,
   active,
-  removable,
   directionId,
   badge,
   title,
@@ -61,7 +59,6 @@ const FrameLabel = ({
   note,
   onPointerDown,
   onActivate,
-  onRemove,
   onNudge,
 }: LabelProps): ReactElement => {
   const view = toLabelView(frame, badge, title, active);
@@ -103,13 +100,6 @@ const FrameLabel = ({
           directionId={directionId}
         />
         {!badge && <FlowFromHere frameId={frame.id} frameName={view.name} />}
-        {removable && (
-          <FrameRemoveButton
-            frame={frame}
-            name={view.name}
-            onRemove={onRemove}
-          />
-        )}
         {extras}
       </div>
     </div>

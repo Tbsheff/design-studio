@@ -1,3 +1,4 @@
+import { Icon } from "@design-studio/ui";
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
@@ -7,39 +8,61 @@ import { shareGroups } from "./top-bar-menu-model.js";
 import type { MenuGroup } from "./top-bar-menu-model.js";
 import type { Props } from "./top-bar-props.js";
 
-const toShareTip = (hasShip: boolean): string => {
-  if (hasShip) {
-    return "Export, or ship as a pull request";
+const CHEVRON = <Icon name="chevronDown" size={12} />;
+
+const toShareTip = (canExport: boolean): string => {
+  if (canExport) {
+    return copy.shareTip;
   }
 
-  return "Export images, files or a handoff";
+  return copy.shareBlocked;
 };
 
-const TopBarShare = ({
-  props,
-  onPort,
-}: {
-  props: Props;
-  onPort: (() => void) | null;
-}): ReactElement => {
+const TopBarShare = ({ props }: { props: Props }): ReactElement => {
   const { canExport, onExport, onShip, onShareLink } = props;
 
   const groups = useCallback(
     (): MenuGroup[] =>
-      shareGroups({ canExport, onExport, onShareLink, onShip }, onPort),
-    [canExport, onExport, onShareLink, onShip, onPort]
+      shareGroups({ canExport, onExport, onShareLink, onShip }),
+    [canExport, onExport, onShareLink, onShip]
   );
 
+  const handleShare = useCallback((): void => {
+    if (!canExport) {
+      return;
+    }
+
+    if (onShareLink) {
+      onShareLink("link");
+
+      return;
+    }
+
+    onExport();
+  }, [canExport, onExport, onShareLink]);
+
   return (
-    <DropMenu
-      label="Share"
-      triggerClass="topbar-share"
-      groups={groups}
-      align="end"
-      tip={toShareTip(Boolean(onShip))}
-    >
-      <span className="topbar-label">{copy.share}</span>
-    </DropMenu>
+    <span className="topbar-share-split">
+      <button
+        type="button"
+        className="topbar-share"
+        aria-disabled={!canExport}
+        data-tip={toShareTip(canExport)}
+        data-tip-align="end"
+        onClick={handleShare}
+      >
+        <span className="topbar-label">{copy.share}</span>
+      </button>
+      <DropMenu
+        label={copy.shareMore}
+        triggerClass="topbar-share topbar-share-more"
+        groups={groups}
+        align="end"
+        tip={copy.shareMore}
+      >
+        {CHEVRON}
+      </DropMenu>
+    </span>
   );
 };
 

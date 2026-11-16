@@ -7,10 +7,11 @@ import type { ClipState } from "./types.ts";
 const WAIT_MS = 3000;
 const TYPE_MS = 400;
 const RELOAD_TIMEOUT_MS = 60_000;
-const PANEL_COUNT = 7;
+const PANEL_DIGITS = ["1", "2", "3", "4", "6", "7"];
 const MENU_ROLE = '[role="menu"]';
 const SELECT_TOOL = 'fieldset.topbar-tools button[aria-label="Select"]';
 const PRESENT_MENU = "button.topbar-present-more";
+const PRESENT_MAIN = "button.topbar-present";
 
 const TOOLS = [
   "Select",
@@ -88,7 +89,15 @@ const isPresentItemRun = async (
     return (await isPaletteRun(page, item)) && isVisible(page, shown);
   }
 
-  await page.getByRole("menuitem", { name: item }).click({ timeout: WAIT_MS });
+  const row = page.getByRole("menuitem", { name: item });
+
+  if ((await row.count()) === 0) {
+    await stopOverlays(page);
+
+    return (await isClicked(page, PRESENT_MAIN)) && isVisible(page, shown);
+  }
+
+  await row.click({ timeout: WAIT_MS });
 
   return isVisible(page, shown);
 };
@@ -116,7 +125,7 @@ const setSelectTool = async (page: Page): Promise<void> => {
   await isClicked(page, SELECT_TOOL);
 };
 
-const toPanelState = (index: number): ClipState => {
+const toPanelState = (index: string): ClipState => {
   const chord = `Alt+Digit${index}`;
 
   return {
@@ -146,9 +155,7 @@ const toOverlayState = (
 ): ClipState => ({ close: stopOverlays, name, open });
 
 const toPanelStates = (): ClipState[] =>
-  Array.from({ length: PANEL_COUNT }, (_unused, index) =>
-    toPanelState(index + 1)
-  );
+  PANEL_DIGITS.map((digit) => toPanelState(digit));
 
 const toTopBarStates = (): ClipState[] => [
   toOverlayState("present menu", async (page) => {
@@ -166,7 +173,10 @@ const toTopBarStates = (): ClipState[] => [
     isOpenedBy(page, "button.topbar-review", "", ".review-panel")
   ),
   toOverlayState("share", (page) =>
-    isOpenedBy(page, "button.topbar-share", "", MENU_ROLE)
+    isOpenedBy(page, "button.topbar-share", "", "dialog.share-dialog")
+  ),
+  toOverlayState("share menu", (page) =>
+    isOpenedBy(page, "button.topbar-share-more", "", MENU_ROLE)
   ),
   toOverlayState("connect ai", (page) =>
     isOpenedBy(

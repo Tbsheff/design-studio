@@ -24,7 +24,6 @@ const MenuSection = ({
         onRegister={onRegister}
       />
     ))}
-    {group.note && <p className="ui-menu-note">{group.note}</p>}
   </div>
 );
 

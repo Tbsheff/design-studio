@@ -20,7 +20,6 @@ const KEYED: [KeyId, string][] = [
   ["column-pages", "panel.pages"],
   ["column-assets", "panel.assets"],
   ["column-versions", "panel.versions"],
-  ["column-tokens", "panel.tokens"],
   ["column-components", "panel.components"],
   ["column-system", "panel.system"],
   ["inspector", "panel.inspector"],

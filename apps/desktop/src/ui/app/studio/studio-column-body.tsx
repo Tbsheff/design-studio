@@ -56,15 +56,11 @@ const toColumnBody = (ctx: StudioCtx, tab: ColumnTab): ReactElement => {
     }
 
     case "assets": {
-      return <AssetsPanel />;
+      return <AssetsPanel tokens={toTokensBody(ctx)} />;
     }
 
     case "versions": {
       return createElement(VersionsPanel, versionsProps(ctx));
-    }
-
-    case "tokens": {
-      return toTokensBody(ctx);
     }
 
     case "components": {

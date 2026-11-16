@@ -3,7 +3,11 @@ import type { ToolDiff } from "@design-studio/contracts";
 import type { ToolRow } from "./run-state-model.js";
 import type { ToolState } from "./tool-chips-model.js";
 import { shortName } from "./tool-chips-model.js";
-import { toolTally } from "./tool-labels-model.js";
+import {
+  toPendingGroupLabel,
+  toolGroupLabel,
+  toolTally,
+} from "./tool-labels-model.js";
 import { shellEdits } from "./tool-rows-model.js";
 
 const toRowClass = (state: ToolState, isSkill: boolean): string => {
@@ -50,16 +54,22 @@ const toTargetText = (target: string, isFull: boolean): string => {
   return shortName(target);
 };
 
-const toSummaryLabel = (tools: ToolRow[]): string => {
-  const names = tools.map((tool) => {
-    if (shellEdits(tool).length > 0) {
-      return "Edit";
-    }
+const toGroupLabel = (tool: ToolRow, isRunning: boolean): string => {
+  if (shellEdits(tool).length > 0) {
+    return toolGroupLabel("Edit");
+  }
 
-    return tool.name;
-  });
+  if (isRunning && tool.durationMs === null) {
+    return toPendingGroupLabel(tool.name);
+  }
 
-  return toolTally(names)
+  return toolGroupLabel(tool.name);
+};
+
+const toSummaryLabel = (tools: ToolRow[], isRunning: boolean): string => {
+  const labels = tools.map((tool) => toGroupLabel(tool, isRunning));
+
+  return toolTally(labels)
     .map((item) => {
       if (item.count > 1) {
         return `${item.label} ×${item.count}`;

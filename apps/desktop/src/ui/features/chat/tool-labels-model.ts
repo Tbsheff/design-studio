@@ -163,16 +163,20 @@ const TOOL_GROUPS = new Map<string, string>([
 const toolGroupLabel = (name: string): string =>
   TOOL_GROUPS.get(name) ?? prettyToolName(name);
 
+const PENDING_GROUPS = new Map<string, string>([["Bash", "Running"]]);
+
+const toPendingGroupLabel = (name: string): string =>
+  PENDING_GROUPS.get(name) ?? toolGroupLabel(name);
+
 interface ToolTally {
   label: string;
   count: number;
 }
 
-const toolTally = (names: Iterable<string>): ToolTally[] => {
+const toolTally = (labels: Iterable<string>): ToolTally[] => {
   const counts = new Map<string, number>();
 
-  for (const name of names) {
-    const label = toolGroupLabel(name);
+  for (const label of labels) {
     counts.set(label, (counts.get(label) ?? 0) + 1);
   }
 
@@ -211,6 +215,7 @@ export {
   SKILL_TOOL,
   prettyToolName,
   skillToolName,
+  toPendingGroupLabel,
   toolGroupLabel,
   toolLabel,
   toolSubject,

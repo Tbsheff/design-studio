@@ -21,7 +21,7 @@ const StepsSummary = ({
   }
 
   return (
-    <ToolSummary tools={run.tools}>
+    <ToolSummary tools={run.tools} isRunning={running}>
       <SegmentList segments={steps} running={running} workTree={workTree} />
     </ToolSummary>
   );

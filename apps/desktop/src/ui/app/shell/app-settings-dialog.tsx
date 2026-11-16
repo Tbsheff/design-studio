@@ -11,7 +11,6 @@ import { useBackdropDismiss } from "./use-backdrop-dismiss";
 const PROJECT_SETTINGS_COMMAND = "project.settings";
 
 interface AppSettingsDialogProps {
-  readonly hasProject: boolean;
   readonly onClose: () => void;
   readonly onConnectAi: () => void;
 }
@@ -23,7 +22,6 @@ const openProjectSettings = (): void => {
 };
 
 const AppSettingsDialog = ({
-  hasProject,
   onClose,
   onConnectAi,
 }: AppSettingsDialogProps): ReactElement => {
@@ -49,11 +47,7 @@ const AppSettingsDialog = ({
     >
       <AppSettingsHead onClose={onClose} />
       <AppSettingsBody onConnectAi={showConnectAi} />
-      <AppSettingsFoot
-        hasProject={hasProject}
-        onClose={onClose}
-        onProject={showProject}
-      />
+      <AppSettingsFoot onClose={onClose} onProject={showProject} />
     </dialog>
   );
 };

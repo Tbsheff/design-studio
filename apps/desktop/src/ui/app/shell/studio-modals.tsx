@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import type { ReactElement } from "react";
 
 import { DesignMdModal } from "../../features/design-system/index.js";
+import { AppSettingsHost } from "./app-settings-host";
 import { SettingsModal } from "./settings-modal";
 
 interface StudioModalsProps {
@@ -31,6 +32,7 @@ const StudioModals = (props: StudioModalsProps): ReactElement => (
         onClose={props.onCloseSettings}
       />
     )}
+    <AppSettingsHost />
   </>
 );
 

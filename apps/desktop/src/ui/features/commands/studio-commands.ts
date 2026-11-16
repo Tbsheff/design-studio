@@ -8,6 +8,7 @@ import {
   IMPACT_OPEN_COMMAND,
   IMPACT_OPEN_EVENT,
   findElement,
+  openAppSettings,
   requestProjectRename,
 } from "./deps.js";
 import { panelCommands } from "./panel-commands.js";
@@ -131,6 +132,14 @@ const prototypeCommands = (studioActions: StudioActions): Command[] => {
 
 const projectCommands = (studioActions: StudioActions): Command[] => [
   ...prototypeCommands(studioActions),
+  {
+    group: "Go",
+    icon: "settings",
+    id: "app.settings",
+    keywords: "preferences appearance theme integrations api keys mcp",
+    run: openAppSettings,
+    title: "Settings…",
+  },
   {
     group: "Go",
     icon: "pencil",

@@ -1,6 +1,5 @@
 import { lazy } from "react";
 
-import { ContentPanel as ContentPanelView } from "./features/content/index.js";
 import { FillSlot as FillSlotView } from "./features/fill/index.js";
 import { MotionSlot as MotionSlotView } from "./features/motion/index.js";
 import { StateStylesSlot as StateStylesSlotView } from "./features/state-styles/index.js";
@@ -42,7 +41,6 @@ const VariantSheet = lazy(async () => {
   return { default: loaded.VariantSheet };
 });
 
-const ContentPanel = ContentPanelView;
 const FillSlot = FillSlotView;
 const MotionSlot = MotionSlotView;
 const StateStylesSlot = StateStylesSlotView;
@@ -50,7 +48,6 @@ const TextStyleSlot = TextStyleSlotView;
 
 export {
   AccessibilitySlot,
-  ContentPanel,
   EffectSlot,
   FillSlot,
   GridSlot,

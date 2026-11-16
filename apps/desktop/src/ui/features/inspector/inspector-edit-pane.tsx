@@ -3,6 +3,7 @@ import { useCallback } from "react";
 
 import { ArrangeSlot } from "./arrange-slot.js";
 import { copy } from "./copy.js";
+import { isTweaksTabShown } from "./inspector-model.js";
 import type { InspectorProps, InspectorTab } from "./inspector-model.js";
 import { InspectorTabBody } from "./inspector-tab-body.js";
 import { LeavePrompt } from "./leave-prompt.js";
@@ -38,7 +39,11 @@ const InspectorEditPane = ({
 
   return (
     <section className="edit-pane" aria-label={copy.editTitle}>
-      <TabBar tab={tab} onTab={onTab} isAppProject={Boolean(props.appDir)} />
+      <TabBar
+        tab={tab}
+        onTab={onTab}
+        isTweaksShown={isTweaksTabShown(props, tab)}
+      />
       {isSessionShown(session) && (
         <SessionHeader session={session} onDone={handleDone} />
       )}

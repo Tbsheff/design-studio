@@ -13,13 +13,7 @@ import type { InspectorTweaksProps } from "./inspector-tweaks.js";
 import type { DirectEditCommit, DirectEditControl } from "./use-direct-edit.js";
 import type { EditSessionHandle, SessionAction } from "./use-edit-session.js";
 
-type InspectorTab =
-  | "simple"
-  | "prototype"
-  | "pro"
-  | "components"
-  | "code"
-  | "tweaks";
+type InspectorTab = "simple" | "pro" | "components" | "code" | "tweaks";
 
 interface InspectorProps {
   readonly projectId: string;
@@ -54,16 +48,28 @@ interface InspectorProps {
 const TABS: { readonly id: InspectorTab; readonly label: string }[] = [
   { id: "simple", label: copy.tabDesign },
   { id: "tweaks", label: copy.tabTweaks },
-  { id: "prototype", label: copy.tabPrototype },
   { id: "code", label: copy.tabCode },
 ];
 
-const toInspectorTabs = (isAppProject: boolean): typeof TABS => {
-  if (isAppProject) {
+const toInspectorTabs = (isTweaksShown: boolean): typeof TABS => {
+  if (!isTweaksShown) {
     return TABS.filter((entry) => entry.id !== "tweaks");
   }
 
   return TABS;
+};
+
+const isTweaksTabShown = (
+  props: InspectorProps,
+  tab: InspectorTab
+): boolean => {
+  if (props.appDir) {
+    return false;
+  }
+
+  const controls = props.tweaks?.draft.state?.controls.length ?? 0;
+
+  return controls > 0 || props.tweaks?.isRunning === true || tab === "tweaks";
 };
 
 const EMPTY_HINT = copy.emptyHint;
@@ -102,6 +108,7 @@ export {
   TABS,
   toInspectorEmptyReason,
   toInspectorTabs,
+  isTweaksTabShown,
   isDirectEditable,
   isVectorShown,
 };

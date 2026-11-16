@@ -2,8 +2,6 @@ import { createLiveStore } from "./live-store.js";
 
 const scaleMode = createLiveStore<boolean>(false);
 
-const scaleKeepTokens = createLiveStore<boolean>(true);
-
 const scaleFocusCount = createLiveStore<number>(0);
 
 const requestScaleMode = (): void => {
@@ -14,10 +12,4 @@ const stopScaleMode = (): void => {
   scaleMode.set(false);
 };
 
-export {
-  requestScaleMode,
-  scaleFocusCount,
-  scaleKeepTokens,
-  scaleMode,
-  stopScaleMode,
-};
+export { requestScaleMode, scaleFocusCount, scaleMode, stopScaleMode };

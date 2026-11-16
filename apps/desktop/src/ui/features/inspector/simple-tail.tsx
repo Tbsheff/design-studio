@@ -1,8 +1,10 @@
 import { useMemo } from "react";
 import type { ReactElement, ReactNode } from "react";
 
+import { MotionSlot } from "../../inspector-slots.js";
 import { InspectorOtherStyles } from "./inspector-other-styles.js";
 import { MatchSection } from "./match-section.js";
+import { MoreSections } from "./more-sections.js";
 import { SelectMatchingSection } from "./select-matching-section.js";
 import type { SimpleEditorProps, SimpleEditorState } from "./simple-model.js";
 
@@ -21,7 +23,15 @@ const SimpleTail = ({
   const selection = useMemo(() => [target], [target]);
 
   return (
-    <>
+    <MoreSections>
+      {directionId && (
+        <MotionSlot
+          projectId={projectId}
+          directionId={directionId}
+          target={target}
+          port={port}
+        />
+      )}
       {props.trailing}
       <MatchSection
         projectId={projectId}
@@ -34,7 +44,7 @@ const SimpleTail = ({
       <SelectMatchingSection selection={selection} port={port} />
       <InspectorOtherStyles css={state.authored.css} />
       <div className="ins-export">{exportMenu}</div>
-    </>
+    </MoreSections>
   );
 };
 

@@ -72,58 +72,6 @@ async function selectCard(page: Page): Promise<void> {
   await expect(page.locator(".ins-tag")).toHaveText("article");
 }
 
-async function selectedBox(page: Page) {
-  return page.locator(".overlay .box.selected").boundingBox();
-}
-
-test("R4-8: the breadcrumb lists each ancestor, collapses the middle, and a click selects it", async ({
-  page,
-}) => {
-  await extrasProject(page);
-  await selectInFrame(page, "h1");
-  const crumbs = page.getByRole("navigation", { name: "Layer path" });
-  await expect(page.locator(".ins-tag")).toHaveText("h1");
-  await expect(crumbs.locator(".ins-crumb")).toHaveText([
-    "…",
-    "div.col",
-    "article.card",
-    "h1.title",
-  ]);
-  await expect(crumbs.locator(".ins-crumb.gap")).toHaveAttribute(
-    "data-tip",
-    "main.shell › section.wrap › div.row"
-  );
-
-  await page.getByLabel("Font size", { exact: true }).fill("40");
-  await page.getByLabel("Font size", { exact: true }).press("Enter");
-  await expect(page.locator(".ins-status.saved")).toBeVisible();
-  await expect(frontFrame(page).locator("h1")).toHaveCSS("font-size", "40px");
-  await expect(page.locator("iframe.frame.back")).toHaveCount(0);
-  await expect(crumbs.locator(".ins-crumb")).toHaveCount(4);
-
-  const before = await selectedBox(page);
-  await crumbs
-    .getByRole("button", { name: "article.card", exact: true })
-    .click();
-  await expect(page.locator(".ins-tag")).toHaveText("article");
-  await expect(crumbs.locator(".ins-crumb.current")).toHaveText("article.card");
-  await expect(crumbs.locator(".ins-crumb")).toHaveText([
-    "…",
-    "div.row",
-    "div.col",
-    "article.card",
-  ]);
-  await expect
-    .poll(async () => JSON.stringify(await selectedBox(page)))
-    .not.toBe(JSON.stringify(before));
-
-  await crumbs.getByRole("button", { name: "Select section.wrap" }).click();
-  await expect(page.locator(".ins-tag")).toHaveText("section");
-  await crumbs.getByRole("button", { name: "main.shell", exact: true }).click();
-  await expect(page.locator(".ins-tag")).toHaveText("main");
-  await expect(crumbs).toHaveCount(0);
-});
-
 test("R4-8: Copy CSS puts the authored rules and the inline style on the clipboard", async ({
   page,
   context,

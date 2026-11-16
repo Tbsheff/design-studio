@@ -1,5 +1,7 @@
+import { useMemo } from "react";
 import type { ReactElement, ReactNode } from "react";
 
+import { EffectsSection } from "./inspector-effects.js";
 import { MultiRotationField } from "./multi-rotation-field.js";
 import type { MultiEdit } from "./simple-model.js";
 import { SimpleSections } from "./simple-sections.js";
@@ -18,18 +20,35 @@ const MultiFieldset = ({
   ui,
   textStyle,
   rotation,
-}: MultiFieldsetProps): ReactElement => (
-  <fieldset className="ins-fieldset" disabled={edit.blocked !== null}>
-    <SimpleSections
-      edit={edit}
-      ui={ui}
-      selection={null}
-      classes={null}
-      textStyle={textStyle}
-      fill={null}
-    />
-    {rotation.isShown && <MultiRotationField edit={edit} rotation={rotation} />}
-  </fieldset>
-);
+}: MultiFieldsetProps): ReactElement => {
+  const effects = useMemo(
+    () => (
+      <EffectsSection
+        edit={edit}
+        projectId=""
+        directionId={null}
+        target={null}
+      />
+    ),
+    [edit]
+  );
+
+  return (
+    <fieldset className="ins-fieldset" disabled={edit.blocked !== null}>
+      <SimpleSections
+        edit={edit}
+        ui={ui}
+        selection={null}
+        classes={null}
+        textStyle={textStyle}
+        fill={null}
+        effects={effects}
+      />
+      {rotation.isShown && (
+        <MultiRotationField edit={edit} rotation={rotation} />
+      )}
+    </fieldset>
+  );
+};
 
 export { MultiFieldset };

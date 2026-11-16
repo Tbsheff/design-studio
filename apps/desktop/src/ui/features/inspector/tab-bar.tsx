@@ -10,13 +10,13 @@ import { toTabKeyTarget } from "./tab-keys-model.js";
 const TabBar = ({
   tab,
   onTab,
-  isAppProject,
+  isTweaksShown,
 }: {
   readonly tab: InspectorTab;
   readonly onTab: (tab: InspectorTab) => void;
-  readonly isAppProject: boolean;
+  readonly isTweaksShown: boolean;
 }): ReactElement => {
-  const tabs = toInspectorTabs(isAppProject);
+  const tabs = toInspectorTabs(isTweaksShown);
 
   const refs = useRef<Partial<Record<InspectorTab, HTMLButtonElement | null>>>(
     {}

@@ -8,11 +8,7 @@ import type {
 } from "react";
 
 import { useLive } from "../../platform/live-store.js";
-import {
-  scaleFocusCount,
-  scaleKeepTokens,
-  stopScaleMode,
-} from "../../platform/scale-mode.js";
+import { scaleFocusCount, stopScaleMode } from "../../platform/scale-mode.js";
 import { copy } from "./copy.js";
 import { layerStyleRoutes, useAction } from "./deps.js";
 import {
@@ -34,11 +30,9 @@ interface ScaleField {
   readonly handleScrubDown: (event: PointerEvent<HTMLElement>) => void;
   readonly handleScrubMove: (event: PointerEvent<HTMLElement>) => void;
   readonly handleScrubUp: (event: PointerEvent<HTMLElement>) => void;
-  readonly handleToggleTokens: () => void;
   readonly inputRef: RefObject<HTMLInputElement | null>;
   readonly isDisabled: boolean;
   readonly note: string | null;
-  readonly shouldKeepTokens: boolean;
 }
 
 interface ScrubStart {
@@ -190,12 +184,11 @@ const useScaleField = (
   selection: SelectionContext
 ): ScaleField => {
   const [draft, setDraft] = useState(FULL_TEXT);
-  const shouldKeepTokens = useLive(scaleKeepTokens);
   const inputRef = useRef<HTMLInputElement>(null);
   const layerId = toScaleLayerId(selection);
 
   const { commit, isPending, note } = useScaleCommit(
-    { ...edit.scope, layerId, shouldKeepTokens },
+    { ...edit.scope, layerId, shouldKeepTokens: true },
     setDraft
   );
 
@@ -223,10 +216,6 @@ const useScaleField = (
     [commit]
   );
 
-  const handleToggleTokens = useCallback(() => {
-    scaleKeepTokens.set(!scaleKeepTokens.get());
-  }, []);
-
   const scrub = useScaleScrub(draft, setDraft, commit);
 
   return {
@@ -234,11 +223,9 @@ const useScaleField = (
     draft,
     handleDraftInput,
     handleKeyDown,
-    handleToggleTokens,
     inputRef,
     isDisabled: layerId === null || isPending,
     note,
-    shouldKeepTokens,
   };
 };
 

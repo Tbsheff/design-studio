@@ -6,9 +6,8 @@ import { AppearanceSection } from "./appearance-section.js";
 import { BorderSection } from "./border-section.js";
 import type { DirectEdit } from "./deps.js";
 import type { ElementClasses } from "./element-classes-model.js";
-import { EffectsSection } from "./inspector-effects.js";
 import { LayoutSection } from "./layout-section.js";
-import { SHADOW_PRESET, applyEdit, toExtrasInUse } from "./simple-model.js";
+import { toExtrasInUse } from "./simple-model.js";
 import type { Extra } from "./simple-model.js";
 import { TextSection } from "./text-section.js";
 import type { TokenUi } from "./use-token-snap.js";
@@ -20,6 +19,7 @@ interface SimpleSectionsProps {
   readonly classes: ElementClasses | null;
   readonly textStyle: ReactNode;
   readonly fill: ReactNode;
+  readonly effects: ReactNode;
 }
 
 const SimpleSections = ({
@@ -29,6 +29,7 @@ const SimpleSections = ({
   classes,
   textStyle,
   fill,
+  effects,
 }: SimpleSectionsProps): ReactElement => {
   const [revealed, setRevealed] = useState<Set<Extra>>(() => new Set());
 
@@ -37,16 +38,9 @@ const SimpleSections = ({
     [edit, revealed]
   );
 
-  const reveal = useCallback(
-    (extra: Extra) => {
-      setRevealed((previous) => new Set(previous).add(extra));
-
-      if (extra === "shadow") {
-        applyEdit(edit, { "box-shadow": SHADOW_PRESET });
-      }
-    },
-    [edit]
-  );
+  const reveal = useCallback((extra: Extra) => {
+    setRevealed((previous) => new Set(previous).add(extra));
+  }, []);
 
   return (
     <>
@@ -64,10 +58,8 @@ const SimpleSections = ({
         fill={fill}
         onReveal={reveal}
       />
-      {extras.has("shadow") && (
-        <EffectsSection edit={edit} isRevealed={revealed.has("shadow")} />
-      )}
       <BorderSection edit={edit} selection={selection} classes={classes} />
+      {effects}
     </>
   );
 };

@@ -8,38 +8,23 @@ import {
 
 import { errorText } from "./deps.js";
 import type { SelectionContext } from "./deps.js";
-import {
-  readEffects,
-  readStyles,
-  saveStyle,
-  writeEffects,
-  writeStyle,
-} from "./effect-api.js";
-import type {
-  EffectIds,
-  EffectInfo,
-  EffectItem,
-  EffectStyle,
-} from "./effect-types.js";
+import { readEffects, writeEffects } from "./effect-api.js";
+import type { EffectIds, EffectInfo, EffectItem } from "./effect-types.js";
 
 interface EffectState {
   readonly error: string | null;
   readonly info: EffectInfo | null;
   readonly stamp: string;
-  readonly styles: readonly EffectStyle[];
 }
 
 interface Effects {
   readonly apply: (stack: readonly EffectItem[]) => void;
   readonly error: string | null;
-  readonly handleSave: (name: string) => void;
-  readonly handleStyle: (name: string | null) => void;
   readonly info: EffectInfo | null;
   readonly isPending: boolean;
-  readonly styles: readonly EffectStyle[];
 }
 
-const EMPTY: EffectState = { error: null, info: null, stamp: "", styles: [] };
+const EMPTY: EffectState = { error: null, info: null, stamp: "" };
 
 interface EffectScope {
   readonly round: number;
@@ -79,13 +64,10 @@ const useEffectState = (
 
     const load = async (): Promise<void> => {
       try {
-        const [info, styles] = await Promise.all([
-          readEffects(ids, source, variant),
-          readStyles(ids),
-        ]);
+        const info = await readEffects(ids, source, variant);
 
         if (live.current) {
-          setState({ error: null, info, stamp, styles });
+          setState({ error: null, info, stamp });
         }
       } catch (error) {
         if (live.current) {
@@ -105,7 +87,7 @@ const useEffectState = (
     return state;
   }
 
-  return { ...EMPTY, info: state.info, styles: state.styles };
+  return { ...EMPTY, info: state.info };
 };
 
 const useEffects = (
@@ -139,28 +121,12 @@ const useEffects = (
     [ids, run, target, variant]
   );
 
-  const handleStyle = useCallback(
-    (name: string | null): void => {
-      run(() => writeStyle(ids, target, name));
-    },
-    [ids, run, target]
-  );
-
-  const stack = state.info?.effects;
-
-  const handleSave = useCallback(
-    (name: string): void => {
-      run(() => saveStyle(ids, name, stack ?? []));
-    },
-    [ids, run, stack]
-  );
-
   const error = saveError ?? state.error;
-  const { info, styles } = state;
+  const { info } = state;
 
   return useMemo(
-    () => ({ apply, error, handleSave, handleStyle, info, isPending, styles }),
-    [apply, error, handleSave, handleStyle, info, isPending, styles]
+    () => ({ apply, error, info, isPending }),
+    [apply, error, info, isPending]
   );
 };
 

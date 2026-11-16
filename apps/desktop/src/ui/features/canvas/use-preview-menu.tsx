@@ -17,6 +17,7 @@ import {
 } from "../../canvas-preview-slots.js";
 import type { GenerateTabProps } from "../../canvas-preview-slots.js";
 import type { PreviewPort } from "../../platform/bridge.js";
+import { ContentMount, useContentHost } from "../content/index.js";
 import { CreateComponentDialog } from "../design-system/index.js";
 import { DevNoteSlot, useDevNoteHost } from "../dev-note/index.js";
 import {
@@ -42,13 +43,13 @@ import type { MenuAnchor } from "./layer-pick-model.js";
 import {
   createItem,
   disabledBy,
+  toClipboard,
   toLayersItem,
   toTransformMenuItems,
 } from "./preview-menu-create.js";
 import { PreviewMenu } from "./preview-menu.js";
 import type { PreviewMenuItem } from "./preview-menu.js";
 import { toCoreMenuItems } from "./preview-more-menu.js";
-import { toValueOr } from "./settle-model.js";
 import { useFramePin } from "./use-frame-pin.js";
 import type { FramePin } from "./use-frame-pin.js";
 import { useLayerPick } from "./use-layer-pick.js";
@@ -87,7 +88,7 @@ const copyCss = async (
   const css = await getAuthoredCss(port, selector);
 
   if (css) {
-    await toValueOr(navigator.clipboard.writeText(toCopyCss(css)), null);
+    await toClipboard(toCopyCss(css));
   }
 };
 
@@ -224,6 +225,7 @@ interface HostBase {
 
 interface MenuHosts {
   readonly pickItems: PreviewMenuItem[];
+  readonly content: ReturnType<typeof useContentHost>;
   readonly devNotes: ReturnType<typeof useDevNoteHost>;
   readonly icons: ReturnType<typeof useIconHost>;
   readonly layerStyle: ReturnType<typeof useLayerStyleHost>;
@@ -249,6 +251,7 @@ const toHostItems = (
   ...hosts.photos.items(item),
   ...hosts.props.items(item),
   ...hosts.patterns.items(item),
+  ...hosts.content.items(item),
   hosts.pin.item,
 ];
 
@@ -428,6 +431,7 @@ const usePreviewMenu = (options: Options): PreviewMenuHandle => {
   const variant = useEditVariant();
 
   const hosts: MenuHosts = {
+    content: useContentHost(base),
     devNotes: useDevNoteHost({
       enabled: base.enabled,
       frameId: options.ids.frameId,
@@ -471,6 +475,9 @@ const usePreviewMenu = (options: Options): PreviewMenuHandle => {
       {toDevNoteSlot(hosts)}
       {toPropSlot(options, hosts)}
       {toPatternSlot(options, hosts)}
+      <Suspense fallback={null}>
+        <ContentMount host={hosts.content} />
+      </Suspense>
       <ImageSearchMount
         directionId={directionId}
         host={hosts.photos}

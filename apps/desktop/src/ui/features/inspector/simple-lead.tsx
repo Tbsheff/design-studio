@@ -1,7 +1,7 @@
-import { Suspense, useMemo } from "react";
+import { useMemo } from "react";
 import type { ReactElement } from "react";
 
-import { ContentPanel, StateStylesSlot } from "../../inspector-slots.js";
+import { StateStylesSlot } from "../../inspector-slots.js";
 import { ClassLine } from "./class-line.js";
 import { toDomClasses } from "./element-classes-model.js";
 import { ErrorLine } from "./error-line.js";
@@ -44,15 +44,6 @@ const SimpleLead = ({ props, state }: SimpleLeadProps): ReactElement => {
           port={port}
           status={edit.status}
         />
-      )}
-      {directionId && hasSource && (
-        <Suspense fallback={null}>
-          <ContentPanel
-            projectId={projectId}
-            directionId={directionId}
-            target={target}
-          />
-        </Suspense>
       )}
     </>
   );

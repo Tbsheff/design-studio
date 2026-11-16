@@ -173,3 +173,19 @@
   color: var(--text-2);
   font-size: var(--t-xs);
 }
+
+.dialog {
+  width: min(360px, 100%);
+  padding: 0;
+}
+
+.dialog .section {
+  border-top: 0;
+  padding: var(--s-3);
+}
+
+.foot {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 var(--s-3) var(--s-3);
+}

@@ -9,16 +9,12 @@ import type { ExportTarget } from "./export-api.js";
 import { ExportDialogBody } from "./export-dialog-body.js";
 import { ExportDialogFoot } from "./export-dialog-foot.js";
 import { ExportDialogHead } from "./export-dialog-head.js";
-import { FORMAT_GROUPS, FORMATS, toFormatGroup } from "./export-formats.js";
-import type {
-  DialogFormat,
-  FormatGroupId,
-  FormatInfo,
-} from "./export-formats.js";
+import { FORMATS, GROUP_CHOICES } from "./export-formats.js";
+import type { DialogFormat, FormatInfo } from "./export-formats.js";
 import { toFrameLabels } from "./frame-labels.js";
 import { pick } from "./pick.js";
-import type { SegmentOption } from "./segmented.js";
 import { useEditors } from "./use-editors.js";
+import { useExportGroup } from "./use-export-group.js";
 import { useExportOptions } from "./use-export-options.js";
 import { useExportRunner } from "./use-export-runner.js";
 
@@ -26,22 +22,6 @@ interface Props {
   target: ExportTarget;
   onClose: () => void;
 }
-
-const GROUP_OPTIONS: readonly SegmentOption<FormatGroupId>[] =
-  FORMAT_GROUPS.map((group) => ({
-    icon: group.icon,
-    id: group.id,
-    label: group.label,
-  }));
-
-const toMemberOptions = (
-  members: readonly DialogFormat[]
-): SegmentOption<DialogFormat>[] =>
-  FORMATS.filter((entry) => members.includes(entry.id)).map((entry) => ({
-    icon: null,
-    id: entry.id,
-    label: entry.label,
-  }));
 
 const FRAME_NAMERS = { nameOf: canvasFrameName, pageOf: framePage };
 
@@ -90,27 +70,7 @@ const ExportDialog = ({ onClose, target }: Props): ReactElement => {
   const info = toFormatInfo(format);
   const result = pick(isHandoff, runner.handoff, null);
 
-  const selectFormat = useCallback(
-    (next: DialogFormat): void => {
-      options.onChoose(next);
-      resetStatus();
-    },
-    [options, resetStatus]
-  );
-
-  const group = toFormatGroup(format);
-
-  const selectGroup = useCallback(
-    (next: FormatGroupId): void => {
-      const members =
-        FORMAT_GROUPS.find((entry) => entry.id === next)?.members ?? [];
-
-      if (!members.includes(format) && members[0]) {
-        selectFormat(members[0]);
-      }
-    },
-    [format, selectFormat]
-  );
+  const group = useExportGroup(options, resetStatus);
 
   return (
     <dialog
@@ -128,15 +88,15 @@ const ExportDialog = ({ onClose, target }: Props): ReactElement => {
         options={options}
         labels={labels}
         info={info}
-        groupId={group.id}
-        groupOptions={GROUP_OPTIONS}
-        memberOptions={toMemberOptions(group.members)}
+        groupId={group.groupId}
+        groupOptions={GROUP_CHOICES}
+        memberOptions={group.memberChoices}
         status={runner.status}
         isBusy={isBusy}
         result={result}
         editors={editors}
-        onFormat={selectFormat}
-        onGroup={selectGroup}
+        onFormat={group.handleFormat}
+        onGroup={group.handleGroup}
         onError={failWith}
       />
       <ExportDialogFoot

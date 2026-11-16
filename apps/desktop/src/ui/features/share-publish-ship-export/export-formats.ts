@@ -96,6 +96,33 @@ const toFormatGroup = (format: DialogFormat): FormatGroup =>
   FORMAT_GROUPS.find((group) => group.members.includes(format)) ??
   (FORMAT_GROUPS[0] as FormatGroup);
 
+interface FormatChoice<Value extends string> {
+  readonly icon: IconName | null;
+  readonly id: Value;
+  readonly label: string;
+}
+
+const FORMAT_BY_ID = new Map(FORMATS.map((entry) => [entry.id, entry]));
+
+const GROUP_CHOICES: readonly FormatChoice<FormatGroupId>[] = FORMAT_GROUPS.map(
+  (group) => ({
+    icon: group.icon,
+    id: group.id,
+    label: group.label,
+  })
+);
+
+const toMemberChoices = (group: FormatGroup): FormatChoice<DialogFormat>[] =>
+  group.members.flatMap((id) => {
+    const entry = FORMAT_BY_ID.get(id);
+
+    if (!entry) {
+      return [];
+    }
+
+    return [{ icon: null, id: entry.id, label: entry.label }];
+  });
+
 const MOBILE_MAX = 600;
 const MOBILE_FRAME = { height: 844, name: "Mobile", width: 390 };
 
@@ -110,15 +137,18 @@ const IDLE_STATUS: ExportStatus = { kind: "idle" };
 export {
   FORMAT_GROUPS,
   FORMATS,
+  GROUP_CHOICES,
   IDLE_STATUS,
   MOBILE_FRAME,
   MOBILE_MAX,
   toFormatGroup,
+  toMemberChoices,
 };
 
 export type {
   DialogFormat,
   ExportStatus,
+  FormatChoice,
   FormatGroup,
   FormatGroupId,
   FormatInfo,

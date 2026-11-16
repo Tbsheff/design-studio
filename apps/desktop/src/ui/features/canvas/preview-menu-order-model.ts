@@ -1,4 +1,3 @@
-import { copy } from "./copy.js";
 import type { PreviewMenuItem } from "./preview-menu-model.js";
 
 interface PreviewMenuParts {
@@ -36,22 +35,9 @@ const DIVIDER_BEFORE: ReadonlySet<string> = new Set([
   "zoom",
 ]);
 
-const CUT_ID = "structure-cut";
-
-const CUT_LABEL = /^Cut to move/u;
-
-const toCoreLabel = (item: PreviewMenuItem): string => {
-  if (item.id === CUT_ID) {
-    return item.label.replace(CUT_LABEL, copy.layerMenuCut);
-  }
-
-  return item.label;
-};
-
 const toCoreItem = (item: PreviewMenuItem): PreviewMenuItem => ({
   ...item,
   divider: DIVIDER_BEFORE.has(item.id),
-  label: toCoreLabel(item),
 });
 
 const toMoreItem = (item: PreviewMenuItem): PreviewMenuItem => ({

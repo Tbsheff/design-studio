@@ -139,7 +139,6 @@ const copy = {
   layOutThe: "Lay out the routes left to right and link them from their source",
   layerMenuBack: "Send to back",
   layerMenuBackward: "Send backward",
-  layerMenuCut: "Cut",
   layerMenuFlipH: "Flip horizontal",
   layerMenuFlipV: "Flip vertical",
   layerMenuForward: "Bring forward",

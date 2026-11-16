@@ -21,7 +21,12 @@ const useFloatingDismiss = (
     }
 
     const onPointer = (event: PointerEvent): void => {
-      if (!rail.current?.contains(event.target as Node)) {
+      const { target } = event;
+
+      const isToggle =
+        target instanceof Element && target.closest("[data-rail-toggle]");
+
+      if (!isToggle && !rail.current?.contains(target as Node)) {
         runFloatingClose();
       }
     };

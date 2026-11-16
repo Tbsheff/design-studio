@@ -14,6 +14,7 @@ const ProjectListToggle = (): ReactElement => {
       className="studio-top-icon"
       aria-label={copy.projectList}
       aria-pressed={rail === "open"}
+      data-rail-toggle=""
       data-tip={tipWithKey(copy.projectList, "project-rail")}
       onClick={setRailToggled}
     >

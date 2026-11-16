@@ -1165,7 +1165,7 @@ export const API_ROUTES = {
   updatePack:
     "PATCH /api/packs/:id UpdateUserPackInput -> PackSummary (same id; 400 built-in or invalid, 404 unknown)",
   updateSettings:
-    "PATCH /api/projects/:pid/settings Partial<ProjectSettings> (model 1..200 chars, maxTurns 1..200 int, allowBash, allowInstall, autoApprove (all three off by default), disabledSkills: skill ids from GET /api/skills) -> Project",
+    "PATCH /api/projects/:pid/settings Partial<ProjectSettings> (model 1..200 chars, maxTurns 1..200 int, allowBash, allowInstall, autoApprove (all three on by default), disabledSkills: skill ids from GET /api/skills) -> Project",
   updateTokens:
     "POST /api/projects/:pid/d/:did/design-system/tokens/update {changes: TokenChange[]} -> UpdateTokensResult (one version; 409 run active, 422 invalid, 404 unknown path)",
   updateWorkspace: "PATCH /api/workspaces/:id {label} -> WorkspaceFolder",
@@ -2333,9 +2333,9 @@ export const DEFAULT_VITE_PORT_BASE = 5200;
 export const SETTINGS_VERSION = 2;
 
 export const DEFAULT_SETTINGS: ProjectSettings = {
-  allowBash: false,
-  allowInstall: false,
-  autoApprove: false,
+  allowBash: true,
+  allowInstall: true,
+  autoApprove: true,
   defaultLevel: "prototype",
   disabledSkills: [],
   maxTurns: 40,

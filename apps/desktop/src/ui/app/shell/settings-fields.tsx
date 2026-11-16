@@ -55,7 +55,7 @@ const SettingsFields = ({
         onChange={handlers.handleInstall}
       />
       <SettingsCheckField
-        isChecked={draft.autoApprove}
+        isChecked={draft.allowBash && draft.autoApprove}
         isDisabled={!draft.allowBash}
         label={copy.autoModeRunCommandsWithout}
         name="autoApprove"

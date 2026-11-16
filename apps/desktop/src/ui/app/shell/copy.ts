@@ -45,7 +45,7 @@ const copy = {
   settings: "Settings",
   settingsSubtitle: "For this computer. They apply to every project.",
   shellRiskNote:
-    "Off for new projects. Shell commands run on this computer in the project folder, and installs download and run third-party code. Turn them on only for projects you trust.",
+    "On by default. Shell commands run on this computer in the project folder, and installs download and run third-party code. Turn them off for projects you do not trust.",
   showing: "Showing ",
   stop: "Stop",
   theDoctorSuggests: "Design Studio suggests",

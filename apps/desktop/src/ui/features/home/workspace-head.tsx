@@ -19,15 +19,16 @@ const WorkspaceHead = ({
     return (
       <div className="ide-head">
         <h1>{copy.prototypesWorkspace}</h1>
-        <p>{copy.prototypesSub}</p>
       </div>
     );
   }
 
+  const sub = toWorkspaceSub(workspace, homeDir, packName);
+
   return (
     <div className="ide-head">
       <h1>{workspace.name}</h1>
-      <p>{toWorkspaceSub(workspace, homeDir, packName)}</p>
+      {sub !== null && <p>{sub}</p>}
     </div>
   );
 };

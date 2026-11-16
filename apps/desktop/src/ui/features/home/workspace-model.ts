@@ -231,9 +231,9 @@ const toWorkspaceSub = (
   workspace: Workspace,
   homeDir: string | null,
   packName: string | null
-): string => {
+): string | null => {
   if (workspace.folder === null) {
-    return copy.prototypesSub;
+    return null;
   }
 
   const parts = [

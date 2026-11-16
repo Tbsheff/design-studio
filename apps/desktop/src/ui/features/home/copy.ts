@@ -230,7 +230,6 @@ const copy = {
   promptsEditApp: "Prompts edit the app source. Pick New prototype to stop.",
   prototypes: "Prototypes",
   prototypesGroup: "Prototypes",
-  prototypesSub: "Standalone designs, no app folder",
   prototypesWorkspace: "Prototypes",
   reactVitePress: "React + Vite project. Press for a plain HTML page.",
   reactViteProject: "React + Vite project",

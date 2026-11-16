@@ -14,7 +14,7 @@ import type { DraftStore } from "../../platform/storage.js";
 import type { ComposerMode } from "./composer-mode-model.js";
 import type { VariationsPromptProps } from "./prompt-box-model.js";
 import type { FrameFocus } from "./run-focus-model.js";
-import type { MentionRequest } from "./use-mentions.js";
+import type { MentionFrameSource, MentionRequest } from "./use-mentions.js";
 import type { RunCanvasChip } from "./use-run-canvas.js";
 
 type PromptSend = (
@@ -55,6 +55,7 @@ interface PromptBoxProps {
   directionId?: string | null;
   tokens?: CompiledTokenEntry[];
   components?: ComponentInfo[] | null;
+  mentionFrames?: readonly MentionFrameSource[] | null;
   mentionRequest?: MentionRequest | null;
   waitReason?: string | null;
   onTweaks?: ((ask: string) => void) | null;

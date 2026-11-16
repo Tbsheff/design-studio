@@ -18,7 +18,23 @@ import {
   toDirectionPath,
   RUNS_PAGE,
 } from "./api-core.js";
+import { pickMessage, request } from "./platform/http";
 import { startBody } from "./start-body.js";
+
+const postRunStart = async (
+  pid: string,
+  did: string,
+  body: ReturnType<typeof startBody>
+): Promise<{ runId: string }> => {
+  const res = await request(
+    "POST",
+    `${toDirectionPath(pid, did)}/runs`,
+    body,
+    pickMessage
+  );
+
+  return (await res.json()) as { runId: string };
+};
 
 const runApi = {
   answerPermission: (
@@ -84,12 +100,7 @@ const runApi = {
     pid: string,
     did: string,
     req: RunRequest & { referenceUrls?: string[] }
-  ): Promise<{ runId: string }> =>
-    json<{ runId: string }>(
-      "POST",
-      `${toDirectionPath(pid, did)}/runs`,
-      startBody(req)
-    ),
+  ): Promise<{ runId: string }> => postRunStart(pid, did, startBody(req)),
   steerRun: (
     pid: string,
     runId: string,

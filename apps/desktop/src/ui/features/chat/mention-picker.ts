@@ -20,12 +20,20 @@ const mentionKey = (mention: RunMention): string => {
     return `file:${mention.path}`;
   }
 
+  if (mention.kind === "frame") {
+    return `frame:${mention.frameId}`;
+  }
+
   return `${mention.kind}:${mention.name}`;
 };
 
 const mentionLabel = (mention: RunMention): string => {
   if (mention.kind === "file") {
     return mention.path.split("/").pop() ?? mention.path;
+  }
+
+  if (mention.kind === "frame") {
+    return mention.label ?? mention.frameId;
   }
 
   return mention.name;
@@ -40,6 +48,10 @@ const mentionIcon = (mention: RunMention): IconName => {
     return "token";
   }
 
+  if (mention.kind === "frame") {
+    return "frame";
+  }
+
   return "component";
 };
 
@@ -50,6 +62,10 @@ const mentionTitle = (mention: RunMention): string => {
 
   if (mention.kind === "token") {
     return `${mention.name}: ${mention.value}`;
+  }
+
+  if (mention.kind === "frame") {
+    return `${mentionLabel(mention)} · frame ${mention.frameId}`;
   }
 
   if (mention.file) {
@@ -79,6 +95,10 @@ const rankMentions = (
     (option) => {
       if (option.mention.kind === "file") {
         return option.mention.path;
+      }
+
+      if (option.mention.kind === "frame") {
+        return `${option.label} ${option.detail}`;
       }
 
       return option.label;

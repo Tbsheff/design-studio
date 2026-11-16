@@ -29,6 +29,7 @@ const usePromptInput = (
   const { draft, files, mode, setDraft, setMode } = base;
   const { components, directionId, projectId, tokens } = props;
   const request = props.mentionRequest;
+  const frames = props.mentionFrames ?? null;
 
   const focus = useRunFocus(props.selection, props.frameFocus ?? null);
   const onFocus = focus.add;
@@ -37,6 +38,7 @@ const usePromptInput = (
     components,
     directionId,
     draft,
+    frames,
     onFocus,
     projectId,
     request,

@@ -12,6 +12,7 @@ import { runById } from "./run-model";
 import type { StudioCtx } from "./studio-context";
 import { toSuggestionSlot } from "./suggestion-slot";
 import { tokenEntries } from "./token-model";
+import type { CanvasLayoutFrame } from "./use-mention-frames";
 
 type LeftProps = ComponentProps<typeof LeftPane>;
 
@@ -95,7 +96,8 @@ const toTweaksSlash = (ctx: StudioCtx): ((ask: string) => void) | null => {
 
 const promptProps = (
   ctx: StudioCtx,
-  frameFocus: FrameFocusFiles
+  frameFocus: FrameFocusFiles,
+  mentionFrames: readonly CanvasLayoutFrame[]
 ): LeftProps["prompt"] => {
   const { project, ui, core, run } = ctx;
   const { variations, chatState, draftChrome, componentList } = core;
@@ -125,6 +127,7 @@ const promptProps = (
     contextWindow: chatState.contextWindow,
     directionId: core.directionId,
     history: chatState.history,
+    mentionFrames,
     mentionRequest: ui.mentionRequest,
     tokens: tokenEntries(core.tokens),
     variations: {

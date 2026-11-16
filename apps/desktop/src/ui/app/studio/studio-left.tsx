@@ -14,6 +14,7 @@ import {
 } from "./left-props";
 import { commentsProps } from "./left-props-panels";
 import type { StudioCtxProps } from "./studio-context";
+import { useMentionFrames } from "./use-mention-frames";
 
 const StudioLeft = ({ ctx }: StudioCtxProps): ReactElement => {
   const { ui, panes, core } = ctx;
@@ -23,6 +24,7 @@ const StudioLeft = ({ ctx }: StudioCtxProps): ReactElement => {
     Boolean(ctx.project.app)
   );
 
+  const mentionFrames = useMentionFrames(ctx.projectId, core.directionId);
   const { showComments } = panes;
   const header = createElement(StudioPaneHeader, headerProps(ctx));
 
@@ -37,7 +39,7 @@ const StudioLeft = ({ ctx }: StudioCtxProps): ReactElement => {
         header={header}
         chat={chatProps(ctx)}
         errors={errorsProps(ctx)}
-        prompt={promptProps(ctx, frameFocus)}
+        prompt={promptProps(ctx, frameFocus, mentionFrames)}
         details={detailsProps(ctx)}
         comments={commentsProps(ctx)}
         onShowComments={handleShowComments}

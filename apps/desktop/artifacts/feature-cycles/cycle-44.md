@@ -338,3 +338,13 @@ None. No pick changes a prompt rule or the run loop. frame-at adds a prompt bloc
 12. batch-rename: the class fallback as `$&` on an unnamed layer, and reselect after the write; rule Fix in `@media` and nested rules (cycle-43 runners-up 6 and 7).
 
 Dropped from the list: flip, paste to replace, hug and fill, the eyedropper, ruler guides, link interactions, element variations, the to-do panel, restore and retry in chat, clarify, starters and templates, markup feedback, the Claude Code handoff, focus on frames, prompt improve (the code exists, see Findings).
+
+## Results (2026-11-15)
+
+Feature cycles are paused. Tyler asked to refine the app and cut fluff, and a UX audit runs first.
+
+- **Merged:** polish-44 (`22b2a1fe4`). It holds fixes only: z-index on Fixed and Sticky, breakpoint writes, `[corner-shape:…]` classes, catch-all route refusal, and contracts code off the Home screen.
+- **Held:** type-detail (half done, no checks yet), layout-more, frame-at and dark-a11y. Judge each against the UX audit before merging.
+- **Also shipped in this install:** the canvas clip and body source fix (`c88fc06d5`) and the Connect AI redesign (`918220d9f`).
+- **Checks:** gen-routes, typecheck, lint:gate (59,564), build:ui, clip (0 issues) and check-bundle pass. Pack passes and the app is installed. :4570 gives 200. Idle CPU is 0.01 CPU-s per minute after start-up.
+- **Incident:** the first pack failed on a short DNS outage, and the check script still copied the old cycle 43 build into /Applications. The script now stops when the pack fails.

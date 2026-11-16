@@ -9,11 +9,10 @@ import { WorkspaceHead } from "./workspace-head.js";
 
 interface IdeCenterProps {
   readonly ide: HomeIde;
-  readonly onOpen: (projectId: string) => void;
   readonly screen: HomeScreen;
 }
 
-const IdeCenter = ({ ide, onOpen, screen }: IdeCenterProps): ReactElement => {
+const IdeCenter = ({ ide, screen }: IdeCenterProps): ReactElement => {
   const { defaultLine, editConfirm, isEditApp, nav, onStarter, packName } = ide;
 
   const { onCancel: handleEditCancel, onConfirm: handleEditConfirm } =
@@ -30,7 +29,6 @@ const IdeCenter = ({ ide, onOpen, screen }: IdeCenterProps): ReactElement => {
       <WorkspaceCenter
         defaultLine={defaultLine}
         isEditApp={isEditApp}
-        onOpen={onOpen}
         onStarter={onStarter}
         workspace={nav.selected}
       />

@@ -242,7 +242,6 @@ const copy = {
   reactVitePress: "React + Vite project. Press for a plain HTML page.",
   reactViteProject: "React + Vite project",
   recentGroup: "Recent",
-  recentIn: "Recent in",
   recentProjects: "Recent projects",
   recentRuns: "Recent runs",
   redesignARoute: "Redesign a route",

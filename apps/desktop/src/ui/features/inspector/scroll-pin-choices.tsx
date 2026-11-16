@@ -49,22 +49,25 @@ const ScrollPinChoices = ({
   );
 
   return (
-    <fieldset className="segmented ins-scroll-pin-seg" aria-label={label}>
-      {options.map((option) => (
-        <button
-          key={option.value}
-          type="button"
-          value={option.value}
-          className={toOnClass(value === option.value)}
-          aria-pressed={value === option.value}
-          aria-disabled={option.value === locked}
-          data-tip={toLockedTip(option.value, locked, lockedTip)}
-          onClick={handlePick}
-        >
-          {option.label}
-        </button>
-      ))}
-    </fieldset>
+    <div className="ins-field ins-align-row ins-scroll-row">
+      <span className="ins-scrub static">{label}</span>
+      <fieldset className="segmented ins-scroll-pin-seg" aria-label={label}>
+        {options.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            value={option.value}
+            className={toOnClass(value === option.value)}
+            aria-pressed={value === option.value}
+            aria-disabled={option.value === locked}
+            data-tip={toLockedTip(option.value, locked, lockedTip)}
+            onClick={handlePick}
+          >
+            {option.label}
+          </button>
+        ))}
+      </fieldset>
+    </div>
   );
 };
 

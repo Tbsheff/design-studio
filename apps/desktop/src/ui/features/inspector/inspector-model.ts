@@ -58,13 +58,19 @@ const TABS: { readonly id: InspectorTab; readonly label: string }[] = [
   { id: "code", label: copy.tabCode },
 ];
 
-const toInspectorTabs = (isAppProject: boolean): typeof TABS => {
-  if (isAppProject) {
+const toInspectorTabs = (
+  isAppProject: boolean,
+  isTweaksShown: boolean
+): typeof TABS => {
+  if (isAppProject || !isTweaksShown) {
     return TABS.filter((entry) => entry.id !== "tweaks");
   }
 
   return TABS;
 };
+
+const hasTweakControls = (tweaks: InspectorProps["tweaks"]): boolean =>
+  (tweaks?.draft.state?.controls.length ?? 0) > 0 || tweaks?.isRunning === true;
 
 const EMPTY_HINT = copy.emptyHint;
 
@@ -100,6 +106,7 @@ const isVectorShown = (selection: SelectionContext[]): boolean =>
 export {
   EMPTY_HINT,
   TABS,
+  hasTweakControls,
   toInspectorEmptyReason,
   toInspectorTabs,
   isDirectEditable,

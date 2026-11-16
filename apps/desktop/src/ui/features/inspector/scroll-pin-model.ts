@@ -25,7 +25,7 @@ interface ScrollPinCurrent {
 }
 
 const SCROLL_PIN_OPTIONS: readonly ScrollPinOption[] = [
-  { label: "Scroll with parent", value: "flow" },
+  { label: "Scrolls", value: "flow" },
   { label: "Fixed", value: "fixed" },
   { label: "Sticky", value: "sticky" },
 ];
@@ -37,7 +37,7 @@ const FIXED_SIDE_OPTIONS: readonly FixedSideOption[] = [
 
 const SCROLL_PIN_TEXT = {
   pin: "Pin to",
-  position: "Position",
+  position: "Scroll",
 } as const;
 
 const ZERO = "0px";

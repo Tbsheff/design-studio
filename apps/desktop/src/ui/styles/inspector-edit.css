@@ -702,16 +702,18 @@ fieldset.ins-toggles {
 
 .ins-code-bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--s-1);
+  gap: 0 var(--s-1);
   flex: none;
   min-height: 36px;
   padding: 0 calc(var(--pane-inset) - var(--s-1)) 0 var(--pane-inset);
 }
 
 .ins-code-file {
-  flex: 1;
+  flex: 1 0 auto;
   min-width: 0;
+  max-width: 100%;
   overflow: hidden;
   color: var(--text-2);
   font-family: var(--mono);
@@ -720,6 +722,13 @@ fieldset.ins-toggles {
   white-space: nowrap;
   direction: rtl;
   text-align: left;
+}
+
+.ins-code-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  margin-left: auto;
 }
 
 .ins-code-error {

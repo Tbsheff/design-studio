@@ -22,7 +22,8 @@ const UiSelect = <OptionValue extends string>(
   const hasActive = isOpen && active >= 0;
   const hasTip = !isOpen && Boolean(props.tip);
   const selected = props.options[current];
-  const label = pick(current === -1, props.placeholder, selected?.label);
+  const selectedLabel = selected?.shortLabel ?? selected?.label;
+  const label = pick(current === -1, props.placeholder, selectedLabel);
   const valueClass = pick(current === -1, " placeholder", "");
 
   const menu = (

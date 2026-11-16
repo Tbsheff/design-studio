@@ -18,13 +18,21 @@ interface NumberStyleSelectsProps {
 const SPACING_OPTIONS = [
   { label: copy.numbersDefault, value: "default" },
   { label: copy.numbersTabular, value: "tabular" },
-  { label: copy.numbersProportional, value: "proportional" },
+  {
+    label: copy.numbersProportional,
+    shortLabel: copy.numbersProportionalShort,
+    value: "proportional",
+  },
 ];
 
 const FIGURE_OPTIONS = [
   { label: copy.numbersDefault, value: "default" },
   { label: copy.numbersLining, value: "lining" },
-  { label: copy.numbersOldstyle, value: "oldstyle" },
+  {
+    label: copy.numbersOldstyle,
+    shortLabel: copy.numbersOldstyleShort,
+    value: "oldstyle",
+  },
 ];
 
 const NumberStyleSelects = ({

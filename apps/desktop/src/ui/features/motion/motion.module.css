@@ -32,6 +32,10 @@
     color 120ms ease-out;
 }
 
+.tab {
+  padding: 0 var(--s-1);
+}
+
 .tab:hover:not(:disabled),
 .chip:hover:not(:disabled) {
   background: var(--surface-hover);

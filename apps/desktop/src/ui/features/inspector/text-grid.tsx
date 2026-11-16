@@ -58,15 +58,21 @@ const TextGrid = ({
       <span className="ins-scrub static">{copy.align}</span>
       <AlignField edit={edit} />
     </div>
-    <SpecNumberField edit={edit} field={LINE_HEIGHT} />
-    <SpecNumberField edit={edit} field={LETTER_SPACING} />
-    <SelectField
-      prop="text-transform"
-      label="Text case"
-      short="Case"
-      edit={edit}
-      options={CASES}
-    />
+    <div className="wide">
+      <SpecNumberField edit={edit} field={LINE_HEIGHT} />
+    </div>
+    <div className="wide">
+      <SpecNumberField edit={edit} field={LETTER_SPACING} />
+    </div>
+    <div className="wide">
+      <SelectField
+        prop="text-transform"
+        label="Text case"
+        short="Case"
+        edit={edit}
+        options={CASES}
+      />
+    </div>
     {selection && classes && (
       <TruncateRow edit={edit} selection={selection} classes={classes} />
     )}

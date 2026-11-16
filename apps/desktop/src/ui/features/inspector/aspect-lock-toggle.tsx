@@ -15,20 +15,17 @@ const AspectLockToggle = ({
   isOn,
   onToggle,
 }: AspectLockToggleProps): ReactElement => (
-  <div className="ins-field ins-align-row ins-aspect-lock">
-    <span className="ins-scrub static">{copy.aspectLock}</span>
-    <button
-      type="button"
-      className="icon-btn ins-link"
-      aria-label={copy.aspectLockToggle}
-      aria-pressed={isOn}
-      data-tip={copy.aspectLockToggle}
-      disabled={isDisabled}
-      onClick={onToggle}
-    >
-      <Icon name={toLinkIcon(isOn)} size={ICON_SIZE} />
-    </button>
-  </div>
+  <button
+    type="button"
+    className="icon-btn ins-link ins-aspect-lock"
+    aria-label={copy.aspectLockToggle}
+    aria-pressed={isOn}
+    data-tip={copy.aspectLockToggle}
+    disabled={isDisabled}
+    onClick={onToggle}
+  >
+    <Icon name={toLinkIcon(isOn)} size={ICON_SIZE} />
+  </button>
 );
 
 export { AspectLockToggle };

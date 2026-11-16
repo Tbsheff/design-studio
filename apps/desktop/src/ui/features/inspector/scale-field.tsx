@@ -2,7 +2,6 @@ import type { SelectionContext } from "@design-studio/contracts";
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
-import { ScaleFieldTokens } from "./scale-field-tokens.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 import { useScaleField } from "./use-scale-field.js";
 
@@ -20,11 +19,9 @@ const ScaleField = ({
     handleScrubDown,
     handleScrubMove,
     handleScrubUp,
-    handleToggleTokens,
     inputRef,
     isDisabled,
     note,
-    shouldKeepTokens,
   } = useScaleField(edit, selection);
 
   return (
@@ -54,7 +51,6 @@ const ScaleField = ({
           onKeyDown={handleKeyDown}
         />
       </div>
-      <ScaleFieldTokens isOn={shouldKeepTokens} onToggle={handleToggleTokens} />
       {note !== null && <output className="ins-note wide">{note}</output>}
     </div>
   );

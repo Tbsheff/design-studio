@@ -14,7 +14,9 @@
 
 .body {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--s-2);
+  min-width: 0;
 }
 
 .note {
@@ -74,6 +76,7 @@
 
 .ratio {
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .spacer {

@@ -17,14 +17,16 @@ const AppearanceGrid = ({ edit, fill }: AppearanceGridProps): ReactElement => (
   <div className="ins-grid">
     <div className="wide">{fill || <BackgroundField edit={edit} />}</div>
     <RadiusField edit={edit} short={copy.radius} />
-    <SelectField
-      prop="overflow"
-      label="Overflow"
-      short="Overflow"
-      edit={edit}
-      options={OVERFLOWS}
-    />
     <OpacityField edit={edit} />
+    <div className="wide">
+      <SelectField
+        prop="overflow"
+        label="Overflow"
+        short="Overflow"
+        edit={edit}
+        options={OVERFLOWS}
+      />
+    </div>
   </div>
 );
 

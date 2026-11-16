@@ -37,7 +37,7 @@ const SizeRow = ({
   );
 
   return (
-    <>
+    <div className="ins-size-pair">
       <SizeSlot
         key={selection.selector}
         axis={axis}
@@ -55,7 +55,7 @@ const SizeRow = ({
         facts={facts}
         used={used}
       />
-    </>
+    </div>
   );
 };
 

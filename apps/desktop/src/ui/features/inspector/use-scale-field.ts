@@ -34,11 +34,9 @@ interface ScaleField {
   readonly handleScrubDown: (event: PointerEvent<HTMLElement>) => void;
   readonly handleScrubMove: (event: PointerEvent<HTMLElement>) => void;
   readonly handleScrubUp: (event: PointerEvent<HTMLElement>) => void;
-  readonly handleToggleTokens: () => void;
   readonly inputRef: RefObject<HTMLInputElement | null>;
   readonly isDisabled: boolean;
   readonly note: string | null;
-  readonly shouldKeepTokens: boolean;
 }
 
 interface ScrubStart {
@@ -223,10 +221,6 @@ const useScaleField = (
     [commit]
   );
 
-  const handleToggleTokens = useCallback(() => {
-    scaleKeepTokens.set(!scaleKeepTokens.get());
-  }, []);
-
   const scrub = useScaleScrub(draft, setDraft, commit);
 
   return {
@@ -234,11 +228,9 @@ const useScaleField = (
     draft,
     handleDraftInput,
     handleKeyDown,
-    handleToggleTokens,
     inputRef,
     isDisabled: layerId === null || isPending,
     note,
-    shouldKeepTokens,
   };
 };
 

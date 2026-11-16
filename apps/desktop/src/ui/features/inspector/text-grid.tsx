@@ -4,10 +4,10 @@ import type { ReactElement, ReactNode } from "react";
 import { AlignField } from "./align-field.js";
 import { ColorField } from "./color-field.js";
 import { ContentRow } from "./content-row.js";
-import { copy } from "./copy.js";
 import type { DirectEdit } from "./deps.js";
 import type { ElementClasses } from "./element-classes-model.js";
 import { FontField } from "./font-field.js";
+import { GlyphNumberField } from "./glyph-number-field.js";
 import { NumberStyleRow } from "./number-style-row.js";
 import { SelectField } from "./select-field.js";
 import {
@@ -55,11 +55,10 @@ const TextGrid = ({
     />
     <TextStyleToggles edit={edit} />
     <div className="ins-field ins-align-row">
-      <span className="ins-scrub static">{copy.align}</span>
       <AlignField edit={edit} />
     </div>
-    <SpecNumberField edit={edit} field={LINE_HEIGHT} />
-    <SpecNumberField edit={edit} field={LETTER_SPACING} />
+    <GlyphNumberField edit={edit} field={LINE_HEIGHT} glyph="leading" />
+    <GlyphNumberField edit={edit} field={LETTER_SPACING} glyph="tracking" />
     <SelectField
       prop="text-transform"
       label="Text case"

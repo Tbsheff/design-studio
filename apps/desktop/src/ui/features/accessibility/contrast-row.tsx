@@ -35,10 +35,10 @@ const ContrastRow = ({
   const levels = levelsOf(pair);
 
   return (
-    <div className={styles.line} data-tip={copy.contrastTip}>
+    <div className={styles.line} data-tip={copy.contrastTip(pair.need)}>
       <span className={styles.label}>{copy.contrast}</span>
       <span aria-hidden="true" className={styles.swatch} style={swatch} />
-      <span className={styles.ratio}>{copy.ratio(pair.ratio, pair.need)}</span>
+      <span className={styles.ratio}>{copy.ratio(pair.ratio)}</span>
       <LevelBadge isPassing={levels.aa} level={copy.aa} />
       <LevelBadge isPassing={levels.aaa} level={copy.aaa} />
       <span className={styles.spacer} />

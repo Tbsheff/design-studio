@@ -38,8 +38,6 @@ import { PatternSlot, usePatternHost } from "../pattern/index.js";
 import { PropSlot, usePropHost } from "../prop/index.js";
 import { useStackingKeys } from "../stacking/index.js";
 import type { LayerEdits } from "../versions-layers-tokens/use-layer-edits.js";
-import { toLayerPickItems } from "./layer-pick-menu.js";
-import { toAfterSelectChild } from "./layer-pick-model.js";
 import type { MenuAnchor } from "./layer-pick-model.js";
 import {
   createItem,
@@ -49,10 +47,12 @@ import {
 } from "./preview-menu-create.js";
 import { PreviewMenu } from "./preview-menu.js";
 import type { PreviewMenuItem } from "./preview-menu.js";
+import { toPreviewMenuItems } from "./preview-more-item.js";
 import { toValueOr } from "./settle-model.js";
 import { useFramePin } from "./use-frame-pin.js";
 import type { FramePin } from "./use-frame-pin.js";
 import { useLayerPick } from "./use-layer-pick.js";
+import type { LayerPickHandle } from "./use-layer-pick.js";
 
 const renderGenerateTab = (props: GenerateTabProps): ReactElement => (
   <ImageGenerateSlot
@@ -231,7 +231,7 @@ interface HostBase {
 }
 
 interface MenuHosts {
-  readonly pickItems: PreviewMenuItem[];
+  readonly pick: LayerPickHandle;
   readonly devNotes: ReturnType<typeof useDevNoteHost>;
   readonly icons: ReturnType<typeof useIconHost>;
   readonly layerStyle: ReturnType<typeof useLayerStyleHost>;
@@ -259,18 +259,6 @@ const toHostItems = (
   ...hosts.patterns.items(item),
   hosts.pin.item,
 ];
-
-const toAfterCopyCss = (
-  items: PreviewMenuItem[],
-  extra: PreviewMenuItem[]
-): PreviewMenuItem[] =>
-  items.flatMap((item) => {
-    if (item.id === "copy-css") {
-      return [item, ...extra];
-    }
-
-    return [item];
-  });
 
 const toLayerStyleSlot = (hosts: MenuHosts): ReactNode => {
   if (!hosts.layerStyle.opened) {
@@ -397,12 +385,12 @@ const toMenuNode = (
     return null;
   }
 
-  const items = toAfterSelectChild(
-    toAfterCopyCss(
-      menuItems(options, target, onCreate, (item) => toHostItems(hosts, item)),
-      hosts.layerStyle.items(target)
-    ),
-    hosts.pickItems
+  const items = toPreviewMenuItems(
+    [
+      ...menuItems(options, target, onCreate, (item) => toHostItems(hosts, item)),
+      ...hosts.layerStyle.items(target),
+    ],
+    { onClose, pick: hosts.pick }
   );
 
   return (
@@ -427,7 +415,6 @@ const usePreviewMenu = (options: Options): PreviewMenuHandle => {
   const { selection } = options;
   const openCreate = useCallback(() => setCreating(selection), [selection]);
 
-  const pick = useLayerPick(options.port?.current ?? null, at?.local ?? null);
   const base = toHostBase(options);
   const isReact = options.ids.kind === "react";
   const variant = useEditVariant();
@@ -444,7 +431,7 @@ const usePreviewMenu = (options: Options): PreviewMenuHandle => {
     layerStyle: useLayerStyleHost({ ...base, selection, variant }),
     patterns: usePatternHost({ ...base, isReact }),
     photos: useImageSearchHost({ ...base, selection }),
-    pickItems: toLayerPickItems(pick, close),
+    pick: useLayerPick(options.port?.current ?? null, at?.local ?? null),
     pin: useFramePin(options.ids.projectId, options.ids.frameId),
     props: usePropHost({ ...base, isReact }),
   };

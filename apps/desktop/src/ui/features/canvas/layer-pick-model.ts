@@ -1,7 +1,5 @@
 import type { LayerPick } from "@design-studio/contracts";
 
-import type { PreviewMenuItem } from "./preview-menu-model.js";
-
 interface MenuLocal {
   readonly x: number;
   readonly y: number;
@@ -30,18 +28,6 @@ const toPickRows = (layers: LayerPick[]): LayerPickRow[] =>
     layer,
   }));
 
-const toAfterSelectChild = (
-  items: PreviewMenuItem[],
-  extra: PreviewMenuItem[]
-): PreviewMenuItem[] =>
-  items.flatMap((item) => {
-    if (item.id === "child") {
-      return [item, ...extra];
-    }
-
-    return [item];
-  });
-
-export { LAYER_PICK_WAIT_MS, toAfterSelectChild, toPickRows };
+export { LAYER_PICK_WAIT_MS, toPickRows };
 
 export type { LayerPickRow, MenuAnchor, MenuLocal };

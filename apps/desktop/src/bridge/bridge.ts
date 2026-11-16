@@ -174,6 +174,22 @@ const markScopedElement = (): void => {
   (document.head ?? document.documentElement).append(style);
 };
 
+const SCROLLBAR_STYLE_ID = "studio-scrollbar";
+
+const SCROLLBAR_CSS =
+  ":where(html){scrollbar-width:thin;scrollbar-color:rgb(128 128 128 / 0.35) transparent;}";
+
+const insertScrollbarStyle = (): void => {
+  if (document.querySelector(`#${SCROLLBAR_STYLE_ID}`)) {
+    return;
+  }
+
+  const style = document.createElement("style");
+  style.id = SCROLLBAR_STYLE_ID;
+  style.textContent = SCROLLBAR_CSS;
+  (document.head ?? document.documentElement).prepend(style);
+};
+
 const marker = "__studioBridgeStarted";
 const globalScope = window as unknown as Record<string, unknown>;
 
@@ -182,6 +198,7 @@ if (!globalScope[marker]) {
   exposeHeadlessScan(selectorFor);
   exposeHeadlessMatch(APP_MODE !== "next");
   markScopedElement();
+  insertScrollbarStyle();
   forceStateFromUrl(
     fromForcedParam(
       new URL(window.location.href).searchParams.get(FORCE_STATE_PARAM)

@@ -26,6 +26,8 @@ const BudgetNotice = ({
       <button
         type="button"
         className="btn ghost small run-retry"
+        data-tip={copy.budgetRetryTip}
+        data-tip-side="top"
         onClick={onRetry}
       >
         {copy.retry2}

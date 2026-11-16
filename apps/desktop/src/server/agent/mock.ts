@@ -50,7 +50,7 @@ import {
 } from "./mock-direct.js";
 import { applyMockPort, isMockPort, runMockPort } from "./mock-port.js";
 import type { MockPortDeps } from "./mock-port.js";
-import { applyMockReference } from "./mock-reference.js";
+import { applyMockReference, toMockStatus } from "./mock-reference.js";
 import {
   evaluateToolUse,
   toBashWriteProblem,
@@ -1326,7 +1326,7 @@ async function runMock(
     error: null,
     finalText,
     modelMs: 0,
-    status: prompt.includes("[budget]") ? "budget_exceeded" : "completed",
+    status: toMockStatus(input.ctx.request),
     usage: { ...MOCK_USAGE },
   };
 

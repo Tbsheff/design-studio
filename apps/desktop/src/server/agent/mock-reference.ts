@@ -58,4 +58,14 @@ const applyMockReference = async (
   };
 };
 
-export { applyMockReference };
+const toMockStatus = (
+  request: DriverInput["ctx"]["request"]
+): DriverOutcome["status"] => {
+  if (request.prompt.includes("[budget]") && !request.retryOf) {
+    return "budget_exceeded";
+  }
+
+  return "completed";
+};
+
+export { applyMockReference, toMockStatus };

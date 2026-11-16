@@ -33,7 +33,7 @@ const SizeSummary = ({
       id={`ins-${axis}`}
       className="ins-input num"
       aria-label={`${AXIS_NAME[axis]}, ${label}, ${px}`}
-      value={label}
+      value={px}
       readOnly
       onFocus={onStart}
       onPointerDown={onStartPointer}

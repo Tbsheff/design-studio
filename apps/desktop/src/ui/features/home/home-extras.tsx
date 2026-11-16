@@ -2,14 +2,10 @@ import type {
   WorkspaceFolder,
   WorkspaceList,
 } from "@design-studio/contracts/folders";
-import { useRef } from "react";
 import type { ReactElement } from "react";
 
-import type { SettingsDraft } from "../chat/settings-draft-model.js";
 import { HiddenProjectsNote } from "./hidden-projects-note.js";
 import { LocationField } from "./location-field.js";
-import { NewProjectAdvanced } from "./new-project-advanced.js";
-import { useFocusElement } from "./use-focus-request.js";
 import type { FolderChooser } from "./use-folder-chooser.js";
 
 interface ComposerFootProps {
@@ -19,14 +15,6 @@ interface ComposerFootProps {
   readonly chooser: FolderChooser;
   readonly onLocation: (path: string | null) => void;
   readonly onAddFolder: (path: string) => Promise<WorkspaceFolder | null>;
-  readonly advanced: {
-    readonly opened: number;
-    readonly draft: SettingsDraft;
-    readonly onDraft: (next: SettingsDraft) => void;
-    readonly designMd: string;
-    readonly onDesignMd: (value: string) => void;
-    readonly onError: (message: string) => void;
-  };
   readonly onHiddenMoved: () => void;
 }
 
@@ -47,17 +35,13 @@ const ComposerFoot = ({
   chooser,
   onLocation,
   onAddFolder,
-  advanced,
   onHiddenMoved,
 }: ComposerFootProps): ReactElement => {
   const homeDir = workspaces?.homeDir ?? null;
-  const { designMd, draft, onDesignMd, onDraft, onError, opened } = advanced;
-  const rowRef = useRef<HTMLDivElement>(null);
-  useFocusElement("location", rowRef);
 
   return (
     <div className="home-foot" data-location={toLocationMark(location)}>
-      <div className="home-foot-row" ref={rowRef} tabIndex={-1}>
+      <div className="home-foot-row">
         <LocationField
           folders={workspaces?.folders ?? EMPTY_FOLDERS}
           value={location}
@@ -68,15 +52,6 @@ const ComposerFoot = ({
           onAddFolder={onAddFolder}
         />
       </div>
-      <NewProjectAdvanced
-        key={opened}
-        isInitiallyOpen={opened > 0}
-        draft={draft}
-        onDraft={onDraft}
-        designMd={designMd}
-        onDesignMd={onDesignMd}
-        onError={onError}
-      />
       <HiddenProjectsNote homeDir={homeDir} onMoved={onHiddenMoved} />
     </div>
   );

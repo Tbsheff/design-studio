@@ -23,7 +23,7 @@ interface HomeUi {
   readonly modelSettings: ModelSettings;
   readonly plusActions: Omit<
     PlusMenuActions,
-    "kind" | "onDesignSystem" | "onKind"
+    "kind" | "onKind"
   >;
   readonly prefs: HomePrefs;
   readonly sendBlocker: string | null;
@@ -74,7 +74,6 @@ const toModelSettings = <Draft extends SettingsLike>(
     draft.setSettingsDraft((current) => ({ ...current, defaultLevel })),
   onModel: (model): void =>
     draft.setSettingsDraft((current) => ({ ...current, model })),
-  onMore: draft.openAdvanced,
 });
 
 const useHomeUi = <Draft extends SettingsLike>(deps: UiDeps<Draft>): HomeUi => {
@@ -91,9 +90,6 @@ const useHomeUi = <Draft extends SettingsLike>(deps: UiDeps<Draft>): HomeUi => {
       attachUrl: attach.openUrlForm,
       contextFileRef: attach.contextFileRef,
       fileRef: attach.fileRef,
-      hasTemplatesShown: homePrefs.hasTemplatesShown,
-      isAskingFirst: homePrefs.shouldAskFirst,
-      openAdvanced: draft.openAdvanced,
     }),
     prefs: homePrefs,
     sendBlocker: homeSendBlocker(

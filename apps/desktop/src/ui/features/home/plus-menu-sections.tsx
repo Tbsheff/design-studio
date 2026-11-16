@@ -1,7 +1,6 @@
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
-import { PlusDesignsSection } from "./plus-designs-section.js";
 import { PlusFilesSection } from "./plus-files-section.js";
 import { PlusItem } from "./plus-item.js";
 import { PlusKindItem } from "./plus-kind-item.js";
@@ -10,13 +9,11 @@ import { PlusRoutesSection } from "./plus-routes-section.js";
 
 interface PlusMenuSectionsProps {
   readonly actions: PlusMenuActions;
-  readonly locationLabel: string;
   readonly onClose: (shouldRefocus: boolean) => void;
 }
 
 const PlusMenuSections = ({
   actions,
-  locationLabel,
   onClose,
 }: PlusMenuSectionsProps): ReactElement => (
   <>
@@ -42,33 +39,6 @@ const PlusMenuSections = ({
       <PlusKindItem actions={actions} />
     </div>
     <PlusRoutesSection onClose={onClose} />
-    <PlusDesignsSection actions={actions} onClose={onClose} />
-    <div className="ui-menu-section">
-      <PlusItem
-        icon="palette"
-        label="Design system"
-        meta={null}
-        hasChevron
-        action={actions.onDesignSystem}
-        onClose={onClose}
-      />
-      <PlusItem
-        icon="sparkle"
-        label="Skills and DESIGN.md"
-        meta={null}
-        hasChevron={false}
-        action={actions.onSkills}
-        onClose={onClose}
-      />
-      <PlusItem
-        icon="folder"
-        label="Location"
-        meta={locationLabel}
-        hasChevron={false}
-        action={actions.onLocation}
-        onClose={onClose}
-      />
-    </div>
   </>
 );
 

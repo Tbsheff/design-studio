@@ -1,8 +1,5 @@
 import type { RefObject } from "react";
 
-import { uiStore } from "../../platform/storage.js";
-import { focusRequest } from "./focus-bus-model.js";
-import { homePrefs } from "./home-prefs-model.js";
 import type { PlusMenuActions } from "./plus-menu-model.js";
 import { startRepoImport } from "./repo-import-model.js";
 
@@ -12,9 +9,6 @@ interface PlusSource {
   readonly attachUrl: () => void;
   readonly contextFileRef: RefObject<HTMLInputElement | null>;
   readonly fileRef: RefObject<HTMLInputElement | null>;
-  readonly hasTemplatesShown: boolean;
-  readonly isAskingFirst: boolean;
-  readonly openAdvanced: () => void;
 }
 
 const toPlusActions = ({
@@ -23,15 +17,7 @@ const toPlusActions = ({
   attachUrl,
   contextFileRef,
   fileRef,
-  hasTemplatesShown,
-  isAskingFirst,
-  openAdvanced,
-}: PlusSource): Omit<
-  PlusMenuActions,
-  "kind" | "onDesignSystem" | "onKind"
-> => ({
-  hasTemplatesShown,
-  onAskFirst: (): void => homePrefs.set({ shouldAskFirst: !isAskingFirst }),
+}: PlusSource): Omit<PlusMenuActions, "kind" | "onKind"> => ({
   onAttachFile: (): void => fileRef.current?.click(),
   onAttachFolder: (): void => {
     attachFolder();
@@ -39,16 +25,9 @@ const toPlusActions = ({
   onAttachUrl: attachUrl,
   onAttachZip: (): void => contextFileRef.current?.click(),
   onImportRepo: startRepoImport,
-  onImportSystem: (): void =>
-    uiStore.set({ libraryFrom: null, screen: "design-systems" }),
   onLinkCode: (): void => {
     addAppFolder();
   },
-  onLocation: (): void => focusRequest("location", false, false),
-  onSkills: openAdvanced,
-  onTemplates: (): void =>
-    homePrefs.set({ hasTemplatesShown: !hasTemplatesShown }),
-  shouldAskFirst: isAskingFirst,
 });
 
 export { toPlusActions };

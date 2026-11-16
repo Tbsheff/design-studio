@@ -1,4 +1,4 @@
-type FocusTarget = "advanced" | "location" | "prompt";
+type FocusTarget = "prompt";
 
 interface FocusRequest {
   readonly isAtEnd: boolean;

@@ -36,22 +36,18 @@ interface DraftConfig<Draft extends SettingsLike> {
 }
 
 interface HomeDraft<Draft extends SettingsLike> {
-  readonly advancedOpened: number;
   readonly changeKind: (next: ProjectKind) => void;
   readonly designCount: number;
-  readonly designMd: string;
   readonly kind: ProjectKind;
   readonly maxDesigns: number;
   readonly modelSizes: string[];
   readonly modelValue: string;
-  readonly openAdvanced: () => void;
   readonly pickTemplate: (
     picked: TemplatePick,
     starter: Starter | null
   ) => void;
   readonly prompt: string;
   readonly questions: ClarifyQuestion[] | null;
-  readonly setDesignMd: Dispatch<SetStateAction<string>>;
   readonly setDesigns: Dispatch<SetStateAction<number>>;
   readonly setPrompt: Dispatch<SetStateAction<string>>;
   readonly setQuestions: Dispatch<SetStateAction<ClarifyQuestion[] | null>>;
@@ -65,9 +61,7 @@ const useHomeDraft = <Draft extends SettingsLike>(
 ): HomeDraft<Draft> => {
   const [prompt, setPrompt] = useState("");
   const [kind, setKind] = useState<ProjectKind>("html");
-  const [designMd, setDesignMd] = useState("");
   const [designs, setDesigns] = useState(1);
-  const [advancedOpened, setAdvancedOpened] = useState(0);
   const [template, setTemplate] = useState<TemplateChoice | null>(null);
   const [questions, setQuestions] = useState<ClarifyQuestion[] | null>(null);
   const [settingsDraft, setSettingsDraft] = useState(config.initialDraft);
@@ -107,28 +101,19 @@ const useHomeDraft = <Draft extends SettingsLike>(
     setDesigns((count) => Math.min(count, config.maxDesignsFor(next)));
   };
 
-  const openAdvanced = (): void => {
-    setAdvancedOpened((count) => count + 1);
-    focusRequest("advanced", false, false);
-  };
-
   const modelSizes = config.modelIds.map((id) => modelSummary(id));
   const modelValue = modelSummary(settingsDraft.model);
 
   return {
-    advancedOpened,
     changeKind,
     designCount,
-    designMd,
     kind,
     maxDesigns,
     modelSizes,
     modelValue,
-    openAdvanced,
     pickTemplate,
     prompt,
     questions,
-    setDesignMd,
     setDesigns,
     setPrompt,
     setQuestions,

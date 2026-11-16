@@ -5,7 +5,7 @@ import type { AppHealth } from "./deps.js";
 import { homePrefs } from "./home-prefs-model.js";
 import type { HomeFilter } from "./home-prefs-model.js";
 import type { LibraryModule } from "./lazy-parts-model.js";
-import { toGridFilter } from "./library-view-model.js";
+import { toGridFilter, toShownFilter } from "./library-view-model.js";
 import type { CardActions } from "./project-card-model.js";
 import { SystemActions } from "./system-actions.js";
 import { SystemPackSection } from "./system-pack-section.js";
@@ -13,6 +13,7 @@ import { SystemPackSection } from "./system-pack-section.js";
 interface LibraryBodyProps {
   readonly lib: LibraryModule;
   readonly filter: HomeFilter;
+  readonly hasPrototypesTab: boolean;
   readonly projects: Project[];
   readonly health: Map<string, AppHealth>;
   readonly homeDir: string | null;
@@ -31,8 +32,12 @@ const clearFilter = (): void => {
   homePrefs.set({ filter: "all" });
 };
 
-const toTabs = (lib: LibraryModule, filter: HomeFilter): ReactElement => (
-  <lib.FilterChips filter={filter} />
+const toTabs = (
+  lib: LibraryModule,
+  filter: HomeFilter,
+  hasPrototypesTab: boolean
+): ReactElement => (
+  <lib.FilterChips filter={filter} hasPrototypesTab={hasPrototypesTab} />
 );
 
 const toHeadActions = (isSystems: boolean): ReactElement | null => {
@@ -45,7 +50,8 @@ const toHeadActions = (isSystems: boolean): ReactElement | null => {
 
 const LibraryBody = ({
   lib,
-  filter,
+  filter: storedFilter,
+  hasPrototypesTab,
   projects,
   health,
   homeDir,
@@ -59,6 +65,7 @@ const LibraryBody = ({
   listError,
   onPickPack,
 }: LibraryBodyProps): ReactElement => {
+  const filter = toShownFilter(storedFilter, hasPrototypesTab);
   const isSystems = filter === "systems";
   const gridFilter = toGridFilter(filter, lib.FILTER_EMPTY, clearFilter);
 
@@ -75,7 +82,7 @@ const LibraryBody = ({
         onQuery={onQuery}
         searchRef={searchRef}
         filter={gridFilter}
-        tabs={toTabs(lib, filter)}
+        tabs={toTabs(lib, filter, hasPrototypesTab)}
         headActions={toHeadActions(isSystems)}
       />
       {isSystems && (

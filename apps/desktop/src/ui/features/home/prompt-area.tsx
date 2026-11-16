@@ -10,15 +10,9 @@ import type {
 
 import { prefetchStudio } from "../../app/screen-preload.js";
 import { copy } from "./copy.js";
-import {
-  EXAMPLE_HINT_ID,
-  toExamples,
-  toPromptDescribedBy,
-} from "./home-model.js";
+import { EXAMPLE_HINT_ID, toPromptDescribedBy } from "./home-model.js";
 import { useExampleTake } from "./use-example-take.js";
-import { useExample } from "./use-example.js";
 import { usePromptElement } from "./use-prompt-element.js";
-import { useStarters } from "./use-starters.js";
 
 interface PromptAreaProps {
   readonly textareaRef: RefObject<HTMLTextAreaElement | null>;
@@ -56,11 +50,10 @@ const PromptArea = ({
     value,
     toPromptDescribedBy(describedBy, isExampleShown)
   );
-  const example = useExample(toExamples(useStarters()), !isExampleShown);
   let shown: string | null = null;
 
   if (isExampleShown) {
-    shown = example;
+    shown = copy.exampleBrief;
   }
 
   const takeExample = useExampleTake(shown, value, onChange);
@@ -97,7 +90,7 @@ const PromptArea = ({
         onChange={updateValue}
         onPaste={onPaste}
         onKeyDown={submitOnEnter}
-        placeholder={placeholder ?? `${example}${copy.tabToUse}`}
+        placeholder={placeholder ?? `${copy.exampleBrief}${copy.tabToUse}`}
       />
       {isExampleShown && (
         <span id={EXAMPLE_HINT_ID} className="sr-only">

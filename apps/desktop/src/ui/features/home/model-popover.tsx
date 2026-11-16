@@ -1,5 +1,4 @@
-import { Icon } from "@design-studio/ui";
-import { useCallback, useRef } from "react";
+import { useRef } from "react";
 import type { ReactElement, RefObject } from "react";
 
 import { copy } from "./copy.js";
@@ -18,17 +17,6 @@ interface ModelPopoverProps {
   readonly isClosing: boolean;
 }
 
-const ICON_SIZE = 14;
-
-const toMoreSection = (openMore: () => void): ReactElement => (
-  <div className="ui-menu-section">
-    <button type="button" className="ui-menu-item" onClick={openMore}>
-      <Icon name="sliders" size={ICON_SIZE} />
-      {copy.skillsLimitsAndDesignMd}
-    </button>
-  </div>
-);
-
 const ModelPopover = ({
   trigger,
   onClose,
@@ -38,12 +26,7 @@ const ModelPopover = ({
   const group = useRef<HTMLDivElement>(null);
   useMenuArrowKeys(group, MENU_ITEMS);
 
-  const { onMore, onModel } = settings;
-
-  const openMore = useCallback((): void => {
-    onClose(false);
-    onMore();
-  }, [onClose, onMore]);
+  const { onModel } = settings;
 
   return (
     <Pop
@@ -70,7 +53,6 @@ const ModelPopover = ({
           />
         ))}
       </div>
-      {toMoreSection(openMore)}
     </Pop>
   );
 };

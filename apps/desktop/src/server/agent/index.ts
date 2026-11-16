@@ -173,7 +173,7 @@ export {
 
 export { loadRepoContext } from "./repo-context.js";
 
-export { resolveRunTarget } from "./run-target.js";
+export { resolveRunTarget, routeFileOf } from "./run-target.js";
 
 export { applySelectionPicture } from "./selection-picture.js";
 

@@ -31,7 +31,7 @@ const toCssPixels = (style: CSSStyleDeclaration, name: string): number => {
   return value;
 };
 
-const toFreeStage = (element: HTMLElement): Stage => {
+const toFreeStage = (element: HTMLElement, isInspectorOpen: boolean): Stage => {
   const style = getComputedStyle(element);
   const gap = toCssPixels(style, "--dock-gap");
   const inspector = toCssPixels(style, "--inspector-w");
@@ -40,7 +40,7 @@ const toFreeStage = (element: HTMLElement): Stage => {
   let right = 0;
   let bottom = 0;
 
-  if (inspector > 0) {
+  if (isInspectorOpen && inspector > 0) {
     right = inspector + gap * RIGHT_GAPS;
   }
 
@@ -54,8 +54,17 @@ const toFreeStage = (element: HTMLElement): Stage => {
   };
 };
 
-const useStageSize = (stageRef: RefObject<HTMLDivElement | null>): Stage => {
+const useStageSize = (
+  stageRef: RefObject<HTMLDivElement | null>,
+  isInspectorOpen: boolean,
+  fitCount: number
+): Stage => {
   const [stage, setStage] = useState<Stage>({ height: 0, width: 0 });
+  const inspectorOpen = useRef(isInspectorOpen);
+
+  useLayoutEffect(() => {
+    inspectorOpen.current = isInspectorOpen;
+  });
 
   useLayoutEffect(() => {
     const element = stageRef.current;
@@ -64,7 +73,8 @@ const useStageSize = (stageRef: RefObject<HTMLDivElement | null>): Stage => {
       return;
     }
 
-    const measure = (): void => setStage(toFreeStage(element));
+    const measure = (): void =>
+      setStage(toFreeStage(element, inspectorOpen.current));
 
     const observer = new ResizeObserver(measure);
 
@@ -73,6 +83,19 @@ const useStageSize = (stageRef: RefObject<HTMLDivElement | null>): Stage => {
 
     return (): void => observer.disconnect();
   }, [stageRef]);
+
+  const seenFit = useRef(fitCount);
+
+  useLayoutEffect(() => {
+    const element = stageRef.current;
+
+    if (!element || seenFit.current === fitCount) {
+      return;
+    }
+
+    seenFit.current = fitCount;
+    setStage(toFreeStage(element, inspectorOpen.current));
+  }, [stageRef, fitCount]);
 
   return stage;
 };

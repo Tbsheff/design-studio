@@ -122,6 +122,7 @@ const useStageViewport = (props: ViewProps): StageViewport => {
   const pz = usePanZoom({
     ...toPanZoomLayout({ active, shown, ui }),
     artboardRef,
+    isInspectorOpen: props.shell?.isInspectorOpen ?? false,
     selectionRect,
     stageRef,
   });

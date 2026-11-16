@@ -47,8 +47,8 @@ const usePanZoom = ({
   layout,
   setting,
   selectionRect,
+  isInspectorOpen,
 }: Options): PanZoom => {
-  const stage = useStageSize(stageRef);
   const [panning, setPanning] = useState(false);
   const { spaceHeld, zoomHeld } = useHeldKeys();
   const [, requestRender] = useReducer(countRender, 0);
@@ -57,6 +57,8 @@ const usePanZoom = ({
     () => createPanZoomState(stageRef, artboardRef, requestRender),
     [stageRef, artboardRef, requestRender]
   );
+
+  const stage = useStageSize(stageRef, isInspectorOpen, state.fitCount);
 
   const api = useMemo(() => toPanZoomApi(state), [state]);
   const committedZoom = toCommittedZoom(stage, layout.bounds, setting);

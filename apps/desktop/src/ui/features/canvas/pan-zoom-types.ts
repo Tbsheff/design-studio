@@ -15,6 +15,7 @@ interface Options {
   layout: PanZoomLayout;
   setting: ZoomSetting;
   selectionRect: () => Box | null;
+  isInspectorOpen: boolean;
 }
 
 export type { Options, PanZoomLayout };

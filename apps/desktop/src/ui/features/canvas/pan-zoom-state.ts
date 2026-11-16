@@ -46,6 +46,7 @@ interface FrameOrigin {
 
 interface PanZoomState {
   artboardRef: RefObject<HTMLDivElement | null>;
+  fitCount: number;
   fitKey: string | null;
   frameOrigin: FrameOrigin | null;
   live: PanZoomLive;
@@ -135,6 +136,7 @@ const createPanZoomState = (
   render: () => void
 ): PanZoomState => ({
   artboardRef: artboard,
+  fitCount: 0,
   fitKey: null,
   frameOrigin: null,
   live: EMPTY_LIVE,

@@ -142,6 +142,7 @@ const zoomStep = (state: PanZoomState, direction: 1 | -1): void =>
   zoomTo(state, toView(state).zoom * ZOOM_STEP ** direction);
 
 const fitZoom = (state: PanZoomState): void => {
+  state.fitCount += 1;
   state.offset = { x: 0, y: 0 };
   commitZoom(state, "fit");
 };

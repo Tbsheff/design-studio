@@ -6,6 +6,7 @@ import type { StackingAppKey } from "../../domain/stacking-key-events.js";
 import { uiStore } from "../../platform/storage.js";
 import { copy } from "./copy.js";
 import type { PreviewMenuItem } from "./preview-menu.js";
+import { toValueOr } from "./settle-model.js";
 
 interface CreateOptions {
   readonly edits: { readonly busy: boolean; readonly enabled: boolean };
@@ -26,6 +27,10 @@ const disabledBy = (reason: string | null): DisabledReason => {
   }
 
   return {};
+};
+
+const toClipboard = async (text: string): Promise<void> => {
+  await toValueOr(navigator.clipboard.writeText(text), null);
 };
 
 const createBlocker = (options: CreateOptions): string | null => {
@@ -167,4 +172,10 @@ const toTransformMenuItems = (): PreviewMenuItem[] => [
   ),
 ];
 
-export { createItem, disabledBy, toLayersItem, toTransformMenuItems };
+export {
+  createItem,
+  disabledBy,
+  toClipboard,
+  toLayersItem,
+  toTransformMenuItems,
+};

@@ -1,9 +1,13 @@
 import { lazy } from "react";
 
-const ContentPanel = lazy(async () => {
-  const loaded = await import("./content-panel.js");
+const ContentMount = lazy(async () => {
+  const loaded = await import("./content-mount.js");
 
-  return { default: loaded.ContentPanel };
+  return { default: loaded.ContentMount };
 });
 
-export { ContentPanel };
+export { useContentHost } from "./use-content-host.js";
+
+export { ContentMount };
+
+export type { ContentHost } from "./use-content-host.js";

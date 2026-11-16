@@ -35,8 +35,8 @@ const useTryVariants = (
           variations.askElement(selection[0]);
         }
       },
-      slash: "variants",
-      title: "Try variants of the selected element",
+      slash: "variations",
+      title: "Make variations of the selected layer",
     };
 
     if (blocker) {

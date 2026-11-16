@@ -75,12 +75,13 @@ const useSlashSections = ({
   const on = enabledSkills(catalog, disabled);
   const excluded = new Set(exclude);
 
-  const all = on.filter(
+  const usable = on.filter(
     (skill) => skill.modelInvocable && !excluded.has(skill.id)
   );
 
+  const all = usable.filter((skill) => skill.origin !== "personal");
   const manualCount = on.filter((skill) => !skill.modelInvocable).length;
-  const status = skillStatus(catalog, error, all.length);
+  const status = skillStatus(catalog, error, usable.length);
 
   const sections = (query: string): SlashSection[] => {
     const skills = all.filter((skill) => matches(skill, query));

@@ -7,6 +7,12 @@ import { copy } from "./copy.js";
 import { MentionOptionRow } from "./mention-option-row.js";
 import type { MentionOption } from "./mention-picker.js";
 
+const isFirstFrame = (
+  shown: readonly MentionOption[],
+  index: number
+): boolean =>
+  shown.findIndex((option) => option.mention.kind === "frame") === index;
+
 const MentionList = ({
   shown,
   current,
@@ -47,7 +53,16 @@ const MentionList = ({
         className="skill-opts"
         id="mention-options"
       >
-        {shown.map((option, index) => (
+        {shown.flatMap((option, index) => [
+          isFirstFrame(shown, index) && (
+            <li
+              key="frames-heading"
+              className="slash-heading"
+              role="presentation"
+            >
+              {copy.mentionFrames}
+            </li>
+          ),
           <MentionOptionRow
             key={option.key}
             option={option}
@@ -55,12 +70,12 @@ const MentionList = ({
             isCurrent={option === current}
             onHover={onHover}
             onPick={onPick}
-          />
-        ))}
+          />,
+        ])}
         {shown.length === 0 && (
           <li className="skill-empty">
-            {loading && "Loading files…"}
-            {!loading && "Nothing matches."}
+            {loading && copy.mentionLoading}
+            {!loading && copy.mentionNoMatch}
           </li>
         )}
       </ul>

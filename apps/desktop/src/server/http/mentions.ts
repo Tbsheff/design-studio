@@ -43,6 +43,32 @@ function parseComponentMention(record: Record<string, unknown>): RunMention {
   };
 }
 
+const FRAME_ID_MAX = 64;
+
+const toFrameLabel = (value: unknown): string | null => {
+  if (typeof value === "string" && value.length <= 200) {
+    return value;
+  }
+
+  return null;
+};
+
+const toFrameMention = (record: Record<string, unknown>): RunMention => {
+  const frameId = record["frameId"];
+
+  if (
+    typeof frameId !== "string" ||
+    frameId.length === 0 ||
+    frameId.length > FRAME_ID_MAX
+  ) {
+    throw new BadRequestError(
+      `a frame mention needs a frameId of 1 to ${FRAME_ID_MAX} chars`
+    );
+  }
+
+  return { frameId, kind: "frame", label: toFrameLabel(record["label"]) };
+};
+
 export function parseMentions(raw: unknown): RunMention[] | undefined {
   if (raw === undefined) {
     return undefined;
@@ -80,8 +106,12 @@ export function parseMentions(raw: unknown): RunMention[] | undefined {
       return parseComponentMention(record);
     }
 
+    if (record["kind"] === "frame") {
+      return toFrameMention(record);
+    }
+
     throw new BadRequestError(
-      "each mention must be a file path, a token or a component"
+      "each mention must be a file path, a token, a component or a frame"
     );
   });
 }

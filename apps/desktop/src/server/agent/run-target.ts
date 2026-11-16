@@ -53,7 +53,7 @@ type SavedFrame = NonNullable<ReturnType<typeof findFrame>>;
 
 const MAX_IN_VIEW = 8;
 
-async function routeFileOf(
+export async function routeFileOf(
   project: Project,
   direction: Direction,
   framePath: string

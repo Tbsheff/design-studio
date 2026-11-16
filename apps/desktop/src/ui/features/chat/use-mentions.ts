@@ -11,6 +11,7 @@ import {
   toDraftWithoutMention,
   toMentionOptions,
 } from "./mention-options-model.js";
+import type { MentionFrameSource } from "./mention-options-model.js";
 import { mentionQueryOf, useMentionPicker } from "./mention-picker.js";
 import type { MentionOption } from "./mention-picker.js";
 import { useMentionFiles } from "./use-mention-files.js";
@@ -24,6 +25,7 @@ interface Options {
   draft: string;
   setDraft: (value: string) => void;
   components?: readonly ComponentInfo[] | null;
+  frames?: readonly MentionFrameSource[] | null;
   request?: MentionRequest | null;
   lead?: readonly MentionOption[];
   onLead?: (option: MentionOption) => void;
@@ -103,6 +105,7 @@ const toFocusPath = (option: MentionOption): string => {
 const useMentions = (config: Options): UseMentionsResult => {
   const { projectId, directionId, tokens, draft, setDraft } = config;
   const { components, request, lead, onLead } = config;
+  const frames = config.frames ?? null;
   const [dismissed, setDismissed] = useState<string | null>(null);
   const query = toActiveQuery(draft, dismissed);
   const files = useMentionFiles(projectId, directionId, query === "");
@@ -115,12 +118,13 @@ const useMentions = (config: Options): UseMentionsResult => {
       toMentionOptions({
         components,
         files,
+        frames,
         isFocusShown,
         lead,
         mentions,
         tokens,
       }),
-    [components, files, isFocusShown, lead, mentions, tokens]
+    [components, files, frames, isFocusShown, lead, mentions, tokens]
   );
 
   const picker = useMentionPicker(options, query);
@@ -169,4 +173,4 @@ const useMentions = (config: Options): UseMentionsResult => {
 
 export { componentMention, useMentions };
 
-export type { MentionRequest, UseMentionsResult };
+export type { MentionFrameSource, MentionRequest, UseMentionsResult };

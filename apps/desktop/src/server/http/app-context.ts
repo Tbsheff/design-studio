@@ -70,7 +70,7 @@ import { createVersionNames } from "../store/version-names.js";
 import { createWorkspaceStore } from "../store/workspaces.js";
 import type { WorkspaceStore } from "../store/workspaces.js";
 import { freshSessionPatch } from "./app-project-files.js";
-import { readMentionFiles } from "./mentions.js";
+import { toMentionContext } from "./mention-frames.js";
 import { createFolderPicker } from "./pick-folder.js";
 import type { FolderPicker } from "./pick-folder.js";
 import { rulesLoader } from "./rules-routes.js";
@@ -407,8 +407,8 @@ const createAppContext = (deps: AppDeps) => {
         return null;
       });
 
-    const mentionFiles = await readMentionFiles(
-      direction.workTree,
+    const mentioned = await toMentionContext(
+      { canvas, direction, project, projects },
       request.mentions
     );
 
@@ -449,7 +449,7 @@ const createAppContext = (deps: AppDeps) => {
       designRules,
       designSystem,
       direction,
-      mentionFiles,
+      ...mentioned,
       previewUrl,
       project,
       repoContext,

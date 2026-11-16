@@ -301,6 +301,7 @@ interface AgentRunContext {
   designRules?: DesignRule[];
   previewUrl: string | null;
   mentionFiles?: MentionFile[];
+  mentionFrames?: MentionFrame[];
   target?: RunTarget | null;
   repoContext?: string | null;
   lockedPaths?: string[];
@@ -310,6 +311,16 @@ interface MentionFile {
   path: string;
   text: string;
   truncated: boolean;
+}
+
+interface MentionFrame {
+  readonly id: string;
+  readonly label: string | null;
+  readonly path: string;
+  readonly state: string;
+  readonly width: number;
+  readonly height: number;
+  readonly pageFile: string | null;
 }
 
 interface AgentRunner {
@@ -433,6 +444,7 @@ export type {
   FileContents,
   InspectResult,
   MentionFile,
+  MentionFrame,
   PeekOptions,
   PreviewService,
   ProbeRect,

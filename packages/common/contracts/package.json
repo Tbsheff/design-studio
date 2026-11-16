@@ -44,6 +44,7 @@
     "./port": "./src/port.ts",
     "./props": "./src/props.ts",
     "./review": "./src/review.ts",
+    "./run-mention": "./src/run-mention.ts",
     "./settings-defaults": "./src/settings-defaults.ts",
     "./share": "./src/share.ts",
     "./share-play": "./src/share-play.ts",

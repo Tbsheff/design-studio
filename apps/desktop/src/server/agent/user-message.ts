@@ -19,10 +19,12 @@ import {
 import type {
   AgentRunContext,
   MentionFile,
+  MentionFrame,
 } from "../../shared/server-ports.js";
 import { referencePagesBlock } from "../design-system/reference-page.js";
 import { referenceBlock, variationBlock } from "../variations/message.js";
 import { toFocusLines } from "./focus-block.js";
+import { toFrameMentionBlock } from "./frame-mention-block.js";
 import { toFrameContextText } from "./guide-text.js";
 import { toImageListLines } from "./image-list.js";
 import { layoutLines } from "./layout-region.js";
@@ -157,7 +159,8 @@ function componentLine(
 
 function mentionsBlock(
   mentions: readonly RunMention[],
-  files: readonly MentionFile[]
+  files: readonly MentionFile[],
+  frames: readonly MentionFrame[]
 ): string | null {
   const tokens = mentions.flatMap((mention) =>
     mention.kind === "token" ? [`${mention.name}: ${mention.value}`] : []
@@ -189,6 +192,11 @@ function mentionsBlock(
     parts.push(
       `<mentioned-components>\nThe user pointed at these components. Reuse them instead of new markup.\n${components.join("\n")}\n</mentioned-components>`
     );
+  }
+  const frameBlock = toFrameMentionBlock(frames);
+
+  if (frameBlock) {
+    parts.push(frameBlock);
   }
   return parts.length > 0 ? parts.join("\n") : null;
 }
@@ -369,6 +377,7 @@ export function buildUserText(
     | "designMd"
     | "designSystem"
     | "mentionFiles"
+    | "mentionFrames"
     | "target"
     | "repoContext"
   > & { attachments?: readonly unknown[]; project?: { kind: ProjectKind } }
@@ -417,7 +426,8 @@ export function buildUserText(
   }
   const mentions = mentionsBlock(
     ctx.request.mentions ?? [],
-    ctx.mentionFiles ?? []
+    ctx.mentionFiles ?? [],
+    ctx.mentionFrames ?? []
   );
 
   if (mentions) {

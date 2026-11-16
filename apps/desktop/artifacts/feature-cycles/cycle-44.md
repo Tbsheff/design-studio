@@ -369,3 +369,6 @@ Feature cycles are paused. Tyler asked to refine the app and cut fluff, and a UX
 - **Bytes:** cuts added 19 B to Home B1; one shared `pick` helper removed it. B1 271,671 B, baseline lowered (`23c6947c9`).
 - **Checks:** gen-routes, typecheck, lint:gate (59,501), build:ui, clip (0), check-bundle pass. App installed, :4570 200, idle CPU 0.02 CPU-s per minute.
 - **Open:** stale e2e specs `canvas-r2`, `canvas-r7`, `versions-panel` reference removed controls; App workspaces have no template entry; risky defaults still on.
+
+- **Merged:** dark-a11y (`c110797d6`): Light / Dark choice in the Accessibility section (now under More). Checks pass, app installed.
+- **Fixed:** App and folder workspaces have a "Start from a template" entry again (`3e1064431`), not checked in the UI.

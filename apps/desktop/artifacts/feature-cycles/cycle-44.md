@@ -348,3 +348,11 @@ Feature cycles are paused. Tyler asked to refine the app and cut fluff, and a UX
 - **Also shipped in this install:** the canvas clip and body source fix (`c88fc06d5`) and the Connect AI redesign (`918220d9f`).
 - **Checks:** gen-routes, typecheck, lint:gate (59,564), build:ui, clip (0 issues) and check-bundle pass. Pack passes and the app is installed. :4570 gives 200. Idle CPU is 0.01 CPU-s per minute after start-up.
 - **Incident:** the first pack failed on a short DNS outage, and the check script still copied the old cycle 43 build into /Applications. The script now stops when the pack fails.
+
+## UX audit bug fixes (2026-11-15)
+
+- **Audit:** cloud session report on branch `ux-audit` (`artifacts/ux-audit/report.md`): 72 rows, 19-item cut list waiting for Tyler.
+- **Merged:** feat/fix-home, feat/fix-insp, feat/fix-canvas, feat/fix-chat (`42ccf6438`). Home row buttons, Esc on shortcuts, "Project settings…" label, Margin/Padding overlap, inspector truncation, Fit clear of the inspector, preset frame names, Ask chip placement, Review panel position, Plan-mode composer, budget retry text, approval wrap.
+- **Clip:** the frame-selection step started its drag on the left tool rail after the Fit change; the check now starts on empty canvas (`0e3a0d9a6`). The app was not broken.
+- **Checks:** gen-routes, typecheck, lint:gate (59,563), build:ui, clip (0), check-bundle pass. Pack passes and the app is installed; :4570 gives 200; idle CPU 0.01 CPU-s per minute.
+- **Open for Tyler:** the cut list; risky defaults `allowBash`, `allowInstall`, `autoApprove` are on (`packages/common/contracts/src/settings-defaults.ts`).

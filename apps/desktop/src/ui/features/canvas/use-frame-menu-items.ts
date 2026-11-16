@@ -1,5 +1,7 @@
 import { useMemo } from "react";
 
+import { runCommand } from "../../canvas-toolbar-slots.js";
+
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import { copy } from "./copy.js";
 import type { FrameMenuEntry } from "./frame-menu-groups-model.js";
@@ -15,6 +17,15 @@ interface FrameMenuItems {
   readonly items: FrameMenuEntry[];
   readonly pageMenu: FrameMenu;
 }
+
+const EXPORT_ITEM: FrameMenuEntry = {
+  icon: "download",
+  id: "export",
+  label: copy.frameExportItem,
+  run: () => {
+    runCommand("version.export");
+  },
+};
 
 const toMenuItems = (
   items: readonly FrameMenuEntry[],
@@ -48,7 +59,7 @@ const useFrameMenuItems = (
   );
 
   const items = useMemo(
-    () => toMenuItems([page, ...own], [board, pin.item, shareLink]),
+    () => toMenuItems([page, ...own], [board, pin.item, shareLink, EXPORT_ITEM]),
     [page, own, board, pin.item, shareLink]
   );
 

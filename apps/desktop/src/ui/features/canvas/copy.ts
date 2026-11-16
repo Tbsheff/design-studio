@@ -89,6 +89,7 @@ const copy = {
   frameAlignSpreadX: "Spread horizontally",
   frameAlignSpreadY: "Spread vertically",
   frameAlignTop: "Align top",
+  frameExportItem: "Export…",
   frameFitBusy: "Measuring the pages…",
   frameFitDone: "Resized ",
   frameFitFailed: "Could not resize: ",

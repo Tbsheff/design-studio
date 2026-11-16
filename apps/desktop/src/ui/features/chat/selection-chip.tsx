@@ -5,22 +5,29 @@ import type { ReactElement } from "react";
 
 import { chipVariants } from "../../ai/components/ai/chip-variants.js";
 import { cn } from "../../ai/lib/utils.js";
-import { toSnippet } from "./selection-chip-model.js";
+import { copy } from "./copy.js";
+import {
+  toSelectionSnippet,
+  toSelectionTag,
+  toSelectionTip,
+} from "./selection-chip-model.js";
 
 const CHIP_ICON = 12;
 
 interface SelectionChipProps {
   readonly onRemove: (selector: string) => void;
-  readonly selected: SelectionContext;
+  readonly selection: readonly SelectionContext[];
 }
 
 const SelectionChip = ({
-  selected,
+  selection,
   onRemove,
 }: SelectionChipProps): ReactElement => {
   const remove = useCallback((): void => {
-    onRemove(selected.selector);
-  }, [onRemove, selected.selector]);
+    for (const selected of selection) {
+      onRemove(selected.selector);
+    }
+  }, [onRemove, selection]);
 
   return (
     <span
@@ -32,18 +39,21 @@ const SelectionChip = ({
       )}
       data-size="sm"
       data-slot="chip"
-      data-tip={selected.selector}
+      data-testid="selection-chip"
+      data-tip={toSelectionTip(selection)}
       data-tip-side="top"
     >
       <Icon name="pointer" size={CHIP_ICON} />
-      <span className="chip-text min-w-0 truncate font-mono">
-        <span className="chip-tag font-bold">{selected.tag}</span>
-        {toSnippet(selected)}
+      <span className="chip-text min-w-0 truncate">
+        <span className="chip-tag font-mono font-bold">
+          {toSelectionTag(selection)}
+        </span>
+        {toSelectionSnippet(selection)}
       </span>
       <button
         type="button"
         className="icon-btn chip-x"
-        aria-label={`Remove ${selected.selector}`}
+        aria-label={copy.clearSelection}
         onClick={remove}
       >
         <Icon name="close" size={CHIP_ICON} />

@@ -142,7 +142,8 @@
 }
 
 @container frame-label (width < 120px) {
-  .frame-label-tools > :not(.frame-menu-root:has(> .frame-chip.more)) {
+  .frame-label-tools
+    > :not(.frame-menu-root:has(> .frame-chip.more), .frame-page-root) {
     display: none;
   }
 }

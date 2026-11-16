@@ -6,12 +6,15 @@ import { Icon } from "./deps.js";
 import { ShortcutGroup } from "./shortcut-group.js";
 import { ShortcutHead } from "./shortcut-head.js";
 import { toShortcutGroups } from "./shortcut-model.js";
+import { useShortcutDismiss } from "./use-shortcut-dismiss.js";
 import { useShortcutMarks } from "./use-shortcut-marks.js";
 
 const ShortcutSheet = ({ onClose }: { onClose: () => void }): ReactElement => {
   const [query, setQuery] = useState("");
   const rootRef = useRef<HTMLElement>(null);
   const marked = useShortcutMarks(rootRef, onClose);
+
+  useShortcutDismiss(rootRef, onClose);
   const groups = useMemo(() => toShortcutGroups(query), [query]);
 
   const changeQuery = useCallback(

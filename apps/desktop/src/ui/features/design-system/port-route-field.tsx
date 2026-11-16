@@ -3,6 +3,7 @@ import type { ChangeEvent, ReactElement } from "react";
 
 import { toChoice } from "./choose-text.js";
 import { COPY } from "./copy.js";
+import { toRouteHint } from "./port-model.js";
 import type { PortForm } from "./use-port-form.js";
 
 const RouteField = ({
@@ -30,7 +31,7 @@ const RouteField = ({
         placeholder={toChoice(
           form.plan.loading,
           COPY.placeholderReadingThePage,
-          COPY.placeholderExampleClasses
+          `${COPY.placeholderExamplePrefix}${toRouteHint(form.path)}`
         )}
         spellCheck={false}
         aria-invalid={Boolean(form.badRoute)}

@@ -7,7 +7,6 @@ interface StudioPaneHeaderProps {
   onDismissError: () => void;
   onRename: (name: string) => Promise<void>;
   onExit: () => void;
-  onDesignMd: () => void;
   onDuplicate: () => void;
   onTrash: () => void;
   onSettings: () => void;

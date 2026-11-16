@@ -1266,7 +1266,6 @@ export const decisionOverrides: OxlintOverride[] = [
       "apps/desktop/src/ui/chat-slots.ts",
       "apps/desktop/src/ui/features/share-publish-ship-export/copy.ts",
       "apps/desktop/src/ui/features/share-publish-ship-export/publish-pane.tsx",
-      "apps/desktop/src/ui/features/share-publish-ship-export/publish-setup.tsx",
       "apps/desktop/src/ui/features/share-publish-ship-export/publish-backend-setup.tsx",
       "apps/desktop/src/ui/features/share-publish-ship-export/publication-row.tsx",
       "apps/desktop/src/ui/features/share-publish-ship-export/publish-api.ts",

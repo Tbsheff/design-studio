@@ -3,11 +3,12 @@ import type {
   ReviewFinding,
   ReviewKind,
 } from "@design-studio/contracts/review";
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { ReactElement } from "react";
 
 import { FindingRow } from "./finding-row.js";
 import { GroupFixAll } from "./group-fix-all.js";
+import { ReviewGroupSummary } from "./review-group-summary.js";
 import type { ReviewActions } from "./review-model.js";
 
 interface ReviewGroupProps {
@@ -16,12 +17,19 @@ interface ReviewGroupProps {
   readonly actions: ReviewActions;
 }
 
+const isFolded = (kind: ReviewKind, count: number): boolean =>
+  kind === "tap-target" && count > 1;
+
 const ReviewGroup = ({
   actions,
   kind,
   list,
 }: ReviewGroupProps): ReactElement => {
   const fixable = useMemo(() => list.filter((finding) => finding.fix), [list]);
+  const [isOpen, setIsOpen] = useState(false);
+  const toggle = useCallback((): void => setIsOpen((open) => !open), []);
+  const isFoldable = isFolded(kind, list.length);
+  const isListShown = !isFoldable || isOpen;
 
   return (
     <section className="review-group" aria-label={REVIEW_KIND_LABEL[kind]}>
@@ -34,9 +42,17 @@ const ReviewGroup = ({
         )}
       </div>
       <ul className="review-list">
-        {list.map((finding) => (
-          <FindingRow key={finding.id} finding={finding} actions={actions} />
-        ))}
+        {isFoldable && (
+          <ReviewGroupSummary
+            count={list.length}
+            isOpen={isOpen}
+            onToggle={toggle}
+          />
+        )}
+        {isListShown &&
+          list.map((finding) => (
+            <FindingRow key={finding.id} finding={finding} actions={actions} />
+          ))}
       </ul>
     </section>
   );

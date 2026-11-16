@@ -4,7 +4,7 @@ import type { Dispatch, ReactNode, SetStateAction } from "react";
 import { CommandLayer } from "../features/commands";
 import type { CommandLayerName, FileOpenTarget } from "../features/commands";
 import { isDesktop } from "../platform/desktop";
-import { ConnectAiLayer } from "./connect-ai-layer";
+import { DialogLayer } from "./dialog-layer";
 
 const DesktopApp = lazy(async () => {
   const loaded = await import("./shell/desktop-app");
@@ -69,7 +69,7 @@ const AppNotice = ({
       <Suspense fallback={null}>
         <McpToasts />
       </Suspense>
-      <ConnectAiLayer />
+      <DialogLayer activeProjectId={activeProjectId} />
       {isDesktop() && (
         <Suspense fallback={null}>
           <DesktopApp activeProjectId={activeProjectId} />

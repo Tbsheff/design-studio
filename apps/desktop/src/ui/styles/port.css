@@ -91,3 +91,8 @@
 .port-done .icon {
   color: var(--ok);
 }
+
+.port-body input::placeholder {
+  color: var(--text-faint);
+  font-style: italic;
+}

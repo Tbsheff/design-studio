@@ -68,6 +68,10 @@ const copy = {
   spellingSummary: "spelling",
   spellingTitle: "Spelling",
   tablet: "Tablet",
+  tapGroupHide: "Hide",
+  tapGroupShow: "Show each",
+  tapGroupText:
+    " targets are smaller than 24 × 24 px, so they are hard to tap.",
   theAgentFollowsEvery:
     " Claude follows every rule. Review checks class, token, font and component rules.",
   thisFramePassesEvery: "This frame passes every check.",
@@ -84,7 +88,7 @@ const copy = {
   walkRunning: "Walking…",
   walkSteps: "Steps",
   walkTaskLabel: "Task for the synthetic user",
-  walkTaskPlaceholder: "Schedule a visit for a patient",
+  walkTaskPlaceholder: "Sign up for a plan",
   walkTitle: "Walk through a task",
 } as const;
 

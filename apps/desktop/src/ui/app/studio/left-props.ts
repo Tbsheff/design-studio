@@ -28,7 +28,6 @@ const headerProps = (
     directionName: nameOf(core.direction),
     kindLabel: kindLabel(project),
     name: project.name,
-    onDesignMd: (): void => ui.setDesignOpen(true),
     onDismissError: (): void => ui.setActionError(null),
     onDuplicate: (): void => {
       void ui.act(async (): Promise<void> => {

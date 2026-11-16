@@ -18,7 +18,7 @@ const toInstallText = (cli: PublishCliState): string => {
     return `cf ${cli.version ?? ""} is too old. Publish needs cf ${cli.minVersion} or later.`;
   }
 
-  return `Publish uses the Cloudflare CLI (cf ${cli.minVersion} or later). It is not on this Mac yet. Run this in Terminal:`;
+  return `Publish uses the Cloudflare CLI (cf ${cli.minVersion} or later). It is not on this computer yet. Run this in a terminal:`;
 };
 
 const InstallStep = ({ busy, cli, run }: Props): ReactElement => {

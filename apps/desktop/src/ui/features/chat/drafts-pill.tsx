@@ -1,12 +1,8 @@
 import { useCallback, useRef } from "react";
 import type { ReactElement } from "react";
 
-import {
-  DRAFT_COUNTS,
-  toDraftsLabel,
-  toDraftsShort,
-} from "../../domain/draft-counts.js";
-import { LEVEL_FOCUS } from "./composer-menu-model.js";
+import { toDraftsLabel } from "../../domain/draft-counts.js";
+import { LEVEL_FOCUS, NO_SIZES } from "./composer-menu-model.js";
 import { ComposerPill } from "./composer-pill.js";
 import { copy } from "./copy.js";
 import { DraftsList } from "./drafts-list.js";
@@ -15,11 +11,6 @@ import type { DesignsSetting } from "./run-settings-model.js";
 import { useFocusOnOpen } from "./use-focus-on-open.js";
 import { useMenuToggle } from "./use-menu-toggle.js";
 import { usePlacedPopover } from "./use-placed-popover.js";
-
-const DRAFT_SIZES = DRAFT_COUNTS.map((count) => ({
-  key: toDraftsLabel(count),
-  node: toDraftsLabel(count),
-}));
 
 const DraftsPill = ({
   designs,
@@ -58,11 +49,10 @@ const DraftsPill = ({
         label={copy.drafts}
         ariaLabel={`${copy.drafts}: ${toDraftsLabel(shown)}`}
         isOpen={menu.open}
-        sizes={DRAFT_SIZES}
+        sizes={NO_SIZES}
         onToggle={onToggle}
       >
-        <span className="drafts-full">{toDraftsLabel(shown)}</span>
-        <span className="drafts-short">{toDraftsShort(shown)}</span>
+        {toDraftsLabel(shown)}
       </ComposerPill>
       <MenuPanel
         panel={panel}

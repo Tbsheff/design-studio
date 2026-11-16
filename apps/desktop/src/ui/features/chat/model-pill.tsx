@@ -21,7 +21,6 @@ const MODEL_SIZES = MODEL_OPTIONS.map((option) => ({
 const ModelPill = ({
   model,
   level,
-  effort,
   onModel,
   onOpen,
 }: ModelPillProps): ReactElement => {
@@ -51,7 +50,6 @@ const ModelPill = ({
         shown={shown}
         level={level}
         isLocked={shown !== model}
-        effort={effort}
         onModel={onModel}
       />
     </>

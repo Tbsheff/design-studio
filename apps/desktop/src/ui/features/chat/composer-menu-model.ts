@@ -3,8 +3,8 @@ import type { IconName } from "@design-studio/ui";
 import type { CSSProperties } from "react";
 
 import type { ComposerMode } from "./composer-mode-model.js";
+import type { StableSize } from "./stable-text.js";
 import type { PlusProjectProps } from "./composer-sheet-model.js";
-import type { EffortSetting } from "./run-settings-model.js";
 
 interface ItemProps {
   icon?: IconName;
@@ -24,12 +24,8 @@ interface PlusMenuProps {
   onMention: () => void;
   onSkills: () => void;
   onOpen?: () => void;
-  mode: ComposerMode;
-  onMode: (mode: ComposerMode) => void;
   project?: PlusProjectProps | null;
 }
-
-const MODES: readonly ComposerMode[] = ["edit", "plan", "critique", "ask"];
 
 const MODE_SHORT_HINT: Record<ComposerMode, string> = {
   ask: "Answers, no changes",
@@ -52,7 +48,6 @@ interface UsePlacedPopoverResult {
 interface ModelPillProps {
   model: string;
   level: RunLevel;
-  effort: EffortSetting;
   onModel: (id: string) => void;
   onOpen?: () => void;
 }
@@ -63,7 +58,16 @@ const MODEL_FOCUS: readonly string[] = ['[tabindex="0"]:not(:disabled)'];
 
 const ITEM_FOCUS: readonly string[] = [ITEM];
 
-export { ITEM, ITEM_FOCUS, LEVEL_FOCUS, MODEL_FOCUS, MODES, MODE_SHORT_HINT };
+const NO_SIZES: readonly StableSize[] = [];
+
+export {
+  ITEM,
+  ITEM_FOCUS,
+  LEVEL_FOCUS,
+  MODEL_FOCUS,
+  MODE_SHORT_HINT,
+  NO_SIZES,
+};
 
 export type {
   ItemProps,

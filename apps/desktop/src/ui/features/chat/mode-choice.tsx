@@ -11,12 +11,17 @@ const ModeChoice = ({
   choice,
   isChecked,
   onMode,
+  onClose,
 }: {
-  choice: ComposerMode;
-  isChecked: boolean;
-  onMode: (mode: ComposerMode) => void;
+  readonly choice: ComposerMode;
+  readonly isChecked: boolean;
+  readonly onMode: (mode: ComposerMode) => void;
+  readonly onClose: (refocus: boolean) => void;
 }): ReactElement => {
-  const pick = useCallback(() => onMode(choice), [onMode, choice]);
+  const pick = useCallback((): void => {
+    onMode(choice);
+    onClose(true);
+  }, [onMode, onClose, choice]);
 
   return (
     <ChoiceItem

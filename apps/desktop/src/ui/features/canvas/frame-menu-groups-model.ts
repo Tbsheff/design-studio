@@ -64,6 +64,7 @@ const FRAME_MENU_GROUPS: readonly FrameMenuGroupSpec[] = [
 const FRAME_MENU_TOP_ORDER: readonly string[] = [
   "redesign-prototype",
   "port-to-app",
+  "frame-page",
   "group:states",
   "group:copy",
   "group:arrange",

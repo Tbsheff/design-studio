@@ -1,33 +1,28 @@
-import { Icon } from "@design-studio/ui";
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
 import { cleanFramePath } from "./canvas-frames-model.js";
 import { copy } from "./copy.js";
-import { useMenu } from "./frame-menu-model.js";
-import { toChipClass, toChipTip } from "./frame-page-chip-model.js";
+import type { FrameMenu } from "./frame-menu-model.js";
 import { FramePageForm } from "./frame-page-form.js";
 import { FramePageList } from "./frame-page-list.js";
-import { pageName } from "./page-name-model.js";
 import { useMenuFit } from "./use-menu-fit.js";
-import { stop } from "./variation-model.js";
 
 const FramePageMenu = ({
+  menu,
   path,
   listPages,
   onPath,
   routes = false,
 }: {
+  menu: FrameMenu;
   path: string;
   listPages: (() => Promise<string[]>) | null;
   onPath: (path: string) => void;
   routes?: boolean;
 }): ReactElement => {
-  const menu = useMenu();
   const fitMenu = useMenuFit<HTMLDialogElement>("root", null);
-  const { close, root, setOpen, trigger } = menu;
-
-  const toggle = useCallback(() => setOpen((isOpen) => !isOpen), [setOpen]);
+  const { close, root } = menu;
 
   const apply = useCallback(
     (raw: string): boolean => {
@@ -46,21 +41,7 @@ const FramePageMenu = ({
   );
 
   return (
-    <div className="frame-menu-root" ref={root}>
-      <button
-        ref={trigger}
-        type="button"
-        className={toChipClass(path)}
-        aria-haspopup="dialog"
-        aria-expanded={menu.open}
-        aria-label={`Page: ${pageName(path)}`}
-        onPointerDown={stop}
-        onClick={toggle}
-        data-tip={toChipTip(path, menu.open)}
-      >
-        <Icon name="file" size={12} />
-        <span className="frame-path">{pageName(path)}</span>
-      </button>
+    <div className="frame-menu-root frame-page-root" ref={root}>
       {menu.open && (
         <dialog
           ref={fitMenu}

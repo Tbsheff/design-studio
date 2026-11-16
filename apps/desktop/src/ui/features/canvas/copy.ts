@@ -98,6 +98,7 @@ const copy = {
   frameMenuCopy: "Copy",
   frameMenuStates: "States",
   framePage: "Frame page",
+  framePageItem: "Change page…",
   frameRemoved: "Frame removed.",
   frameSelectAlign: "Align",
   frameSelectCount: " frames",

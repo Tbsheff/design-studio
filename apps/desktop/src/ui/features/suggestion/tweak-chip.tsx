@@ -15,11 +15,12 @@ const TweakChip = ({ chip, onTweaks }: TweakChipProps): ReactElement => (
   <button
     className={styles.chip}
     data-kind="tweaks"
+    data-tip={copy.tweaksTip}
+    data-tip-side="top"
     type="button"
     onClick={onTweaks}
   >
-    <span className={styles.kind}>{copy.tweaks}</span>
-    <span className={styles.text}>{toTweakChipText(chip)}</span>
+    {toTweakChipText(chip)}
   </button>
 );
 

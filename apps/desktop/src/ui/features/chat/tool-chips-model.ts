@@ -1,3 +1,5 @@
+import type { PermissionRequest } from "@design-studio/contracts";
+
 import type { ToolRow } from "./run-state-model.js";
 import { toolSubject, toolVerb } from "./tool-labels-model.js";
 
@@ -14,6 +16,19 @@ const planHeld = (tool: ToolRow): boolean =>
 type ToolState = "pending" | "done" | "error" | "stopped" | "denied";
 
 const CHECK_GROUP = "Checked";
+
+const toWaitingIds = (
+  permissions: readonly PermissionRequest[]
+): ReadonlySet<string> =>
+  new Set(
+    permissions.flatMap((permission) => {
+      if (permission.toolUseId === null) {
+        return [];
+      }
+
+      return [permission.toolUseId];
+    })
+  );
 
 interface RowGroup {
   tool: ToolRow;
@@ -70,6 +85,7 @@ export {
   failed,
   planHeld,
   shortName,
+  toWaitingIds,
 };
 
 export type { FileChange, RowGroup, ToolState };

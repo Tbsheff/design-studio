@@ -237,13 +237,6 @@
   opacity: 1;
 }
 
-@media (hover: none) {
-  .msg-user-actions,
-  .reply-copy-slot .copy-btn {
-    opacity: 1;
-  }
-}
-
 .code-block-head {
   justify-content: space-between;
   padding-right: var(--s-1);
@@ -362,6 +355,17 @@
   font-size: var(--t-xs);
 }
 
+.msg-inline-status {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-3);
+  font-size: var(--t-2xs);
+}
+
+.msg-inline-status[data-used="false"] {
+  color: var(--warn);
+}
+
 .permission {
   min-width: 0;
   margin: 0;
@@ -406,27 +410,13 @@
 }
 
 .permission-actions {
+  flex-wrap: wrap;
   gap: var(--s-1);
 }
 
 .permission-actions > .btn {
   flex: none;
   padding: 0 var(--s-2);
-}
-
-.permission-actions > .btn.permission-always {
-  flex: 0 1 auto;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.permission-rule {
-  min-width: 0;
-  overflow: hidden;
-  font-family: var(--mono);
-  font-size: var(--t-xs);
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .permission-deny input {
@@ -1211,20 +1201,21 @@
 }
 
 .run-notice {
+  flex-wrap: wrap;
   align-items: center;
   padding: var(--s-2) var(--s-3);
   border-radius: var(--r-md);
 }
 
 .run-notice-text {
-  flex: 1;
+  flex: 1 1 160px;
   min-width: 0;
   text-wrap: pretty;
 }
 
 .run-notice .run-retry {
   height: 28px;
-  margin: -6px 0;
+  margin: -4px 0 -4px auto;
   color: inherit;
   font-size: var(--t-2xs);
 }

@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
+import { toPageLabel } from "./run-context-model.js";
 import type { RunCanvasChip } from "./use-run-canvas.js";
 
 const toDetail = (chip: RunCanvasChip): string => {
@@ -24,8 +25,7 @@ const RunContextText = ({ chip }: { chip: RunCanvasChip }): ReactElement => {
 
   return (
     <span className="chip-text min-w-0 truncate">
-      {copy.onPage}
-      <span className="font-mono text-foreground">{chip.page}</span>
+      {toPageLabel(chip.page)}
       {toDetail(chip)}
     </span>
   );

@@ -1,3 +1,4 @@
+import type { SelectionContext } from "@design-studio/contracts";
 import type { ReactElement } from "react";
 
 import { RunContextPill } from "./run-context-pill.js";
@@ -5,10 +6,12 @@ import type { RunCanvasChip } from "./use-run-canvas.js";
 
 const RunContextChip = ({
   chip,
+  selection,
 }: {
   chip: RunCanvasChip | null | undefined;
+  selection: readonly SelectionContext[];
 }): ReactElement | null => {
-  if (!chip) {
+  if (!chip || selection.length > 0) {
     return null;
   }
 

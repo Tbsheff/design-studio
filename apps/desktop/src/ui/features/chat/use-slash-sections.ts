@@ -29,6 +29,9 @@ interface UseSlashSectionsResult {
   readonly sections: (query: string) => SlashSection[];
 }
 
+const isShellSkill = (skill: { origin: string; needsBash: boolean }): boolean =>
+  skill.origin === "personal" && skill.needsBash;
+
 const toManualNote = (manualCount: number): ReactElement | null => {
   if (manualCount > 0) {
     return createElement(
@@ -76,7 +79,8 @@ const useSlashSections = ({
   const excluded = new Set(exclude);
 
   const all = on.filter(
-    (skill) => skill.modelInvocable && !excluded.has(skill.id)
+    (skill) =>
+      skill.modelInvocable && !excluded.has(skill.id) && !isShellSkill(skill)
   );
 
   const manualCount = on.filter((skill) => !skill.modelInvocable).length;

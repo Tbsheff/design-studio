@@ -1,7 +1,7 @@
 import { memo, useMemo } from "react";
 import type { ReactElement } from "react";
 
-import type { PolishProps, TurnProps } from "./chat-turn-model.js";
+import type { RunCallbacks, TurnProps } from "./chat-turn-model.js";
 import { RunBody } from "./run-body.js";
 import type { RunView } from "./run-state-model.js";
 import { useRunEntry } from "./use-run-entry.js";
@@ -16,7 +16,7 @@ interface EntryProps extends TurnProps {
   latest: boolean;
   workTree: string | null;
   onDetails: (runId: string) => void;
-  polish: PolishProps;
+  callbacks: RunCallbacks;
   offline: boolean;
   onStop: (() => void) | undefined;
 }
@@ -26,7 +26,7 @@ const RunEntryBody = ({
   latest,
   workTree,
   onDetails,
-  polish,
+  callbacks,
   offline,
   onStop,
   title,
@@ -42,10 +42,10 @@ const RunEntryBody = ({
 }: EntryProps): ReactElement => {
   const { tail, undo, retry } = useRunEntry({
     actions,
+    callbacks,
     latest,
     onDetails,
     onReview,
-    polish,
     reviewVersionId,
     run,
     undoTip,

@@ -13,6 +13,8 @@ interface SuggestionRunIds {
 
 type TweakChip = "add" | "open";
 
+const MAX_CHIPS = 2;
+
 const toKindLabel = (kind: Suggestion["kind"]): string => copy[kind];
 
 const toTweakChip = (
@@ -38,11 +40,40 @@ const toTweakChipText = (chip: TweakChip): string => {
   return copy.openTweaks;
 };
 
+const toShownSuggestions = (
+  suggestions: readonly Suggestion[],
+  chip: TweakChip | null
+): readonly Suggestion[] => {
+  let room = MAX_CHIPS;
+
+  if (chip !== null) {
+    room -= 1;
+  }
+
+  const kinds = new Set<Suggestion["kind"]>();
+  const shown: Suggestion[] = [];
+
+  for (const suggestion of suggestions) {
+    if (shown.length < room && !kinds.has(suggestion.kind)) {
+      kinds.add(suggestion.kind);
+      shown.push(suggestion);
+    }
+  }
+
+  return shown;
+};
+
 const isChipsShown = (
   chip: TweakChip | null,
   suggestionCount: number
 ): boolean => chip !== null || suggestionCount > 0;
 
-export { isChipsShown, toKindLabel, toTweakChip, toTweakChipText };
+export {
+  isChipsShown,
+  toKindLabel,
+  toShownSuggestions,
+  toTweakChip,
+  toTweakChipText,
+};
 
 export type { Suggestion, SuggestionResult, SuggestionRunIds, TweakChip };

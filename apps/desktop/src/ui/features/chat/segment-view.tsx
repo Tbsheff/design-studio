@@ -26,7 +26,13 @@ const SegmentView = ({
   }
 
   if (segment.kind === "user") {
-    return <SentWhileRunning text={segment.text} />;
+    return (
+      <SentWhileRunning
+        text={segment.text}
+        isUsed={segment.isUsed}
+        isRunning={running}
+      />
+    );
   }
 
   if (segment.kind === "thinking") {

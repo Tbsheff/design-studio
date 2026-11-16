@@ -1,23 +1,16 @@
-import { RUN_LEVELS } from "@design-studio/contracts";
 import type { RunLevel } from "@design-studio/contracts";
 import { useRef } from "react";
 import type { ReactElement } from "react";
 
-import { LEVEL_FOCUS } from "./composer-menu-model.js";
+import { LEVEL_FOCUS, NO_SIZES } from "./composer-menu-model.js";
 import { ComposerPill } from "./composer-pill.js";
 import { copy } from "./copy.js";
 import { LevelMenuBody } from "./level-menu-body.js";
 import { levelLabel } from "./level-model.js";
-import { LevelPillValue } from "./level-pill-value.js";
 import { MenuPanel } from "./menu-panel.js";
 import { useFocusOnOpen } from "./use-focus-on-open.js";
 import { useMenuToggle } from "./use-menu-toggle.js";
 import { usePlacedPopover } from "./use-placed-popover.js";
-
-const LEVEL_SIZES = RUN_LEVELS.map((runLevel) => ({
-  key: levelLabel(runLevel),
-  node: levelLabel(runLevel),
-}));
 
 const LevelPill = ({
   level,
@@ -43,10 +36,10 @@ const LevelPill = ({
         label={copy.level}
         ariaLabel={`Level: ${levelLabel(level)}`}
         isOpen={menu.open}
-        sizes={LEVEL_SIZES}
+        sizes={NO_SIZES}
         onToggle={onToggle}
       >
-        <LevelPillValue level={level} />
+        {levelLabel(level)}
       </ComposerPill>
       <MenuPanel
         panel={panel}

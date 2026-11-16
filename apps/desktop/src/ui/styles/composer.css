@@ -671,17 +671,6 @@ dialog.run-settings-pop {
   stroke-width: 1.5;
 }
 
-.composer-state {
-  gap: 2px;
-  height: 22px;
-  padding-right: 2px;
-  font-size: var(--t-2xs);
-}
-
-.composer-state-short {
-  display: none;
-}
-
 .composer-menu {
   position: fixed;
   z-index: 90;
@@ -706,68 +695,6 @@ dialog.run-settings-pop {
   line-height: var(--lh-sm);
   font-weight: var(--w-medium);
   color: var(--home-pill-value);
-}
-
-.prompt-bar {
-  container: prompt-bar / inline-size;
-}
-
-@container prompt-bar (max-width: 340px) {
-  .prompt-bar .composer-state {
-    justify-content: center;
-    width: var(--composer-ctl);
-    height: var(--composer-ctl);
-    padding: 0;
-    border-radius: var(--r-control);
-  }
-
-  .prompt-bar .composer-state-label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-
-  .prompt-bar .composer-state-short {
-    display: grid;
-    place-items: center;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .prompt-bar .composer-state .icon-btn.chip-x {
-    position: absolute;
-    inset: 0;
-    width: auto;
-    height: auto;
-    border-radius: inherit;
-    background: inherit;
-    opacity: 0;
-  }
-
-  .prompt-bar .composer-state:hover .icon-btn.chip-x,
-  .prompt-bar .composer-state .icon-btn.chip-x:focus-visible {
-    opacity: 1;
-  }
-}
-
-@container prompt-bar (max-width: 300px) {
-  .prompt-bar .composer-pill.ui-pill-select {
-    column-gap: 2px;
-    padding: 0 6px;
-  }
-}
-
-@container prompt-bar (max-width: 250px) {
-  .prompt-bar .composer-pill.ui-pill-select {
-    padding: 0 4px 0 6px;
-  }
-
-  .prompt-bar .composer-pill .ui-pill-select-value {
-    font-size: var(--t-xs);
-    line-height: var(--lh-xs);
-  }
 }
 
 .icon-btn.send-btn {
@@ -925,7 +852,6 @@ dialog.run-settings-pop {
 }
 
 .context-meter,
-.composer-state,
 .queued-head {
   font-variant-numeric: tabular-nums;
 }
@@ -1191,14 +1117,16 @@ button.skill-opt {
 }
 
 .prompt .prompt-bar {
+  flex-wrap: wrap;
   gap: 2px;
 }
 
 .prompt .prompt-send {
-  flex: 1 1 auto;
-  justify-content: flex-end;
-  gap: 2px;
-  min-width: 0;
+  display: contents;
+}
+
+.prompt .prompt-send .icon-btn.send-btn {
+  margin-left: auto;
 }
 
 .prompt-bar .icon-btn.bordered.composer-plus {
@@ -1283,40 +1211,4 @@ button.skill-opt {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-@container prompt-bar (max-width: 340px) {
-  .prompt-bar .composer-pill.ui-pill-select.inline {
-    padding: 0 6px;
-  }
-
-  .prompt-bar .composer-pill .ui-pill-select-caret {
-    display: none;
-  }
-}
-
-.prompt-bar .drafts-short,
-.prompt-bar .level-short {
-  display: none;
-}
-
-@container prompt-bar (max-width: 300px) {
-  .prompt-bar .level-pill .level-full,
-  .prompt-bar .level-pill .stable-text-size {
-    display: none;
-  }
-
-  .prompt-bar .level-pill .level-short {
-    display: inline-grid;
-    place-items: center;
-  }
-
-  .prompt-bar .drafts-pill .drafts-full,
-  .prompt-bar .drafts-pill .stable-text-size {
-    display: none;
-  }
-
-  .prompt-bar .drafts-pill .drafts-short {
-    display: inline;
-  }
 }

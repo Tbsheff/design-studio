@@ -25,11 +25,12 @@ const SuggestionChip = ({
     <button
       className={styles.chip}
       data-kind={kind}
+      data-tip={prompt}
+      data-tip-side="top"
       type="button"
       onClick={handlePick}
     >
-      <span className={styles.kind}>{toKindLabel(kind)}</span>
-      <span className={styles.text}>{prompt}</span>
+      {toKindLabel(kind)}
     </button>
   );
 };

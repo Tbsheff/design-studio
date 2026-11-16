@@ -37,12 +37,12 @@ const PermissionActions = ({
           type="button"
           className="btn small permission-always"
           disabled={isDisabled}
-          data-tip={rule}
-          aria-label={`Always allow ${rule}`}
+          data-tip={`${copy.alwaysAllowTip}${rule}`}
+          data-tip-side="top"
+          aria-label={`${copy.alwaysAllowTip}${rule}`}
           onClick={onAlwaysClick}
         >
-          {copy.always}
-          <code className="permission-rule">{rule}</code>
+          {copy.alwaysAllow}
         </button>
       )}
       <button

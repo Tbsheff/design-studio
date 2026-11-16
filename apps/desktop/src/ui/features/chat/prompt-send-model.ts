@@ -1,7 +1,10 @@
+import { TRY_VARIANTS_COMMAND } from "@design-studio/contracts/element-variants";
+
 import { slashCommands } from "../../chat-slots.js";
 import type { Command } from "../../chat-slots.js";
 import { MODE_SHORT_HINT } from "./composer-menu-model.js";
 import { MODE_LABEL } from "./composer-mode-model.js";
+import { copy } from "./copy.js";
 import type { ComposerMode } from "./composer-mode-model.js";
 import { MOD_LABEL } from "./mod-label.js";
 import { EMPTY_REASON, MODES, MODE_ICON } from "./prompt-box-model.js";
@@ -9,6 +12,8 @@ import type { SendStatus } from "./prompt-box-model.js";
 import type { SlashGroup } from "./slash-menu.js";
 
 const SLASH_HIDDEN = /^composer\.(?:mode|level)-/u;
+
+const VARIATIONS_COMMAND = "composer.variations";
 
 const RUNNING_PLACEHOLDER = `Add a note for Claude (↵), or send it now (${MOD_LABEL}↵)`;
 
@@ -56,8 +61,33 @@ const addSkillId = (previous: string[], id: string): string[] => {
   return [...previous, id];
 };
 
-const toSlashCommands = (): Command[] =>
-  slashCommands().filter((command) => !SLASH_HIDDEN.test(command.id));
+const toVariationsCommand = (
+  command: Command,
+  element: Command | null
+): Command => {
+  if (command.id !== VARIATIONS_COMMAND || element === null) {
+    return command;
+  }
+
+  if (element.disabled) {
+    return command;
+  }
+
+  return { ...command, run: element.run, title: copy.variationsOfSelection };
+};
+
+const toSlashCommands = (): Command[] => {
+  const all = slashCommands();
+  const element = all.find((command) => command.id === TRY_VARIANTS_COMMAND);
+
+  return all.flatMap((command) => {
+    if (SLASH_HIDDEN.test(command.id) || command.id === TRY_VARIANTS_COMMAND) {
+      return [];
+    }
+
+    return [toVariationsCommand(command, element ?? null)];
+  });
+};
 
 const toDropClass = (isDragging: boolean, base: string): string => {
   if (isDragging) {

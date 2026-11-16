@@ -1,5 +1,5 @@
 import type { RunEffort, RunLevel } from "@design-studio/contracts";
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useRef } from "react";
 import type { ChangeEvent, ReactElement } from "react";
 
 import { cn } from "../../ai/lib/utils.js";
@@ -8,7 +8,7 @@ import type { PlusProjectProps } from "./composer-sheet-model.js";
 import { ContextMeter } from "./context-meter.js";
 import { DraftsPill } from "./drafts-pill.js";
 import { LevelPill } from "./level-pill.js";
-import { ModeChip } from "./mode-chip.js";
+import { ModePill } from "./mode-pill.js";
 import { ModelPill } from "./model-pill.js";
 import { PlusMenu } from "./plus-menu.js";
 import type { SendProps } from "./prompt-box-model.js";
@@ -46,6 +46,7 @@ interface PromptToolbarProps {
   readonly onReferenceFolder: () => Promise<void>;
   readonly onReferenceUrl: () => void;
   readonly onMention: () => void;
+  readonly onFocusSelection: (() => void) | null;
   readonly onMode: (mode: ComposerMode) => void;
   readonly onOpenSkills: () => void;
   readonly project: PlusProjectProps;
@@ -56,14 +57,12 @@ interface PromptToolbarProps {
 
 const PromptToolbar = (props: PromptToolbarProps): ReactElement => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const { designs, mode, onMode, send } = props;
+  const { designs, send } = props;
   const attach = useCallback((): void => inputRef.current?.click(), []);
 
   const referenceRef = useRef<HTMLInputElement>(null);
   const attachZip = useCallback((): void => referenceRef.current?.click(), []);
   const { onFiles, onReferenceFiles, onReferenceFolder } = props;
-
-  const resetMode = useCallback((): void => onMode("edit"), [onMode]);
 
   const pickFiles = useCallback(
     (event: ChangeEvent<HTMLInputElement>): void => {
@@ -76,13 +75,6 @@ const PromptToolbar = (props: PromptToolbarProps): ReactElement => {
     [onFiles]
   );
 
-  const { effort: effortValue, onEffort } = props;
-
-  const effort = useMemo(
-    () => ({ onChange: onEffort, value: effortValue }),
-    [effortValue, onEffort]
-  );
-
   return (
     <div data-slot="composer-toolbar" className={TOOLBAR_CLASS}>
       <PlusMenu
@@ -91,13 +83,18 @@ const PromptToolbar = (props: PromptToolbarProps): ReactElement => {
         onAttachUrl={props.onReferenceUrl}
         onAttachZip={attachZip}
         onMention={props.onMention}
+        onFocusSelection={props.onFocusSelection}
         onSkills={props.onOpenSkills}
         onOpen={props.onCloseSlash}
-        mode={mode}
-        onMode={onMode}
         project={props.project}
       />
-      <ModeChip mode={mode} onClear={resetMode} />
+      <ModePill
+        mode={props.mode}
+        effort={props.effort}
+        onMode={props.onMode}
+        onEffort={props.onEffort}
+        onOpen={props.onCloseSlash}
+      />
       <input
         ref={inputRef}
         type="file"
@@ -121,7 +118,6 @@ const PromptToolbar = (props: PromptToolbarProps): ReactElement => {
         <ModelPill
           model={props.model}
           level={props.level}
-          effort={effort}
           onModel={props.onChooseModel}
           onOpen={props.onCloseSlash}
         />

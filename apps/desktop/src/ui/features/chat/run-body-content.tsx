@@ -32,7 +32,7 @@ const RunBodyContent = ({
   onRetry,
   onStop,
 }: RunBodyContentProps): ReactElement => {
-  const { run, latest, onDetails, onReview, onPolish, onApprovePlan } = tail;
+  const { run, latest, onDetails, onReview, onApprovePlan } = tail;
   const isRunning = run.status === "running";
 
   return (
@@ -60,11 +60,8 @@ const RunBodyContent = ({
       <RunBodyTail
         run={run}
         latest={latest}
-        headVersionId={tail.headVersionId}
-        isPolishDisabled={tail.isPolishDisabled}
         onDetails={onDetails}
         onReview={onReview}
-        onPolish={onPolish}
         onApprovePlan={onApprovePlan}
       />
     </BodyContent>

@@ -74,7 +74,7 @@ const PromptComposer = ({
       extraClass={toDropClass(isDragging, "composer ui-composer cursor-text")}
       onClick={focusInput}
     >
-      <RunContextChip chip={box.canvasChip} />
+      <RunContextChip chip={box.canvasChip} selection={box.selection} />
       <Suspense fallback={null}>
         <RepoContextChip
           projectId={box.projectId}

@@ -13,12 +13,9 @@ interface TurnActions {
   dirtyCount: () => number;
 }
 
-interface PolishProps {
-  headVersionId: string | null;
-  running: boolean;
-  onPolish: () => void;
-  onRetry?: (run: RunView) => void;
-  onApprovePlan?: (run: RunView) => void;
+interface RunCallbacks {
+  readonly onRetry: (run: RunView) => void;
+  readonly onApprovePlan: (run: RunView) => void;
 }
 
 interface TurnProps {
@@ -185,4 +182,4 @@ const reviewOf = (
 
 export { reviewOf, turnProps, undoProps };
 
-export type { PolishProps, TurnActions, TurnProps };
+export type { RunCallbacks, TurnActions, TurnProps };

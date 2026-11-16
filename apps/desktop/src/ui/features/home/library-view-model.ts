@@ -20,4 +20,15 @@ const toGridFilter = (
   return { label: labels[filter], onClear };
 };
 
-export { toGridFilter };
+const toShownFilter = (
+  filter: HomeFilter,
+  hasPrototypesTab: boolean
+): HomeFilter => {
+  if (filter === "prototypes" && !hasPrototypesTab) {
+    return "all";
+  }
+
+  return filter;
+};
+
+export { toGridFilter, toShownFilter };

@@ -9,8 +9,10 @@ import type { HomeScreen } from "./use-home-screen.js";
 import { toListedProjects } from "./workspace-model.js";
 
 const HomeLibraryBlock = ({
+  hasPrototypesTab,
   screen,
 }: {
+  readonly hasPrototypesTab: boolean;
   readonly screen: HomeScreen;
 }): ReactElement => {
   const { composer, lib, modules, ui } = screen;
@@ -52,6 +54,7 @@ const HomeLibraryBlock = ({
           searchRef={lib.searchRef}
           listError={lib.listError}
           onPickPack={pickPack}
+          hasPrototypesTab={hasPrototypesTab}
         />
       )}
     </LibraryArea>

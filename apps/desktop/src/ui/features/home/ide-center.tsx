@@ -2,9 +2,9 @@ import type { ReactElement } from "react";
 
 import { EditAppConfirmDialog } from "./edit-app-confirm.js";
 import { HomeHero } from "./home-hero.js";
+import { StartArea } from "./start-area.js";
 import type { HomeIde } from "./use-home-ide.js";
 import type { HomeScreen } from "./use-home-screen.js";
-import { WorkspaceCenter } from "./workspace-center.js";
 import { WorkspaceHead } from "./workspace-head.js";
 
 interface IdeCenterProps {
@@ -13,7 +13,7 @@ interface IdeCenterProps {
 }
 
 const IdeCenter = ({ ide, screen }: IdeCenterProps): ReactElement => {
-  const { defaultLine, editConfirm, isEditApp, nav, onStarter, packName } = ide;
+  const { editConfirm, nav, packName } = ide;
 
   const { onCancel: handleEditCancel, onConfirm: handleEditConfirm } =
     editConfirm;
@@ -26,12 +26,7 @@ const IdeCenter = ({ ide, screen }: IdeCenterProps): ReactElement => {
         workspace={nav.selected}
       />
       <HomeHero screen={screen} />
-      <WorkspaceCenter
-        defaultLine={defaultLine}
-        isEditApp={isEditApp}
-        onStarter={onStarter}
-        workspace={nav.selected}
-      />
+      <StartArea ide={ide} screen={screen} />
       {editConfirm.path !== null && (
         <EditAppConfirmDialog
           onCancel={handleEditCancel}

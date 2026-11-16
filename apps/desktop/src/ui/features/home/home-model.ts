@@ -3,7 +3,6 @@ import type {
   ProjectKind,
   ProjectSettings,
   RunLevel,
-  Starter,
 } from "@design-studio/contracts";
 import { shortenHome } from "@design-studio/contracts/folders";
 import type { WorkspaceList } from "@design-studio/contracts/folders";
@@ -18,16 +17,6 @@ import type { ImageDraft, ReferenceDraft } from "./composer-drafts-model.js";
 type Busy = "create" | "ask" | "starter" | null;
 
 type Pop = "plus" | "pack" | "level" | "model" | "drafts" | "folder" | null;
-
-const EXAMPLES = [
-  "Wireframe a settings page",
-  "Prototype a dashboard for tracking orders",
-  "A pricing page for a developer tool with three tiers",
-  "Turn my notes into a one-page brief",
-  "A mobile onboarding flow for a running app",
-];
-
-const EXAMPLE_MS = 3500;
 
 const LEVEL_LABEL: Record<RunLevel, string> = {
   polish: "Polish",
@@ -203,14 +192,6 @@ const getPromptPlaceholder = (chip: AppChip | null): string | null => {
   return null;
 };
 
-const toExamples = (starters: readonly Starter[]): readonly string[] => {
-  if (starters.length === 0) {
-    return EXAMPLES;
-  }
-
-  return starters.map((starter) => starter.prompt);
-};
-
 const isExampleTakeKey = (event: TakeKeyEvent): boolean =>
   event.key === "Tab" && TAKE_MODIFIERS.every((name) => !event[name]);
 
@@ -275,9 +256,7 @@ interface StarProps {
 
 export {
   EMPTY_PROMPT,
-  EXAMPLES,
   EXAMPLE_HINT_ID,
-  EXAMPLE_MS,
   HOME_REASON_ID,
   LEVEL_LABEL,
   MODEL_OPTIONS,
@@ -290,7 +269,6 @@ export {
   getModelSummary as modelSummary,
   getPromptPlaceholder as promptPlaceholder,
   getReasonId as reasonId,
-  toExamples,
   toPromptDescribedBy,
   toShortHome as shortHome,
 };

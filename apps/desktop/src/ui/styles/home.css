@@ -1033,7 +1033,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-.project-more {
+.project-card .project-more {
   position: absolute;
   right: var(--s-3);
   bottom: var(--s-6);
@@ -1050,7 +1050,7 @@
 }
 
 @media (hover: none) {
-  .project-more {
+  .project-card .project-more {
     opacity: 1;
   }
 }
@@ -1695,7 +1695,7 @@
   text-wrap: balance;
 }
 
-.project-star {
+.project-card .project-star {
   position: absolute;
   top: var(--s-3);
   right: var(--s-3);
@@ -1719,7 +1719,7 @@
 }
 
 @media (hover: none) {
-  .project-star {
+  .project-card .project-star {
     opacity: 1;
   }
 }

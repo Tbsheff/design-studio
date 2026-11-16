@@ -547,9 +547,8 @@
   outline: none;
 }
 
-.home-foot[data-location="default"] > .home-foot-row:not(:focus-within) {
-  opacity: 0;
-  pointer-events: none;
+.home-foot:empty {
+  display: none;
 }
 
 .home-tabs {

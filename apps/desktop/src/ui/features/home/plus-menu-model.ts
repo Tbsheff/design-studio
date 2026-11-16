@@ -7,6 +7,7 @@ interface PlusMenuActions {
   readonly onAttachZip: () => void;
   readonly onImportRepo: () => void;
   readonly onLinkCode: () => void;
+  readonly onLocation: () => void;
   readonly kind: ProjectKind | null;
   readonly onKind: (kind: ProjectKind) => void;
 }

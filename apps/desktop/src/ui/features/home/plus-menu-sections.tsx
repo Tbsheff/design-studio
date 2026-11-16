@@ -36,6 +36,14 @@ const PlusMenuSections = ({
         action={actions.onImportRepo}
         onClose={onClose}
       />
+      <PlusItem
+        icon="folder"
+        label={copy.locationItem}
+        meta={null}
+        hasChevron={false}
+        action={actions.onLocation}
+        onClose={onClose}
+      />
       <PlusKindItem actions={actions} />
     </div>
     <PlusRoutesSection onClose={onClose} />

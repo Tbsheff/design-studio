@@ -1,5 +1,6 @@
 import type { RefObject } from "react";
 
+import { focusRequest } from "./focus-bus-model.js";
 import type { PlusMenuActions } from "./plus-menu-model.js";
 import { startRepoImport } from "./repo-import-model.js";
 
@@ -28,6 +29,7 @@ const toPlusActions = ({
   onLinkCode: (): void => {
     addAppFolder();
   },
+  onLocation: (): void => focusRequest("location", false, false),
 });
 
 export { toPlusActions };

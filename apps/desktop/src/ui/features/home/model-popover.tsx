@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import type { ReactElement, RefObject } from "react";
 
+import { AskFirstItem } from "./ask-first-item.js";
 import { copy } from "./copy.js";
 import { MODEL_OPTIONS } from "./home-model.js";
 import { ModelOption } from "./model-option.js";
@@ -53,6 +54,7 @@ const ModelPopover = ({
           />
         ))}
       </div>
+      <AskFirstItem />
     </Pop>
   );
 };

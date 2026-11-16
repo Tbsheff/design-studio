@@ -7,6 +7,7 @@ import type { ReactElement } from "react";
 import { HiddenProjectsNote } from "./hidden-projects-note.js";
 import { LocationField } from "./location-field.js";
 import type { FolderChooser } from "./use-folder-chooser.js";
+import { useLocationRow } from "./use-location-row.js";
 
 interface ComposerFootProps {
   readonly workspaces: WorkspaceList | null;
@@ -20,14 +21,6 @@ interface ComposerFootProps {
 
 const EMPTY_FOLDERS: WorkspaceFolder[] = [];
 
-const toLocationMark = (location: string | null): string => {
-  if (location === null) {
-    return "default";
-  }
-
-  return "custom";
-};
-
 const ComposerFoot = ({
   workspaces,
   location,
@@ -39,19 +32,26 @@ const ComposerFoot = ({
 }: ComposerFootProps): ReactElement => {
   const homeDir = workspaces?.homeDir ?? null;
 
+  const { attachRow, handleLocationPick, isShown } = useLocationRow(
+    location,
+    onLocation
+  );
+
   return (
-    <div className="home-foot" data-location={toLocationMark(location)}>
-      <div className="home-foot-row">
-        <LocationField
-          folders={workspaces?.folders ?? EMPTY_FOLDERS}
-          value={location}
-          homeDir={homeDir}
-          prompt={prompt}
-          chooser={chooser}
-          onChange={onLocation}
-          onAddFolder={onAddFolder}
-        />
-      </div>
+    <div className="home-foot">
+      {isShown && (
+        <div className="home-foot-row" ref={attachRow} tabIndex={-1}>
+          <LocationField
+            folders={workspaces?.folders ?? EMPTY_FOLDERS}
+            value={location}
+            homeDir={homeDir}
+            prompt={prompt}
+            chooser={chooser}
+            onChange={handleLocationPick}
+            onAddFolder={onAddFolder}
+          />
+        </div>
+      )}
       <HiddenProjectsNote homeDir={homeDir} onMoved={onHiddenMoved} />
     </div>
   );

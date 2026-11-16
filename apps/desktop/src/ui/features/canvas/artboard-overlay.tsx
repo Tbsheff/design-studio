@@ -94,6 +94,26 @@ const toSelectedBoxes = (
   });
 };
 
+const toHoverBox = (
+  hover: HoverBox | null,
+  zoom: number,
+  isShown: boolean
+): ReactElement | null => {
+  if (hover === null || !isShown) {
+    return null;
+  }
+
+  return (
+    <div className="box hover" style={toRectStyle(hover.rect, null)}>
+      {hover.label && (
+        <span className={`box-label${labelPlace(hover.rect.y * zoom)}`}>
+          {hover.label}
+        </span>
+      )}
+    </div>
+  );
+};
+
 const ArtboardOverlay = ({
   hover,
   selection,
@@ -116,16 +136,10 @@ const ArtboardOverlay = ({
 
   return (
     <div className="overlay">
-      {hover && !measuring && !onSelected && (
-        <div className="box hover" style={toRectStyle(hover.rect, null)}>
-          {hover.label && (
-            <span className={`box-label${labelPlace(hover.rect.y * zoom)}`}>
-              {hover.label}
-            </span>
-          )}
-        </div>
-      )}
-      {toSelectedBoxes(selection, resize)}
+      <div className="overlay-clip">
+        {toHoverBox(hover, zoom, !measuring && !onSelected)}
+        {toSelectedBoxes(selection, resize)}
+      </div>
       {!resize?.live && !resize?.ghost && spacing}
       {resize?.target && (
         <ResizeHandles control={resize} rect={resize.target.rect} zoom={zoom} />

@@ -3,15 +3,18 @@ import type { ReactElement } from "react";
 
 import { SelectionPromptAsk } from "./selection-prompt-ask.js";
 import { SelectionPromptBox } from "./selection-prompt-box.js";
+import type { PromptBounds } from "./selection-prompt-model.js";
 import { SelectionPromptStatus } from "./selection-prompt-status.js";
 import { useSelectionPrompt } from "./use-selection-prompt.js";
 
 interface SelectionPromptProps {
+  readonly bounds: PromptBounds;
   readonly selection: readonly SelectionContext[];
   readonly zoom: number;
 }
 
 const SelectionPrompt = ({
+  bounds,
   selection,
   zoom,
 }: SelectionPromptProps): ReactElement => {
@@ -29,7 +32,7 @@ const SelectionPrompt = ({
     placement,
     rect,
     text,
-  } = useSelectionPrompt(selection, zoom);
+  } = useSelectionPrompt(selection, zoom, bounds);
 
   return (
     <div className="selection-prompt-layer">

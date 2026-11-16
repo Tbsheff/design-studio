@@ -262,6 +262,7 @@
   display: flex;
   align-items: center;
   gap: 2px;
+  min-width: 0;
   height: var(--bar-h);
   margin: 0;
   padding: 0 var(--s-2);
@@ -269,11 +270,15 @@
 }
 
 .studio-inspector .edit-tab {
+  flex: 1 1 auto;
+  min-width: 0;
   height: 28px;
-  padding: 0 var(--s-2);
+  padding: 0 var(--s-1);
+  overflow: hidden;
   border-radius: var(--r-control-xs);
   color: var(--text-3);
   font-size: var(--t-sm);
+  text-overflow: ellipsis;
 }
 
 .studio-inspector .edit-tab.on {

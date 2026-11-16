@@ -60,6 +60,19 @@ function escapeAttr(value: string): string {
     .replaceAll("<", "&lt;");
 }
 
+function insertLocMark(element: Element, file: string, out: Insertion[]): void {
+  const startTag = element.sourceCodeLocation?.startTag;
+  const hasLoc = element.attrs.some((attr) => attr.name === SOURCE_LOC_ATTR);
+
+  if (startTag && !hasLoc) {
+    const loc = `${file}:${startTag.startLine}:${startTag.startCol}`;
+    out.push({
+      offset: startTag.startOffset + 1 + element.tagName.length,
+      text: ` ${SOURCE_LOC_ATTR}="${escapeAttr(loc)}"`,
+    });
+  }
+}
+
 function collectLocInsertions(
   root: ParentNode,
   file: string,
@@ -70,17 +83,7 @@ function collectLocInsertions(
       continue;
     }
 
-    const startTag = child.sourceCodeLocation?.startTag;
-    const hasLoc = child.attrs.some((attr) => attr.name === SOURCE_LOC_ATTR);
-
-    if (startTag && !hasLoc) {
-      const loc = `${file}:${startTag.startLine}:${startTag.startCol}`;
-      out.push({
-        offset: startTag.startOffset + 1 + child.tagName.length,
-        text: ` ${SOURCE_LOC_ATTR}="${escapeAttr(loc)}"`,
-      });
-    }
-
+    insertLocMark(child, file, out);
     collectLocInsertions(child, file, out);
   }
 }
@@ -123,6 +126,7 @@ export function annotateHtml(
   const body = findElement(document, "body");
 
   if (body) {
+    insertLocMark(body, file, insertions);
     collectLocInsertions(body, file, insertions);
   }
 

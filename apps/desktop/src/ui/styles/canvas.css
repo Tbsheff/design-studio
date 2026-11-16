@@ -251,6 +251,13 @@
   pointer-events: none;
 }
 
+.overlay-clip {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  overflow-clip-margin: var(--stroke, 1px);
+}
+
 .box {
   position: absolute;
   box-sizing: border-box;

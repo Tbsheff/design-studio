@@ -11,13 +11,12 @@ const StageOverlay = ({
   edits,
   preview: { frames },
   props,
-  slots,
+  slots: { Grid, Spacing },
   stage,
   variant,
 }: StageSlotProps): ReactElement => {
   const { active, comment, draw, layout, pane, pz, viewport } = stage;
   const { resize, spacingHost } = edits;
-  const { Grid, Spacing } = slots;
 
   const spacing = useMemo(
     () => (
@@ -65,6 +64,7 @@ const StageOverlay = ({
   return (
     <>
       <LiveOverlay
+        bounds={viewport}
         hover={frames.hover}
         picked={frames.picked}
         commenting={stage.commentMode}

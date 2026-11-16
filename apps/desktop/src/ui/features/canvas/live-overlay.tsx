@@ -11,6 +11,7 @@ import { useResizeLive } from "./use-resize-handles.js";
 import type { ResizeHandles } from "./use-resize-handles.js";
 
 interface LiveOverlayProps {
+  readonly bounds: { readonly height: number; readonly width: number };
   readonly hover: LiveStore<HoverBox | null>;
   readonly picked: LiveStore<SelectionContext[] | null>;
   readonly commenting: boolean;
@@ -42,6 +43,7 @@ const toPickedStore = (
 };
 
 const LiveOverlay = ({
+  bounds,
   hover,
   picked,
   commenting,
@@ -68,7 +70,7 @@ const LiveOverlay = ({
       />
       {!commenting && (
         <Suspense fallback={null}>
-          <SelectionPrompt selection={selection} zoom={zoom} />
+          <SelectionPrompt bounds={bounds} selection={selection} zoom={zoom} />
         </Suspense>
       )}
     </>

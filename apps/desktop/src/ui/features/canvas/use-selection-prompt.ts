@@ -21,11 +21,13 @@ import {
   toElapsedSeconds,
   toPlacement,
   toSelectionLabel,
+  toClippedRect,
   toStartedPhase,
   toUnionRect,
   toWorkingPhase,
 } from "./selection-prompt-model.js";
 import type {
+  PromptBounds,
   PromptPhase,
   PromptPlacement,
   PromptRect,
@@ -126,7 +128,8 @@ const usePromptPhase = (
 
 const useSelectionPrompt = (
   selection: readonly SelectionContext[],
-  zoom: number
+  zoom: number,
+  bounds: PromptBounds
 ): SelectionPromptView => {
   const [text, setText] = useState("");
   const returnTo = useRef<Element | null>(null);
@@ -170,7 +173,7 @@ const useSelectionPrompt = (
   useEffect(() => onSelectionPromptOpen(onOpen), [onOpen]);
 
   const onText = setText;
-  const rect = toUnionRect(selection);
+  const rect = toClippedRect(toUnionRect(selection), bounds);
 
   return {
     elapsed,

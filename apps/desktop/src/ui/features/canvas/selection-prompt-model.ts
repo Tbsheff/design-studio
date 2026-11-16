@@ -15,6 +15,11 @@ interface PromptRect {
   readonly y: number;
 }
 
+interface PromptBounds {
+  readonly height: number;
+  readonly width: number;
+}
+
 interface PromptPlacement {
   readonly isAbove: boolean;
   readonly shift: number;
@@ -103,6 +108,26 @@ const toUnionRect = (
     top = Math.min(top, item.rect.y);
     right = Math.max(right, item.rect.x + item.rect.width);
     bottom = Math.max(bottom, item.rect.y + item.rect.height);
+  }
+
+  return { height: bottom - top, width: right - left, x: left, y: top };
+};
+
+const toClippedRect = (
+  rect: PromptRect | null,
+  bounds: PromptBounds
+): PromptRect | null => {
+  if (rect === null) {
+    return null;
+  }
+
+  const left = Math.max(rect.x, 0);
+  const top = Math.max(rect.y, 0);
+  const right = Math.min(rect.x + rect.width, bounds.width);
+  const bottom = Math.min(rect.y + rect.height, bounds.height);
+
+  if (right <= left || bottom <= top) {
+    return null;
   }
 
   return { height: bottom - top, width: right - left, x: left, y: top };
@@ -233,9 +258,10 @@ export {
   toPlaceholder,
   toPlacement,
   toSelectionLabel,
+  toClippedRect,
   toStartedPhase,
   toUnionRect,
   toWorkingPhase,
 };
 
-export type { PromptPhase, PromptPlacement, PromptRect };
+export type { PromptBounds, PromptPhase, PromptPlacement, PromptRect };

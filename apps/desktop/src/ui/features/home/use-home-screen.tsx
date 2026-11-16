@@ -1,5 +1,5 @@
-import { DEFAULT_SETTINGS } from "@design-studio/contracts";
 import type { PackSummary } from "@design-studio/contracts";
+import { DEFAULT_SETTINGS } from "@design-studio/contracts/settings-defaults";
 
 import { useUi } from "../../platform/storage.js";
 import { maxVariationsFor } from "../canvas/variations-api.js";

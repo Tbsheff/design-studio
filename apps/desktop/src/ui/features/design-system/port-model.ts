@@ -108,24 +108,52 @@ const toRouteError = (route: string, picked: PortFlowPage[]): string | null => {
 
 const DYNAMIC_PART = /^\[[^\]/]+\]$/u;
 
+const CATCH_ALL_PART = /^\[\.{3}[^\]/]+\]$/u;
+
+const OPTIONAL_PART = /^\[\[\.{3}[^\]/]+\]\]$/u;
+
 const GROUP_PART = /^\(.*\)$/u;
 
 const toRouteParts = (route: string): string[] =>
   route.split("/").filter((part) => part !== "" && !GROUP_PART.test(part));
 
-const isPatternOf = (pattern: string, route: string | null): boolean => {
-  const parts = toRouteParts(pattern);
-  const actual = toRouteParts(route ?? "");
+const toTailMin = (last: string): number | null => {
+  if (OPTIONAL_PART.test(last)) {
+    return 0;
+  }
 
-  return (
-    route !== null &&
-    parts.some((part) => DYNAMIC_PART.test(part)) &&
-    parts.length === actual.length &&
-    parts.every(
-      (part, index) => part === actual[index] || DYNAMIC_PART.test(part)
-    )
-  );
+  if (CATCH_ALL_PART.test(last)) {
+    return 1;
+  }
+
+  return null;
 };
+
+const isPartOf = (part: string, actual: string | undefined): boolean =>
+  part === actual || DYNAMIC_PART.test(part);
+
+const isHeadOf = (head: string[], actual: string[]): boolean =>
+  head.length <= actual.length &&
+  head.every((part, index) => isPartOf(part, actual[index]));
+
+const isPartsOf = (parts: string[], actual: string[]): boolean => {
+  const tailMin = toTailMin(parts.at(-1) ?? "");
+
+  if (tailMin === null) {
+    return (
+      parts.some((part) => DYNAMIC_PART.test(part)) &&
+      parts.length === actual.length &&
+      isHeadOf(parts, actual)
+    );
+  }
+
+  const head = parts.slice(0, -1);
+
+  return actual.length >= head.length + tailMin && isHeadOf(head, actual);
+};
+
+const isPatternOf = (pattern: string, route: string | null): boolean =>
+  route !== null && isPartsOf(toRouteParts(pattern), toRouteParts(route));
 
 const toEntryPage = (flow: PortFlowPlan | null): PortFlowPage | null =>
   flow?.pages.find((page) => page.path === flow.source.entry) ?? null;

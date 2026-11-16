@@ -1,4 +1,3 @@
-import { VARIATION_MAX, VARIATION_MAX_REACT } from "@design-studio/contracts";
 import type {
   Direction,
   Project,
@@ -9,6 +8,10 @@ import type {
   VariationStartRequest,
   VariationStartResult,
 } from "@design-studio/contracts";
+import {
+  VARIATION_MAX,
+  VARIATION_MAX_REACT,
+} from "@design-studio/contracts/variation-limits";
 
 import { sendJson } from "../../platform/http.js";
 import type { JsonBody } from "../../platform/http.js";

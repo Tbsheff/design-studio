@@ -1,3 +1,5 @@
+import { toAddedClass } from "./added-groups.js";
+import type { AddedGroup } from "./added-groups.js";
 import {
   BORDER_PREFIX,
   toBorderGroup,
@@ -7,9 +9,6 @@ import {
 import { KEYWORD_GROUPS } from "./keyword-groups.js";
 import type { KeywordGroup } from "./keyword-groups.js";
 import { SINGLE_PROPS } from "./map.js";
-import { toOutlineClass } from "./outline.js";
-import type { OutlineGroup } from "./outline.js";
-import { toRotateScaleClass } from "./rotate-scale.js";
 import type { RotateScaleGroup } from "./rotate-scale.js";
 import type { TailwindTheme } from "./theme-model.js";
 import { lengthToPx } from "./units.js";
@@ -77,7 +76,7 @@ export type SingleGroup =
   | "bg-position"
   | "bg-repeat"
   | KeywordGroup
-  | OutlineGroup
+  | AddedGroup
   | RotateScaleGroup;
 
 export type Group = SidedGroup | SingleGroup;
@@ -615,7 +614,7 @@ export function classify(
     return single("filter");
   }
 
-  const outline = toOutlineClass(utility) ?? toRotateScaleClass(utility);
+  const outline = toAddedClass(utility);
 
   if (outline) {
     return outline;

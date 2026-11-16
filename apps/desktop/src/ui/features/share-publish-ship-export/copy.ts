@@ -62,7 +62,8 @@ const copy = {
   connectAiNoClients: "No client has connected yet.",
   connectAiOff: "Turn on the MCP server to see the setup for your agent.",
   connectAiOpen: "Connect AI…",
-  connectAiServerNote: "Off. Runs on this Mac only, and agents need its token.",
+  connectAiServerNote:
+    "Off. Runs on this computer only, and agents need its token.",
   copied: "Copied",
   copyAsCode: "Copy as code",
   copyCommandLabel: "Copy command",

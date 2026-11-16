@@ -120,6 +120,7 @@ const copy = {
   folderPath: "Folder path",
   folderStillChecked: "The folder is still being checked.",
   folders: "Folders",
+  foundOnThisComputer: "Found on this computer",
   foundOnThisMac: "Found on this Mac",
   fromClient: "from",
   goTo: "Go to",

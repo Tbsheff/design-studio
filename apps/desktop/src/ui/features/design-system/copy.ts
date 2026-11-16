@@ -212,7 +212,7 @@ const COPY = {
   textTheAgentPicksColors: "Claude picks colors and type for each project.",
   textTheAgentReadsThis: "Claude reads this file on every run.",
   textTheAgentRebuildsThe:
-    "Claude rebuilds the checked pages as routes in your app, with its components and token classes, and links them to each other.",
+    "Claude rebuilds the chosen frame as a route in your app, with its components and token classes. When the frame links to other pages, pick the pages to move with it.",
   textTheAiStepLooks:
     "Claude looks at the images. Tokens files (Figma variables, DTCG, Tokens Studio) and DESIGN.md are read at once.",
   textTheApp: "the app",

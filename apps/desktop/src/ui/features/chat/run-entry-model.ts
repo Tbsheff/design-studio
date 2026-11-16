@@ -37,11 +37,8 @@ const toUndo = (
 interface RunBodyTailProps {
   readonly run: RunView;
   readonly latest: boolean;
-  readonly headVersionId: string | null;
-  readonly isPolishDisabled: boolean;
   readonly onDetails: () => void;
   readonly onReview: (() => void) | null;
-  readonly onPolish: () => void;
   readonly onApprovePlan: (() => void) | null;
 }
 

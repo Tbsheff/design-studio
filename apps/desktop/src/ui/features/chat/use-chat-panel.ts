@@ -16,7 +16,7 @@ import {
   chatSearchOpen,
   focusChatSearchButton,
 } from "./chat-search-model.js";
-import type { PolishProps, TurnActions } from "./chat-turn-model.js";
+import type { RunCallbacks, TurnActions } from "./chat-turn-model.js";
 import { loadRunsThrough, renameRun } from "./run-history-model.js";
 import type { RunView } from "./run-state-model.js";
 import type { RewindControl } from "./use-rewind.js";
@@ -95,17 +95,13 @@ const useRunSearch = (available: boolean): UseRunSearchResult => {
   };
 };
 
-interface PolishInput {
-  headVersionId: string | null;
+interface RunCallbackInput {
   onApprovePlan: ((run: RunView) => void) | undefined;
-  onPolish: () => void;
   onRetry: ((run: RunView) => void) | undefined;
-  polishing: boolean;
 }
 
-const usePolish = (input: PolishInput): PolishProps => {
-  const { headVersionId, onApprovePlan, onPolish, onRetry, polishing } = input;
-  const polishRef = useLatest(onPolish);
+const useRunCallbacks = (input: RunCallbackInput): RunCallbacks => {
+  const { onApprovePlan, onRetry } = input;
   const retryRef = useLatest(onRetry);
 
   const retry = useCallback(
@@ -120,17 +116,9 @@ const usePolish = (input: PolishInput): PolishProps => {
     [approveRef]
   );
 
-  const startPolish = useCallback(() => polishRef.current(), [polishRef]);
-
   return useMemo(
-    () => ({
-      headVersionId,
-      onApprovePlan: approve,
-      onPolish: startPolish,
-      onRetry: retry,
-      running: polishing,
-    }),
-    [headVersionId, polishing, startPolish, retry, approve]
+    () => ({ onApprovePlan: approve, onRetry: retry }),
+    [retry, approve]
   );
 };
 
@@ -204,4 +192,10 @@ const useScrollToRun = (options: ScrollToRunOptions): void => {
   }, [runId, isShown, onDone, viewportRef, wasAtBottomRef]);
 };
 
-export { useLatest, usePolish, useRunSearch, useScrollToRun, useTurnActions };
+export {
+  useLatest,
+  useRunCallbacks,
+  useRunSearch,
+  useScrollToRun,
+  useTurnActions,
+};

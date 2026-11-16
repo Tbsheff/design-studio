@@ -5,8 +5,6 @@ export {
   exportApi,
 } from "../share-publish-ship-export/index.js";
 
-export type { RunView } from "../chat/run-state-model.js";
-
 export {
   insertApi,
   insertError,

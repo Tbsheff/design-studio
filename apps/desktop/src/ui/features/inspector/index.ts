@@ -66,7 +66,7 @@ export {
 
 export { toInspectorEmptyReason, isDirectEditable } from "./inspector-model.js";
 
-export { canPolishRun, POLISH_REQUEST } from "./polish-model.js";
+export { POLISH_REQUEST } from "./polish-model.js";
 
 export { toJoinedCorners } from "./corners-model.js";
 

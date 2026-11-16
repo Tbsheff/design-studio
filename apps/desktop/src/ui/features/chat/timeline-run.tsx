@@ -13,7 +13,7 @@ const TimelineRun = ({
   context: TimelineRunContext;
 }): ReactElement => {
   const { actions, isOffline, lastId, onDetails, onReview, onStop } = context;
-  const { polish, rewind, titles, workTree } = context;
+  const { callbacks, rewind, titles, workTree } = context;
 
   const turn = turnProps(
     run,
@@ -30,7 +30,7 @@ const TimelineRun = ({
       latest={run.runId === lastId}
       workTree={workTree}
       onDetails={onDetails}
-      polish={polish}
+      callbacks={callbacks}
       offline={isOffline}
       onStop={onStop}
       reviewVersionId={reviewOf(run, rewind)}

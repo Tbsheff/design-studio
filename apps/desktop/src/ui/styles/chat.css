@@ -217,7 +217,7 @@
 }
 
 .msg-user-actions .copy-btn:hover,
-.msg-user-actions .msg-action:not([aria-disabled="true"]):hover {
+.msg-user-actions .msg-action:hover {
   color: var(--text);
 }
 
@@ -620,26 +620,10 @@
   color: var(--text-3);
 }
 
-.msg-action[aria-disabled="true"] {
-  cursor: default;
-}
-
-.msg-action[aria-disabled="true"] > svg {
-  opacity: 0.4;
-}
-
 .msg.user:hover,
 .msg.user:focus-within {
   position: relative;
   z-index: 2;
-}
-
-.msg-action[aria-disabled="true"]:hover {
-  background: transparent;
-}
-
-.msg-action[aria-disabled="true"]:active {
-  scale: 1;
 }
 
 .run-title {
@@ -1228,25 +1212,6 @@
   margin: -6px 0;
   color: inherit;
   font-size: var(--t-2xs);
-}
-
-.polish-this .btn {
-  flex: none;
-  height: 28px;
-  border-radius: var(--r-control-sm);
-  font-size: var(--t-xs);
-}
-
-.polish-this {
-  min-width: 0;
-  font-size: var(--t-2xs);
-}
-
-.polish-this > span {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .drawer .tools-table {

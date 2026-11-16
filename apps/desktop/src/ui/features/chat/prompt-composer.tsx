@@ -74,14 +74,18 @@ const PromptComposer = ({
       extraClass={toDropClass(isDragging, "composer ui-composer cursor-text")}
       onClick={focusInput}
     >
-      <RunContextChip chip={box.canvasChip} />
+      {box.selection.length === 0 && <RunContextChip chip={box.canvasChip} />}
       <Suspense fallback={null}>
         <RepoContextChip
           projectId={box.projectId}
           directionId={box.directionId}
         />
       </Suspense>
-      <SelectionChips selection={box.selection} onRemove={onRemoveSelection} />
+      <SelectionChips
+        focus={input.focus}
+        selection={box.selection}
+        onRemove={onRemoveSelection}
+      />
       <Comments count={prefill.linked.length} onClear={clearPrefill} />
       <AttachmentThumbs files={files} onRemove={removeFile} />
       <ReferenceUrlSlot url={base.references.url} />

@@ -77,6 +77,8 @@ const lockReason = (group: SlashGroup | null | undefined): string | null =>
   group?.choices.find((choice) => choice.disabledReason)?.disabledReason ??
   null;
 
+const SETTINGS_HEADING = "Settings";
+
 const MAX_HEIGHT = 288;
 
 const GAP = 6;
@@ -323,6 +325,10 @@ const toRowHeading = (
 ): string | null => {
   const row = rows[at];
   const before = rows[at - 1];
+
+  if (row?.kind === "group" && before?.kind === "choice" && !hasHeading) {
+    return SETTINGS_HEADING;
+  }
 
   if (
     row?.kind === "choice" &&

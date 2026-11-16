@@ -1,4 +1,3 @@
-import { copy } from "./copy.js";
 import type { RouteOutput, suggestionRoutes } from "./deps.js";
 
 type SuggestionResult = RouteOutput<typeof suggestionRoutes.runSuggestion>;
@@ -11,38 +10,15 @@ interface SuggestionRunIds {
   readonly runId: string;
 }
 
-type TweakChip = "add" | "open";
+const SHOWN_MAX = 2;
 
-const toKindLabel = (kind: Suggestion["kind"]): string => copy[kind];
+const toShownSuggestions = (
+  suggestions: readonly Suggestion[]
+): readonly Suggestion[] =>
+  suggestions
+    .filter((suggestion) => suggestion.kind !== "review")
+    .slice(0, SHOWN_MAX);
 
-const toTweakChip = (
-  tweakCount: number | null,
-  isAppProject: boolean
-): TweakChip | null => {
-  if (isAppProject || tweakCount === null) {
-    return null;
-  }
+export { toShownSuggestions };
 
-  if (tweakCount === 0) {
-    return "add";
-  }
-
-  return "open";
-};
-
-const toTweakChipText = (chip: TweakChip): string => {
-  if (chip === "add") {
-    return copy.addTweaks;
-  }
-
-  return copy.openTweaks;
-};
-
-const isChipsShown = (
-  chip: TweakChip | null,
-  suggestionCount: number
-): boolean => chip !== null || suggestionCount > 0;
-
-export { isChipsShown, toKindLabel, toTweakChip, toTweakChipText };
-
-export type { Suggestion, SuggestionResult, SuggestionRunIds, TweakChip };
+export type { Suggestion, SuggestionResult, SuggestionRunIds };

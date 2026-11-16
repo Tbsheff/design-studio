@@ -112,6 +112,21 @@ dialog.run-settings-pop {
   color: inherit;
 }
 
+.chip-menu-trigger {
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-control-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.chip-menu-trigger:focus-visible {
+  box-shadow: var(--ring);
+  outline: none;
+}
+
 .icon-btn.thumb-x {
   position: absolute;
   top: 3px;
@@ -672,18 +687,6 @@ dialog.run-settings-pop {
   stroke-width: 1.5;
 }
 
-.composer-state {
-  gap: 2px;
-  height: 22px;
-  padding-right: 2px;
-  font-size: var(--t-2xs);
-}
-
-.composer-state-short {
-  display: inline-grid;
-  place-items: center;
-}
-
 .composer-menu {
   position: fixed;
   z-index: 90;
@@ -887,7 +890,6 @@ dialog.run-settings-pop {
 }
 
 .context-meter,
-.composer-state,
 .queued-head {
   font-variant-numeric: tabular-nums;
 }
@@ -1257,7 +1259,7 @@ button.skill-opt {
   }
 }
 
-@container prompt-bar (max-width: 300px) {
+@container prompt-bar (max-width: 420px) {
   .prompt-bar > [data-slot="composer-toolbar-spacer"] {
     order: 2;
     flex-basis: 100%;
@@ -1266,19 +1268,6 @@ button.skill-opt {
   }
 
   .prompt-bar > .icon-btn.send-btn {
-    margin-left: auto;
-  }
-}
-
-@container prompt-bar (max-width: 420px) {
-  .prompt-bar:has(> .composer-state) > [data-slot="composer-toolbar-spacer"] {
-    order: 2;
-    flex-basis: 100%;
-    justify-content: flex-start;
-    margin-left: 0;
-  }
-
-  .prompt-bar:has(> .composer-state) > .icon-btn.send-btn {
     margin-left: auto;
   }
 }

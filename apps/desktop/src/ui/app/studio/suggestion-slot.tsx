@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 
 import { SuggestionChips } from "../../features/suggestion/index";
 import { focusComposer } from "../../platform/focus";
-import { appDirOf } from "./project-model";
 import type { StudioCtx } from "./studio-context";
 
 type DirectionRun = StudioCtx["core"]["directionRuns"][number];
@@ -19,7 +18,11 @@ const toFinishedRun = (
     return null;
   }
 
-  if (last.status !== "completed" || last.summary === null) {
+  if (
+    last.status !== "completed" ||
+    last.summary === null ||
+    last.request?.plan === true
+  ) {
     return null;
   }
 
@@ -34,18 +37,6 @@ const toSuggestionSlot = (ctx: StudioCtx, hasPending: boolean): ReactNode => {
     return null;
   }
 
-  const tweakCount = ctx.core.tweaks.state?.controls.length ?? null;
-
-  const handleTweaks = (): void => {
-    if (tweakCount === 0) {
-      void ctx.run.runTweaks("");
-
-      return;
-    }
-
-    ctx.run.openTweaks();
-  };
-
   const handlePick = (prompt: string): void => {
     ctx.ui.draft.set(prompt);
     globalThis.requestAnimationFrame((): void => focusComposer(prompt));
@@ -56,11 +47,8 @@ const toSuggestionSlot = (ctx: StudioCtx, hasPending: boolean): ReactNode => {
     { fallback: null },
     createElement(SuggestionChips, {
       ids: { directionId, projectId: ctx.projectId, runId: last.runId },
-      isAppProject: appDirOf(ctx.project) !== null,
       key: last.runId,
       onPick: handlePick,
-      onTweaks: handleTweaks,
-      tweakCount,
     })
   );
 };

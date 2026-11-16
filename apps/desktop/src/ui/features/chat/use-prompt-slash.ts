@@ -59,7 +59,7 @@ const usePromptSlash = (
   );
 
   const slashSource = useSlashSections({
-    commands: toSlashCommands(),
+    commands: toSlashCommands(selection.length > 0),
     disabled: props.settings.disabledSkills ?? [],
     exclude: skillIds,
     onCommand: runCommand,

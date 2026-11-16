@@ -1,3 +1,5 @@
+import { TRY_VARIANTS_COMMAND } from "@design-studio/contracts/element-variants";
+
 import { slashCommands } from "../../chat-slots.js";
 import type { Command } from "../../chat-slots.js";
 import { MODE_SHORT_HINT } from "./composer-menu-model.js";
@@ -9,6 +11,8 @@ import type { SendStatus } from "./prompt-box-model.js";
 import type { SlashGroup } from "./slash-menu.js";
 
 const SLASH_HIDDEN = /^composer\.(?:mode|level)-/u;
+
+const DIRECTION_VARIATIONS = "composer.variations";
 
 const RUNNING_PLACEHOLDER = `Add a note for Claude (↵), or send it now (${MOD_LABEL}↵)`;
 
@@ -56,8 +60,21 @@ const addSkillId = (previous: string[], id: string): string[] => {
   return [...previous, id];
 };
 
-const toSlashCommands = (): Command[] =>
-  slashCommands().filter((command) => !SLASH_HIDDEN.test(command.id));
+const toVariationsHidden = (hasSelection: boolean): string => {
+  if (hasSelection) {
+    return DIRECTION_VARIATIONS;
+  }
+
+  return TRY_VARIANTS_COMMAND;
+};
+
+const toSlashCommands = (hasSelection: boolean): Command[] => {
+  const hidden = toVariationsHidden(hasSelection);
+
+  return slashCommands().filter(
+    (command) => !SLASH_HIDDEN.test(command.id) && command.id !== hidden
+  );
+};
 
 const toDropClass = (isDragging: boolean, base: string): string => {
   if (isDragging) {

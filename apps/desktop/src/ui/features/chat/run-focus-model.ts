@@ -1,5 +1,3 @@
-import type { SelectionContext } from "@design-studio/contracts";
-
 import { copy } from "./copy.js";
 
 interface FrameFocus {
@@ -81,18 +79,6 @@ const toFramesTip = (frames: FrameFocus): string => {
 const toFocusWithout = (list: readonly string[], path: string): string[] =>
   list.filter((item) => item !== path);
 
-const toSelectionFocusPath = (
-  selection: readonly SelectionContext[]
-): string | null => {
-  const first = selection[0] ?? null;
-
-  if (first === null || first.source === null) {
-    return null;
-  }
-
-  return toFocusPath(first.source.file);
-};
-
 const toFocusLabel = (path: string): string => path.split("/").pop() ?? path;
 
 export {
@@ -105,7 +91,6 @@ export {
   toFocusWithout,
   toFramesLabel,
   toFramesTip,
-  toSelectionFocusPath,
 };
 
 export type { FrameFocus };

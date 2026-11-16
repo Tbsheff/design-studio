@@ -46,6 +46,10 @@ const toRows = (
     return choiceRows(group, filter);
   }
 
+  if (filter === "") {
+    return [...sectionRows(shown), ...groupRows(groups, filter)];
+  }
+
   return [...groupRows(groups, filter), ...sectionRows(shown)];
 };
 

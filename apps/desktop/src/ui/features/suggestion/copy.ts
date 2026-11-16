@@ -1,12 +1,5 @@
 const copy = {
-  addTweaks: "Add live tweaks",
-  heading: "Next steps",
-  openTweaks: "Open tweaks",
-  refine: "Refine",
-  responsive: "Responsive",
-  review: "Review",
-  state: "States",
-  tweaks: "Tweaks",
+  label: "Suggested prompts",
 } as const;
 
 export { copy };

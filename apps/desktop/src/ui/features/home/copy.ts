@@ -185,7 +185,6 @@ const copy = {
   nextJsApps: " Next.js apps",
   noAgentRunNoCost: "No run, no cost",
   noAppFoldersFoundIn: "No app folders found in ",
-  noClients: "No MCP clients",
   noDesignSystem: "No design system",
   noDesignSystemLabel: "No design system",
   noDevServer: "No dev server",

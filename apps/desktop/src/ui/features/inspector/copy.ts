@@ -34,7 +34,7 @@ const copy = {
   bottomLeftRadius: "Bottom left radius",
   bottomRightRadius: "Bottom right radius",
   breakpoint: "Breakpoint",
-  butTypedRaw: ", but typed raw",
+  butNotToken: ", but typed as a plain value",
   cancel: "Cancel",
   changeThisUseToAnother:
     "Change this use to another component with props that fit",

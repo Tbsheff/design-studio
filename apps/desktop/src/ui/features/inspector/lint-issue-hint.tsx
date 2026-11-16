@@ -36,7 +36,7 @@ const LintIssueHint = ({
       <>
         {copy.sameAs}
         {token}
-        {copy.butTypedRaw}
+        {copy.butNotToken}
       </>
     );
   }

@@ -356,3 +356,5 @@ Feature cycles are paused. Tyler asked to refine the app and cut fluff, and a UX
 - **Clip:** the frame-selection step started its drag on the left tool rail after the Fit change; the check now starts on empty canvas (`0e3a0d9a6`). The app was not broken.
 - **Checks:** gen-routes, typecheck, lint:gate (59,563), build:ui, clip (0), check-bundle pass. Pack passes and the app is installed; :4570 gives 200; idle CPU 0.01 CPU-s per minute.
 - **Open for Tyler:** the cut list; risky defaults `allowBash`, `allowInstall`, `autoApprove` are on (`packages/common/contracts/src/settings-defaults.ts`).
+
+- **Merged:** frame-at (`e2611752c`): `@` frame mentions in the chat and `start_run`; an unknown frame now fails with a clear error. All checks pass, clip 0, app installed, idle CPU 0.02 CPU-s per minute. type-detail, layout-more and dark-a11y stay held for the cut decision.

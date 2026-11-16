@@ -4,6 +4,8 @@ import type { CSSProperties, PointerEvent, WheelEvent } from "react";
 const BOX_OFFSET = 8;
 const EDGE_GAP = 8;
 const ASK_ROOM = 28;
+const ASK_WIDTH = 56;
+const ASK_GAP = 4;
 const SNIPPET_MAX = 16;
 const MS_PER_SECOND = 1000;
 const START_GRACE_MS = 4000;
@@ -180,19 +182,31 @@ const toPlacement = (
   return { isAbove, shift: previous.shift + delta / zoom };
 };
 
-const toAskStyle = (rect: PromptRect, zoom: number): CSSProperties => {
-  if (rect.y * zoom < ASK_ROOM) {
+const toAskStyle = (
+  rect: PromptRect,
+  zoom: number,
+  bounds: PromptBounds
+): CSSProperties => {
+  const scale = `scale(${1 / zoom})`;
+  const left = rect.x + rect.width;
+  const roomRight = (bounds.width - left) * zoom;
+
+  if (roomRight >= ASK_WIDTH + ASK_GAP) {
+    return { left, top: rect.y, transform: `${scale} translateX(${ASK_GAP}px)` };
+  }
+
+  if (rect.y * zoom >= ASK_ROOM) {
     return {
-      left: rect.x,
+      left,
       top: rect.y,
-      transform: `scale(${1 / zoom}) translate(4px, 4px)`,
+      transform: `${scale} translate(-100%, calc(-100% - ${ASK_GAP}px))`,
     };
   }
 
   return {
-    left: rect.x,
+    left,
     top: rect.y,
-    transform: `scale(${1 / zoom}) translateY(calc(-100% - 4px))`,
+    transform: `${scale} translate(calc(-100% - ${ASK_GAP}px), ${ASK_GAP}px)`,
   };
 };
 

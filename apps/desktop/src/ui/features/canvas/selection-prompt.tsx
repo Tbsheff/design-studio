@@ -37,7 +37,12 @@ const SelectionPrompt = ({
   return (
     <div className="selection-prompt-layer">
       {rect && phase.kind === "closed" && !isRunning && (
-        <SelectionPromptAsk rect={rect} zoom={zoom} onOpen={onOpen} />
+        <SelectionPromptAsk
+          bounds={bounds}
+          rect={rect}
+          zoom={zoom}
+          onOpen={onOpen}
+        />
       )}
       {rect && phase.kind === "open" && (
         <SelectionPromptBox

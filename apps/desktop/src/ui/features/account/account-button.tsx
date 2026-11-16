@@ -3,8 +3,9 @@ import { useCallback, useRef, useState } from "react";
 import type { ReactElement, ReactNode } from "react";
 
 import { AccountDropdown } from "./account-dropdown.js";
-import { openSettings, toInitial } from "./account-model.js";
+import { toInitial } from "./account-model.js";
 import { copy } from "./copy.js";
+import { openAppSettings } from "./deps.js";
 import { useAccount } from "./use-account.js";
 
 const FACE_ICON_SIZE = 12;
@@ -36,7 +37,7 @@ const AccountButton = (): ReactElement => {
 
   const runSettings = useCallback((): void => {
     setOpen(false);
-    openSettings();
+    openAppSettings();
   }, []);
 
   const runAuth = useCallback((): void => {

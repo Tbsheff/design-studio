@@ -58,7 +58,11 @@
 }
 
 .studio[data-inspector="open"] .studio-stage {
-  --zoom-right: calc(var(--dock-gap) * 2 + var(--inspector-w));
+  --zoom-right: calc(var(--dock-gap) + var(--inspector-w));
+}
+
+.studio[data-inspector="open"] .studio-stage > .pane-canvas.center {
+  right: var(--inspector-w);
 }
 
 .studio-body .studio-stage > .pane-canvas.center {
@@ -90,8 +94,7 @@
 
 .studio-dock,
 .studio-tools > .topbar-tools,
-.studio-zoom > .canvas-zoom,
-.studio-stage > .studio-inspector {
+.studio-zoom > .canvas-zoom {
   border-radius: var(--r-lg);
   background: var(--surface);
   box-shadow: var(--card-shadow);
@@ -328,10 +331,6 @@
   color: var(--accent-text);
 }
 
-.canvas-theme {
-  margin-inline-end: var(--s-1);
-}
-
 .canvas-zoom .topbar-menu {
   top: auto;
   bottom: calc(100% + var(--s-2));
@@ -341,10 +340,12 @@
 .studio-stage > .studio-inspector {
   position: absolute;
   z-index: 32;
-  top: var(--dock-gap);
-  right: var(--dock-gap);
-  bottom: var(--dock-gap);
+  top: 0;
+  right: 0;
+  bottom: 0;
   width: var(--inspector-w);
+  background: var(--surface);
+  box-shadow: inset 1px 0 0 var(--line);
   min-width: 0;
   min-height: 0;
   display: flex;

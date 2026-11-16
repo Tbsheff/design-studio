@@ -26,6 +26,7 @@ const WHEEL_SPAN = 4;
 const PAN_STEPS = 6;
 const CHIP_ROW = 0.4;
 const LOW_ROW = 0.8;
+const PANEL_ROW = 0.5;
 const NEAR_PX = 2;
 const NARROW: ViewSize = { height: 700, width: 900 };
 const MORE_CHIP = "button.frame-chip.more";
@@ -312,7 +313,7 @@ const isPanelArrangeOpen = async (page: Page): Promise<boolean> => {
   await setNarrow(page);
   await setFit(page);
 
-  const label = await setChipAtEdge(page, CHIP_ROW);
+  const label = await setChipAtEdge(page, PANEL_ROW);
 
   if (label === null) {
     return false;
@@ -337,7 +338,7 @@ const isPanelArrangeOpen = async (page: Page): Promise<boolean> => {
     return false;
   }
 
-  return isRowOpen(page, ARRANGE, CHIP_ROW);
+  return isRowOpen(page, ARRANGE, PANEL_ROW);
 };
 
 const toMenuState = (

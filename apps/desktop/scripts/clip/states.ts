@@ -11,6 +11,7 @@ const PANEL_DIGITS = ["1", "2", "3", "4", "6", "7"];
 const MENU_ROLE = '[role="menu"]';
 const SELECT_TOOL = 'fieldset.topbar-tools button[aria-label="Select"]';
 const PRESENT_MENU = "button.topbar-present-more";
+const PRESENT_MAIN = "button.topbar-present";
 
 const TOOLS = [
   "Select",
@@ -88,7 +89,15 @@ const isPresentItemRun = async (
     return (await isPaletteRun(page, item)) && isVisible(page, shown);
   }
 
-  await page.getByRole("menuitem", { name: item }).click({ timeout: WAIT_MS });
+  const row = page.getByRole("menuitem", { name: item });
+
+  if ((await row.count()) === 0) {
+    await stopOverlays(page);
+
+    return (await isClicked(page, PRESENT_MAIN)) && isVisible(page, shown);
+  }
+
+  await row.click({ timeout: WAIT_MS });
 
   return isVisible(page, shown);
 };
@@ -158,7 +167,7 @@ const toTopBarStates = (): ClipState[] => [
     isPresentItemRun(page, "Play prototype", '[data-testid="play-layer"]')
   ),
   toOverlayState("present", (page) =>
-    isOpenedBy(page, "button.topbar-present", "", ".present-layer")
+    isPresentItemRun(page, "In this window", ".present-layer")
   ),
   toOverlayState("review", (page) =>
     isOpenedBy(page, "button.topbar-review", "", ".review-panel")

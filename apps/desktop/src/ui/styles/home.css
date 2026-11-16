@@ -170,7 +170,6 @@
   color: var(--home-pill-value);
 }
 
-.home-composer-bar .home-pill,
 .home-composer-bar .home-badge {
   height: var(--composer-ctl);
   padding: 0 10px;
@@ -546,10 +545,6 @@
 .home-foot .home-location {
   flex: 1;
   padding: 0;
-}
-
-.home-foot > .home-foot-row:focus {
-  outline: none;
 }
 
 .home-foot[data-location="default"]:not(:has(> .advanced[open]))
@@ -1797,31 +1792,6 @@
 
 .project-grid.list .project-menu:not(.at-pointer) {
   top: calc(50% + 14px + var(--s-1));
-}
-
-.home-composer-bar .home-pill {
-  --tip: off;
-}
-
-@media (max-width: 860px) {
-  .home-composer-bar .home-pill {
-    justify-content: center;
-    width: var(--composer-ctl);
-    padding: 0;
-  }
-
-  .home-composer-bar .home-pill-text {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-
-  .home-composer-bar .home-pill {
-    --tip: on;
-  }
 }
 
 @media (max-width: 720px) {

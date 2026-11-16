@@ -21,10 +21,7 @@ interface HomeUi {
   readonly isMenuClosing: boolean;
   readonly isMenuShown: boolean;
   readonly modelSettings: ModelSettings;
-  readonly plusActions: Omit<
-    PlusMenuActions,
-    "kind" | "onDesignSystem" | "onKind"
-  >;
+  readonly plusActions: Omit<PlusMenuActions, "kind" | "onKind">;
   readonly prefs: HomePrefs;
   readonly sendBlocker: string | null;
 }
@@ -91,9 +88,6 @@ const useHomeUi = <Draft extends SettingsLike>(deps: UiDeps<Draft>): HomeUi => {
       attachUrl: attach.openUrlForm,
       contextFileRef: attach.contextFileRef,
       fileRef: attach.fileRef,
-      hasTemplatesShown: homePrefs.hasTemplatesShown,
-      isAskingFirst: homePrefs.shouldAskFirst,
-      openAdvanced: draft.openAdvanced,
     }),
     prefs: homePrefs,
     sendBlocker: homeSendBlocker(

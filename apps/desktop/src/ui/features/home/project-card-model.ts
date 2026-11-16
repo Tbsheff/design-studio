@@ -32,11 +32,11 @@ interface ProjectBadge {
   readonly tone: string;
 }
 
-const TYPE_TONE: Record<ProjectType, string> = {
+type BadgeType = Exclude<ProjectType, "html" | "react">;
+
+const TYPE_TONE: Record<BadgeType, string> = {
   "design-system": "dsb",
-  html: "proto",
   next: "next",
-  react: "proto",
   vite: "vite",
 };
 
@@ -53,11 +53,11 @@ const PRIVATE_PREFIX = /^\/private(?=\/)/u;
 const isFolderProject = (project: Project): boolean =>
   Boolean(project.imported && !project.imported.created);
 
-const toProjectBadge = (project: Project): ProjectBadge => {
+const toProjectBadge = (project: Project): ProjectBadge | null => {
   const type = projectTypeOf(project);
 
-  if (type === "html" && isFolderProject(project)) {
-    return { label: TYPE_LABELS[type], tone: "html" };
+  if (type === "html" || type === "react") {
+    return null;
   }
 
   return { label: TYPE_LABELS[type], tone: TYPE_TONE[type] };

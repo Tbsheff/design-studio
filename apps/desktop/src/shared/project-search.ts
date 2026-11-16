@@ -41,6 +41,14 @@ export const TYPE_LABELS: Record<ProjectType, string> = {
   vite: "App · Vite",
 };
 
+export const toKindBadge = (type: ProjectType): string | null => {
+  if (type === "html" || type === "react") {
+    return null;
+  }
+
+  return TYPE_LABELS[type];
+};
+
 interface TypedProject {
   kind: "html" | "react";
   designSystemFor?: string | null;

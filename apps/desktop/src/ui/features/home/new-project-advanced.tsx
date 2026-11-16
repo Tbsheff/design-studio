@@ -4,6 +4,7 @@ import type { ReactElement, SyntheticEvent } from "react";
 
 import type { SettingsFields as SettingsFieldsView } from "../../app/shell/settings-fields.js";
 import type { SettingsDraft } from "../chat/settings-draft-model.js";
+import { AskFirstField } from "./ask-first-field.js";
 import { copy } from "./copy.js";
 import { DesignMdField } from "./design-md-field.js";
 import { DesignMdFilePick } from "./design-md-file-pick.js";
@@ -74,6 +75,7 @@ const NewProjectAdvanced = ({
       </summary>
       <div className="advanced-body">
         {toSettingsFields(isOpen, draft, onDraft)}
+        <AskFirstField />
         <DesignMdField value={designMd} onChange={onDesignMd} />
         <DesignMdFilePick onDesignMd={onDesignMd} onError={onError} />
       </div>

@@ -190,9 +190,6 @@ const toRecent = (projects: readonly Project[] | null): Project[] =>
 const toListedProjects = (projects: readonly Project[]): Project[] =>
   projects.filter((project) => !isFolderLink(project));
 
-const toRecentIn = (workspace: Workspace | null): readonly Project[] =>
-  workspace?.projects.slice(0, RECENT_MAX) ?? [];
-
 const toAgo = (at: number, now: number): string => {
   const gap = Math.max(0, now - at);
 
@@ -234,9 +231,9 @@ const toWorkspaceSub = (
   workspace: Workspace,
   homeDir: string | null,
   packName: string | null
-): string => {
+): string | null => {
   if (workspace.folder === null) {
-    return copy.prototypesSub;
+    return null;
   }
 
   const parts = [
@@ -335,7 +332,6 @@ export {
   toPinned,
   toProjectAgo,
   toRecent,
-  toRecentIn,
   toStarters,
   toWorkspaceKey,
   toWorkspaceSub,

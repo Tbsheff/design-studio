@@ -13,12 +13,14 @@ interface ProjectMenuProps {
   readonly trigger: RefObject<HTMLButtonElement | null>;
 }
 
-const toKindLabel = (header: StudioPaneHeaderProps): string => {
-  if (header.directionName) {
-    return `${header.kindLabel} · ${header.directionName}`;
+const toKindLabel = (header: StudioPaneHeaderProps): string | null => {
+  const parts = [header.kindLabel, header.directionName].filter(Boolean);
+
+  if (parts.length === 0) {
+    return null;
   }
 
-  return header.kindLabel;
+  return parts.join(" · ");
 };
 
 const ProjectMenu = ({

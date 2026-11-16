@@ -16,7 +16,7 @@ export type {
   KeyInput,
 } from "../../../shared/keymap.js";
 
-export { TYPE_LABELS } from "../../../shared/project-search.js";
+export { TYPE_LABELS, toKindBadge } from "../../../shared/project-search.js";
 
 export type {
   ProjectHit,

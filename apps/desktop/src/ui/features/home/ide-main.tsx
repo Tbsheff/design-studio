@@ -34,7 +34,7 @@ const IdeMain = ({
         onTrash={onTrash}
         projects={screen.lib.projects}
       />
-      <IdeCenter ide={ide} onOpen={onOpen} screen={screen} />
+      <IdeCenter ide={ide} screen={screen} />
       <ActivityColumn onOpen={onOpen} onSearch={onSearch} state={activity} />
       <div className="ide-library">
         <HomeLibraryBlock screen={screen} />

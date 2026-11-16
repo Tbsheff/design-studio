@@ -21,7 +21,13 @@ const toCoreMenuItems = (
       id: "more",
       label: copy.layerMenuMore,
       run: onClose,
-      submenu: <PreviewMoreItems items={more} onClose={onClose} />,
+      submenu: (
+        <PreviewMoreItems
+          items={more}
+          label={copy.layerMenuMore}
+          onClose={onClose}
+        />
+      ),
     },
   ];
 };

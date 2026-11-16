@@ -134,7 +134,7 @@ interface StructureMenuState {
 
 const LABELS: Record<StructureKey, string> = {
   copy: "Copy",
-  cut: "Cut to move",
+  cut: "Cut",
   delete: "Delete",
   duplicate: "Duplicate",
   group: "Group selection",

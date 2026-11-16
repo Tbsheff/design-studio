@@ -1,7 +1,6 @@
 import { useCallback, useContext, useEffect, useMemo } from "react";
 import type { KeyboardEvent, ReactElement } from "react";
 
-import { copy } from "./copy.js";
 import { toNextIndex } from "./preview-menu-model.js";
 import type { PreviewMenuItem } from "./preview-menu-model.js";
 import { PreviewMenuRow } from "./preview-menu-row.js";
@@ -11,11 +10,13 @@ import { useMenuItemRefs } from "./use-menu-item-refs.js";
 
 interface PreviewMoreItemsProps {
   readonly items: readonly PreviewMenuItem[];
+  readonly label: string;
   readonly onClose: () => void;
 }
 
 const PreviewMoreItems = ({
   items,
+  label,
   onClose,
 }: PreviewMoreItemsProps): ReactElement => {
   const { bind, focusItem, list } = useMenuItemRefs();
@@ -63,7 +64,7 @@ const PreviewMoreItems = ({
       className="project-menu preview-submenu"
       role="menu"
       tabIndex={-1}
-      aria-label={copy.layerMenuMore}
+      aria-label={label}
       onKeyDown={onKeyDown}
     >
       {items.map((item) => (

@@ -801,12 +801,7 @@ fieldset.compare-modes {
   color: var(--text-3);
 }
 
-.layers-tag {
-  flex: none;
-  color: var(--text-2);
-}
-
-.layers-row.selected :is(.layers-tag, .layers-kind) {
+.layers-row.selected .layers-kind {
   color: inherit;
 }
 

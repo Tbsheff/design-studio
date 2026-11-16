@@ -22,6 +22,7 @@ const copy = {
   changeSpotCount: " changes",
   changeSpotOf: " of ",
   changeSpotOne: "1 change",
+  changeSpotReview: " · Review",
   changeSpotStaleTip:
     "This layer changed again, so this undoes the whole change block. Cmd+Z takes it back.",
   changeSpotTip: "Step through the changes. Shift+click or Esc clears.",
@@ -262,6 +263,12 @@ const copy = {
   skipReview: "Skip review",
   soTheFramesShow: " so the frames show real pages.",
   spent: " spent",
+  stageMenu: "Canvas actions",
+  stageMenuAddFrame: "Add frame",
+  stageMenuFit: "Zoom to fit",
+  stageMenuPaste: "Paste",
+  stagePasteEmpty:
+    "The clipboard has no image. Copy a screenshot, then paste it.",
   startFrame: "Start frame",
   startNowWith: "Start now with the generated briefs",
   styleReference: "Style reference for new runs",

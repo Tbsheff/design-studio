@@ -36,50 +36,6 @@
   margin-left: auto;
 }
 
-.ins-variant-chip {
-  flex: none;
-  height: 24px;
-  min-width: 28px;
-  padding: 0 var(--s-2);
-  border: 1px solid transparent;
-  border-radius: var(--r-control-sm);
-  background: transparent;
-  color: var(--text-2);
-  font: inherit;
-  font-size: var(--t-xs);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.ins-variant-chip:hover:not(:disabled) {
-  background: var(--surface-hover);
-  color: var(--text);
-}
-
-.ins-variant-chip.on {
-  border-color: var(--accent-line);
-  background: var(--accent-soft);
-  color: var(--accent-text);
-}
-
-.ins-variant-chip:disabled {
-  color: var(--text-faint);
-  cursor: default;
-}
-
-.ins-variant-chip:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}
-
-.ins-variant-sep {
-  width: 1px;
-  height: 14px;
-  margin: 0 var(--s-1);
-  background: var(--line);
-}
-
 .ins-variant-note {
   display: flex;
   align-items: baseline;

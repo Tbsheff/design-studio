@@ -17,10 +17,8 @@ import {
 import {
   ANY_WIDTH,
   BASE,
-  isStateId,
   toBreakpoints,
   toFrameWidth,
-  toNextStates,
 } from "./variant-bar-model.js";
 
 interface VariantBarState {
@@ -28,8 +26,6 @@ interface VariantBarState {
   readonly current: ParsedVariant;
   readonly prefix: string;
   readonly handleBase: () => void;
-  readonly handleDark: () => void;
-  readonly handleState: (id: string) => void;
   readonly handleWidth: (name: string) => void;
 }
 
@@ -64,19 +60,6 @@ const useVariantBar = (
     choose(BASE);
   }, [choose]);
 
-  const handleDark = useCallback((): void => {
-    choose({ ...current, dark: !current.dark });
-  }, [choose, current]);
-
-  const handleState = useCallback(
-    (id: string): void => {
-      if (isStateId(id)) {
-        choose({ ...current, states: toNextStates(current.states, id) });
-      }
-    },
-    [choose, current]
-  );
-
   const handleWidth = useCallback(
     (name: string): void => {
       let breakpoint: string | null = name;
@@ -94,8 +77,6 @@ const useVariantBar = (
     breakpoints,
     current,
     handleBase,
-    handleDark,
-    handleState,
     handleWidth,
     prefix,
   };

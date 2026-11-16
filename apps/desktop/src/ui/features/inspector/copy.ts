@@ -34,7 +34,6 @@ const copy = {
   bottomLeftRadius: "Bottom left radius",
   bottomRightRadius: "Bottom right radius",
   breakpoint: "Breakpoint",
-  breakpointAndState: "Breakpoint and state",
   butTypedRaw: ", but typed raw",
   cancel: "Cancel",
   changeThisUseToAnother:
@@ -339,6 +338,7 @@ const copy = {
   variantProp: "Variant prop",
   variantStyles: "Variant styles",
   variantValue: "Variant value",
+  variantWidth: "Width",
   variants: "Variants",
   variants2: "variants",
   versionsOfTheSelected: "Versions of the selected ",

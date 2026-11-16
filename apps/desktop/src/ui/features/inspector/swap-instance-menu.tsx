@@ -1,6 +1,6 @@
 import type { SourceLoc } from "@design-studio/contracts";
 import { useFitPopover, usePopover } from "@design-studio/ui";
-import type { ReactElement } from "react";
+import type { ReactElement, RefObject } from "react";
 import { useCallback, useMemo, useRef } from "react";
 
 import {
@@ -19,6 +19,7 @@ interface Props {
   readonly use: SourceLoc;
   readonly onDone: (result: SwapDone) => void;
   readonly onClose: () => void;
+  readonly trigger: RefObject<HTMLButtonElement | null>;
 }
 
 const swapApi: SwapApi = {
@@ -58,10 +59,11 @@ const SwapInstanceMenu = ({
   use,
   onDone,
   onClose,
+  trigger,
 }: Props): ReactElement => {
   const root = useRef<HTMLDivElement>(null);
   const close = useCallback(() => onClose(), [onClose]);
-  usePopover(true, root, close);
+  usePopover(true, root, close, trigger);
   useFitPopover(root, null, true);
 
   const site = useMemo(

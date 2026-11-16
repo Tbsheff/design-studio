@@ -1,5 +1,5 @@
 import type { ComponentInstance } from "@design-studio/contracts/props";
-import { Suspense, lazy, useCallback, useState } from "react";
+import { Suspense, lazy, useCallback, useRef, useState } from "react";
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
@@ -38,6 +38,7 @@ const SwapButton = ({
   onStatus,
 }: SwapButtonProps): ReactElement => {
   const [isOpen, setIsOpen] = useState(false);
+  const trigger = useRef<HTMLButtonElement>(null);
   const close = useCallback(() => setIsOpen(false), []);
   const toggle = useCallback(() => setIsOpen((value) => !value), []);
 
@@ -49,6 +50,7 @@ const SwapButton = ({
   return (
     <div className="prp-swap">
       <button
+        ref={trigger}
         type="button"
         className="btn small"
         aria-haspopup="menu"
@@ -66,6 +68,7 @@ const SwapButton = ({
             use={instance.use}
             onDone={onDone}
             onClose={close}
+            trigger={trigger}
           />
         </Suspense>
       )}

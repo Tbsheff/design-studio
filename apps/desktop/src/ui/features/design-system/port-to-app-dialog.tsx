@@ -54,7 +54,10 @@ const PortToAppDialog = ({
       aria-label={COPY.labelMoveToApp}
     >
       <form className="modal-form" onSubmit={submit} noValidate>
-        <PortDialogHead onClose={onClose} />
+        <PortDialogHead
+          isMulti={form.pages.all.length > 1}
+          onClose={onClose}
+        />
         <PortDialogBody
           form={form}
           error={failure}

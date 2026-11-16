@@ -1,11 +1,10 @@
-import { Suspense, lazy, useCallback } from "react";
+import { Suspense, lazy } from "react";
 import type { ReactElement } from "react";
 
 import { McpPointBadge } from "../chat/index.js";
 import { CommentModePill } from "../comments/comment-layer.js";
 import { useEditVariant } from "../inspector/index.js";
 import { AgentPresenceLine } from "./agent-presence-line.js";
-import { frameName } from "./canvas-frame-ops.js";
 import { dropQuietFocus } from "./canvas-helpers.js";
 import type { CanvasStageProps } from "./canvas-stage-types.js";
 import { copy } from "./copy.js";
@@ -14,9 +13,12 @@ import { EditNotice } from "./edit-notice.js";
 import { FrameMarquee } from "./frame-marquee.js";
 import { FrameUndoBar } from "./frame-undo-bar.js";
 import { StageArtboard } from "./stage-artboard.js";
+import { openStageMenu } from "./stage-menu-model.js";
+import { StageMenu } from "./stage-menu.js";
 import { StageMessage } from "./stage-message.js";
 import { StageRulers } from "./stage-rulers.js";
 import { unionRect } from "./use-canvas-frames.js";
+import { useFrameNameOf } from "./use-frame-name-of.js";
 import { useStagePointerDown } from "./use-frame-selection.js";
 
 const LazySpacingHandles = lazy(async () => {
@@ -67,18 +69,7 @@ const CanvasStage = (stageProps: CanvasStageProps): ReactElement => {
     pz: stage.pz,
   });
 
-  const nameOf = useCallback(
-    (id: string): string => {
-      const found = layout.frames.find((item) => item.id === id);
-
-      if (found) {
-        return frameName(found);
-      }
-
-      return id;
-    },
-    [layout.frames]
-  );
+  const nameOf = useFrameNameOf(layout.frames);
 
   return (
     <div
@@ -88,6 +79,7 @@ const CanvasStage = (stageProps: CanvasStageProps): ReactElement => {
       tabIndex={-1}
       aria-label={copy.canvas}
       onPointerDown={onStagePointerDown}
+      onContextMenu={openStageMenu}
       onBlur={dropQuietFocus}
     >
       <StageMessage
@@ -128,6 +120,7 @@ const CanvasStage = (stageProps: CanvasStageProps): ReactElement => {
         <McpPointBadge badge={pointBadge} frameName={nameOf} />
       </Suspense>
       <AgentPresenceLine frames={layout.frames} presence={presence} />
+      <StageMenu addFrame={wiring.addFrameAt} zoomBy={stage.zoomBy} />
     </div>
   );
 };

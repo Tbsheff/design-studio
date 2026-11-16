@@ -262,7 +262,7 @@ export const KEYMAP = [
   },
   {
     id: "layer-cut",
-    label: "Cut to move",
+    label: "Cut",
     keys: ["Mod+X"],
     group: "Selection",
   },

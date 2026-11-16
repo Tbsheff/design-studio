@@ -380,3 +380,4 @@ Feature cycles are paused. Tyler asked to refine the app and cut fluff, and a UX
 - Passed: gen-routes, typecheck, lint:gate (59501 diagnostics, baseline 89733), build:ui, check-bundle, clip (0 findings), desktop:pack.
 - Installed to `/Applications`. :4570 returns 200. Idle CPU is 0.01 CPU-s per minute.
 - Kept: `autoApprove`, `allowBash` and `allowInstall` stay on, by Tyler's choice.
+- Dropped: `feat/type-detail` (baec99240) and `feat/layout-more` (663962885), by Tyler's choice. Both added inspector rows. Restore with `git branch <name> <sha>` while git still keeps the commits.

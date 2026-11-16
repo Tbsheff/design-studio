@@ -30,7 +30,6 @@ const toProjectItems = (
   toItem("rename", "pencil", "Rename", onStartRename),
   toItem("duplicate", "copy", "Duplicate", header.onDuplicate),
   toItem("settings", "settings", "Project settings…", header.onSettings),
-  toItem("design-md", "doc", "Edit DESIGN.md", header.onDesignMd),
   toItem("trash", "trash", "Move to trash", header.onTrash),
 ];
 

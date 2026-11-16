@@ -5,17 +5,16 @@ import type {
 import type { ReactElement } from "react";
 
 import { ConnectAiOpener } from "./connect-ai-opener.js";
-import { copy as uiCopy } from "./copy.js";
 import type { ExportTarget } from "./export-api.js";
 import type {
   DialogFormat,
   ExportStatus,
   FormatInfo,
 } from "./export-formats.js";
+import { ExportFormatPicker } from "./export-format-picker.js";
 import { ExportOptionFields } from "./export-option-fields.js";
 import type { FrameLabel } from "./frame-label.js";
 import { HandoffResultView } from "./handoff-result-view.js";
-import { Segmented } from "./segmented.js";
 import type { SegmentOption } from "./segmented.js";
 import type { ExportOptions } from "./use-export-options.js";
 
@@ -25,6 +24,7 @@ interface ExportDialogBodyProps {
   readonly labels: ReadonlyMap<string, FrameLabel>;
   readonly info: FormatInfo;
   readonly formatOptions: readonly SegmentOption<DialogFormat>[];
+  readonly moreOptions: readonly SegmentOption<DialogFormat>[];
   readonly status: ExportStatus;
   readonly isBusy: boolean;
   readonly result: HandoffResult | null;
@@ -39,6 +39,7 @@ const ExportDialogBody = ({
   info,
   isBusy,
   labels,
+  moreOptions,
   onError,
   onFormat,
   options,
@@ -47,10 +48,10 @@ const ExportDialogBody = ({
   target,
 }: ExportDialogBodyProps): ReactElement => (
   <div className="modal-body export-body" aria-busy={isBusy}>
-    <Segmented
-      label={uiCopy.formatLabel}
+    <ExportFormatPicker
+      main={formatOptions}
+      more={moreOptions}
       value={options.format}
-      options={formatOptions}
       onChange={onFormat}
     />
     <p className="export-sub export-hint">{info.hint}</p>

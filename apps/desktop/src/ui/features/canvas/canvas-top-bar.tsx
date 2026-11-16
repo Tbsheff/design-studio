@@ -85,9 +85,7 @@ const toHosted = (
 
 const CanvasTopBar = (props: Props): ReactElement => {
   const port = usePortDialog(!props.onShip);
-  const { open: openPort, close: closePort } = port;
-  const hasShip = Boolean(props.onShip);
-  const openPortDialog = useCallback((): void => openPort(null), [openPort]);
+  const { close: closePort } = port;
   const { canPlay, onPresent } = props;
 
   const present = useMemo(
@@ -116,12 +114,6 @@ const CanvasTopBar = (props: Props): ReactElement => {
     [fit, step, zoomTo, zoomSetting, zoomStore]
   );
 
-  let onPort: (() => void) | null = null;
-
-  if (!hasShip) {
-    onPort = openPortDialog;
-  }
-
   const parts: TopBarParts = {
     end: (
       <>
@@ -129,7 +121,7 @@ const CanvasTopBar = (props: Props): ReactElement => {
         <span data-topbar-slot="review" style={CONTENTS_STYLE} />
         <TopBarPresent onPresent={onWindow} present={present} />
         <TopBarConnect />
-        <TopBarShare props={props} onPort={onPort} />
+        <TopBarShare props={props} />
         {props.account}
         {port.target && (
           <Suspense fallback={null}>

@@ -38,12 +38,6 @@ const PublishPane = lazy(async () => {
   return { default: loaded.PublishPane };
 });
 
-const PublishSetup = lazy(async () => {
-  const loaded = await import("./publish-setup.js");
-
-  return { default: loaded.PublishSetup };
-});
-
 const FigmaImportDialog: LazyExoticComponent<typeof FigmaImportDialogView> =
   lazy(async () => {
     const loaded = await import("./figma-import-dialog.js");
@@ -56,7 +50,6 @@ export {
   ExportDialog,
   FigmaImportDialog,
   PublishPane,
-  PublishSetup,
   ShareDialog,
   ShipDialog,
   loadConnectAiDialog,

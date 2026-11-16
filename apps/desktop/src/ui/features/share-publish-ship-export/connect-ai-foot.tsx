@@ -5,6 +5,7 @@ import { copy as uiCopy } from "./copy.js";
 interface ConnectAiFootProps {
   readonly clients: readonly string[];
   readonly isBusy: boolean;
+  readonly isEnabled: boolean;
   readonly onRotate: () => void;
 }
 
@@ -19,6 +20,7 @@ const toClientsText = (clients: readonly string[]): string => {
 const ConnectAiFoot = ({
   clients,
   isBusy,
+  isEnabled,
   onRotate,
 }: ConnectAiFootProps): ReactElement => (
   <div className="connect-ai-foot">
@@ -28,7 +30,7 @@ const ConnectAiFoot = ({
     <button
       type="button"
       className="btn small"
-      disabled={isBusy}
+      disabled={isBusy || !isEnabled}
       onClick={onRotate}
     >
       {uiCopy.newToken}

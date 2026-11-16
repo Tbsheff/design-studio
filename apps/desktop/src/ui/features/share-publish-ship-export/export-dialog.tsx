@@ -23,9 +23,20 @@ interface Props {
   onClose: () => void;
 }
 
-const FORMAT_OPTIONS: readonly SegmentOption<DialogFormat>[] = FORMATS.map(
-  (entry) => ({ icon: entry.icon, id: entry.id, label: entry.label })
-);
+const toFormatOptions = (
+  isMore: boolean
+): readonly SegmentOption<DialogFormat>[] =>
+  FORMATS.flatMap((entry) => {
+    if (entry.isMore !== isMore) {
+      return [];
+    }
+
+    return [{ icon: entry.icon, id: entry.id, label: entry.label }];
+  });
+
+const MAIN_OPTIONS = toFormatOptions(false);
+
+const MORE_OPTIONS = toFormatOptions(true);
 
 const FRAME_NAMERS = { nameOf: canvasFrameName, pageOf: framePage };
 
@@ -98,7 +109,8 @@ const ExportDialog = ({ onClose, target }: Props): ReactElement => {
         options={options}
         labels={labels}
         info={info}
-        formatOptions={FORMAT_OPTIONS}
+        formatOptions={MAIN_OPTIONS}
+        moreOptions={MORE_OPTIONS}
         status={runner.status}
         isBusy={isBusy}
         result={result}

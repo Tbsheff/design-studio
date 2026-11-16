@@ -55,13 +55,13 @@ const SettingsFields = ({
         onChange={handlers.handleInstall}
       />
       <SettingsCheckField
-        isChecked={draft.allowBash && draft.autoApprove}
+        isChecked={draft.autoApprove}
         isDisabled={!draft.allowBash}
         label={copy.autoModeRunCommandsWithout}
         name="autoApprove"
         onChange={handlers.handleAuto}
       />
-      <p className="warn-line">{copy.theseAreOnByDefault}</p>
+      <p className="field-help settings-note">{copy.shellRiskNote}</p>
       {children}
       <SkillsChecklist
         disabled={draft.disabledSkills}

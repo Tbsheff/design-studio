@@ -37,6 +37,12 @@ import {
 import { packagedResource, resourcePath } from "../platform/resources/index.js";
 import type { AppDetection } from "./project-types.js";
 
+const LEGACY_PERMISSIONS = {
+  allowBash: true,
+  allowInstall: true,
+  autoApprove: true,
+} as const;
+
 export const MAIN_DIRECTION_ID = "main";
 export const DESIGN_MD_FILE = "DESIGN.md";
 
@@ -153,7 +159,11 @@ export function cleanAppEnv(raw: unknown): Record<string, string> | undefined {
 export function migrateSettings(
   project: Pick<Project, "settings">
 ): ProjectSettings {
-  const settings = { ...DEFAULT_SETTINGS, ...project.settings };
+  const settings = {
+    ...DEFAULT_SETTINGS,
+    ...LEGACY_PERMISSIONS,
+    ...project.settings,
+  };
 
   Reflect.deleteProperty(settings, "maxBudgetUsd");
 

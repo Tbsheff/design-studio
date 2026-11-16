@@ -26,6 +26,10 @@ const KitDriftPanel = ({
     return null;
   }
 
+  if (drift.items.length === 0 && drift.error === null) {
+    return null;
+  }
+
   return (
     <section aria-label={copy.title} className="review-group">
       <KitDriftHead
@@ -35,15 +39,6 @@ const KitDriftPanel = ({
         onSwapAll={drift.handleSwapAll}
       />
       {drift.error !== null && <div className="alert error">{drift.error}</div>}
-      {drift.isLoading && drift.items.length === 0 && (
-        <div className="review-wait">
-          <span className="spinner" />
-          {copy.scanning}
-        </div>
-      )}
-      {!drift.isLoading && drift.items.length === 0 && (
-        <div className="review-wait">{copy.empty}</div>
-      )}
       <ul className="review-list">
         {drift.items.map((item) => (
           <KitDriftRow

@@ -21,7 +21,7 @@ interface SettingsDraft {
 const toDraft = (settings: ProjectSettings): SettingsDraft => ({
   allowBash: settings.allowBash,
   allowInstall: settings.allowInstall,
-  autoApprove: settings.autoApprove ?? true,
+  autoApprove: settings.autoApprove,
   defaultLevel: settings.defaultLevel ?? "prototype",
   disabledSkills: [...(settings.disabledSkills ?? [])],
   maxTurns: String(settings.maxTurns),

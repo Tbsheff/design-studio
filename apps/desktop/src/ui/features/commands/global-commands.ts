@@ -1,3 +1,4 @@
+import { openAppSettings } from "../../domain/app-settings-events.js";
 import {
   CONNECT_AI_COMMAND,
   openConnectAi,
@@ -175,6 +176,15 @@ const CONNECT_AI: Command = {
   title: "Connect AI…",
 };
 
+const APP_SETTINGS: Command = {
+  group: "Go",
+  icon: "settings",
+  id: "app.settings",
+  keywords: "preferences appearance theme integrations api keys mcp",
+  run: openAppSettings,
+  title: "Settings…",
+};
+
 const home = (): void => uiStore.set({ activeProjectId: null, screen: "home" });
 
 const toHomeReason = (inProject: boolean): string | null => {
@@ -251,6 +261,7 @@ const globalCommands = (openShortcuts: () => void): Command[] => {
     copyPngCommand(inProject),
     ...THEME_COMMANDS,
     CONNECT_AI,
+    APP_SETTINGS,
     {
       group: "Help",
       icon: "sliders",

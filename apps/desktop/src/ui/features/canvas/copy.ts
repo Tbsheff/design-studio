@@ -250,6 +250,8 @@ const copy = {
   },
   set: "Set ",
   share: "Share",
+  shareNeedsVersion: "Save a version to share",
+  shareTip: "Share a link to view and comment, or publish",
   showAll: "Show all",
   showAllStates: "Show all states",
   showChatPane: "Show chat pane",

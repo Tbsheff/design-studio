@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { Dispatch, RefObject, SetStateAction } from "react";
+import type { Dispatch, SetStateAction } from "react";
 
 import { toPressedIds } from "./shortcut-model.js";
 
@@ -33,17 +33,7 @@ const scheduleUnmark = (
   );
 };
 
-const isCloseKey = (
-  event: KeyboardEvent,
-  rootRef: RefObject<HTMLElement | null>
-): boolean =>
-  event.key === "Escape" &&
-  Boolean(rootRef.current?.contains(document.activeElement));
-
-const useShortcutMarks = (
-  rootRef: RefObject<HTMLElement | null>,
-  onClose: () => void
-): ReadonlySet<string> => {
+const useShortcutMarks = (): ReadonlySet<string> => {
   const [marked, setMarked] = useState<ReadonlySet<string>>(new Set());
   const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
 
@@ -52,14 +42,6 @@ const useShortcutMarks = (
 
     const onKey = (event: KeyboardEvent): void => {
       if (event.repeat) {
-        return;
-      }
-
-      if (isCloseKey(event, rootRef)) {
-        event.preventDefault();
-        event.stopPropagation();
-        onClose();
-
         return;
       }
 
@@ -87,7 +69,7 @@ const useShortcutMarks = (
 
       live.clear();
     };
-  }, [onClose, rootRef]);
+  }, []);
 
   return marked;
 };

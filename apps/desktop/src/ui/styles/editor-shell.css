@@ -368,6 +368,29 @@
   font-variant-numeric: tabular-nums;
 }
 
+.assets-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.assets-panel > .column-list {
+  flex: none;
+}
+
+.assets-tokens {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--line);
+}
+
+.assets-tokens > .column-group-head {
+  flex: none;
+  padding-inline: var(--s-3);
+}
+
 .column-note {
   margin: 0;
   padding: var(--s-2) var(--s-3);

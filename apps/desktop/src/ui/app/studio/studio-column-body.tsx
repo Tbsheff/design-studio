@@ -1,13 +1,7 @@
 import { createElement } from "react";
 import type { ReactElement } from "react";
 
-import { ColorPickerSlot } from "../../domain/color-picker-slot.js";
-import type { ColorPickerSlotProps } from "../../domain/color-picker-slot.js";
-import { ColorPickerPopup } from "../../features/inspector/index.js";
-import {
-  TokensPanel,
-  VersionsPanel,
-} from "../../features/versions-layers-tokens/index.js";
+import { VersionsPanel } from "../../features/versions-layers-tokens/index.js";
 import type { ColumnTab } from "../../platform/panel-tab";
 import { ComponentsPanel } from "../components-panel-host";
 import { AssetsPanel } from "./assets-panel";
@@ -15,23 +9,6 @@ import { COLUMN_COPY } from "./copy";
 import { componentsProps, versionsProps } from "./left-props-panels";
 import type { StudioCtx } from "./studio-context";
 import { StudioSystem } from "./studio-system";
-
-const toColorPicker = (props: ColorPickerSlotProps): ReactElement =>
-  createElement(ColorPickerPopup, props);
-
-const toTokensBody = (ctx: StudioCtx): ReactElement => {
-  const { panel } = ctx.core.studioTokens;
-
-  if (panel) {
-    return (
-      <ColorPickerSlot.Provider value={toColorPicker}>
-        {createElement(TokensPanel, panel)}
-      </ColorPickerSlot.Provider>
-    );
-  }
-
-  return <p className="column-note">{COLUMN_COPY.tokensEmpty}</p>;
-};
 
 const toColumnBody = (ctx: StudioCtx, tab: ColumnTab): ReactElement => {
   switch (tab) {
@@ -56,15 +33,11 @@ const toColumnBody = (ctx: StudioCtx, tab: ColumnTab): ReactElement => {
     }
 
     case "assets": {
-      return <AssetsPanel />;
+      return <AssetsPanel ctx={ctx} />;
     }
 
     case "versions": {
       return createElement(VersionsPanel, versionsProps(ctx));
-    }
-
-    case "tokens": {
-      return toTokensBody(ctx);
     }
 
     case "components": {
@@ -81,4 +54,4 @@ const toColumnBody = (ctx: StudioCtx, tab: ColumnTab): ReactElement => {
   }
 };
 
-export { toColorPicker, toColumnBody };
+export { toColumnBody };

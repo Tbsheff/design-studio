@@ -20,7 +20,6 @@ const RAIL_TABS: readonly RailTab[] = [
     label: "Versions",
     tab: "versions",
   },
-  { icon: "token", keyId: "column-tokens", label: "Tokens", tab: "tokens" },
   {
     icon: "component",
     keyId: "column-components",

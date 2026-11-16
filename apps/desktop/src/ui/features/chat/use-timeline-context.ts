@@ -1,5 +1,5 @@
 import { useStableProps } from "../../platform/use-stable-props.js";
-import type { PolishProps, TurnActions } from "./chat-turn-model.js";
+import type { RunCallbacks, TurnActions } from "./chat-turn-model.js";
 import type { RewindControl } from "./use-rewind.js";
 
 interface TimelineRunContext {
@@ -9,7 +9,7 @@ interface TimelineRunContext {
   readonly onDetails: (runId: string) => void;
   readonly onReview: ((versionId: string) => void) | null;
   readonly onStop: (() => void) | undefined;
-  readonly polish: PolishProps;
+  readonly callbacks: RunCallbacks;
   readonly rewind: RewindControl | undefined;
   readonly titles: Readonly<Record<string, string>>;
   readonly workTree: string | null;
@@ -20,7 +20,7 @@ interface TimelineContextOptions {
   readonly detailsSource: (runId: string) => void;
   readonly isOffline: boolean;
   readonly lastId: string | null;
-  readonly polish: PolishProps;
+  readonly callbacks: RunCallbacks;
   readonly reviewSource: ((versionId: string) => void) | undefined;
   readonly rewind: RewindControl | undefined;
   readonly stopSource: (() => void) | undefined;
@@ -33,7 +33,7 @@ const NO_NESTED: ReadonlySet<string> = new Set<string>();
 const useTimelineContext = (
   options: TimelineContextOptions
 ): TimelineRunContext => {
-  const { actions, isOffline, lastId, polish, rewind, titles, workTree } =
+  const { actions, isOffline, lastId, callbacks, rewind, titles, workTree } =
     options;
 
   const onDetails = options.detailsSource;
@@ -43,12 +43,12 @@ const useTimelineContext = (
   return useStableProps(
     {
       actions,
+      callbacks,
       isOffline,
       lastId,
       onDetails,
       onReview,
       onStop,
-      polish,
       rewind,
       titles,
       workTree,

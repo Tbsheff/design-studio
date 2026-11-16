@@ -196,6 +196,7 @@ const copy = {
   sendPictureHint: "The agent sees what you see",
   sendsToANew: "Sends to a new direction",
   set: "Set",
+  settingsHeading: "Settings",
   sharedLayoutThisChange: "Shared layout: this change affects ",
   shellCommandsToLet: " shell commands. To let ",
   shortBriefsBuildBetter:

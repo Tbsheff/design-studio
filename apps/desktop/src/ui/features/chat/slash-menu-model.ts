@@ -1,6 +1,8 @@
 import type { IconName } from "@design-studio/ui";
 import type { KeyboardEvent, ReactNode } from "react";
 
+import { copy } from "./copy.js";
+
 interface SlashChoice {
   id: string;
   label: string;
@@ -323,6 +325,10 @@ const toRowHeading = (
 ): string | null => {
   const row = rows[at];
   const before = rows[at - 1];
+
+  if (row?.kind === "group" && before?.kind === "choice" && !hasHeading) {
+    return copy.settingsHeading;
+  }
 
   if (
     row?.kind === "choice" &&

@@ -276,3 +276,7 @@ figure.stop {
   opacity: 0.45;
   cursor: default;
 }
+
+.contrastLines {
+  display: grid;
+}

@@ -7,7 +7,7 @@ import type { ClipState } from "./types.ts";
 const WAIT_MS = 3000;
 const TYPE_MS = 400;
 const RELOAD_TIMEOUT_MS = 60_000;
-const PANEL_COUNT = 7;
+const PANEL_DIGITS = ["1", "2", "3", "4", "6", "7"];
 const MENU_ROLE = '[role="menu"]';
 const SELECT_TOOL = 'fieldset.topbar-tools button[aria-label="Select"]';
 const PRESENT_MENU = "button.topbar-present-more";
@@ -116,7 +116,7 @@ const setSelectTool = async (page: Page): Promise<void> => {
   await isClicked(page, SELECT_TOOL);
 };
 
-const toPanelState = (index: number): ClipState => {
+const toPanelState = (index: string): ClipState => {
   const chord = `Alt+Digit${index}`;
 
   return {
@@ -146,9 +146,7 @@ const toOverlayState = (
 ): ClipState => ({ close: stopOverlays, name, open });
 
 const toPanelStates = (): ClipState[] =>
-  Array.from({ length: PANEL_COUNT }, (_unused, index) =>
-    toPanelState(index + 1)
-  );
+  PANEL_DIGITS.map((digit) => toPanelState(digit));
 
 const toTopBarStates = (): ClipState[] => [
   toOverlayState("present menu", async (page) => {

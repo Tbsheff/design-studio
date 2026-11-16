@@ -12,14 +12,18 @@ interface ColumnSpec {
 const COLUMNS: readonly ColumnSpec[] = [
   { icon: "layers", keyId: "layers", tab: "layers", title: "Layers" },
   { icon: "doc", keyId: "column-pages", tab: "pages", title: "Pages" },
-  { icon: "assets", keyId: "column-assets", tab: "assets", title: "Assets" },
+  {
+    icon: "assets",
+    keyId: "column-assets",
+    tab: "assets",
+    title: "Assets and tokens",
+  },
   {
     icon: "history",
     keyId: "column-versions",
     tab: "versions",
     title: "Versions",
   },
-  { icon: "token", keyId: "column-tokens", tab: "tokens", title: "Tokens" },
   {
     icon: "component",
     keyId: "column-components",

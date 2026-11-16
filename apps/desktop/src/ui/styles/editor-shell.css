@@ -376,6 +376,21 @@
   line-height: var(--lh-xs);
 }
 
+.column-assets {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.column-assets > .column-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-top: 1px solid var(--line);
+}
+
 .edit-layers-host:empty::before,
 .column-pages-host:empty::before {
   content: attr(data-empty);

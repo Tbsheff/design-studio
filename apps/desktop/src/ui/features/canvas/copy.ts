@@ -354,6 +354,7 @@ const layoutGridCopy = {
 const presentCopy = {
   more: "More ways to present",
   playTip: "Play prototype. The arrow shows more ways to present",
+  windowTip: "Present in this window",
 } as const;
 
 const groupResizeCopy = {

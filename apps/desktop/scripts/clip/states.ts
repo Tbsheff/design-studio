@@ -158,7 +158,7 @@ const toTopBarStates = (): ClipState[] => [
     isPresentItemRun(page, "Play prototype", '[data-testid="play-layer"]')
   ),
   toOverlayState("present", (page) =>
-    isPresentItemRun(page, "In this window", ".present-layer")
+    isOpenedBy(page, "button.topbar-present", "", ".present-layer")
   ),
   toOverlayState("review", (page) =>
     isOpenedBy(page, "button.topbar-review", "", ".review-panel")

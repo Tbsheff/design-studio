@@ -15,38 +15,53 @@ interface TopBarPresentProps {
 
 const CHEVRON = <Icon name="chevronDown" size={12} />;
 
+const toMainId = (canPlay: boolean): string => {
+  if (canPlay) {
+    return "play";
+  }
+
+  return "window";
+};
+
+const toMainTip = (canPlay: boolean): string => {
+  if (canPlay) {
+    return presentCopy.playTip;
+  }
+
+  return tipWithKey(presentCopy.windowTip, "present");
+};
+
 const TopBarPresent = ({
   canPlay,
   onPlay,
   present,
 }: TopBarPresentProps): ReactElement => {
+  const mainId = toMainId(canPlay);
+
   const groups = useCallback(
-    (): MenuGroup[] => [{ items: present }],
-    [present]
+    (): MenuGroup[] => [
+      { items: present.filter((entry) => entry.id !== mainId) },
+    ],
+    [present, mainId]
   );
 
-  if (!canPlay) {
-    return (
-      <DropMenu
-        label={copy.present}
-        triggerClass="topbar-text-btn topbar-present topbar-present-more"
-        groups={groups}
-        align="end"
-        tip={tipWithKey(copy.present, "present")}
-      >
-        <span className="topbar-label">{copy.present}</span>
-        {CHEVRON}
-      </DropMenu>
-    );
-  }
+  const handlePresent = useCallback((): void => {
+    if (canPlay) {
+      onPlay();
+
+      return;
+    }
+
+    present.find((entry) => entry.id === mainId)?.run();
+  }, [canPlay, onPlay, present, mainId]);
 
   return (
     <span className="topbar-present-split">
       <button
         type="button"
         className="topbar-text-btn topbar-present"
-        data-tip={presentCopy.playTip}
-        onClick={onPlay}
+        data-tip={toMainTip(canPlay)}
+        onClick={handlePresent}
       >
         <span className="topbar-label">{copy.present}</span>
       </button>

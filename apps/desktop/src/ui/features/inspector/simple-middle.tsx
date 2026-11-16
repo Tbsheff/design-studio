@@ -27,11 +27,6 @@ const SimpleMiddle = ({ props, state }: SimpleMiddleProps): ReactElement => {
     () =>
       directionId && (
         <>
-          <TextStyleSlot
-            projectId={projectId}
-            directionId={directionId}
-            targets={targets}
-          />
           <Suspense fallback={null}>
             <TextRewriteSlot
               projectId={projectId}
@@ -39,6 +34,11 @@ const SimpleMiddle = ({ props, state }: SimpleMiddleProps): ReactElement => {
               targets={targets}
             />
           </Suspense>
+          <TextStyleSlot
+            projectId={projectId}
+            directionId={directionId}
+            targets={targets}
+          />
         </>
       ),
     [projectId, directionId, targets]

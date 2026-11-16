@@ -24,7 +24,6 @@ const RewriteField = ({ ids, target }: RewriteFieldProps): ReactElement => {
 
   return (
     <div className={styles.field}>
-      <span className="ins-scrub static">{copy.label}</span>
       <button
         aria-controls={menuId}
         aria-expanded={state.isOpen}
@@ -36,7 +35,7 @@ const RewriteField = ({ ids, target }: RewriteFieldProps): ReactElement => {
         type="button"
         onClick={state.handleToggle}
       >
-        <span className={styles.current}>{copy.label}</span>
+        <span className={styles.current}>{copy.button}</span>
       </button>
       {state.isOpen && (
         <div className={styles.popup} id={menuId} ref={root}>

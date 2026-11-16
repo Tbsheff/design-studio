@@ -81,12 +81,12 @@
 .studio-top .topbar-file {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-1-5);
   min-width: 0;
   max-width: 260px;
   height: 28px;
   margin-left: 0;
-  padding: 0 var(--s-2) 0 var(--s-1);
+  padding: 0 var(--s-1-5) 0 var(--s-2);
   border: 0;
   border-radius: var(--r-control-sm);
   background: transparent;

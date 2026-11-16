@@ -8,7 +8,7 @@ import type { PlusProjectProps } from "./composer-sheet-model.js";
 import { ContextMeter } from "./context-meter.js";
 import { DraftsPill } from "./drafts-pill.js";
 import { LevelPill } from "./level-pill.js";
-import { ModeChip } from "./mode-chip.js";
+import { ModePill } from "./mode-pill.js";
 import { ModelPill } from "./model-pill.js";
 import { PlusMenu } from "./plus-menu.js";
 import type { SendProps } from "./prompt-box-model.js";
@@ -63,8 +63,6 @@ const PromptToolbar = (props: PromptToolbarProps): ReactElement => {
   const attachZip = useCallback((): void => referenceRef.current?.click(), []);
   const { onFiles, onReferenceFiles, onReferenceFolder } = props;
 
-  const resetMode = useCallback((): void => onMode("edit"), [onMode]);
-
   const pickFiles = useCallback(
     (event: ChangeEvent<HTMLInputElement>): void => {
       if (event.target.files) {
@@ -93,11 +91,9 @@ const PromptToolbar = (props: PromptToolbarProps): ReactElement => {
         onMention={props.onMention}
         onSkills={props.onOpenSkills}
         onOpen={props.onCloseSlash}
-        mode={mode}
-        onMode={onMode}
         project={props.project}
       />
-      <ModeChip mode={mode} onClear={resetMode} />
+      <ModePill mode={mode} onMode={onMode} onOpen={props.onCloseSlash} />
       <input
         ref={inputRef}
         type="file"

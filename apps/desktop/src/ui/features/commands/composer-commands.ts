@@ -12,7 +12,7 @@ const MODE_ORDER: ComposerMode[] = ["edit", "plan", "critique", "ask"];
 const MODE_TITLES: Record<ComposerMode, string> = {
   ask: "Ask mode: the agent answers and changes nothing",
   critique: "Critique mode: the agent reviews only",
-  edit: "Edit mode: the agent changes files",
+  edit: "Build mode: the agent changes files",
   plan: "Plan mode: the agent writes a plan first",
 };
 

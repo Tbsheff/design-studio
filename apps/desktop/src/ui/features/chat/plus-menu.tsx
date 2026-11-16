@@ -4,7 +4,6 @@ import type { MouseEvent, ReactElement } from "react";
 
 import { ITEM_FOCUS } from "./composer-menu-model.js";
 import type { PlusMenuProps } from "./composer-menu-model.js";
-import type { ComposerMode } from "./composer-mode-model.js";
 import { copy } from "./copy.js";
 import { MenuPanel } from "./menu-panel.js";
 import { PlusMenuBody } from "./plus-menu-body.js";
@@ -28,16 +27,6 @@ const PlusMenu = (props: PlusMenuProps): ReactElement => {
       run();
     },
     [close]
-  );
-
-  const { onMode } = props;
-
-  const pickMode = useCallback(
-    (choice: ComposerMode): void => {
-      close(true);
-      onMode(choice);
-    },
-    [close, onMode]
   );
 
   return (
@@ -64,7 +53,7 @@ const PlusMenu = (props: PlusMenuProps): ReactElement => {
         menuClass=""
         label={copy.addAndSettings}
       >
-        <PlusMenuBody menuProps={props} onAct={onAct} onPickMode={pickMode} />
+        <PlusMenuBody menuProps={props} onAct={onAct} />
       </MenuPanel>
     </>
   );

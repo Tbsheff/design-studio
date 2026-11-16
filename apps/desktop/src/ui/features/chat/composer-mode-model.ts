@@ -5,7 +5,7 @@ type ComposerMode = RunMode | "plan";
 const MODE_LABEL: Record<ComposerMode, string> = {
   ask: "Ask",
   critique: "Critique",
-  edit: "Edit",
+  edit: "Build",
   plan: "Plan",
 };
 

@@ -4,19 +4,30 @@ import { PillCaret } from "./pill-caret.js";
 import { StableText } from "./stable-text.js";
 import type { StableSize } from "./stable-text.js";
 
+const MENU_POPUP = "menu";
+
+const PILL_VALUE = "ui-pill-select-value";
+
 const PILL_VARIANT = {
   drafts: {
     buttonClass: "ui-pill-select inline composer-pill drafts-pill",
     buttonTestId: "drafts-pill",
-    popup: "menu",
-    valueClass: "ui-pill-select-value",
+    popup: MENU_POPUP,
+    valueClass: PILL_VALUE,
     valueTestId: null,
   },
   level: {
     buttonClass: "ui-pill-select inline composer-pill level-pill",
     buttonTestId: "level-pill",
-    popup: "menu",
-    valueClass: "ui-pill-select-value",
+    popup: MENU_POPUP,
+    valueClass: PILL_VALUE,
+    valueTestId: null,
+  },
+  mode: {
+    buttonClass: "ui-pill-select inline composer-pill mode-pill",
+    buttonTestId: "mode-pill",
+    popup: MENU_POPUP,
+    valueClass: PILL_VALUE,
     valueTestId: null,
   },
   model: {

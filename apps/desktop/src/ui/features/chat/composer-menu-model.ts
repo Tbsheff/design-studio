@@ -24,8 +24,6 @@ interface PlusMenuProps {
   onMention: () => void;
   onSkills: () => void;
   onOpen?: () => void;
-  mode: ComposerMode;
-  onMode: (mode: ComposerMode) => void;
   project?: PlusProjectProps | null;
 }
 

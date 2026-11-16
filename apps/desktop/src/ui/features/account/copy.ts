@@ -11,6 +11,7 @@ const copy = {
   pending: "Waiting for the browser to finish sign-in.",
   settings: "Project settings…",
   signIn: "Sign in",
+  signInUnset: "Sign in is not set up",
   signOut: "Sign out",
   signedInAs: "Signed in as",
   signedOut: "You are signed out.",

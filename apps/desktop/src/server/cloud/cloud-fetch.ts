@@ -1,10 +1,19 @@
+import { env } from "node:process";
+
 import { Unavailable } from "@design-studio/actions/_core/errors/unavailable";
 import { Effect, Result } from "effect";
 import type { Schema } from "effect";
 
 import { toDecoder } from "../platform/decode/index.js";
 
-const CLOUD_ORIGIN = "https://api.designstudio.app";
+const UNSET_ORIGIN = "https://cloud-origin-unset.invalid";
+
+const toCloudOrigin = (): string =>
+  [env.STUDIO_API_ORIGIN, env.STUDIO_WEB_ORIGIN].find(
+    (value) => (value ?? "").trim() !== ""
+  ) ?? UNSET_ORIGIN;
+
+const CLOUD_ORIGIN = toCloudOrigin();
 
 const toUnavailable = (): Unavailable =>
   new Unavailable({

@@ -3,7 +3,7 @@ import { useCallback, useRef, useState } from "react";
 import type { ReactElement, ReactNode } from "react";
 
 import { AccountDropdown } from "./account-dropdown.js";
-import { openSettings, toInitial } from "./account-model.js";
+import { isSignInReady, openSettings, toInitial } from "./account-model.js";
 import { copy } from "./copy.js";
 import { useAccount } from "./use-account.js";
 
@@ -22,6 +22,7 @@ const AccountButton = (): ReactElement => {
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
   const isSignedIn = view.phase === "signed-in" && view.user !== null;
+  const isReady = isSignedIn || isSignInReady(view);
   const initial = toInitial(view.user);
 
   const close = useCallback((refocus: boolean): void => {
@@ -68,7 +69,8 @@ const AccountButton = (): ReactElement => {
       </button>
       {open && (
         <AccountDropdown
-          isDisabled={isPending || view.phase === "pending"}
+          isDisabled={isPending || view.phase === "pending" || !isReady}
+          isReady={isReady}
           isSignedIn={isSignedIn}
           onAuth={runAuth}
           onClose={close}

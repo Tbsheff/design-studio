@@ -9,7 +9,8 @@ type AccountPhase =
   | "needs-confirm"
   | "pending"
   | "signed-in"
-  | "signed-out";
+  | "signed-out"
+  | "unavailable";
 
 interface AccountView {
   readonly orgs: CloudWire["orgs"];
@@ -41,6 +42,7 @@ const PHASES: ReadonlySet<string> = new Set([
   "pending",
   "signed-in",
   SIGNED_OUT,
+  "unavailable",
 ]);
 
 const EMPTY_VIEW: AccountView = { orgs: [], phase: SIGNED_OUT, user: null };
@@ -79,6 +81,9 @@ const readDesktopAccount = (): DesktopAccount | null => {
   return host?.account ?? null;
 };
 
+const isSignInReady = (view: AccountView): boolean =>
+  view.phase !== "unavailable" && readDesktopAccount() !== null;
+
 const needsConfirm = (view: AccountView): boolean =>
   view.phase === "needs-confirm" && view.user !== null;
 
@@ -115,6 +120,10 @@ const toStatusText = (phase: AccountPhase): string => {
     return copy.pending;
   }
 
+  if (phase === "unavailable") {
+    return copy.signInUnset;
+  }
+
   return copy.signedOut;
 };
 
@@ -122,6 +131,7 @@ export {
   EMPTY_VIEW,
   fromCloud,
   fromDesktop,
+  isSignInReady,
   needsConfirm,
   openSettings,
   readDesktopAccount,

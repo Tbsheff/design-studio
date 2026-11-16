@@ -6,8 +6,8 @@ import path from "node:path";
 import { app, safeStorage, shell } from "electron";
 import type { WebContents } from "electron";
 
-const CLOUD_ORIGIN = "https://api.designstudio.app";
-const WEB_ORIGIN = "https://app.designstudio.app";
+import { toApiOrigin, toWebOrigin } from "./cloud-origin.js";
+
 const FLOW_TTL_MS = 10 * 60 * 1000;
 const JWT_REFRESH_MS = 12 * 60 * 1000;
 const FETCH_TIMEOUT_MS = 15_000;
@@ -21,7 +21,12 @@ const ACCOUNT_IPC = {
   signOut: "studio:account-sign-out",
 } as const;
 
-type AccountState = "signed-out" | "pending" | "needs-confirm" | "signed-in";
+type AccountState =
+  | "signed-out"
+  | "pending"
+  | "needs-confirm"
+  | "signed-in"
+  | "unavailable";
 
 interface AccountUser {
   id: string;
@@ -125,7 +130,12 @@ async function postJson(
   if (token) {
     headers.authorization = `Bearer ${token}`;
   }
-  const response = await fetch(new URL(route, CLOUD_ORIGIN), {
+  const origin = toApiOrigin();
+
+  if (!origin) {
+    throw new Error("STUDIO_API_ORIGIN is not set");
+  }
+  const response = await fetch(new URL(route, origin), {
     body: JSON.stringify(body),
     headers,
     method: "POST",
@@ -197,6 +207,10 @@ class AccountAuth {
       };
     }
 
+    if (!toWebOrigin()) {
+      return { orgs: [], state: "unavailable", user: null };
+    }
+
     const state = this.hasFlow() ? "pending" : "signed-out";
 
     return { orgs: [], state, user: null };
@@ -224,10 +238,15 @@ class AccountAuth {
   }
 
   async signIn(): Promise<AccountView> {
+    const webOrigin = toWebOrigin();
+
+    if (!webOrigin) {
+      return this.view();
+    }
     const verifier = base64Url(randomBytes(48));
     const state = base64Url(randomBytes(32));
     this.flow = { expiresAt: Date.now() + FLOW_TTL_MS, state, verifier };
-    const url = new URL("/sign-in/desktop", WEB_ORIGIN);
+    const url = new URL("/sign-in/desktop", webOrigin);
     url.searchParams.set("state", state);
     url.searchParams.set("code_challenge", challengeFor(verifier));
     url.searchParams.set("code_challenge_method", "S256");
@@ -436,6 +455,6 @@ class AccountAuth {
   }
 }
 
-export { ACCOUNT_IPC, AccountAuth, CLOUD_ORIGIN, WEB_ORIGIN };
+export { ACCOUNT_IPC, AccountAuth };
 
 export type { AccountOrg, AccountUser, AccountView, AuthDeps };

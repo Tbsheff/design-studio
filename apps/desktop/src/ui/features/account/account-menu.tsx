@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 
-import { needsConfirm, toStatusText } from "./account-model.js";
+import { isSignInReady, needsConfirm, toStatusText } from "./account-model.js";
 import { copy } from "./copy.js";
 import { ErrorLine } from "./error-line.js";
 import { SignedInConfirm } from "./signed-in-confirm.js";
@@ -44,7 +44,7 @@ const AccountMenu = (): ReactElement => {
       <p>{toStatusText(view.phase)}</p>
       <button
         type="button"
-        disabled={isPending || view.phase === "pending"}
+        disabled={isPending || view.phase === "pending" || !isSignInReady(view)}
         onClick={signIn}
       >
         {copy.signIn}

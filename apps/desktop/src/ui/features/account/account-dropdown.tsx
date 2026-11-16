@@ -9,6 +9,7 @@ import { copy } from "./copy.js";
 
 interface AccountDropdownProps {
   readonly isDisabled: boolean;
+  readonly isReady: boolean;
   readonly isSignedIn: boolean;
   readonly onAuth: () => void;
   readonly onClose: (refocus: boolean) => void;
@@ -17,9 +18,13 @@ interface AccountDropdownProps {
   readonly user: AccountView["user"];
 }
 
-const toAuthLabel = (isSignedIn: boolean): string => {
+const toAuthLabel = (isSignedIn: boolean, isReady: boolean): string => {
   if (isSignedIn) {
     return copy.signOut;
+  }
+
+  if (!isReady) {
+    return copy.signInUnset;
   }
 
   return copy.signIn;
@@ -27,6 +32,7 @@ const toAuthLabel = (isSignedIn: boolean): string => {
 
 const AccountDropdown = ({
   isDisabled,
+  isReady,
   isSignedIn,
   onAuth,
   onClose,
@@ -57,7 +63,7 @@ const AccountDropdown = ({
         <AccountRow
           icon="arrowRight"
           isDisabled={isDisabled}
-          label={toAuthLabel(isSignedIn)}
+          label={toAuthLabel(isSignedIn, isReady)}
           onRun={onAuth}
         />
       </div>

@@ -7,6 +7,7 @@ import {
   DEV_STATUS_OPEN_EVENT,
   IMPACT_OPEN_COMMAND,
   IMPACT_OPEN_EVENT,
+  PORT_OPEN_EVENT,
   findElement,
   requestProjectRename,
 } from "./deps.js";
@@ -250,7 +251,21 @@ const runCommands = (studioActions: StudioActions): Command[] => [
 
 const toShipCommands = (studioActions: StudioActions): Command[] => {
   if (!studioActions.onShip) {
-    return [];
+    return [
+      {
+        group: "Version",
+        icon: "react",
+        id: "version.port",
+        keywords: "move port app route next react kit",
+        run: () =>
+          globalThis.dispatchEvent(
+            new CustomEvent(PORT_OPEN_EVENT, {
+              detail: { directionId: null, frameId: null },
+            })
+          ),
+        title: "Move to app…",
+      },
+    ];
   }
 
   return [

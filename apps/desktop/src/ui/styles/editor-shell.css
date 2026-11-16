@@ -180,6 +180,28 @@
   background: var(--strong-hover);
 }
 
+.studio-top-end .topbar-share-split {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.studio-top-end .topbar-share-split > .topbar-share {
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+
+.studio-top-end .topbar-share-split .topbar-share-more {
+  padding: 0 var(--s-1-5);
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+}
+
+.studio-top-end .topbar-share[aria-disabled="true"] {
+  opacity: var(--disabled-opacity);
+  cursor: default;
+}
+
 .studio-top-end .topbar-share:active,
 .studio-top-end .topbar-text-btn:active {
   scale: 0.97;

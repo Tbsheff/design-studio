@@ -164,7 +164,10 @@ const toTopBarStates = (): ClipState[] => [
     isOpenedBy(page, "button.topbar-review", "", ".review-panel")
   ),
   toOverlayState("share", (page) =>
-    isOpenedBy(page, "button.topbar-share", "", MENU_ROLE)
+    isOpenedBy(page, "button.topbar-share", "", "dialog.share-dialog")
+  ),
+  toOverlayState("share menu", (page) =>
+    isOpenedBy(page, "button.topbar-share-more", "", MENU_ROLE)
   ),
   toOverlayState("connect ai", (page) =>
     isOpenedBy(

@@ -10,6 +10,7 @@ import type { ExportTarget } from "./export-api.js";
 import type {
   DialogFormat,
   ExportStatus,
+  FormatGroupId,
   FormatInfo,
 } from "./export-formats.js";
 import { ExportOptionFields } from "./export-option-fields.js";
@@ -24,23 +25,29 @@ interface ExportDialogBodyProps {
   readonly options: ExportOptions;
   readonly labels: ReadonlyMap<string, FrameLabel>;
   readonly info: FormatInfo;
-  readonly formatOptions: readonly SegmentOption<DialogFormat>[];
+  readonly groupId: FormatGroupId;
+  readonly groupOptions: readonly SegmentOption<FormatGroupId>[];
+  readonly memberOptions: readonly SegmentOption<DialogFormat>[];
   readonly status: ExportStatus;
   readonly isBusy: boolean;
   readonly result: HandoffResult | null;
   readonly editors: readonly EditorInfo[];
   readonly onFormat: (format: DialogFormat) => void;
+  readonly onGroup: (group: FormatGroupId) => void;
   readonly onError: (text: string) => void;
 }
 
 const ExportDialogBody = ({
   editors,
-  formatOptions,
+  groupId,
+  groupOptions,
   info,
   isBusy,
   labels,
+  memberOptions,
   onError,
   onFormat,
+  onGroup,
   options,
   result,
   status,
@@ -49,10 +56,18 @@ const ExportDialogBody = ({
   <div className="modal-body export-body" aria-busy={isBusy}>
     <Segmented
       label={uiCopy.formatLabel}
-      value={options.format}
-      options={formatOptions}
-      onChange={onFormat}
+      value={groupId}
+      options={groupOptions}
+      onChange={onGroup}
     />
+    {memberOptions.length > 1 && (
+      <Segmented
+        label={uiCopy.formatKindLabel}
+        value={options.format}
+        options={memberOptions}
+        onChange={onFormat}
+      />
+    )}
     <p className="export-sub export-hint">{info.hint}</p>
     <ExportOptionFields options={options} labels={labels} />
     {result && (

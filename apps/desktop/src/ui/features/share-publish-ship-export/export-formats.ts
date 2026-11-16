@@ -70,6 +70,32 @@ const FORMATS: FormatInfo[] = [
   },
 ];
 
+type FormatGroupId = "png" | "svg" | "pdf" | "code" | "more";
+
+interface FormatGroup {
+  readonly icon: IconName;
+  readonly id: FormatGroupId;
+  readonly label: string;
+  readonly members: readonly DialogFormat[];
+}
+
+const FORMAT_GROUPS: readonly FormatGroup[] = [
+  { icon: "image", id: "png", label: "PNG", members: ["png"] },
+  { icon: "pencil", id: "svg", label: "SVG", members: ["svg"] },
+  { icon: "doc", id: "pdf", label: "PDF", members: ["pdf"] },
+  { icon: "code", id: "code", label: "Code", members: ["html", "zip"] },
+  {
+    icon: "more",
+    id: "more",
+    label: "More formats",
+    members: ["pptx", "flow", "handoff"],
+  },
+];
+
+const toFormatGroup = (format: DialogFormat): FormatGroup =>
+  FORMAT_GROUPS.find((group) => group.members.includes(format)) ??
+  (FORMAT_GROUPS[0] as FormatGroup);
+
 const MOBILE_MAX = 600;
 const MOBILE_FRAME = { height: 844, name: "Mobile", width: 390 };
 
@@ -81,6 +107,19 @@ type ExportStatus =
 
 const IDLE_STATUS: ExportStatus = { kind: "idle" };
 
-export { FORMATS, IDLE_STATUS, MOBILE_FRAME, MOBILE_MAX };
+export {
+  FORMAT_GROUPS,
+  FORMATS,
+  IDLE_STATUS,
+  MOBILE_FRAME,
+  MOBILE_MAX,
+  toFormatGroup,
+};
 
-export type { DialogFormat, ExportStatus, FormatInfo };
+export type {
+  DialogFormat,
+  ExportStatus,
+  FormatGroup,
+  FormatGroupId,
+  FormatInfo,
+};

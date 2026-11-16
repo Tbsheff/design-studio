@@ -9,8 +9,12 @@ import type { ExportTarget } from "./export-api.js";
 import { ExportDialogBody } from "./export-dialog-body.js";
 import { ExportDialogFoot } from "./export-dialog-foot.js";
 import { ExportDialogHead } from "./export-dialog-head.js";
-import { FORMATS } from "./export-formats.js";
-import type { DialogFormat, FormatInfo } from "./export-formats.js";
+import { FORMAT_GROUPS, FORMATS, toFormatGroup } from "./export-formats.js";
+import type {
+  DialogFormat,
+  FormatGroupId,
+  FormatInfo,
+} from "./export-formats.js";
 import { toFrameLabels } from "./frame-labels.js";
 import { pick } from "./pick.js";
 import type { SegmentOption } from "./segmented.js";
@@ -23,9 +27,21 @@ interface Props {
   onClose: () => void;
 }
 
-const FORMAT_OPTIONS: readonly SegmentOption<DialogFormat>[] = FORMATS.map(
-  (entry) => ({ icon: entry.icon, id: entry.id, label: entry.label })
-);
+const GROUP_OPTIONS: readonly SegmentOption<FormatGroupId>[] =
+  FORMAT_GROUPS.map((group) => ({
+    icon: group.icon,
+    id: group.id,
+    label: group.label,
+  }));
+
+const toMemberOptions = (
+  members: readonly DialogFormat[]
+): SegmentOption<DialogFormat>[] =>
+  FORMATS.filter((entry) => members.includes(entry.id)).map((entry) => ({
+    icon: null,
+    id: entry.id,
+    label: entry.label,
+  }));
 
 const FRAME_NAMERS = { nameOf: canvasFrameName, pageOf: framePage };
 
@@ -82,6 +98,20 @@ const ExportDialog = ({ onClose, target }: Props): ReactElement => {
     [options, resetStatus]
   );
 
+  const group = toFormatGroup(format);
+
+  const selectGroup = useCallback(
+    (next: FormatGroupId): void => {
+      const members =
+        FORMAT_GROUPS.find((entry) => entry.id === next)?.members ?? [];
+
+      if (!members.includes(format) && members[0]) {
+        selectFormat(members[0]);
+      }
+    },
+    [format, selectFormat]
+  );
+
   return (
     <dialog
       ref={ref}
@@ -98,12 +128,15 @@ const ExportDialog = ({ onClose, target }: Props): ReactElement => {
         options={options}
         labels={labels}
         info={info}
-        formatOptions={FORMAT_OPTIONS}
+        groupId={group.id}
+        groupOptions={GROUP_OPTIONS}
+        memberOptions={toMemberOptions(group.members)}
         status={runner.status}
         isBusy={isBusy}
         result={result}
         editors={editors}
         onFormat={selectFormat}
+        onGroup={selectGroup}
         onError={failWith}
       />
       <ExportDialogFoot

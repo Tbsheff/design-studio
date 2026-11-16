@@ -112,6 +112,21 @@ dialog.run-settings-pop {
   color: inherit;
 }
 
+.chip-menu-trigger {
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-control-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.chip-menu-trigger:focus-visible {
+  box-shadow: var(--ring);
+  outline: none;
+}
+
 .icon-btn.thumb-x {
   position: absolute;
   top: 3px;

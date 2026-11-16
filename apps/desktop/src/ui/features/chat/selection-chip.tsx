@@ -5,19 +5,30 @@ import type { ReactElement } from "react";
 
 import { chipVariants } from "../../ai/components/ai/chip-variants.js";
 import { cn } from "../../ai/lib/utils.js";
-import { toSnippet } from "./selection-chip-model.js";
+import { SelectionChipMenu } from "./selection-chip-menu.js";
+import { SelectionChipTrigger } from "./selection-chip-trigger.js";
+import type { RunFocus } from "./use-run-focus.js";
+import { useSelectionChipMenu } from "./use-selection-chip-menu.js";
 
 const CHIP_ICON = 12;
 
 interface SelectionChipProps {
+  readonly count: number;
+  readonly focus: RunFocus;
   readonly onRemove: (selector: string) => void;
   readonly selected: SelectionContext;
 }
 
 const SelectionChip = ({
+  count,
+  focus,
   selected,
   onRemove,
 }: SelectionChipProps): ReactElement => {
+  const chip = useSelectionChipMenu(selected, count, focus);
+  const { menu, trigger } = chip;
+  const { toggle: handleToggle } = menu;
+
   const remove = useCallback((): void => {
     onRemove(selected.selector);
   }, [onRemove, selected.selector]);
@@ -32,14 +43,13 @@ const SelectionChip = ({
       )}
       data-size="sm"
       data-slot="chip"
-      data-tip={selected.selector}
-      data-tip-side="top"
     >
-      <Icon name="pointer" size={CHIP_ICON} />
-      <span className="chip-text min-w-0 truncate font-mono">
-        <span className="chip-tag font-bold">{selected.tag}</span>
-        {toSnippet(selected)}
-      </span>
+      <SelectionChipTrigger
+        isOpen={menu.open}
+        selected={selected}
+        trigger={trigger}
+        onToggle={handleToggle}
+      />
       <button
         type="button"
         className="icon-btn chip-x"
@@ -48,6 +58,7 @@ const SelectionChip = ({
       >
         <Icon name="close" size={CHIP_ICON} />
       </button>
+      <SelectionChipMenu chip={chip} />
     </span>
   );
 };

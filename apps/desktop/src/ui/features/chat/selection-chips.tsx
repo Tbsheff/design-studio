@@ -1,16 +1,17 @@
 import type { SelectionContext } from "@design-studio/contracts";
 import type { ReactElement } from "react";
 
-import { SelectionPictureChip } from "../../ai/components/ai/selection-picture-chip.js";
-import { copy } from "./copy.js";
 import { SelectionChip } from "./selection-chip.js";
+import type { RunFocus } from "./use-run-focus.js";
 
 interface SelectionChipsProps {
+  readonly focus: RunFocus;
   readonly onRemove: (selector: string) => void;
   readonly selection: SelectionContext[];
 }
 
 const SelectionChips = ({
+  focus,
   selection,
   onRemove,
 }: SelectionChipsProps): ReactElement | null => {
@@ -23,16 +24,12 @@ const SelectionChips = ({
       {selection.map((selected) => (
         <SelectionChip
           key={selected.selector}
+          count={selection.length}
+          focus={focus}
           selected={selected}
           onRemove={onRemove}
         />
       ))}
-      <SelectionPictureChip
-        count={selection.length}
-        label={copy.selectionPicture}
-        removeLabel={copy.selectionPictureRemove}
-        tip={copy.selectionPictureTip}
-      />
     </div>
   );
 };

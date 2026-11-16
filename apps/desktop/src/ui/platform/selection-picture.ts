@@ -22,9 +22,15 @@ const resetSelectionPicture = (): void => {
 const useSelectionPicture = (count: number): boolean =>
   useLive(selectionPictureStore) && isPictureCount(count);
 
+const toggleSelectionPicture = (): void => {
+  selectionPictureStore.set(!selectionPictureStore.get());
+};
+
 export {
+  isPictureCount,
   isSelectionPictureOn,
   resetSelectionPicture,
   setSelectionPictureOff,
+  toggleSelectionPicture,
   useSelectionPicture,
 };

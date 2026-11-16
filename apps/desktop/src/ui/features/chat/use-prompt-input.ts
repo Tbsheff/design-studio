@@ -31,7 +31,7 @@ const usePromptInput = (
   const request = props.mentionRequest;
   const frames = props.mentionFrames ?? null;
 
-  const focus = useRunFocus(props.selection, props.frameFocus ?? null);
+  const focus = useRunFocus(props.frameFocus ?? null);
   const onFocus = focus.add;
 
   const mentions = useMentions({

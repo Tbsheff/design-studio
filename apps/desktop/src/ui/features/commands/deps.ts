@@ -87,8 +87,6 @@ export {
   DEV_STATUS_OPEN_EVENT,
 } from "../../domain/dev-status-events.js";
 
-export { PORT_OPEN_EVENT } from "@design-studio/contracts/port";
-
 export {
   IMPACT_OPEN_COMMAND,
   IMPACT_OPEN_EVENT,

@@ -159,6 +159,7 @@ const copy = {
   loadingPages: "Loading pages…",
   loadingRoutes: "Loading routes…",
   makeStatesWithAi: "Make states with AI",
+  moveToApp: "Move to app…",
   name: "Name",
   newMockData: "New mock data…",
   noDesignYetSend:

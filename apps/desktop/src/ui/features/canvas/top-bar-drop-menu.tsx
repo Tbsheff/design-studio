@@ -1,10 +1,12 @@
 import { PORT_OPEN_EVENT } from "@design-studio/contracts/port";
 import { lazy, useCallback, useEffect, useState } from "react";
 
+import { useCommands } from "../../canvas-hook-slots.js";
 import { uiStore } from "../../platform/storage.js";
 import { setPortAvailable } from "../design-system/port-api.js";
 import type { PortOpenDetail } from "../design-system/port-api.js";
 import type { PortDialogTarget } from "../design-system/port-to-app-dialog.js";
+import { copy } from "./copy.js";
 
 const lazyPortToAppDialog = lazy(async () => {
   const loaded = await import("../design-system/port-to-app-dialog.js");
@@ -38,6 +40,22 @@ const usePortDialog = (available: boolean): PortDialog => {
     []
   );
 
+  useCommands(() => {
+    if (!available) {
+      return [];
+    }
+
+    return [
+      {
+        group: "Version",
+        icon: "react",
+        id: "version.port",
+        keywords: "move port app route next react kit",
+        run: (): void => open(null),
+        title: copy.moveToApp,
+      },
+    ];
+  });
   useEffect(() => {
     setPortAvailable(available);
 

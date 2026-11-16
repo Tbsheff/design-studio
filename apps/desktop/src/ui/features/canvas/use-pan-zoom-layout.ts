@@ -13,6 +13,47 @@ import {
 import type { ActiveSpot } from "./pan-zoom-sync.js";
 import type { PanZoomLayout } from "./pan-zoom-types.js";
 
+const PIXEL_UNIT = /px$/u;
+
+const RIGHT_GAPS = 2;
+
+const BOTTOM_GAPS = 3;
+
+const toCssPixels = (style: CSSStyleDeclaration, name: string): number => {
+  const value = Number(
+    style.getPropertyValue(name).trim().replace(PIXEL_UNIT, "")
+  );
+
+  if (Number.isNaN(value)) {
+    return 0;
+  }
+
+  return value;
+};
+
+const toFreeStage = (element: HTMLElement): Stage => {
+  const style = getComputedStyle(element);
+  const gap = toCssPixels(style, "--dock-gap");
+  const inspector = toCssPixels(style, "--inspector-w");
+  const tools = toCssPixels(style, "--tools-w");
+  const zoomBar = toCssPixels(style, "--zoom-h");
+  let right = 0;
+  let bottom = 0;
+
+  if (inspector > 0) {
+    right = inspector + gap * RIGHT_GAPS;
+  }
+
+  if (tools > 0) {
+    bottom = tools + zoomBar + gap * BOTTOM_GAPS;
+  }
+
+  return {
+    height: Math.max(0, element.clientHeight - bottom),
+    width: Math.max(0, element.clientWidth - right),
+  };
+};
+
 const useStageSize = (stageRef: RefObject<HTMLDivElement | null>): Stage => {
   const [stage, setStage] = useState<Stage>({ height: 0, width: 0 });
 
@@ -23,8 +64,7 @@ const useStageSize = (stageRef: RefObject<HTMLDivElement | null>): Stage => {
       return;
     }
 
-    const measure = (): void =>
-      setStage({ height: element.clientHeight, width: element.clientWidth });
+    const measure = (): void => setStage(toFreeStage(element));
 
     const observer = new ResizeObserver(measure);
 

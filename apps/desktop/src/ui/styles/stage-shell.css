@@ -356,6 +356,13 @@
   display: none;
 }
 
+.studio-stage .review-panel {
+  right: var(--zoom-right);
+  max-width: calc(
+    100% - var(--zoom-right) - var(--dock-right) - var(--dock-gap)
+  );
+}
+
 .studio-top-icon {
   flex: none;
   display: grid;

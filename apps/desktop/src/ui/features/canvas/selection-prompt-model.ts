@@ -183,16 +183,16 @@ const toPlacement = (
 const toAskStyle = (rect: PromptRect, zoom: number): CSSProperties => {
   if (rect.y * zoom < ASK_ROOM) {
     return {
-      left: rect.x,
+      left: rect.x + rect.width,
       top: rect.y,
-      transform: `scale(${1 / zoom}) translate(4px, 4px)`,
+      transform: `scale(${1 / zoom}) translate(calc(-100% - 4px), 4px)`,
     };
   }
 
   return {
-    left: rect.x,
+    left: rect.x + rect.width,
     top: rect.y,
-    transform: `scale(${1 / zoom}) translateY(calc(-100% - 4px))`,
+    transform: `scale(${1 / zoom}) translate(-100%, calc(-100% - 4px))`,
   };
 };
 

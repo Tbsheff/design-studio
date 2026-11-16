@@ -84,6 +84,7 @@ const SimpleMiddle = ({ props, state }: SimpleMiddleProps): ReactElement => {
         textStyle={textStyle}
         fill={fill}
         effects={effects}
+        layout={props.layout}
       />
     </>
   );

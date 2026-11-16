@@ -2,7 +2,8 @@ import type { SelectionContext } from "@design-studio/contracts";
 import type { ReactElement } from "react";
 
 import { AlignSelf } from "./align-self.js";
-import { AspectLockRow } from "./aspect-lock-row.js";
+import { AspectLockError } from "./aspect-lock-error.js";
+import { AspectLockToggle } from "./aspect-lock-toggle.js";
 import type { ElementClasses } from "./element-classes-model.js";
 import { MinMaxRows } from "./min-max-rows.js";
 import { isPositioned } from "./position-model.js";
@@ -25,9 +26,15 @@ const SizeRows = ({
   const parent = toParentLayout(selection.styles);
   const lock = useAspectLock(edit, selection, classes);
 
+  let sizeGrid = "ins-grid";
+
+  if (classes) {
+    sizeGrid = "ins-grid ins-size-grid";
+  }
+
   return (
     <>
-      <div className="ins-grid">
+      <div className={sizeGrid}>
         <SizeRow
           axis="width"
           edit={edit}
@@ -40,8 +47,15 @@ const SizeRows = ({
           fieldEdit={lock.heightEdit}
           selection={selection}
         />
-        {classes && <AspectLockRow lock={lock} />}
+        {classes && (
+          <AspectLockToggle
+            isDisabled={!lock.isReady}
+            isOn={lock.isOn}
+            onToggle={lock.handleToggle}
+          />
+        )}
       </div>
+      {classes && <AspectLockError error={lock.error} />}
       <ScaleField edit={edit} selection={selection} />
       <MinMaxRows edit={edit} />
       {(parent.isFlex || parent.isGrid) &&

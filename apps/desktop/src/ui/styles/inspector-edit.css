@@ -545,8 +545,15 @@ fieldset.ins-toggles {
   border-radius: var(--r-control-sm);
 }
 
-.edit-pane .ins-aspect-lock {
-  justify-content: space-between;
+.edit-pane .ins-grid.ins-size-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) 24px;
+}
+
+.edit-pane .ins-size-grid > .ins-aspect-lock {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  align-self: center;
+  justify-self: center;
 }
 
 .edit-pane .ins-truncate .ins-toggles {

@@ -1,6 +1,6 @@
 import type { SelectionContext } from "@design-studio/contracts";
 import { memo, useMemo } from "react";
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import { AutoLayoutSection } from "./auto-layout-section.js";
 import { BoxModel } from "./box-model.js";
@@ -16,6 +16,7 @@ interface LayoutSectionProps {
   readonly edit: DirectEdit;
   readonly selection: SelectionContext | null;
   readonly classes: ElementClasses | null;
+  readonly extra: ReactNode;
 }
 
 const BoxModelMemo = memo(
@@ -30,6 +31,7 @@ const LayoutSection = ({
   edit,
   selection,
   classes,
+  extra,
 }: LayoutSectionProps): ReactElement => {
   const lead = useMemo(
     () => <LayoutLead edit={edit} selection={selection} classes={classes} />,
@@ -44,6 +46,7 @@ const LayoutSection = ({
       title={copy.layout}
       lead={lead}
     >
+      {extra}
       <BoxModelMemo edit={edit} declared={toDeclaredMargins(selection)} />
     </AutoLayoutSection>
   );

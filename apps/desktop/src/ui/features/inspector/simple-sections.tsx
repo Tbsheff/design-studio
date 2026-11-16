@@ -20,6 +20,7 @@ interface SimpleSectionsProps {
   readonly textStyle: ReactNode;
   readonly fill: ReactNode;
   readonly effects: ReactNode;
+  readonly layout: ReactNode;
 }
 
 const SimpleSections = ({
@@ -30,6 +31,7 @@ const SimpleSections = ({
   textStyle,
   fill,
   effects,
+  layout,
 }: SimpleSectionsProps): ReactElement => {
   const [revealed, setRevealed] = useState<Set<Extra>>(() => new Set());
 
@@ -44,7 +46,12 @@ const SimpleSections = ({
 
   return (
     <>
-      <LayoutSection edit={edit} selection={selection} classes={classes} />
+      <LayoutSection
+        edit={edit}
+        selection={selection}
+        classes={classes}
+        extra={layout}
+      />
       <TextSection
         edit={edit}
         ui={ui}

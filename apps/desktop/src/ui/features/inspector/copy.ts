@@ -23,7 +23,6 @@ const copy = {
   arrange: "Arrange",
   arranged: "Arranged",
   askTheAgentToChange: "Ask Claude to change it",
-  aspectLock: "Lock ratio",
   aspectLockToggle: "Keep the width to height ratio when you resize",
   autoPutsTheSpaceBetween: "Auto puts the space between the children",
   base: "Base",

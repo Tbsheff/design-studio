@@ -87,6 +87,9 @@ const kindOf = (info: MotionInfo): MotionKind => {
   return "none";
 };
 
+const hasSavedMotion = (info: MotionInfo | null): boolean =>
+  info !== null && kindOf(info) !== "none";
+
 const presetOf = (text: string): EntrancePreset => {
   const hit = PRESET_HINTS.find(([pattern]) => pattern.test(text));
 
@@ -248,6 +251,7 @@ export {
   childCount,
   curveOf,
   draftOf,
+  hasSavedMotion,
   isPreset,
   REPLAY_GAP_MS,
   replayMs,

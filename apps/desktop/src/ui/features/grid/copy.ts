@@ -12,8 +12,8 @@ const copy = {
   itemTitle: "Grid item",
   lineTip:
     "A line number from 1 for a start, or a count from 1 for a span. Clear the field to remove it",
-  makeGrid: "Turn into grid",
-  makeGridTip: "Set display grid on this layer",
+  makeGrid: "Grid",
+  makeGridTip: "Turn into grid. Sets display grid on this layer",
   noSource:
     "Design Studio cannot find this layer in the code, so it cannot edit the grid.",
   removeColumn: "Remove column",

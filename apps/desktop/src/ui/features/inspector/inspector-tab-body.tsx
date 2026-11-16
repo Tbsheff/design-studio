@@ -4,7 +4,6 @@ import { ComponentsTab } from "./components-tab.js";
 import { InspectorCode } from "./inspector-code.js";
 import type { InspectorProps, InspectorTab } from "./inspector-model.js";
 import { ProSlot } from "./pro-slot.js";
-import { PrototypeTab } from "./prototype-tab.js";
 import { SimpleSlot } from "./simple-slot.js";
 import { TweaksTab } from "./tweaks-tab.js";
 import type { EditSession } from "./use-edit-session.js";
@@ -24,7 +23,6 @@ const InspectorTabBody = ({ props, session, tab }: Props): ReactElement => (
   >
     {tab === "simple" && <SimpleSlot props={props} />}
     {tab === "pro" && <ProSlot props={props} />}
-    {tab === "prototype" && <PrototypeTab props={props} />}
     {tab === "components" && <ComponentsTab components={props.components} />}
     {tab === "code" && (
       <InspectorCode

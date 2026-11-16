@@ -199,9 +199,6 @@ const copy = {
   proposalLabel: "Proposed design rule",
   proposalStyleLine: (property: string, value: string, count: number): string =>
     `You set ${property} to ${value} ${count} times. Make it a rule?`,
-  prototypeHint:
-    "Press L, then click an element and pick a frame to link it. Links play in Present.",
-  prototypeUseTool: "Use the Prototype link tool",
   radius: "Radius",
   readOnly: "Read only",
   readingValues: "Reading values…",
@@ -233,10 +230,6 @@ const copy = {
   scaleTokensChanged: " token values now have fixed values.",
   scaleTokensKept: " values use tokens and stay.",
   scaled: "Scaled ",
-  scrollPinAbsoluteTip:
-    "Absolute layers move with their parent. Turn off absolute first.",
-  scrollPinHint: "Play the frame in Present and scroll to see it.",
-  scrollPinTitle: "Scroll behavior",
   searchFreeStockPhotosAnd: "Search free stock photos and place one here",
   select: "select",
   selectAllWith: "Select all with ",
@@ -285,7 +278,6 @@ const copy = {
   tabComponents: "Components",
   tabDesign: "Design",
   tabLayers: "Layers",
-  tabPrototype: "Prototype",
   tabSimple: "Simple",
   tabTweaks: "Tweaks",
   text: "Text",

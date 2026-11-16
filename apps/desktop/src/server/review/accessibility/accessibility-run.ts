@@ -6,11 +6,14 @@ import {
 } from "../../direct-edit/index.js";
 import type { DirectionIds } from "../../direct-edit/index.js";
 import type { KnownFailure } from "../../platform/attempt/index.js";
+import { toSchemedPreview } from "../../preview/page-capture/index.js";
 import { toAccessibilityFailure } from "./accessibility-failure.js";
 import { readDesignSystemState, withPagePath } from "./deps.js";
 import type {
   AccessibilityReport,
   AccessibilitySetResult,
+  CompiledTokenEntry,
+  PreviewService,
   SourceLoc,
 } from "./deps.js";
 import { AccessibilityError } from "./errors.js";
@@ -20,7 +23,10 @@ import { inspectAccessibilityPage } from "./inspect.js";
 import { toAccessibilityFrame } from "./live-frame.js";
 import { setAccessibilityAttributes, toAccessibilityResult } from "./set.js";
 
+type AccessibilityColorScheme = "light" | "dark";
+
 interface InspectAccessibilityCommand extends DirectionIds {
+  readonly colorScheme: AccessibilityColorScheme | null;
   readonly frame: string | null;
   readonly isPassingIncluded: boolean;
   readonly limit: number;
@@ -33,6 +39,31 @@ interface SetAccessibilityCommand extends DirectionIds {
   readonly tag: string | null;
   readonly usedAt: SourceLoc | null;
 }
+
+const toProbePreview = (
+  preview: PreviewService,
+  colorScheme: AccessibilityColorScheme | null
+): Pick<PreviewService, "peekPage" | "withPage"> => {
+  if (colorScheme === null) {
+    return preview;
+  }
+
+  return { withPage: toSchemedPreview(preview, colorScheme).withPage };
+};
+
+const toSchemeEntries = (
+  entries: readonly CompiledTokenEntry[],
+  colorScheme: AccessibilityColorScheme | null
+): readonly CompiledTokenEntry[] => {
+  if (colorScheme !== "dark") {
+    return entries;
+  }
+
+  return entries.map((entry) => ({
+    ...entry,
+    value: entry.darkValue ?? entry.value,
+  }));
+};
 
 const runAccessibilityInspect = (
   command: InspectAccessibilityCommand
@@ -55,8 +86,8 @@ const runAccessibilityInspect = (
       ]);
 
       const report = await inspectAccessibilityPage(
-        runtime.preview,
-        state.entries,
+        toProbePreview(runtime.preview, command.colorScheme),
+        toSchemeEntries(state.entries, command.colorScheme),
         {
           frame: frame.id,
           page: page || "/",

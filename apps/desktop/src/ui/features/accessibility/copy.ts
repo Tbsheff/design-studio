@@ -12,6 +12,7 @@ const copy = {
   contrastTip: "WCAG contrast of the text and its background",
   decorative: "Decorative",
   decorativeTip: 'Marks the image as decorative with alt=""',
+  fixDarkTip: "Set the dark value of this token in Tokens, or ask Claude.",
   fixLabel: (token: string): string =>
     `Use ${token} for the text color to pass AA`,
   fixText: (token: string): string => `Use ${token}`,
@@ -67,6 +68,10 @@ const copy = {
     `Tab stop ${order}: ${name}`,
   tabStopUnnamed: (order: number): string => `Tab stop ${order}: unnamed`,
   tabText: "Tabs",
+  theme: "Theme",
+  themeDark: "Dark",
+  themeLight: "Light",
+  themeTip: "Check the light or the dark theme of the page",
   title: "Accessibility",
   unnamedMark: "!",
   unset: "Not set",

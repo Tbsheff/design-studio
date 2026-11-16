@@ -19,7 +19,10 @@ interface AccessibilityIds {
   readonly projectId: string;
 }
 
+type ThemeName = "light" | "dark";
+
 interface InspectQuery {
+  readonly colorScheme: ThemeName | null;
   readonly frame: string | null;
   readonly passing: boolean;
   readonly selector: string | null;
@@ -36,6 +39,7 @@ const readAccessibility = (
   query: InspectQuery
 ): Promise<AccessibilityReport> =>
   call(accessibilityRoutes.inspectAccessibility, {
+    colorScheme: query.colorScheme,
     directionId: ids.directionId,
     frame: query.frame,
     includePassing: query.passing,
@@ -110,4 +114,4 @@ export {
   writeAccessibility,
 };
 
-export type { AccessibilityIds, InspectQuery };
+export type { AccessibilityIds, InspectQuery, ThemeName };

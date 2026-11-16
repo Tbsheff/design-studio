@@ -11,12 +11,14 @@ import styles from "./accessibility.module.css";
 
 interface ContrastRowProps {
   readonly disabled: boolean;
+  readonly isDark: boolean;
   readonly pair: ContrastPair | null;
   readonly onFix: (fix: ContrastFix) => void;
 }
 
 const ContrastRow = ({
   disabled,
+  isDark,
   pair,
   onFix,
 }: ContrastRowProps): ReactElement => {
@@ -33,20 +35,34 @@ const ContrastRow = ({
   }
 
   const levels = levelsOf(pair);
+  let fixLine: ReactElement | null = null;
+
+  if (pair.fix !== null) {
+    fixLine = (
+      <div className={styles.line}>
+        <span className={styles.spacer} />
+        <ContrastFixButton
+          disabled={disabled || pair.passes}
+          fix={pair.fix}
+          isDark={isDark}
+          onFix={onFix}
+        />
+      </div>
+    );
+  }
 
   return (
-    <div className={styles.line} data-tip={copy.contrastTip}>
-      <span className={styles.label}>{copy.contrast}</span>
-      <span aria-hidden="true" className={styles.swatch} style={swatch} />
-      <span className={styles.ratio}>{copy.ratio(pair.ratio, pair.need)}</span>
-      <LevelBadge isPassing={levels.aa} level={copy.aa} />
-      <LevelBadge isPassing={levels.aaa} level={copy.aaa} />
-      <span className={styles.spacer} />
-      <ContrastFixButton
-        disabled={disabled || pair.passes}
-        fix={pair.fix}
-        onFix={onFix}
-      />
+    <div className={styles.contrastLines}>
+      <div className={styles.line} data-tip={copy.contrastTip}>
+        <span className={styles.label}>{copy.contrast}</span>
+        <span aria-hidden="true" className={styles.swatch} style={swatch} />
+        <span className={styles.ratio}>
+          {copy.ratio(pair.ratio, pair.need)}
+        </span>
+        <LevelBadge isPassing={levels.aa} level={copy.aa} />
+        <LevelBadge isPassing={levels.aaa} level={copy.aaa} />
+      </div>
+      {fixLine}
     </div>
   );
 };

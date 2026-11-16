@@ -9,6 +9,7 @@ import { copy } from "./copy.js";
 import type { SelectionContext } from "./deps.js";
 import { NameLine } from "./name-line.js";
 import { RoleSelect } from "./role-select.js";
+import { ThemeChoice } from "./theme-choice.js";
 import type { AccessibilityHandlers } from "./use-accessibility-handlers.js";
 import type { Accessibility } from "./use-accessibility.js";
 import { VisionRow } from "./vision-row.js";
@@ -60,8 +61,14 @@ const AccessibilityBody = ({
         value={attrs.tabIndex}
         onCommit={handlers.handleTabIndex}
       />
+      <ThemeChoice
+        disabled={accessibility.isPending}
+        value={accessibility.theme}
+        onPick={accessibility.handleTheme}
+      />
       <ContrastRow
         disabled={accessibility.isPending}
+        isDark={accessibility.theme === "dark"}
         pair={pair}
         onFix={accessibility.handleFix}
       />

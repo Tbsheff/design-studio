@@ -21,7 +21,7 @@ const inspectAccessibility = defineAction({
   },
   confirm: "none",
   description:
-    "Check the accessibility of one canvas frame, or of one layer in it, on the live page. It returns the role and accessible name of the layer and where the name comes from, the tab order, the focusable elements with no name, the images with no alt, and the text and background contrast pairs with the WCAG ratio and the need (4.5:1, or 3:1 for large text). Each low pair names the nearest project token that passes and a fix to send to replace_style. Pass includePassing to list the pairs that pass too. The limit caps each list. Read only.",
+    "Check the accessibility of one canvas frame, or of one layer in it, on the live page. It returns the role and accessible name of the layer and where the name comes from, the tab order, the focusable elements with no name, the images with no alt, and the text and background contrast pairs with the WCAG ratio and the need (4.5:1, or 3:1 for large text). Each low pair names the nearest project token that passes and a fix to send to replace_style. Pass includePassing to list the pairs that pass too. Pass colorScheme dark to check the dark theme. The limit caps each list. Read only.",
   errors: [BadRequest, Conflict, NotFound],
   http: {
     method: "GET",
